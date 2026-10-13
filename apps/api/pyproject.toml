@@ -1,0 +1,47 @@
+[project]
+name = "vyuh-api"
+version = "0.1.0"
+description = "VYUH FastAPI backend"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi>=0.143,<0.144",
+  "uvicorn[standard]>=0.54",
+  "sqlalchemy>=2.1,<2.2",
+  "alembic>=1.20",
+  "psycopg[binary]>=3.3",
+  "pydantic>=2.14,<3",
+  "pydantic-settings>=2.15",
+  "pyjwt[crypto]>=2.15",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=9.1",
+  "httpx>=0.28",
+  "ruff==0.17.0",
+  "datamodel-code-generator==0.83.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["app/schemas/generated", "alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "S", "SIM", "RUF", "ANN"]
+ignore = ["ANN401"]
+
+[tool.ruff.lint.isort]
+known-third-party = ["alembic"]
+known-first-party = ["app", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "ANN"]
+"alembic/**" = ["ANN"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

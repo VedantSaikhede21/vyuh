@@ -48,6 +48,7 @@ def main() -> None:
             "--use-standard-collections",
             "--use-union-operator",
             "--use-subclass-enum",
+            "--capitalise-enum-members",
             "--use-double-quotes",
             "--snake-case-field",
             "--allow-population-by-field-name",
@@ -62,9 +63,13 @@ def main() -> None:
             HEADER,
         ]
     )
-    run([sys.executable, "-m", "ruff", "format", "--quiet", "--no-respect-gitignore", str(OUT_FILE)])
+    run(
+        [sys.executable, "-m", "ruff", "format", "--quiet", "--no-respect-gitignore", str(OUT_FILE)]
+    )
     init = OUT_DIR / "__init__.py"
-    init.write_text(HEADER + "from .models import *  # noqa: F403\n", encoding="utf-8", newline="\n")
+    init.write_text(
+        HEADER + "from .models import *  # noqa: F403\n", encoding="utf-8", newline="\n"
+    )
     text = OUT_FILE.read_text(encoding="utf-8")
     OUT_FILE.write_text(text, encoding="utf-8", newline="\n")
     print(f"Wrote {OUT_FILE.relative_to(REPO_DIR)}")

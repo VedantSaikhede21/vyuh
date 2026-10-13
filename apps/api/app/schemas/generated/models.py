@@ -20,18 +20,18 @@ class VyuhSchemas(RootModel[Any]):
 
 
 class Activity(StrEnum):
-    approaching = "APPROACHING"
-    loitering = "LOITERING"
-    departing = "DEPARTING"
-    hovering = "HOVERING"
-    unknown = "UNKNOWN"
+    APPROACHING = "APPROACHING"
+    LOITERING = "LOITERING"
+    DEPARTING = "DEPARTING"
+    HOVERING = "HOVERING"
+    UNKNOWN = "UNKNOWN"
 
 
 class Affiliation(StrEnum):
-    hostile = "HOSTILE"
-    friendly = "FRIENDLY"
-    neutral = "NEUTRAL"
-    unknown = "UNKNOWN"
+    HOSTILE = "HOSTILE"
+    FRIENDLY = "FRIENDLY"
+    NEUTRAL = "NEUTRAL"
+    UNKNOWN = "UNKNOWN"
 
 
 class AffiliationSetPayload(BaseModel):
@@ -42,15 +42,15 @@ class AffiliationSetPayload(BaseModel):
 
 
 class AltitudeBand(StrEnum):
-    low = "LOW"
-    medium = "MEDIUM"
-    high = "HIGH"
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
 
 
 class AreaZoneKind(StrEnum):
-    protected_asset = "PROTECTED_ASSET"
-    no_kinetic = "NO_KINETIC"
-    sensor_site = "SENSOR_SITE"
+    PROTECTED_ASSET = "PROTECTED_ASSET"
+    NO_KINETIC = "NO_KINETIC"
+    SENSOR_SITE = "SENSOR_SITE"
 
 
 class Asset(BaseModel):
@@ -65,14 +65,14 @@ class Asset(BaseModel):
 
 
 class Behaviour(StrEnum):
-    recon_loiter = "RECON_LOITER"
-    smuggling_drop = "SMUGGLING_DROP"
-    attack_run = "ATTACK_RUN"
-    swarm_saturation = "SWARM_SATURATION"
-    decoy = "DECOY"
-    transit = "TRANSIT"
-    friendly_patrol = "FRIENDLY_PATROL"
-    bird_flock = "BIRD_FLOCK"
+    RECON_LOITER = "RECON_LOITER"
+    SMUGGLING_DROP = "SMUGGLING_DROP"
+    ATTACK_RUN = "ATTACK_RUN"
+    SWARM_SATURATION = "SWARM_SATURATION"
+    DECOY = "DECOY"
+    TRANSIT = "TRANSIT"
+    FRIENDLY_PATROL = "FRIENDLY_PATROL"
+    BIRD_FLOCK = "BIRD_FLOCK"
 
 
 class CameraSlewedPayload(BaseModel):
@@ -85,9 +85,9 @@ class CameraSlewedPayload(BaseModel):
 
 
 class ClassificationResult(StrEnum):
-    exact = "EXACT"
-    category = "CATEGORY"
-    wrong = "WRONG"
+    EXACT = "EXACT"
+    CATEGORY = "CATEGORY"
+    WRONG = "WRONG"
 
 
 class ClientMeta(BaseModel):
@@ -115,24 +115,24 @@ class CompleteSessionRequest(BaseModel):
 
 
 class ContactClass(StrEnum):
-    quad_small = "QUAD_SMALL"
-    quad_heavy = "QUAD_HEAVY"
-    fpv = "FPV"
-    fixed_wing_small = "FIXED_WING_SMALL"
-    loitering_generic = "LOITERING_GENERIC"
-    bird_small = "BIRD_SMALL"
-    bird_large = "BIRD_LARGE"
-    friendly_quad = "FRIENDLY_QUAD"
-    civilian_hobby = "CIVILIAN_HOBBY"
-    helicopter_friendly = "HELICOPTER_FRIENDLY"
+    QUAD_SMALL = "QUAD_SMALL"
+    QUAD_HEAVY = "QUAD_HEAVY"
+    FPV = "FPV"
+    FIXED_WING_SMALL = "FIXED_WING_SMALL"
+    LOITERING_GENERIC = "LOITERING_GENERIC"
+    BIRD_SMALL = "BIRD_SMALL"
+    BIRD_LARGE = "BIRD_LARGE"
+    FRIENDLY_QUAD = "FRIENDLY_QUAD"
+    CIVILIAN_HOBBY = "CIVILIAN_HOBBY"
+    HELICOPTER_FRIENDLY = "HELICOPTER_FRIENDLY"
 
 
 class ContactOutcome(StrEnum):
-    neutralised = "NEUTRALISED"
-    leaked = "LEAKED"
-    ignored_ok = "IGNORED_OK"
-    wrongly_engaged = "WRONGLY_ENGAGED"
-    fratricide = "FRATRICIDE"
+    NEUTRALISED = "NEUTRALISED"
+    LEAKED = "LEAKED"
+    IGNORED_OK = "IGNORED_OK"
+    WRONGLY_ENGAGED = "WRONGLY_ENGAGED"
+    FRATRICIDE = "FRATRICIDE"
 
 
 class ContactReachedAssetPayload(BaseModel):
@@ -147,10 +147,10 @@ class TrackId(RootModel[str]):
 
 
 class ControlLink(StrEnum):
-    rf_manual = "RF_MANUAL"
-    autonomous_gnss = "AUTONOMOUS_GNSS"
-    fibre_optic = "FIBRE_OPTIC"
-    none = "NONE"
+    RF_MANUAL = "RF_MANUAL"
+    AUTONOMOUS_GNSS = "AUTONOMOUS_GNSS"
+    FIBRE_OPTIC = "FIBRE_OPTIC"
+    NONE = "NONE"
 
 
 class DevLoginRequest(BaseModel):
@@ -161,9 +161,9 @@ class DevLoginRequest(BaseModel):
 
 
 class EffectorKind(StrEnum):
-    ew_jam = "EW_JAM"
-    ew_spoof = "EW_SPOOF"
-    intercept = "INTERCEPT"
+    EW_JAM = "EW_JAM"
+    EW_SPOOF = "EW_SPOOF"
+    INTERCEPT = "INTERCEPT"
 
 
 class Emissions(BaseModel):
@@ -201,21 +201,21 @@ class EoIrSensor(BaseModel):
 
 
 class EoLevel(StrEnum):
-    detect = "DETECT"
-    recognise = "RECOGNISE"
-    identify = "IDENTIFY"
+    DETECT = "DETECT"
+    RECOGNISE = "RECOGNISE"
+    IDENTIFY = "IDENTIFY"
 
 
 class ErrorCode(StrEnum):
-    validation_error = "VALIDATION_ERROR"
-    implausible_events = "IMPLAUSIBLE_EVENTS"
-    unauthorized = "UNAUTHORIZED"
-    forbidden = "FORBIDDEN"
-    not_found = "NOT_FOUND"
-    session_not_active = "SESSION_NOT_ACTIVE"
-    rate_limited = "RATE_LIMITED"
-    llm_unavailable = "LLM_UNAVAILABLE"
-    internal = "INTERNAL"
+    VALIDATION_ERROR = "VALIDATION_ERROR"
+    IMPLAUSIBLE_EVENTS = "IMPLAUSIBLE_EVENTS"
+    UNAUTHORIZED = "UNAUTHORIZED"
+    FORBIDDEN = "FORBIDDEN"
+    NOT_FOUND = "NOT_FOUND"
+    SESSION_NOT_ACTIVE = "SESSION_NOT_ACTIVE"
+    RATE_LIMITED = "RATE_LIMITED"
+    LLM_UNAVAILABLE = "LLM_UNAVAILABLE"
+    INTERNAL = "INTERNAL"
 
 
 class EventBatchResponse(BaseModel):
@@ -227,32 +227,32 @@ class EventBatchResponse(BaseModel):
 
 
 class EventType(StrEnum):
-    session_started = "SESSION_STARTED"
-    contact_spawned = "CONTACT_SPAWNED"
-    contact_despawned = "CONTACT_DESPAWNED"
-    contact_reached_asset = "CONTACT_REACHED_ASSET"
-    contact_neutralised = "CONTACT_NEUTRALISED"
-    sensor_track_created = "SENSOR_TRACK_CREATED"
-    sensor_track_lost = "SENSOR_TRACK_LOST"
-    eo_identifiable = "EO_IDENTIFIABLE"
-    response_outcome = "RESPONSE_OUTCOME"
-    ai_suggestion_shown = "AI_SUGGESTION_SHOWN"
-    session_ended = "SESSION_ENDED"
-    track_selected = "TRACK_SELECTED"
-    camera_slewed = "CAMERA_SLEWED"
-    marked_detected = "MARKED_DETECTED"
-    classified = "CLASSIFIED"
-    affiliation_set = "AFFILIATION_SET"
-    response_ordered = "RESPONSE_ORDERED"
-    report_submitted = "REPORT_SUBMITTED"
-    ai_suggestion_accepted = "AI_SUGGESTION_ACCEPTED"
-    ai_suggestion_rejected = "AI_SUGGESTION_REJECTED"
+    SESSION_STARTED = "SESSION_STARTED"
+    CONTACT_SPAWNED = "CONTACT_SPAWNED"
+    CONTACT_DESPAWNED = "CONTACT_DESPAWNED"
+    CONTACT_REACHED_ASSET = "CONTACT_REACHED_ASSET"
+    CONTACT_NEUTRALISED = "CONTACT_NEUTRALISED"
+    SENSOR_TRACK_CREATED = "SENSOR_TRACK_CREATED"
+    SENSOR_TRACK_LOST = "SENSOR_TRACK_LOST"
+    EO_IDENTIFIABLE = "EO_IDENTIFIABLE"
+    RESPONSE_OUTCOME = "RESPONSE_OUTCOME"
+    AI_SUGGESTION_SHOWN = "AI_SUGGESTION_SHOWN"
+    SESSION_ENDED = "SESSION_ENDED"
+    TRACK_SELECTED = "TRACK_SELECTED"
+    CAMERA_SLEWED = "CAMERA_SLEWED"
+    MARKED_DETECTED = "MARKED_DETECTED"
+    CLASSIFIED = "CLASSIFIED"
+    AFFILIATION_SET = "AFFILIATION_SET"
+    RESPONSE_ORDERED = "RESPONSE_ORDERED"
+    REPORT_SUBMITTED = "REPORT_SUBMITTED"
+    AI_SUGGESTION_ACCEPTED = "AI_SUGGESTION_ACCEPTED"
+    AI_SUGGESTION_REJECTED = "AI_SUGGESTION_REJECTED"
 
 
 class FalseContactDensity(StrEnum):
-    low = "LOW"
-    med = "MED"
-    high = "HIGH"
+    LOW = "LOW"
+    MED = "MED"
+    HIGH = "HIGH"
 
 
 class HealthResponse(BaseModel):
@@ -265,12 +265,12 @@ class HealthResponse(BaseModel):
 
 
 class KillChainStage(StrEnum):
-    detect = "DETECT"
-    track = "TRACK"
-    identify = "IDENTIFY"
-    decide = "DECIDE"
-    respond = "RESPOND"
-    assess = "ASSESS"
+    DETECT = "DETECT"
+    TRACK = "TRACK"
+    IDENTIFY = "IDENTIFY"
+    DECIDE = "DECIDE"
+    RESPOND = "RESPOND"
+    ASSESS = "ASSESS"
 
 
 class LatLon(BaseModel):
@@ -293,11 +293,11 @@ class MarkedDetectedEvent(BaseModel):
 
 
 class NonThreatClass(StrEnum):
-    bird_small = "BIRD_SMALL"
-    bird_large = "BIRD_LARGE"
-    friendly_quad = "FRIENDLY_QUAD"
-    civilian_hobby = "CIVILIAN_HOBBY"
-    helicopter_friendly = "HELICOPTER_FRIENDLY"
+    BIRD_SMALL = "BIRD_SMALL"
+    BIRD_LARGE = "BIRD_LARGE"
+    FRIENDLY_QUAD = "FRIENDLY_QUAD"
+    CIVILIAN_HOBBY = "CIVILIAN_HOBBY"
+    HELICOPTER_FRIENDLY = "HELICOPTER_FRIENDLY"
 
 
 class Penalty(BaseModel):
@@ -335,25 +335,25 @@ class ReportLocation(BaseModel):
 
 
 class ReportedClass(StrEnum):
-    quad_small = "QUAD_SMALL"
-    quad_heavy = "QUAD_HEAVY"
-    fpv = "FPV"
-    fixed_wing_small = "FIXED_WING_SMALL"
-    loitering_generic = "LOITERING_GENERIC"
-    bird_small = "BIRD_SMALL"
-    bird_large = "BIRD_LARGE"
-    friendly_quad = "FRIENDLY_QUAD"
-    civilian_hobby = "CIVILIAN_HOBBY"
-    helicopter_friendly = "HELICOPTER_FRIENDLY"
-    unknown = "UNKNOWN"
+    QUAD_SMALL = "QUAD_SMALL"
+    QUAD_HEAVY = "QUAD_HEAVY"
+    FPV = "FPV"
+    FIXED_WING_SMALL = "FIXED_WING_SMALL"
+    LOITERING_GENERIC = "LOITERING_GENERIC"
+    BIRD_SMALL = "BIRD_SMALL"
+    BIRD_LARGE = "BIRD_LARGE"
+    FRIENDLY_QUAD = "FRIENDLY_QUAD"
+    CIVILIAN_HOBBY = "CIVILIAN_HOBBY"
+    HELICOPTER_FRIENDLY = "HELICOPTER_FRIENDLY"
+    UNKNOWN = "UNKNOWN"
 
 
 class ResponseKind(StrEnum):
-    monitor = "MONITOR"
-    report = "REPORT"
-    ew_jam = "EW_JAM"
-    ew_spoof = "EW_SPOOF"
-    intercept = "INTERCEPT"
+    MONITOR = "MONITOR"
+    REPORT = "REPORT"
+    EW_JAM = "EW_JAM"
+    EW_SPOOF = "EW_SPOOF"
+    INTERCEPT = "INTERCEPT"
 
 
 class ResponseOrderedPayload(BaseModel):
@@ -367,12 +367,12 @@ class ResponseOrderedPayload(BaseModel):
 
 
 class ResponseResult(StrEnum):
-    neutralised = "NEUTRALISED"
-    no_effect = "NO_EFFECT"
-    missed = "MISSED"
-    blocked_by_roe = "BLOCKED_BY_ROE"
-    out_of_range = "OUT_OF_RANGE"
-    cooldown = "COOLDOWN"
+    NEUTRALISED = "NEUTRALISED"
+    NO_EFFECT = "NO_EFFECT"
+    MISSED = "MISSED"
+    BLOCKED_BY_ROE = "BLOCKED_BY_ROE"
+    OUT_OF_RANGE = "OUT_OF_RANGE"
+    COOLDOWN = "COOLDOWN"
 
 
 class RfSensor(BaseModel):
@@ -389,15 +389,15 @@ class RfSensor(BaseModel):
 
 
 class Roe(StrEnum):
-    weapons_free = "WEAPONS_FREE"
-    weapons_tight = "WEAPONS_TIGHT"
-    weapons_hold = "WEAPONS_HOLD"
+    WEAPONS_FREE = "WEAPONS_FREE"
+    WEAPONS_TIGHT = "WEAPONS_TIGHT"
+    WEAPONS_HOLD = "WEAPONS_HOLD"
 
 
 class ScenarioKind(StrEnum):
-    scripted = "SCRIPTED"
-    generated = "GENERATED"
-    authored = "AUTHORED"
+    SCRIPTED = "SCRIPTED"
+    GENERATED = "GENERATED"
+    AUTHORED = "AUTHORED"
 
 
 class ScoreComponents(BaseModel):
@@ -412,9 +412,9 @@ class ScoreComponents(BaseModel):
 
 
 class SensorKind(StrEnum):
-    radar = "RADAR"
-    eo_ir = "EO_IR"
-    rf = "RF"
+    RADAR = "RADAR"
+    EO_IR = "EO_IR"
+    RF = "RF"
 
 
 class SensorTrackCreatedPayload(BaseModel):
@@ -428,9 +428,9 @@ class SensorTrackCreatedPayload(BaseModel):
 
 
 class SessionEndReason(StrEnum):
-    time_up = "TIME_UP"
-    all_resolved = "ALL_RESOLVED"
-    aborted = "ABORTED"
+    TIME_UP = "TIME_UP"
+    ALL_RESOLVED = "ALL_RESOLVED"
+    ABORTED = "ABORTED"
 
 
 class SessionEndedPayload(BaseModel):
@@ -441,8 +441,8 @@ class SessionEndedPayload(BaseModel):
 
 
 class SessionMode(StrEnum):
-    practice = "PRACTICE"
-    assessment = "ASSESSMENT"
+    PRACTICE = "PRACTICE"
+    ASSESSMENT = "ASSESSMENT"
 
 
 class SessionStartedPayload(BaseModel):
@@ -455,10 +455,10 @@ class SessionStartedPayload(BaseModel):
 
 
 class SessionStatus(StrEnum):
-    created = "CREATED"
-    active = "ACTIVE"
-    completed = "COMPLETED"
-    abandoned = "ABANDONED"
+    CREATED = "CREATED"
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    ABANDONED = "ABANDONED"
 
 
 class SunAzEl(BaseModel):
@@ -470,17 +470,17 @@ class SunAzEl(BaseModel):
 
 
 class SystemEventType(StrEnum):
-    session_started = "SESSION_STARTED"
-    contact_spawned = "CONTACT_SPAWNED"
-    contact_despawned = "CONTACT_DESPAWNED"
-    contact_reached_asset = "CONTACT_REACHED_ASSET"
-    contact_neutralised = "CONTACT_NEUTRALISED"
-    sensor_track_created = "SENSOR_TRACK_CREATED"
-    sensor_track_lost = "SENSOR_TRACK_LOST"
-    eo_identifiable = "EO_IDENTIFIABLE"
-    response_outcome = "RESPONSE_OUTCOME"
-    ai_suggestion_shown = "AI_SUGGESTION_SHOWN"
-    session_ended = "SESSION_ENDED"
+    SESSION_STARTED = "SESSION_STARTED"
+    CONTACT_SPAWNED = "CONTACT_SPAWNED"
+    CONTACT_DESPAWNED = "CONTACT_DESPAWNED"
+    CONTACT_REACHED_ASSET = "CONTACT_REACHED_ASSET"
+    CONTACT_NEUTRALISED = "CONTACT_NEUTRALISED"
+    SENSOR_TRACK_CREATED = "SENSOR_TRACK_CREATED"
+    SENSOR_TRACK_LOST = "SENSOR_TRACK_LOST"
+    EO_IDENTIFIABLE = "EO_IDENTIFIABLE"
+    RESPONSE_OUTCOME = "RESPONSE_OUTCOME"
+    AI_SUGGESTION_SHOWN = "AI_SUGGESTION_SHOWN"
+    SESSION_ENDED = "SESSION_ENDED"
 
 
 class TerrainRef(BaseModel):
@@ -492,11 +492,11 @@ class TerrainRef(BaseModel):
 
 
 class ThreatClass(StrEnum):
-    quad_small = "QUAD_SMALL"
-    quad_heavy = "QUAD_HEAVY"
-    fpv = "FPV"
-    fixed_wing_small = "FIXED_WING_SMALL"
-    loitering_generic = "LOITERING_GENERIC"
+    QUAD_SMALL = "QUAD_SMALL"
+    QUAD_HEAVY = "QUAD_HEAVY"
+    FPV = "FPV"
+    FIXED_WING_SMALL = "FIXED_WING_SMALL"
+    LOITERING_GENERIC = "LOITERING_GENERIC"
 
 
 ThreatMixAdditionalProperty = TypeAliasType(
@@ -514,9 +514,9 @@ class TokenResponse(BaseModel):
 
 
 class TrackLostReason(StrEnum):
-    misses = "MISSES"
-    los = "LOS"
-    out_of_range = "OUT_OF_RANGE"
+    MISSES = "MISSES"
+    LOS = "LOS"
+    OUT_OF_RANGE = "OUT_OF_RANGE"
 
 
 class TrackSelectedEvent(BaseModel):
@@ -531,15 +531,15 @@ class TrackSelectedEvent(BaseModel):
 
 
 class TraineeEventType(StrEnum):
-    track_selected = "TRACK_SELECTED"
-    camera_slewed = "CAMERA_SLEWED"
-    marked_detected = "MARKED_DETECTED"
-    classified = "CLASSIFIED"
-    affiliation_set = "AFFILIATION_SET"
-    response_ordered = "RESPONSE_ORDERED"
-    report_submitted = "REPORT_SUBMITTED"
-    ai_suggestion_accepted = "AI_SUGGESTION_ACCEPTED"
-    ai_suggestion_rejected = "AI_SUGGESTION_REJECTED"
+    TRACK_SELECTED = "TRACK_SELECTED"
+    CAMERA_SLEWED = "CAMERA_SLEWED"
+    MARKED_DETECTED = "MARKED_DETECTED"
+    CLASSIFIED = "CLASSIFIED"
+    AFFILIATION_SET = "AFFILIATION_SET"
+    RESPONSE_ORDERED = "RESPONSE_ORDERED"
+    REPORT_SUBMITTED = "REPORT_SUBMITTED"
+    AI_SUGGESTION_ACCEPTED = "AI_SUGGESTION_ACCEPTED"
+    AI_SUGGESTION_REJECTED = "AI_SUGGESTION_REJECTED"
 
 
 class UnitRef(BaseModel):
@@ -551,15 +551,15 @@ class UnitRef(BaseModel):
 
 
 class UserRole(StrEnum):
-    trainee = "TRAINEE"
-    instructor = "INSTRUCTOR"
-    admin = "ADMIN"
+    TRAINEE = "TRAINEE"
+    INSTRUCTOR = "INSTRUCTOR"
+    ADMIN = "ADMIN"
 
 
 class WaypointAction(StrEnum):
-    drop = "DROP"
-    dive = "DIVE"
-    rth = "RTH"
+    DROP = "DROP"
+    DIVE = "DIVE"
+    RTH = "RTH"
 
 
 class Weather(BaseModel):
@@ -574,10 +574,10 @@ class Weather(BaseModel):
 
 
 class ZoneKind(StrEnum):
-    protected_asset = "PROTECTED_ASSET"
-    no_kinetic = "NO_KINETIC"
-    border_line = "BORDER_LINE"
-    sensor_site = "SENSOR_SITE"
+    PROTECTED_ASSET = "PROTECTED_ASSET"
+    NO_KINETIC = "NO_KINETIC"
+    BORDER_LINE = "BORDER_LINE"
+    SENSOR_SITE = "SENSOR_SITE"
 
 
 class AffiliationSetEvent(BaseModel):
