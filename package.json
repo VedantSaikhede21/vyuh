@@ -1,0 +1,26 @@
+{
+  "name": "vyuh",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.11.2",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter \"./apps/*\" dev",
+    "lint": "eslint . && prettier --check . && pnpm -r --if-present typecheck",
+    "format": "prettier --write .",
+    "test": "pnpm -r --filter \"./packages/*\" test",
+    "gen:schemas": "pnpm --filter @vyuh/shared export:jsonschema && pnpm --filter @vyuh/api gen:pydantic",
+    "e2e": "echo \"e2e: Playwright suite arrives in Phase 1 (placeholder)\""
+  },
+  "devDependencies": {
+    "@eslint/js": "~9.39.5",
+    "eslint": "~9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.2"
+  }
+}

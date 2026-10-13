@@ -1,0 +1,8 @@
+pnpm-lock.yaml
+node_modules
+.next
+dist
+coverage
+apps/api
+packages/shared/schema
+*.md
