@@ -1,0 +1,23 @@
+{
+  "name": "@vyuh/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema/vyuh.schema.json": "./schema/vyuh.schema.json",
+    "./examples/*": "./examples/*"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p .",
+    "export:jsonschema": "node scripts/export-jsonschema.ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "vitest": "^5.0.4"
+  }
+}

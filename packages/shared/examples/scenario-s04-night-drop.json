@@ -1,0 +1,97 @@
+{
+  "id": "S04",
+  "schemaVersion": 1,
+  "name": "Night Drop",
+  "seed": 40417,
+  "difficulty": 3,
+  "briefing": "## Situation\nForward post on open plains near a border fence. Reports of night-time drone drops in the area.\n## ROE\nWEAPONS TIGHT — engage only positively identified hostiles. No kinetic response over the village.",
+  "terrain": { "preset": "PUNJAB_PLAINS", "origin": { "lat": 30.9, "lon": 74.5 } },
+  "environment": {
+    "date": "2026-11-20",
+    "time": "01:30",
+    "isNight": true,
+    "weather": {
+      "visibilityM": 4000,
+      "rainMmph": 0,
+      "windMps": 3,
+      "windDirDeg": 300,
+      "cloudPct": 20
+    }
+  },
+  "roe": "WEAPONS_TIGHT",
+  "zones": [
+    {
+      "id": "z1",
+      "kind": "BORDER_LINE",
+      "polyline": [
+        [-3000, 2500],
+        [3000, 2600]
+      ]
+    },
+    {
+      "id": "z2",
+      "kind": "NO_KINETIC",
+      "polygon": [
+        [800, -400],
+        [1400, -400],
+        [1400, 200],
+        [800, 200]
+      ]
+    }
+  ],
+  "assets": [{ "id": "a1", "name": "Post Alpha", "x": 0, "z": 0, "radiusM": 150 }],
+  "sensors": [
+    { "id": "rad1", "kind": "RADAR", "x": 0, "y": 6, "z": 0, "refRangeM": 3000, "scanPeriodS": 2 },
+    {
+      "id": "eo1",
+      "kind": "EO_IR",
+      "x": 0,
+      "y": 8,
+      "z": 0,
+      "fovDegMin": 1.5,
+      "fovDegMax": 30,
+      "resolution": [640, 360]
+    },
+    { "id": "rf1", "kind": "RF", "x": 0, "y": 4, "z": 0, "rangeM": 4000, "bearingErrDeg": 7 }
+  ],
+  "effectors": [
+    { "id": "jam1", "kind": "EW_JAM", "x": 0, "z": 0, "rangeM": 1500, "cooldownS": 10 },
+    { "id": "int1", "kind": "INTERCEPT", "x": 0, "z": 0, "rangeM": 1200, "ammo": 4, "cooldownS": 6 }
+  ],
+  "contacts": [
+    {
+      "id": "c01",
+      "class": "QUAD_HEAVY",
+      "isThreat": true,
+      "affiliation": "HOSTILE",
+      "controlLink": "RF_MANUAL",
+      "behaviour": "SMUGGLING_DROP",
+      "spawnTMs": 20000,
+      "path": [
+        { "x": -600, "y": 40, "z": 3200, "speedMps": 12 },
+        { "x": -300, "y": 30, "z": 1800, "speedMps": 10, "holdS": 15, "action": "DROP" },
+        { "x": -600, "y": 40, "z": 3200, "speedMps": 12, "action": "RTH" }
+      ],
+      "emissions": { "rfActive": true, "rfBand": "2.4GHz" },
+      "aiSuggestion": { "suggestedClass": "QUAD_HEAVY", "confidence": 0.82 }
+    },
+    {
+      "id": "c02",
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "groupId": "g1",
+      "spawnTMs": 0,
+      "path": [
+        { "x": 1500, "y": 60, "z": 2200, "speedMps": 9 },
+        { "x": 900, "y": 45, "z": 1200, "speedMps": 8 },
+        { "x": -200, "y": 70, "z": 600, "speedMps": 9 }
+      ],
+      "emissions": { "rfActive": false }
+    }
+  ],
+  "durationS": 300,
+  "scoringTreeId": "default_v1"
+}

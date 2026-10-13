@@ -1,0 +1,2532 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vyuh.schema.json",
+  "title": "VyuhSchemas",
+  "description": "GENERATED from packages/shared (zod). Do not edit — run `pnpm gen:schemas`.",
+  "$defs": {
+    "Activity": {
+      "type": "string",
+      "enum": [
+        "APPROACHING",
+        "LOITERING",
+        "DEPARTING",
+        "HOVERING",
+        "UNKNOWN"
+      ]
+    },
+    "Affiliation": {
+      "type": "string",
+      "enum": [
+        "HOSTILE",
+        "FRIENDLY",
+        "NEUTRAL",
+        "UNKNOWN"
+      ]
+    },
+    "AffiliationSetEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "AFFILIATION_SET"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "affiliation": {
+              "$ref": "#/$defs/Affiliation"
+            }
+          },
+          "required": [
+            "affiliation"
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "trackId",
+        "payload"
+      ]
+    },
+    "AiSuggestion": {
+      "type": "object",
+      "properties": {
+        "suggestedClass": {
+          "$ref": "#/$defs/ContactClass"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "suggestedClass",
+        "confidence"
+      ]
+    },
+    "AiSuggestionAcceptedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "AI_SUGGESTION_ACCEPTED"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "$ref": "#/$defs/AiSuggestionPayload"
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "trackId",
+        "payload"
+      ]
+    },
+    "AiSuggestionPayload": {
+      "type": "object",
+      "properties": {
+        "suggestedClass": {
+          "$ref": "#/$defs/ContactClass"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "suggestedClass",
+        "confidence"
+      ]
+    },
+    "AiSuggestionRejectedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "AI_SUGGESTION_REJECTED"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "$ref": "#/$defs/AiSuggestionPayload"
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "trackId",
+        "payload"
+      ]
+    },
+    "AiSuggestionShownEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "AI_SUGGESTION_SHOWN"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "$ref": "#/$defs/AiSuggestionPayload"
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "trackId",
+        "payload"
+      ]
+    },
+    "AltitudeBand": {
+      "type": "string",
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ]
+    },
+    "AreaZone": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "$ref": "#/$defs/AreaZoneKind"
+        },
+        "polygon": {
+          "minItems": 3,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Point2"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "polygon"
+      ]
+    },
+    "AreaZoneKind": {
+      "type": "string",
+      "enum": [
+        "PROTECTED_ASSET",
+        "NO_KINETIC",
+        "SENSOR_SITE"
+      ]
+    },
+    "Asset": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "x": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "radiusM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "x",
+        "z",
+        "radiusM"
+      ]
+    },
+    "Behaviour": {
+      "type": "string",
+      "enum": [
+        "RECON_LOITER",
+        "SMUGGLING_DROP",
+        "ATTACK_RUN",
+        "SWARM_SATURATION",
+        "DECOY",
+        "TRANSIT",
+        "FRIENDLY_PATROL",
+        "BIRD_FLOCK"
+      ]
+    },
+    "BorderLineZone": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "const": "BORDER_LINE"
+        },
+        "polyline": {
+          "minItems": 2,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Point2"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "polyline"
+      ]
+    },
+    "CameraSlewedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "CAMERA_SLEWED"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "azDeg": {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMaximum": 360
+            },
+            "elDeg": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "zoom": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "azDeg",
+            "elDeg",
+            "zoom"
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "payload"
+      ]
+    },
+    "ClassificationResult": {
+      "type": "string",
+      "enum": [
+        "EXACT",
+        "CATEGORY",
+        "WRONG"
+      ]
+    },
+    "ClassifiedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "CLASSIFIED"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "class": {
+              "$ref": "#/$defs/ContactClass"
+            }
+          },
+          "required": [
+            "class"
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "trackId",
+        "payload"
+      ]
+    },
+    "ClientMeta": {
+      "type": "object",
+      "properties": {
+        "avgFps": {
+          "type": "number",
+          "minimum": 0
+        },
+        "gpu": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "browser": {
+          "type": "string",
+          "maxLength": 200
+        }
+      }
+    },
+    "CompleteSessionRequest": {
+      "type": "object",
+      "properties": {
+        "endTMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "clientMeta": {
+          "$ref": "#/$defs/ClientMeta"
+        }
+      },
+      "required": [
+        "endTMs",
+        "clientMeta"
+      ]
+    },
+    "ContactClass": {
+      "type": "string",
+      "enum": [
+        "QUAD_SMALL",
+        "QUAD_HEAVY",
+        "FPV",
+        "FIXED_WING_SMALL",
+        "LOITERING_GENERIC",
+        "BIRD_SMALL",
+        "BIRD_LARGE",
+        "FRIENDLY_QUAD",
+        "CIVILIAN_HOBBY",
+        "HELICOPTER_FRIENDLY"
+      ]
+    },
+    "ContactDespawnedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "CONTACT_DESPAWNED"
+        },
+        "contactId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "$ref": "#/$defs/EmptyPayload"
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "contactId",
+        "payload"
+      ]
+    },
+    "ContactNeutralisedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "CONTACT_NEUTRALISED"
+        },
+        "contactId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "by": {
+              "$ref": "#/$defs/ResponseKind"
+            }
+          },
+          "required": [
+            "by"
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "contactId",
+        "payload"
+      ]
+    },
+    "ContactOutcome": {
+      "type": "string",
+      "enum": [
+        "NEUTRALISED",
+        "LEAKED",
+        "IGNORED_OK",
+        "WRONGLY_ENGAGED",
+        "FRATRICIDE"
+      ]
+    },
+    "ContactReachedAssetEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "CONTACT_REACHED_ASSET"
+        },
+        "contactId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "assetId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "assetId"
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "contactId",
+        "payload"
+      ]
+    },
+    "ContactReport": {
+      "type": "object",
+      "properties": {
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "trackIds": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "class": {
+          "$ref": "#/$defs/ReportedClass"
+        },
+        "affiliation": {
+          "$ref": "#/$defs/Affiliation"
+        },
+        "location": {
+          "$ref": "#/$defs/ReportLocation"
+        },
+        "headingDeg": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 360
+        },
+        "altitudeBand": {
+          "$ref": "#/$defs/AltitudeBand"
+        },
+        "activity": {
+          "$ref": "#/$defs/Activity"
+        }
+      },
+      "required": [
+        "tMs",
+        "trackIds",
+        "count",
+        "class",
+        "affiliation",
+        "location",
+        "headingDeg",
+        "altitudeBand",
+        "activity"
+      ]
+    },
+    "ContactSpawnedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "CONTACT_SPAWNED"
+        },
+        "contactId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "$ref": "#/$defs/EmptyPayload"
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "contactId",
+        "payload"
+      ]
+    },
+    "ContactSpec": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "class": {
+          "$ref": "#/$defs/ContactClass"
+        },
+        "isThreat": {
+          "type": "boolean"
+        },
+        "affiliation": {
+          "$ref": "#/$defs/Affiliation"
+        },
+        "controlLink": {
+          "$ref": "#/$defs/ControlLink"
+        },
+        "behaviour": {
+          "$ref": "#/$defs/Behaviour"
+        },
+        "spawnTMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "despawnTMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "groupId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Waypoint"
+          }
+        },
+        "emissions": {
+          "$ref": "#/$defs/Emissions"
+        },
+        "aiSuggestion": {
+          "$ref": "#/$defs/AiSuggestion"
+        }
+      },
+      "required": [
+        "id",
+        "class",
+        "isThreat",
+        "affiliation",
+        "controlLink",
+        "behaviour",
+        "spawnTMs",
+        "path",
+        "emissions"
+      ]
+    },
+    "ControlLink": {
+      "type": "string",
+      "enum": [
+        "RF_MANUAL",
+        "AUTONOMOUS_GNSS",
+        "FIBRE_OPTIC",
+        "NONE"
+      ]
+    },
+    "CreateSessionRequest": {
+      "type": "object",
+      "properties": {
+        "scenarioId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "mode": {
+          "$ref": "#/$defs/SessionMode"
+        }
+      },
+      "required": [
+        "scenarioId",
+        "mode"
+      ]
+    },
+    "CreateSessionResponse": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "scenario": {
+          "$ref": "#/$defs/Scenario"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        }
+      },
+      "required": [
+        "sessionId",
+        "scenario",
+        "startedAt"
+      ]
+    },
+    "DevLoginRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 254
+        }
+      },
+      "required": [
+        "email"
+      ]
+    },
+    "Difficulty": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "EffectorConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "$ref": "#/$defs/EffectorKind"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0
+        },
+        "z": {
+          "type": "number"
+        },
+        "rangeM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "cooldownS": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ammo": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "x",
+        "z",
+        "rangeM",
+        "cooldownS"
+      ]
+    },
+    "EffectorKind": {
+      "type": "string",
+      "enum": [
+        "EW_JAM",
+        "EW_SPOOF",
+        "INTERCEPT"
+      ]
+    },
+    "Emissions": {
+      "type": "object",
+      "properties": {
+        "rfActive": {
+          "type": "boolean"
+        },
+        "rfBand": {
+          "type": "string"
+        },
+        "friendlyIdCode": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rfActive"
+      ]
+    },
+    "EmptyPayload": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "Environment": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+        },
+        "time": {
+          "$ref": "#/$defs/TimeOfDay"
+        },
+        "isNight": {
+          "type": "boolean"
+        },
+        "weather": {
+          "$ref": "#/$defs/Weather"
+        },
+        "sunAzEl": {
+          "$ref": "#/$defs/SunAzEl"
+        }
+      },
+      "required": [
+        "date",
+        "time",
+        "isNight",
+        "weather"
+      ]
+    },
+    "EoIdentifiableEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "EO_IDENTIFIABLE"
+        },
+        "contactId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "$ref": "#/$defs/EoLevel"
+            },
+            "rangeM": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "level",
+            "rangeM"
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "contactId",
+        "payload"
+      ]
+    },
+    "EoIrSensor": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0
+        },
+        "z": {
+          "type": "number"
+        },
+        "kind": {
+          "type": "string",
+          "const": "EO_IR"
+        },
+        "fovDegMin": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fovDegMax": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "resolution": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "id",
+        "x",
+        "y",
+        "z",
+        "kind",
+        "fovDegMin",
+        "fovDegMax",
+        "resolution"
+      ]
+    },
+    "EoLevel": {
+      "type": "string",
+      "enum": [
+        "DETECT",
+        "RECOGNISE",
+        "IDENTIFY"
+      ]
+    },
+    "ErrorBody": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/ErrorCode"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "details"
+      ]
+    },
+    "ErrorCode": {
+      "type": "string",
+      "enum": [
+        "VALIDATION_ERROR",
+        "IMPLAUSIBLE_EVENTS",
+        "UNAUTHORIZED",
+        "FORBIDDEN",
+        "NOT_FOUND",
+        "SESSION_NOT_ACTIVE",
+        "RATE_LIMITED",
+        "LLM_UNAVAILABLE",
+        "INTERNAL"
+      ]
+    },
+    "ErrorEnvelope": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/ErrorBody"
+        }
+      },
+      "required": [
+        "error"
+      ]
+    },
+    "EventBatchRequest": {
+      "type": "object",
+      "properties": {
+        "batchSeq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "events": {
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SimEvent"
+          }
+        }
+      },
+      "required": [
+        "batchSeq",
+        "events"
+      ]
+    },
+    "EventBatchResponse": {
+      "type": "object",
+      "properties": {
+        "accepted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "lastSeq": {
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "accepted",
+        "lastSeq"
+      ]
+    },
+    "EventType": {
+      "type": "string",
+      "enum": [
+        "SESSION_STARTED",
+        "CONTACT_SPAWNED",
+        "CONTACT_DESPAWNED",
+        "CONTACT_REACHED_ASSET",
+        "CONTACT_NEUTRALISED",
+        "SENSOR_TRACK_CREATED",
+        "SENSOR_TRACK_LOST",
+        "EO_IDENTIFIABLE",
+        "RESPONSE_OUTCOME",
+        "AI_SUGGESTION_SHOWN",
+        "SESSION_ENDED",
+        "TRACK_SELECTED",
+        "CAMERA_SLEWED",
+        "MARKED_DETECTED",
+        "CLASSIFIED",
+        "AFFILIATION_SET",
+        "RESPONSE_ORDERED",
+        "REPORT_SUBMITTED",
+        "AI_SUGGESTION_ACCEPTED",
+        "AI_SUGGESTION_REJECTED"
+      ]
+    },
+    "FalseContactDensity": {
+      "type": "string",
+      "enum": [
+        "LOW",
+        "MED",
+        "HIGH"
+      ]
+    },
+    "GenerateScenarioResponse": {
+      "type": "object",
+      "properties": {
+        "scenarioId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "scenario": {
+          "$ref": "#/$defs/Scenario"
+        }
+      },
+      "required": [
+        "scenarioId",
+        "scenario"
+      ]
+    },
+    "HealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "env": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "env",
+        "version"
+      ]
+    },
+    "KillChainStage": {
+      "type": "string",
+      "enum": [
+        "DETECT",
+        "TRACK",
+        "IDENTIFY",
+        "DECIDE",
+        "RESPOND",
+        "ASSESS"
+      ]
+    },
+    "LatLon": {
+      "type": "object",
+      "properties": {
+        "lat": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "lon": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        }
+      },
+      "required": [
+        "lat",
+        "lon"
+      ]
+    },
+    "MarkedDetectedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "MARKED_DETECTED"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "$ref": "#/$defs/EmptyPayload"
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "trackId",
+        "payload"
+      ]
+    },
+    "MeResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role": {
+          "$ref": "#/$defs/UserRole"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnitRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rating": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "isGuest": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "role",
+        "unit",
+        "rating",
+        "isGuest"
+      ]
+    },
+    "NonThreatClass": {
+      "type": "string",
+      "enum": [
+        "BIRD_SMALL",
+        "BIRD_LARGE",
+        "FRIENDLY_QUAD",
+        "CIVILIAN_HOBBY",
+        "HELICOPTER_FRIENDLY"
+      ]
+    },
+    "Penalty": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "points": {
+          "type": "number"
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "contactId": {
+          "type": "string"
+        },
+        "feedback": {
+          "type": "string"
+        },
+        "unavoidable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "points",
+        "feedback"
+      ]
+    },
+    "PerContactMetrics": {
+      "type": "object",
+      "properties": {
+        "contactId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "isThreat": {
+          "type": "boolean"
+        },
+        "firstDetectableTMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "traineeDetectedTMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "detectionLatencyS": {
+          "type": "number",
+          "minimum": 0
+        },
+        "classifiedAs": {
+          "$ref": "#/$defs/ContactClass"
+        },
+        "classificationCorrect": {
+          "$ref": "#/$defs/ClassificationResult"
+        },
+        "identifiableWhenClassified": {
+          "type": "boolean"
+        },
+        "responses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResponseKind"
+          }
+        },
+        "responseAppropriate": {
+          "type": "boolean"
+        },
+        "outcome": {
+          "$ref": "#/$defs/ContactOutcome"
+        },
+        "aiSuggestionShown": {
+          "type": "boolean"
+        },
+        "aiSuggestionAccepted": {
+          "type": "boolean"
+        },
+        "aiSuggestionCorrect": {
+          "type": "boolean"
+        },
+        "points": {
+          "type": "number"
+        },
+        "feedback": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "contactId",
+        "isThreat",
+        "responses",
+        "feedback"
+      ]
+    },
+    "Point2": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "RadarSensor": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0
+        },
+        "z": {
+          "type": "number"
+        },
+        "kind": {
+          "type": "string",
+          "const": "RADAR"
+        },
+        "refRangeM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "scanPeriodS": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "x",
+        "y",
+        "z",
+        "kind",
+        "refRangeM",
+        "scanPeriodS"
+      ]
+    },
+    "ReportLocation": {
+      "type": "object",
+      "properties": {
+        "bearingDeg": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 360
+        },
+        "rangeM": {
+          "type": "number",
+          "minimum": 0
+        },
+        "fromSensorId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "bearingDeg",
+        "rangeM",
+        "fromSensorId"
+      ]
+    },
+    "ReportSubmittedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "REPORT_SUBMITTED"
+        },
+        "payload": {
+          "$ref": "#/$defs/ContactReport"
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "payload"
+      ]
+    },
+    "ReportedClass": {
+      "type": "string",
+      "enum": [
+        "QUAD_SMALL",
+        "QUAD_HEAVY",
+        "FPV",
+        "FIXED_WING_SMALL",
+        "LOITERING_GENERIC",
+        "BIRD_SMALL",
+        "BIRD_LARGE",
+        "FRIENDLY_QUAD",
+        "CIVILIAN_HOBBY",
+        "HELICOPTER_FRIENDLY",
+        "UNKNOWN"
+      ]
+    },
+    "ResponseKind": {
+      "type": "string",
+      "enum": [
+        "MONITOR",
+        "REPORT",
+        "EW_JAM",
+        "EW_SPOOF",
+        "INTERCEPT"
+      ]
+    },
+    "ResponseOrderedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "RESPONSE_ORDERED"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "response": {
+              "$ref": "#/$defs/ResponseKind"
+            },
+            "effectorId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "response"
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "trackId",
+        "payload"
+      ]
+    },
+    "ResponseOutcomeEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "RESPONSE_OUTCOME"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "contactId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "response": {
+              "$ref": "#/$defs/ResponseKind"
+            },
+            "result": {
+              "$ref": "#/$defs/ResponseResult"
+            },
+            "collateral": {
+              "type": "object",
+              "properties": {
+                "contactId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                }
+              },
+              "required": [
+                "contactId"
+              ]
+            }
+          },
+          "required": [
+            "response",
+            "result"
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "trackId",
+        "contactId",
+        "payload"
+      ]
+    },
+    "ResponseResult": {
+      "type": "string",
+      "enum": [
+        "NEUTRALISED",
+        "NO_EFFECT",
+        "MISSED",
+        "BLOCKED_BY_ROE",
+        "OUT_OF_RANGE",
+        "COOLDOWN"
+      ]
+    },
+    "RfSensor": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0
+        },
+        "z": {
+          "type": "number"
+        },
+        "kind": {
+          "type": "string",
+          "const": "RF"
+        },
+        "rangeM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "bearingErrDeg": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "x",
+        "y",
+        "z",
+        "kind",
+        "rangeM",
+        "bearingErrDeg"
+      ]
+    },
+    "Roe": {
+      "type": "string",
+      "enum": [
+        "WEAPONS_FREE",
+        "WEAPONS_TIGHT",
+        "WEAPONS_HOLD"
+      ]
+    },
+    "Scenario": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "briefing": {
+          "type": "string"
+        },
+        "seed": {
+          "$ref": "#/$defs/Seed"
+        },
+        "difficulty": {
+          "$ref": "#/$defs/Difficulty"
+        },
+        "request": {
+          "$ref": "#/$defs/ScenarioRequest"
+        },
+        "terrain": {
+          "$ref": "#/$defs/TerrainRef"
+        },
+        "environment": {
+          "$ref": "#/$defs/Environment"
+        },
+        "roe": {
+          "$ref": "#/$defs/Roe"
+        },
+        "zones": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Zone"
+          }
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Asset"
+          }
+        },
+        "sensors": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SensorConfig"
+          }
+        },
+        "effectors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EffectorConfig"
+          }
+        },
+        "contacts": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContactSpec"
+          }
+        },
+        "durationS": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 3600
+        },
+        "scoringTreeId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "schemaVersion",
+        "name",
+        "briefing",
+        "seed",
+        "difficulty",
+        "terrain",
+        "environment",
+        "roe",
+        "zones",
+        "assets",
+        "sensors",
+        "effectors",
+        "contacts",
+        "durationS",
+        "scoringTreeId"
+      ]
+    },
+    "ScenarioKind": {
+      "type": "string",
+      "enum": [
+        "SCRIPTED",
+        "GENERATED",
+        "AUTHORED"
+      ]
+    },
+    "ScenarioRequest": {
+      "type": "object",
+      "properties": {
+        "terrainPreset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timeOfDay": {
+          "$ref": "#/$defs/TimeOfDay"
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+        },
+        "weather": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Weather"
+            },
+            {
+              "type": "string",
+              "const": "LIVE"
+            }
+          ]
+        },
+        "difficulty": {
+          "$ref": "#/$defs/Difficulty"
+        },
+        "seed": {
+          "$ref": "#/$defs/Seed"
+        },
+        "threatMix": {
+          "$ref": "#/$defs/ThreatMix"
+        },
+        "swarmSize": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "falseContactDensity": {
+          "$ref": "#/$defs/FalseContactDensity"
+        },
+        "aiAssistAccuracy": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "durationS": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 3600
+        },
+        "roe": {
+          "$ref": "#/$defs/Roe"
+        }
+      },
+      "required": [
+        "terrainPreset",
+        "timeOfDay",
+        "weather",
+        "difficulty",
+        "seed",
+        "durationS",
+        "roe"
+      ]
+    },
+    "Score": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "components": {
+          "$ref": "#/$defs/ScoreComponents"
+        },
+        "penalties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Penalty"
+          }
+        },
+        "perContact": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PerContactMetrics"
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        "treeVersion": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "total",
+        "components",
+        "penalties",
+        "perContact",
+        "metrics",
+        "treeVersion"
+      ]
+    },
+    "ScoreComponents": {
+      "type": "object",
+      "properties": {
+        "detection": {
+          "type": "number"
+        },
+        "classification": {
+          "type": "number"
+        },
+        "decision": {
+          "type": "number"
+        },
+        "report": {
+          "type": "number"
+        },
+        "efficiency": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "detection",
+        "classification",
+        "decision",
+        "report",
+        "efficiency"
+      ]
+    },
+    "Seed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "SensorConfig": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/RadarSensor"
+        },
+        {
+          "$ref": "#/$defs/EoIrSensor"
+        },
+        {
+          "$ref": "#/$defs/RfSensor"
+        }
+      ]
+    },
+    "SensorKind": {
+      "type": "string",
+      "enum": [
+        "RADAR",
+        "EO_IR",
+        "RF"
+      ]
+    },
+    "SensorTrackCreatedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "SENSOR_TRACK_CREATED"
+        },
+        "contactId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "sensorId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "sensorKind": {
+              "$ref": "#/$defs/SensorKind"
+            },
+            "rangeM": {
+              "type": "number",
+              "minimum": 0
+            },
+            "bearingDeg": {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMaximum": 360
+            }
+          },
+          "required": [
+            "sensorId",
+            "sensorKind",
+            "bearingDeg"
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "contactId",
+        "trackId",
+        "payload"
+      ]
+    },
+    "SensorTrackLostEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "SENSOR_TRACK_LOST"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "contactId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "$ref": "#/$defs/TrackLostReason"
+            }
+          },
+          "required": [
+            "reason"
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "trackId",
+        "payload"
+      ]
+    },
+    "SessionEndReason": {
+      "type": "string",
+      "enum": [
+        "TIME_UP",
+        "ALL_RESOLVED",
+        "ABORTED"
+      ]
+    },
+    "SessionEndedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "SESSION_ENDED"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "$ref": "#/$defs/SessionEndReason"
+            }
+          },
+          "required": [
+            "reason"
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "payload"
+      ]
+    },
+    "SessionMode": {
+      "type": "string",
+      "enum": [
+        "PRACTICE",
+        "ASSESSMENT"
+      ]
+    },
+    "SessionStartedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "SESSION_STARTED"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "$ref": "#/$defs/SessionMode"
+            },
+            "scenarioId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "seed": {
+              "$ref": "#/$defs/Seed"
+            }
+          },
+          "required": [
+            "mode",
+            "scenarioId",
+            "seed"
+          ]
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "payload"
+      ]
+    },
+    "SessionStatus": {
+      "type": "string",
+      "enum": [
+        "CREATED",
+        "ACTIVE",
+        "COMPLETED",
+        "ABANDONED"
+      ]
+    },
+    "SimEvent": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/SessionStartedEvent"
+        },
+        {
+          "$ref": "#/$defs/ContactSpawnedEvent"
+        },
+        {
+          "$ref": "#/$defs/ContactDespawnedEvent"
+        },
+        {
+          "$ref": "#/$defs/ContactReachedAssetEvent"
+        },
+        {
+          "$ref": "#/$defs/ContactNeutralisedEvent"
+        },
+        {
+          "$ref": "#/$defs/SensorTrackCreatedEvent"
+        },
+        {
+          "$ref": "#/$defs/SensorTrackLostEvent"
+        },
+        {
+          "$ref": "#/$defs/EoIdentifiableEvent"
+        },
+        {
+          "$ref": "#/$defs/ResponseOutcomeEvent"
+        },
+        {
+          "$ref": "#/$defs/AiSuggestionShownEvent"
+        },
+        {
+          "$ref": "#/$defs/SessionEndedEvent"
+        },
+        {
+          "$ref": "#/$defs/TrackSelectedEvent"
+        },
+        {
+          "$ref": "#/$defs/CameraSlewedEvent"
+        },
+        {
+          "$ref": "#/$defs/MarkedDetectedEvent"
+        },
+        {
+          "$ref": "#/$defs/ClassifiedEvent"
+        },
+        {
+          "$ref": "#/$defs/AffiliationSetEvent"
+        },
+        {
+          "$ref": "#/$defs/ResponseOrderedEvent"
+        },
+        {
+          "$ref": "#/$defs/ReportSubmittedEvent"
+        },
+        {
+          "$ref": "#/$defs/AiSuggestionAcceptedEvent"
+        },
+        {
+          "$ref": "#/$defs/AiSuggestionRejectedEvent"
+        }
+      ]
+    },
+    "SunAzEl": {
+      "type": "object",
+      "properties": {
+        "azDeg": {
+          "type": "number"
+        },
+        "elDeg": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "azDeg",
+        "elDeg"
+      ]
+    },
+    "SystemEventType": {
+      "type": "string",
+      "enum": [
+        "SESSION_STARTED",
+        "CONTACT_SPAWNED",
+        "CONTACT_DESPAWNED",
+        "CONTACT_REACHED_ASSET",
+        "CONTACT_NEUTRALISED",
+        "SENSOR_TRACK_CREATED",
+        "SENSOR_TRACK_LOST",
+        "EO_IDENTIFIABLE",
+        "RESPONSE_OUTCOME",
+        "AI_SUGGESTION_SHOWN",
+        "SESSION_ENDED"
+      ]
+    },
+    "TerrainRef": {
+      "type": "object",
+      "properties": {
+        "preset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "origin": {
+          "$ref": "#/$defs/LatLon"
+        }
+      },
+      "required": [
+        "preset",
+        "origin"
+      ]
+    },
+    "ThreatClass": {
+      "type": "string",
+      "enum": [
+        "QUAD_SMALL",
+        "QUAD_HEAVY",
+        "FPV",
+        "FIXED_WING_SMALL",
+        "LOITERING_GENERIC"
+      ]
+    },
+    "ThreatMix": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/ThreatClass"
+      },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 50
+      }
+    },
+    "TimeOfDay": {
+      "type": "string",
+      "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+    },
+    "TokenResponse": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string"
+        },
+        "tokenType": {
+          "type": "string",
+          "const": "bearer"
+        },
+        "expiresIn": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "accessToken",
+        "tokenType",
+        "expiresIn"
+      ]
+    },
+    "TrackLostReason": {
+      "type": "string",
+      "enum": [
+        "MISSES",
+        "LOS",
+        "OUT_OF_RANGE"
+      ]
+    },
+    "TrackSelectedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "TRACK_SELECTED"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "$ref": "#/$defs/EmptyPayload"
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "trackId",
+        "payload"
+      ]
+    },
+    "TraineeEventType": {
+      "type": "string",
+      "enum": [
+        "TRACK_SELECTED",
+        "CAMERA_SLEWED",
+        "MARKED_DETECTED",
+        "CLASSIFIED",
+        "AFFILIATION_SET",
+        "RESPONSE_ORDERED",
+        "REPORT_SUBMITTED",
+        "AI_SUGGESTION_ACCEPTED",
+        "AI_SUGGESTION_REJECTED"
+      ]
+    },
+    "UnitRef": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "UserRole": {
+      "type": "string",
+      "enum": [
+        "TRAINEE",
+        "INSTRUCTOR",
+        "ADMIN"
+      ]
+    },
+    "Waypoint": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0
+        },
+        "z": {
+          "type": "number"
+        },
+        "speedMps": {
+          "type": "number",
+          "minimum": 0
+        },
+        "holdS": {
+          "type": "number",
+          "minimum": 0
+        },
+        "action": {
+          "$ref": "#/$defs/WaypointAction"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z",
+        "speedMps"
+      ]
+    },
+    "WaypointAction": {
+      "type": "string",
+      "enum": [
+        "DROP",
+        "DIVE",
+        "RTH"
+      ]
+    },
+    "Weather": {
+      "type": "object",
+      "properties": {
+        "visibilityM": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rainMmph": {
+          "type": "number",
+          "minimum": 0
+        },
+        "windMps": {
+          "type": "number",
+          "minimum": 0
+        },
+        "windDirDeg": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 360
+        },
+        "cloudPct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "visibilityM",
+        "rainMmph",
+        "windMps",
+        "windDirDeg",
+        "cloudPct"
+      ]
+    },
+    "Zone": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/BorderLineZone"
+        },
+        {
+          "$ref": "#/$defs/AreaZone"
+        }
+      ]
+    },
+    "ZoneKind": {
+      "type": "string",
+      "enum": [
+        "PROTECTED_ASSET",
+        "NO_KINETIC",
+        "BORDER_LINE",
+        "SENSOR_SITE"
+      ]
+    }
+  }
+}
