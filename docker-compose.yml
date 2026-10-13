@@ -1,0 +1,23 @@
+# Local development: Postgres only (Phase 0).
+# The full offline stack (postgres + api + web) is added in Phase 6.
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vyuh
+      POSTGRES_PASSWORD: vyuh # local dev only — never used outside this container
+      POSTGRES_DB: vyuh
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U vyuh -d vyuh']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:
