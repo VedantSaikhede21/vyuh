@@ -3,3 +3,5 @@
 *.jpg binary
 *.ico binary
 *.glb binary
+apps/api/app/schemas/generated/** linguist-generated=true
+packages/shared/schema/** linguist-generated=true

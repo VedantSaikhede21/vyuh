@@ -33,7 +33,10 @@ export const SessionStartedEvent = named(
   z.object({
     ...base,
     type: z.literal('SESSION_STARTED'),
-    payload: z.object({ mode: SessionMode, scenarioId: ID, seed: Seed }),
+    payload: named(
+      'SessionStartedPayload',
+      z.object({ mode: SessionMode, scenarioId: ID, seed: Seed }),
+    ),
   }),
 );
 
@@ -53,7 +56,7 @@ export const ContactReachedAssetEvent = named(
     ...base,
     type: z.literal('CONTACT_REACHED_ASSET'),
     contactId: ID,
-    payload: z.object({ assetId: ID }),
+    payload: named('ContactReachedAssetPayload', z.object({ assetId: ID })),
   }),
 );
 
@@ -63,7 +66,7 @@ export const ContactNeutralisedEvent = named(
     ...base,
     type: z.literal('CONTACT_NEUTRALISED'),
     contactId: ID,
-    payload: z.object({ by: ResponseKind }),
+    payload: named('ContactNeutralisedPayload', z.object({ by: ResponseKind })),
   }),
 );
 
@@ -74,13 +77,16 @@ export const SensorTrackCreatedEvent = named(
     type: z.literal('SENSOR_TRACK_CREATED'),
     contactId: ID,
     trackId: ID,
-    payload: z.object({
-      sensorId: ID,
-      sensorKind: SensorKind,
-      /** Absent for RF (bearing only). */
-      rangeM: z.number().min(0).optional(),
-      bearingDeg: z.number().min(0).lt(360),
-    }),
+    payload: named(
+      'SensorTrackCreatedPayload',
+      z.object({
+        sensorId: ID,
+        sensorKind: SensorKind,
+        /** Absent for RF (bearing only). */
+        rangeM: z.number().min(0).optional(),
+        bearingDeg: z.number().min(0).lt(360),
+      }),
+    ),
   }),
 );
 
@@ -91,7 +97,7 @@ export const SensorTrackLostEvent = named(
     type: z.literal('SENSOR_TRACK_LOST'),
     trackId: ID,
     contactId: ID.optional(),
-    payload: z.object({ reason: TrackLostReason }),
+    payload: named('SensorTrackLostPayload', z.object({ reason: TrackLostReason })),
   }),
 );
 
@@ -102,7 +108,10 @@ export const EoIdentifiableEvent = named(
     type: z.literal('EO_IDENTIFIABLE'),
     contactId: ID,
     trackId: ID.optional(),
-    payload: z.object({ level: EoLevel, rangeM: z.number().min(0) }),
+    payload: named(
+      'EoIdentifiablePayload',
+      z.object({ level: EoLevel, rangeM: z.number().min(0) }),
+    ),
   }),
 );
 
@@ -113,11 +122,14 @@ export const ResponseOutcomeEvent = named(
     type: z.literal('RESPONSE_OUTCOME'),
     trackId: ID,
     contactId: ID,
-    payload: z.object({
-      response: ResponseKind,
-      result: ResponseResult,
-      collateral: z.object({ contactId: ID }).optional(),
-    }),
+    payload: named(
+      'ResponseOutcomePayload',
+      z.object({
+        response: ResponseKind,
+        result: ResponseResult,
+        collateral: named('Collateral', z.object({ contactId: ID })).optional(),
+      }),
+    ),
   }),
 );
 
@@ -136,7 +148,7 @@ export const SessionEndedEvent = named(
   z.object({
     ...base,
     type: z.literal('SESSION_ENDED'),
-    payload: z.object({ reason: SessionEndReason }),
+    payload: named('SessionEndedPayload', z.object({ reason: SessionEndReason })),
   }),
 );
 
@@ -151,17 +163,17 @@ export const MarkedDetectedEvent = trackEvent('MarkedDetectedEvent', 'MARKED_DET
 export const ClassifiedEvent = trackEvent(
   'ClassifiedEvent',
   'CLASSIFIED',
-  z.object({ class: ContactClass }),
+  named('ClassifiedPayload', z.object({ class: ContactClass })),
 );
 export const AffiliationSetEvent = trackEvent(
   'AffiliationSetEvent',
   'AFFILIATION_SET',
-  z.object({ affiliation: Affiliation }),
+  named('AffiliationSetPayload', z.object({ affiliation: Affiliation })),
 );
 export const ResponseOrderedEvent = trackEvent(
   'ResponseOrderedEvent',
   'RESPONSE_ORDERED',
-  z.object({ response: ResponseKind, effectorId: ID.optional() }),
+  named('ResponseOrderedPayload', z.object({ response: ResponseKind, effectorId: ID.optional() })),
 );
 export const AiSuggestionAcceptedEvent = trackEvent(
   'AiSuggestionAcceptedEvent',
@@ -179,11 +191,14 @@ export const CameraSlewedEvent = named(
   z.object({
     ...base,
     type: z.literal('CAMERA_SLEWED'),
-    payload: z.object({
-      azDeg: z.number().min(0).lt(360),
-      elDeg: z.number().min(-90).max(90),
-      zoom: z.number().positive(),
-    }),
+    payload: named(
+      'CameraSlewedPayload',
+      z.object({
+        azDeg: z.number().min(0).lt(360),
+        elDeg: z.number().min(-90).max(90),
+        zoom: z.number().positive(),
+      }),
+    ),
   }),
 );
 

@@ -253,7 +253,7 @@ docker compose up        # offline full stack
 
 ## 12. Files, git & ownership rules
 
-- **Generated — never hand-edit:** `apps/api/app/schemas/generated/`. Change zod in `packages/shared`, then `pnpm gen:schemas`.
+- **Generated — never hand-edit:** `apps/api/app/schemas/generated/` (every file starts with a `GENERATED FILE — DO NOT EDIT` header) and `packages/shared/schema/vyuh.schema.json`. Change zod in `packages/shared`, then `pnpm gen:schemas` (zod → JSON Schema via `packages/shared/scripts/export-jsonschema.ts` → Pydantic via `apps/api/scripts/gen_pydantic.py`, pinned datamodel-code-generator, no timestamp). CI fails if regenerating produces a diff. Cross-field rules (`superRefine` in zod) are not in JSON Schema and must be re-checked in Python services.
 - **Migrations:** a merged Alembic migration is never edited; add a new one.
 - **Scoring trees:** a tree version that has scored sessions is immutable; changes create `default_v2` etc. Scores store `tree_version`.
 - **Scenario schema:** bump `schema_version` on breaking changes and keep a loader that upgrades old scenario JSON.
