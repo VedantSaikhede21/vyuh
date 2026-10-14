@@ -51,6 +51,59 @@ export function lostReason(h: Readonly<ScanHistory>): 'LOS' | 'MISSES' {
   return h.consecutiveMaskedMisses >= h.consecutiveMisses ? 'LOS' : 'MISSES';
 }
 
+// ---- Alpha-beta filter (decision 51) ------------------------------------------
+// 2D (x east, z north) position + velocity. Radar height is not measured with
+// noise, so track height stays the true AGL (tech debt: track height leaks truth).
+
+export const FILTER_ALPHA = 0.5;
+export const FILTER_BETA = 0.2;
+
+export interface TrackFilter {
+  /** Filtered position at `tMs`. */
+  x: number;
+  z: number;
+  /** Velocity, m/s; meaningful once `hasVelocity`. */
+  vx: number;
+  vz: number;
+  tMs: number;
+  /** False until the second measurement (velocity from two points). */
+  hasVelocity: boolean;
+}
+
+export function createTrackFilter(x: number, z: number, tMs: number): TrackFilter {
+  return { x, z, vx: 0, vz: 0, tMs, hasVelocity: false };
+}
+
+/** Position extrapolated to `tMs` (pos + vel·Δt). */
+export function predictFilter(f: Readonly<TrackFilter>, tMs: number): { x: number; z: number } {
+  if (!f.hasVelocity) return { x: f.x, z: f.z };
+  const dt = (tMs - f.tMs) / 1000;
+  return { x: f.x + f.vx * dt, z: f.z + f.vz * dt };
+}
+
+/** Fold one measurement in. The second one sets velocity from two points; later ones use α-β. */
+export function updateTrackFilter(f: TrackFilter, mx: number, mz: number, tMs: number): void {
+  const dt = (tMs - f.tMs) / 1000;
+  if (dt <= 0) return;
+  if (!f.hasVelocity) {
+    f.vx = (mx - f.x) / dt;
+    f.vz = (mz - f.z) / dt;
+    f.x = mx;
+    f.z = mz;
+    f.hasVelocity = true;
+  } else {
+    const px = f.x + f.vx * dt;
+    const pz = f.z + f.vz * dt;
+    const rx = mx - px;
+    const rz = mz - pz;
+    f.x = px + FILTER_ALPHA * rx;
+    f.z = pz + FILTER_ALPHA * rz;
+    f.vx += (FILTER_BETA / dt) * rx;
+    f.vz += (FILTER_BETA / dt) * rz;
+  }
+  f.tMs = tMs;
+}
+
 export function formatTrackId(n: number): string {
   return `T${String(n).padStart(3, '0')}`;
 }
@@ -66,14 +119,16 @@ export interface TrackState {
   status: TrackStatus;
   readonly createdTMs: number;
   lastUpdateTMs: number;
-  /** Latest measurement from the sensor. */
+  /** Filtered (and predicted between scans) range / bearing from the sensor. */
   rangeM: number;
   bearingDeg: number;
-  /** Position estimate in the scenario frame. */
+  /** Filtered position estimate, predicted forward every tick. */
   pos: Vec3;
-  /** Measured height above ground (not perturbed in Phase 1). */
+  /** Height above ground — true AGL (the 2D filter does not estimate it). */
   altitudeAglM: number;
-  /** Estimated from the last two measurements; null until there are two. */
+  /** α-β filter state behind `pos`. */
+  filter: TrackFilter;
+  /** From the filter velocity; null until the second measurement. */
   headingDeg: number | null;
   speedMps: number | null;
   // Trainee annotations.

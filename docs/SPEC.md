@@ -246,7 +246,10 @@ Modules: `rng.ts`, `clock.ts`, `coords.ts`, `terrain.ts` (heightmap sampling + L
 ### 6.1 Radar
 - Config: `refRangeM` = range at which a 0.01 m² target has Pd = 0.5; scan period 2 s; bearing/range noise σ.
 - Detection range scales with RCS^(1/4) (radar equation: SNR ∝ RCS / R⁴).
-- `Pd = logistic((SNRdB − thresholdDb) / slope)`; then × LOS (0 if masked) × clutter factor (if AGL < 15 m within 2 km: × 0.4) × rain factor.
+- `Pd = logistic((SNRdB − thresholdDb) / slope)`; then × LOS (0 if masked) × clutter factor (if AGL < 15 m within 2 km horizontal range: × 0.4).
+- **Rain (accepted divergence, decision 50):** not a Pd factor but a two-way SNR loss, so it grows with range: γ = 0.0101 · R^1.276 dB/km (R = `rainMmph`, representative X-band, ITU-R P.838 style), loss = 2 · γ · range_km.
+- Clutter and rain add no random draws: every scan draws exactly five numbers per active contact.
+- **Tracks (decision 51):** 2D (x, z) alpha-beta filter, α 0.5, β 0.2; velocity starts from the first two measurements. Every tick a live track is extrapolated `pos + vel·Δt`; the HUD range/bearing/heading/speed and the EO lock use this filtered estimate. Track height is the true AGL (not filtered).
 - Birds produce tracks too (similar RCS) — this is intentional.
 
 ### 6.2 EO/IR camera

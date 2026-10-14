@@ -27,10 +27,15 @@ export { appendEvent, createEventLog } from './events.ts';
 export type { DistributiveOmit, EventDraft, EventLog, TraineeEvent } from './events.ts';
 export {
   BEARING_SIGMA_DEG,
+  CLUTTER_AGL_M,
+  CLUTTER_FACTOR,
+  CLUTTER_RANGE_M,
   PD_SLOPE_DB,
   RANGE_SIGMA_M,
   REF_RCS_M2,
+  clutterFactor,
   gaussian,
+  rainLossDb,
   radarPd,
   radarScan,
   radarSnrDb,
@@ -39,13 +44,18 @@ export type { RadarReturn } from './sensors/radar.ts';
 export {
   CONFIRM_HITS,
   CONFIRM_WINDOW,
+  FILTER_ALPHA,
+  FILTER_BETA,
   LOSE_MISSES,
   createScanHistory,
+  createTrackFilter,
   formatTrackId,
   lostReason,
+  predictFilter,
   recordScan,
+  updateTrackFilter,
 } from './tracks.ts';
-export type { ScanHistory, ScanUpdate, TrackState, TrackStatus } from './tracks.ts';
+export type { ScanHistory, ScanUpdate, TrackFilter, TrackState, TrackStatus } from './tracks.ts';
 export {
   PKILL_MAX,
   PKILL_MIN,
