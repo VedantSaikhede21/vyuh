@@ -26,7 +26,7 @@ export function AppHeader() {
               </Button>
             </>
           ) : (
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="secondary" size="sm">
               <Link href="/login">Log in</Link>
             </Button>
           )}
