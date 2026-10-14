@@ -472,14 +472,18 @@
     "Collateral": {
       "type": "object",
       "properties": {
-        "contactId": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 64
+        "contactIds": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
         }
       },
       "required": [
-        "contactId"
+        "contactIds"
       ]
     },
     "CompleteSessionRequest": {
@@ -497,6 +501,14 @@
       "required": [
         "endTMs",
         "clientMeta"
+      ]
+    },
+    "ContactCategory": {
+      "type": "string",
+      "enum": [
+        "DRONE",
+        "BIRD",
+        "MANNED_AIRCRAFT"
       ]
     },
     "ContactClass": {
@@ -601,7 +613,9 @@
         "UNRESOLVED",
         "IGNORED_OK",
         "WRONGLY_ENGAGED",
-        "FRATRICIDE"
+        "FRATRICIDE",
+        "FRIENDLY_JAMMED",
+        "CIVILIAN_JAMMED"
       ]
     },
     "ContactReachedAssetEvent": {
@@ -820,11 +834,17 @@
         },
         "mode": {
           "$ref": "#/$defs/SessionMode"
+        },
+        "simVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
         }
       },
       "required": [
         "scenarioId",
-        "mode"
+        "mode",
+        "simVersion"
       ]
     },
     "CreateSessionResponse": {
@@ -840,12 +860,18 @@
         "startedAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "simVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
         }
       },
       "required": [
         "sessionId",
         "scenario",
-        "startedAt"
+        "startedAt",
+        "simVersion"
       ]
     },
     "DevLoginRequest": {
@@ -2348,6 +2374,18 @@
             }
           ]
         },
+        "simVersion": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "score": {
           "anyOf": [
             {
@@ -2367,6 +2405,7 @@
         "status",
         "startedAt",
         "endedAt",
+        "simVersion",
         "score"
       ]
     },

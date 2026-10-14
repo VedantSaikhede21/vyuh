@@ -21,6 +21,7 @@ from app.schemas.generated import (
 
 _THREAT = {c.value for c in ThreatClass}
 _NON_THREAT = {c.value for c in NonThreatClass}
+_SILENT_LINKS = {"AUTONOMOUS_GNSS", "FIBRE_OPTIC", "NONE"}
 
 
 def scenario_rule_violations(s: Scenario) -> list[str]:
@@ -46,6 +47,12 @@ def scenario_rule_violations(s: Scenario) -> list[str]:
             problems.append(f"contacts.{c.id}: isThreat must be {expected} for class {cls}")
         if c.spawn_t_ms > duration_ms:
             problems.append(f"contacts.{c.id}: spawns after scenario ends")
+        if c.emissions.rf_active and c.control_link.value in _SILENT_LINKS:
+            problems.append(
+                f"contacts.{c.id}: rfActive must be false for control link {c.control_link.value}"
+            )
+        if c.emissions.friendly_id_code is not None and not c.emissions.rf_active:
+            problems.append(f"contacts.{c.id}: friendlyIdCode requires rfActive")
         if c.despawn_t_ms is not None and c.despawn_t_ms <= c.spawn_t_ms:
             problems.append(f"contacts.{c.id}: despawnTMs must be after spawnTMs")
     for x in s.sensors:

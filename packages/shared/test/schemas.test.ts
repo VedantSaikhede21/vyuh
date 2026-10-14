@@ -75,6 +75,18 @@ describe('Scenario (SPEC §4.4 example)', () => {
     ['duplicate contact ids', (s: ScenarioT) => (s.contacts[1]!.id = 'c01')],
     ['bird marked as threat', (s: ScenarioT) => (s.contacts[1]!.isThreat = true)],
     ['despawn before spawn', (s: ScenarioT) => (s.contacts[0]!.despawnTMs = 1000)],
+    [
+      'GNSS contact emitting RF',
+      (s: ScenarioT) => (s.contacts[0]!.controlLink = 'AUTONOMOUS_GNSS'),
+    ],
+    [
+      'fibre-optic contact emitting RF',
+      (s: ScenarioT) => (s.contacts[0]!.controlLink = 'FIBRE_OPTIC'),
+    ],
+    [
+      'friendly ID code without RF',
+      (s: ScenarioT) => (s.contacts[1]!.emissions.friendlyIdCode = 'BLUE1'),
+    ],
   ] as const)('rejects: %s', (_label, mutate) => {
     const s = clone();
     (mutate as (s: ScenarioT) => void)(s);
@@ -234,6 +246,7 @@ describe('Session detail / Score', () => {
     status: 'COMPLETED',
     startedAt: '2026-10-14T10:00:00+00:00',
     endedAt: '2026-10-14T10:03:00+00:00',
+    simVersion: 1,
     score,
   };
 

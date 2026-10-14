@@ -15,6 +15,7 @@ import {
   type SimEvent,
   type TokenResponse as TokenResponseT,
 } from '@vyuh/shared';
+import { SIM_VERSION } from '@vyuh/sim-core';
 import type { z } from 'zod';
 import { env } from './env';
 
@@ -101,7 +102,10 @@ export const api = {
   getScenario: (id: string, signal?: AbortSignal) =>
     apiFetch(`/scenarios/${id}`, ScenarioDetailResponse, { signal }),
   createSession: (scenarioId: string, mode: SessionMode) =>
-    apiFetch('/sessions', CreateSessionResponse, { method: 'POST', body: { scenarioId, mode } }),
+    apiFetch('/sessions', CreateSessionResponse, {
+      method: 'POST',
+      body: { scenarioId, mode, simVersion: SIM_VERSION },
+    }),
   postEvents: (sessionId: string, batchSeq: number, events: readonly SimEvent[]) =>
     apiFetch(`/sessions/${sessionId}/events`, EventBatchResponse, {
       method: 'POST',

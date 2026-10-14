@@ -92,5 +92,5 @@ jobs:
       - name: Fail if generated files changed
         run: |
           git status --porcelain
-          git diff --exit-code -- packages/shared/schema apps/api/app/schemas/generated
-          test -z "$(git status --porcelain -- packages/shared/schema apps/api/app/schemas/generated)"
+          git diff --exit-code -- packages/shared/schema apps/api/app/schemas/generated apps/api/app/seed/generated
+          test -z "$(git status --porcelain -- packages/shared/schema apps/api/app/schemas/generated apps/api/app/seed/generated)"

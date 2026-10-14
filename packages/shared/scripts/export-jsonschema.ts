@@ -4,12 +4,13 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
-import { schemaRegistry } from '../src/index.ts';
+import { CLASS_PROFILES, ThreatClass, schemaRegistry } from '../src/index.ts';
 
 type Json = Record<string, unknown>;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outFile = resolve(here, '../schema/vyuh.schema.json');
+const profilesFile = resolve(here, '../../../apps/api/app/seed/generated/class_profiles.json');
 const REF_PREFIX = '#/$defs/';
 const DISCRIMINATOR_KEYS = ['type', 'kind'];
 
@@ -89,3 +90,17 @@ const bundle = {
 mkdirSync(dirname(outFile), { recursive: true });
 writeFileSync(outFile, `${JSON.stringify(bundle, null, 2)}\n`, 'utf8');
 console.log(`Wrote ${Object.keys(defs).length} schemas → ${outFile}`);
+
+// Class profiles for the API (threat_types seed): Python never reads packages/ at runtime
+// (decision 49), so the values are exported here and covered by the CI no-diff check.
+const threat: ReadonlySet<string> = new Set(ThreatClass.options);
+const profiles = {
+  _generated:
+    'GENERATED FILE — DO NOT EDIT. Source: packages/shared/src/threats.ts; run `pnpm gen:schemas`.',
+  classes: Object.fromEntries(
+    Object.entries(CLASS_PROFILES).map(([cls, p]) => [cls, { isThreat: threat.has(cls), ...p }]),
+  ),
+};
+mkdirSync(dirname(profilesFile), { recursive: true });
+writeFileSync(profilesFile, `${JSON.stringify(profiles, null, 2)}\n`, 'utf8');
+console.log(`Wrote ${Object.keys(CLASS_PROFILES).length} class profiles → ${profilesFile}`);

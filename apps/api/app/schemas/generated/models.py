@@ -108,11 +108,15 @@ class ClientMeta(BaseModel):
     browser: Annotated[str | None, Field(max_length=200)] = None
 
 
+class ContactId(RootModel[str]):
+    root: Annotated[str, Field(max_length=64, min_length=1)]
+
+
 class Collateral(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    contact_id: Annotated[str, Field(alias="contactId", max_length=64, min_length=1)]
+    contact_ids: Annotated[list[ContactId], Field(alias="contactIds", min_length=1)]
 
 
 class CompleteSessionRequest(BaseModel):
@@ -121,6 +125,12 @@ class CompleteSessionRequest(BaseModel):
     )
     end_t_ms: Annotated[int, Field(alias="endTMs", ge=0, le=9007199254740991)]
     client_meta: Annotated[ClientMeta, Field(alias="clientMeta")]
+
+
+class ContactCategory(StrEnum):
+    DRONE = "DRONE"
+    BIRD = "BIRD"
+    MANNED_AIRCRAFT = "MANNED_AIRCRAFT"
 
 
 class ContactClass(StrEnum):
@@ -143,6 +153,8 @@ class ContactOutcome(StrEnum):
     IGNORED_OK = "IGNORED_OK"
     WRONGLY_ENGAGED = "WRONGLY_ENGAGED"
     FRATRICIDE = "FRATRICIDE"
+    FRIENDLY_JAMMED = "FRIENDLY_JAMMED"
+    CIVILIAN_JAMMED = "CIVILIAN_JAMMED"
 
 
 class ContactReachedAssetPayload(BaseModel):
@@ -452,6 +464,10 @@ class SensorTrackCreatedPayload(BaseModel):
     sensor_kind: Annotated[SensorKind, Field(alias="sensorKind")]
     range_m: Annotated[float | None, Field(alias="rangeM", ge=0.0)] = None
     bearing_deg: Annotated[float, Field(alias="bearingDeg", ge=0.0, lt=360.0)]
+
+
+class SimVersion(RootModel[int]):
+    root: Annotated[int, Field(ge=1, le=9007199254740991)]
 
 
 class SessionEndReason(StrEnum):
@@ -787,6 +803,7 @@ class CreateSessionRequest(BaseModel):
     )
     scenario_id: Annotated[UUID, Field(alias="scenarioId")]
     mode: SessionMode
+    sim_version: Annotated[int, Field(alias="simVersion", ge=1, le=9007199254740991)]
 
 
 class EffectorConfig(BaseModel):
@@ -1005,6 +1022,7 @@ class SessionDetailResponse(BaseModel):
     status: SessionStatus
     started_at: Annotated[AwareDatetime, Field(alias="startedAt")]
     ended_at: Annotated[AwareDatetime | None, Field(alias="endedAt")]
+    sim_version: Annotated[SimVersion | None, Field(alias="simVersion")]
     score: Score | None
 
 
@@ -1182,6 +1200,7 @@ class CreateSessionResponse(BaseModel):
     session_id: Annotated[UUID, Field(alias="sessionId")]
     scenario: Scenario
     started_at: Annotated[AwareDatetime, Field(alias="startedAt")]
+    sim_version: Annotated[int, Field(alias="simVersion", ge=1, le=9007199254740991)]
 
 
 class EventBatchRequest(BaseModel):

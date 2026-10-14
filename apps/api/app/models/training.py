@@ -43,6 +43,8 @@ class TrainingSession(Base):
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     client_meta: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    #: sim-core SIM_VERSION of the client that ran it (null for pre-Part-B sessions).
+    sim_version: Mapped[int | None]
 
 
 class SessionEvent(Base):

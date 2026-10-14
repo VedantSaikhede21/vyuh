@@ -128,7 +128,8 @@ export const ResponseOutcomeEvent = named(
       z.object({
         response: ResponseKind,
         result: ResponseResult,
-        collateral: named('Collateral', z.object({ contactId: ID })).optional(),
+        /** Other contacts affected by the same response (e.g. every RF contact in a jam sector). */
+        collateral: named('Collateral', z.object({ contactIds: z.array(ID).min(1) })).optional(),
       }),
     ),
   }),

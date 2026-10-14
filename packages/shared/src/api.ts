@@ -80,7 +80,12 @@ export type TokenResponse = z.infer<typeof TokenResponse>;
 
 export const CreateSessionRequest = named(
   'CreateSessionRequest',
-  z.object({ scenarioId: z.uuid(), mode: SessionMode }),
+  z.object({
+    scenarioId: z.uuid(),
+    mode: SessionMode,
+    /** sim-core SIM_VERSION the client runs; replay must use the same (decision 48). */
+    simVersion: z.int().min(1),
+  }),
 );
 export type CreateSessionRequest = z.infer<typeof CreateSessionRequest>;
 
@@ -90,6 +95,7 @@ export const CreateSessionResponse = named(
     sessionId: z.uuid(),
     scenario: Scenario,
     startedAt: z.iso.datetime({ offset: true }),
+    simVersion: z.int().min(1),
   }),
 );
 export type CreateSessionResponse = z.infer<typeof CreateSessionResponse>;
@@ -138,6 +144,8 @@ export const SessionDetailResponse = named(
     status: SessionStatus,
     startedAt: z.iso.datetime({ offset: true }),
     endedAt: z.iso.datetime({ offset: true }).nullable(),
+    /** Null for sessions created before sim versions were recorded. */
+    simVersion: z.int().min(1).nullable(),
     score: Score.nullable(),
   }),
 );
