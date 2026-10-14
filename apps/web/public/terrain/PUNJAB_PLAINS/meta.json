@@ -1,0 +1,28 @@
+{
+  "name": "PUNJAB_PLAINS",
+  "origin": {
+    "lat": 30.52,
+    "lon": 75.7
+  },
+  "utcOffsetMin": 330,
+  "sizeM": 14000.0,
+  "resolution": 512,
+  "metresPerPx": 27.397260273972602,
+  "originElevM": 236.89,
+  "relMinM": -5.309,
+  "relMaxM": 12.811,
+  "minElevM": 231.58,
+  "maxElevM": 249.7,
+  "buildingsStatus": "OK",
+  "buildingCount": 41,
+  "files": {
+    "heightmap": "heightmap.u16",
+    "preview": "heightmap.png",
+    "buildings": "buildings.geojson"
+  },
+  "source": "Copernicus DEM GLO-30 (Copernicus_DSM_COG_10_N30_00_E075_00_DEM); local AEQD grid, bilinear",
+  "attribution": [
+    "Copernicus DEM GLO-30: © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved",
+    "Building footprints © OpenStreetMap contributors, ODbL 1.0"
+  ]
+}
