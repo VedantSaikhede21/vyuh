@@ -4,23 +4,35 @@ import { Billboard, Html, Line } from '@react-three/drei';
 import type { Affiliation } from '@vyuh/shared';
 import { toThree } from '@vyuh/sim-core';
 import type { RefObject } from 'react';
-import { Shape, ShapeGeometry } from 'three';
+import { Path, Shape, ShapeGeometry } from 'three';
 import { AFFILIATION_STYLE, affiliationOutline } from '@/lib/affiliation';
 import { useHudStore, type TrackView } from '@/lib/sim/store';
 import { useSimRuntime } from './sim-context';
 
 const MARKER_M = 22;
 
-/** APP-6 frame per affiliation: filled geometry and closed outline, shared by all markers. */
-const FRAMES = new Map<Affiliation, { fill: ShapeGeometry; outline: [number, number, number][] }>();
+/** Inner edge of the hollow (not yet detected) frame, as a fraction of the outline. */
+const HOLLOW_INNER = 0.62;
+
+/**
+ * APP-6 frame per affiliation as two shared geometries: hollow (a band, not yet
+ * marked detected) and filled. One mesh per marker keeps draw calls at two per
+ * track with the stalk (SPEC §16 budget).
+ */
+const FRAMES = new Map<Affiliation, { hollow: ShapeGeometry; filled: ShapeGeometry }>();
 function frame(aff: Affiliation) {
   let f = FRAMES.get(aff);
   if (f === undefined) {
-    const pts = affiliationOutline(aff).map(([x, y]) => [x * MARKER_M, y * MARKER_M] as const);
-    const shape = new Shape();
-    pts.forEach(([x, y], i) => (i === 0 ? shape.moveTo(x, y) : shape.lineTo(x, y)));
-    const outline = [...pts, pts[0]!].map(([x, y]) => [x, y, 0] as [number, number, number]);
-    f = { fill: new ShapeGeometry(shape), outline };
+    const ring = (k: number) =>
+      affiliationOutline(aff).map(([x, y]) => [x * MARKER_M * k, y * MARKER_M * k] as const);
+    const outer = new Shape();
+    ring(1).forEach(([x, y], i) => (i === 0 ? outer.moveTo(x, y) : outer.lineTo(x, y)));
+    const band = new Shape();
+    ring(1).forEach(([x, y], i) => (i === 0 ? band.moveTo(x, y) : band.lineTo(x, y)));
+    const hole = new Path();
+    ring(HOLLOW_INNER).forEach(([x, y], i) => (i === 0 ? hole.moveTo(x, y) : hole.lineTo(x, y)));
+    band.holes.push(hole);
+    f = { hollow: new ShapeGeometry(band), filled: new ShapeGeometry(outer) };
     FRAMES.set(aff, f);
   }
   return f;
@@ -46,7 +58,7 @@ function TrackMarker({
     <group>
       <Billboard position={[top.x, top.y + MARKER_M, top.z]}>
         <mesh
-          geometry={shape.fill}
+          geometry={track.markedDetected ? shape.filled : shape.hollow}
           onClick={(e) => {
             e.stopPropagation();
             onSelect(track.id);
@@ -55,11 +67,10 @@ function TrackMarker({
           <meshBasicMaterial
             color={style.hex}
             transparent
-            opacity={track.markedDetected ? 0.55 : 0.08}
+            opacity={track.markedDetected ? 0.7 : 0.9}
             depthWrite={false}
           />
         </mesh>
-        <Line points={shape.outline} color={style.hex} lineWidth={2} />
       </Billboard>
       <Line
         points={[
