@@ -2,26 +2,30 @@
 
 import type { ScenarioListItem, SessionMode, TerrainPresetMeta } from '@vyuh/shared';
 import { isNightAt } from '@vyuh/sim-core';
+import { Moon, Sun } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  Panel,
+  PanelBody,
+  PanelHeader,
+  Pips,
+  Readout,
+  Skeleton,
+  StatusNotice,
+  Tooltip,
+} from '@/components/hud/primitives';
 import { RequireAuth } from '@/components/require-auth';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Panel, PanelBody, PanelHeader } from '@/components/hud/primitives';
 import { api } from '@/lib/api';
-import { loadPresetMeta } from '@/lib/terrain/load-world';
 import { useAuth } from '@/lib/auth';
+import { loadPresetMeta } from '@/lib/terrain/load-world';
 import { ROE_LABEL } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 
-function OperatorCard() {
+function OperatorPanel() {
   const { user } = useAuth();
   if (!user) return null;
-  const rows: [string, string][] = [
-    ['Name', user.name],
-    ['Email', user.email ?? '—'],
-    ['Unit', user.unit?.name ?? 'Unassigned'],
-  ];
   return (
     <Panel>
       <PanelHeader title="Operator">
@@ -29,19 +33,18 @@ function OperatorCard() {
           {user.role}
         </Badge>
       </PanelHeader>
-      <PanelBody>
-        <dl className="grid grid-cols-[8rem_1fr] gap-y-2 text-body">
-          {rows.map(([k, v]) => (
-            <div key={k} className="contents">
-              <dt className="text-label self-center">{k}</dt>
-              <dd className="font-mono" data-testid={`user-${k.toLowerCase()}`}>
-                {v}
-              </dd>
-            </div>
-          ))}
-          <dt className="text-label self-center">Rating</dt>
-          <dd className="font-mono tnum">{user.rating}</dd>
+      <PanelBody className="space-y-3">
+        <dl className="grid grid-cols-[5rem_1fr] gap-y-1.5 text-body">
+          <dt className="text-label self-center">Name</dt>
+          <dd data-testid="user-name">{user.name}</dd>
+          <dt className="text-label self-center">Email</dt>
+          <dd className="truncate" data-testid="user-email">
+            {user.email ?? '—'}
+          </dd>
+          <dt className="text-label self-center">Unit</dt>
+          <dd data-testid="user-unit">{user.unit?.name ?? 'Unassigned'}</dd>
         </dl>
+        <Readout label="Rating" value={user.rating} flash={false} />
       </PanelBody>
     </Panel>
   );
@@ -52,7 +55,35 @@ const MODES: { value: SessionMode; label: string; hint: string }[] = [
   { value: 'ASSESSMENT', label: 'Assessment', hint: 'Fixed clock, no pause' },
 ];
 
-function ScenarioList() {
+function ModeToggle({ mode, onChange }: { mode: SessionMode; onChange: (m: SessionMode) => void }) {
+  return (
+    <div className="flex" role="radiogroup" aria-label="Session mode">
+      {MODES.map((m) => (
+        <Tooltip key={m.value} content={m.hint} side="bottom" align="end">
+          <button
+            role="radio"
+            aria-checked={mode === m.value}
+            onClick={() => onChange(m.value)}
+            className={cn(
+              'h-6 border px-2 text-label transition-colors duration-150 ease-ui first:rounded-l-sm last:rounded-r-sm',
+              mode === m.value
+                ? 'border-select bg-bg-3 text-text-1'
+                : 'border-line-2 hover:text-text-1',
+            )}
+          >
+            {m.label}
+          </button>
+        </Tooltip>
+      ))}
+    </div>
+  );
+}
+
+const TH = 'h-7 bg-bg-2 px-3 text-left text-label font-medium whitespace-nowrap';
+const TD = 'h-8 px-3 whitespace-nowrap';
+
+/** Scenario table (DESIGN §11.3, restyle; the full redesign is Phase 3b). */
+function ScenarioTable() {
   const router = useRouter();
   const [items, setItems] = useState<ScenarioListItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -60,16 +91,26 @@ function ScenarioList() {
   const [starting, setStarting] = useState<string | null>(null);
   const [metas, setMetas] = useState<Record<string, TerrainPresetMeta>>({});
 
-  useEffect(() => {
-    const ctrl = new AbortController();
+  const fetchList = useCallback((signal?: AbortSignal) => {
     api
-      .listScenarios(ctrl.signal)
+      .listScenarios(signal)
       .then((r) => setItems(r.items))
       .catch((err: unknown) => {
-        if (!ctrl.signal.aborted) setError(err instanceof Error ? err.message : 'Failed to load');
+        if (!signal?.aborted) setError(err instanceof Error ? err.message : 'Network error');
       });
-    return () => ctrl.abort();
   }, []);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetchList(ctrl.signal);
+    return () => ctrl.abort();
+  }, [fetchList]);
+
+  const retry = () => {
+    setError(null);
+    setItems(null);
+    fetchList();
+  };
 
   // Night is computed from the preset meta (as in the sim); the stored flag shows until it loads.
   useEffect(() => {
@@ -93,6 +134,7 @@ function ScenarioList() {
   };
 
   const begin = async (scenarioId: string) => {
+    if (starting) return;
     setStarting(scenarioId);
     try {
       const { sessionId } = await api.createSession(scenarioId, mode);
@@ -106,56 +148,91 @@ function ScenarioList() {
   return (
     <Panel>
       <PanelHeader title="Scenarios">
-        <div className="flex gap-1" role="radiogroup" aria-label="Session mode">
-          {MODES.map((m) => (
-            <button
-              key={m.value}
-              role="radio"
-              aria-checked={mode === m.value}
-              title={m.hint}
-              onClick={() => setMode(m.value)}
-              className={cn(
-                'rounded-sm border px-2 py-0.5 text-readout uppercase',
-                mode === m.value
-                  ? 'border-select bg-primary-bg text-primary-fg'
-                  : 'border-line-1 text-text-2 hover:text-text-1',
-              )}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
+        <ModeToggle mode={mode} onChange={setMode} />
       </PanelHeader>
-      <PanelBody className="space-y-2">
-        {error && <p className="text-body text-crit">{error}</p>}
-        {items === null && !error && <p className="text-label">Loading scenarios…</p>}
-        {items?.length === 0 && (
-          <p className="text-body text-text-2">
-            No scenarios yet. Run the seed: <code>uv run python -m app.seed.demo</code>
-          </p>
-        )}
-        {items?.map((s) => (
-          <div
-            key={s.id}
-            className="flex items-center justify-between gap-3 border border-line-1 p-2"
-            data-testid={`scenario-${s.code ?? s.id}`}
-          >
-            <div className="min-w-0">
-              <div className="text-readout">
-                {s.code && <span className="text-text-1">{s.code} · </span>}
-                {s.name}
-              </div>
-              <div className="text-label">
-                Difficulty {s.difficulty} · {Math.round(s.durationS / 60)} min · {ROE_LABEL[s.roe]}
-                {isNight(s) ? ' · night' : ''}
-              </div>
-            </div>
-            <Button size="sm" disabled={starting !== null} onClick={() => void begin(s.id)}>
-              {starting === s.id ? 'Starting…' : 'Start'}
-            </Button>
-          </div>
-        ))}
-      </PanelBody>
+      {error && (
+        <StatusNotice tone="error" title="Could not load scenarios." onRetry={retry}>
+          {error}. Check that the API is running, then retry.
+        </StatusNotice>
+      )}
+      {items === null && !error && <Skeleton label="Loading scenarios" />}
+      {items?.length === 0 && (
+        <StatusNotice title="No scenarios yet.">
+          An administrator seeds them with <code>uv run python -m app.seed.demo</code>.
+        </StatusNotice>
+      )}
+      {items && items.length > 0 && (
+        <table className="w-full border-collapse" aria-label="Scenarios">
+          <thead>
+            <tr>
+              <th className={TH}>Code</th>
+              <th className={cn(TH, 'w-full')}>Scenario</th>
+              <th className={TH}>Difficulty</th>
+              <th className={TH}>Light</th>
+              <th className={TH}>ROE</th>
+              <th className={cn(TH, 'text-right')}>Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((s) => {
+              const night = isNight(s);
+              const busy = starting === s.id;
+              return (
+                <tr
+                  key={s.id}
+                  data-testid={`scenario-${s.code ?? s.id}`}
+                  onClick={() => void begin(s.id)}
+                  className={cn(
+                    'cursor-pointer border-t border-line-1 transition-colors duration-150 ease-ui hover:bg-bg-2',
+                    busy && 'bg-bg-3',
+                  )}
+                >
+                  <td className={cn(TD, 'text-readout text-text-2')}>{s.code ?? '—'}</td>
+                  <td className={cn(TD, 'text-body')}>
+                    {/* The row is clickable; this button gives keyboard users the same action. */}
+                    <button
+                      type="button"
+                      className="text-left text-text-1 hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void begin(s.id);
+                      }}
+                      disabled={starting !== null}
+                      aria-label={`Open the briefing for ${s.name}`}
+                    >
+                      {s.name}
+                    </button>
+                    {busy && <span className="ml-2 text-small text-text-2">Opening briefing…</span>}
+                    {s.tags.includes('test') && (
+                      <Badge className="ml-2" tone="default">
+                        Test
+                      </Badge>
+                    )}
+                  </td>
+                  <td className={TD}>
+                    <Pips value={s.difficulty} />
+                  </td>
+                  <td className={cn(TD, 'text-body text-text-2')}>
+                    <span className="flex items-center gap-1.5">
+                      {night ? (
+                        <Moon size={16} strokeWidth={1.5} aria-hidden />
+                      ) : (
+                        <Sun size={16} strokeWidth={1.5} aria-hidden />
+                      )}
+                      {night ? 'Night' : 'Day'}
+                    </span>
+                  </td>
+                  <td className={cn(TD, 'text-label text-text-1')}>{ROE_LABEL[s.roe]}</td>
+                  <td className={cn(TD, 'text-right text-readout')}>
+                    {Math.round(s.durationS / 60)}
+                    <span className="text-text-3"> min</span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
     </Panel>
   );
 }
@@ -164,10 +241,13 @@ export default function TrainPage() {
   return (
     <RequireAuth>
       <div className="space-y-4">
-        <h1 className="text-h1">Training</h1>
-        <div className="grid gap-4 md:grid-cols-[1fr_2fr]">
-          <OperatorCard />
-          <ScenarioList />
+        <div className="space-y-1">
+          <h1 className="text-h1">Training</h1>
+          <p className="text-body text-text-2">Choose a scenario to open its briefing.</p>
+        </div>
+        <div className="grid items-start gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
+          <OperatorPanel />
+          <ScenarioTable />
         </div>
       </div>
     </RequireAuth>
