@@ -11,7 +11,7 @@
     "lint": "pnpm lint:ts && pnpm --filter @vyuh/api lint",
     "lint:ts": "eslint . && prettier --check . && pnpm --filter @vyuh/web lint && pnpm -r --if-present typecheck",
     "format": "prettier --write .",
-    "test": "pnpm -r --filter \"./packages/*\" test",
+    "test": "pnpm -r --filter \"./packages/*\" --filter @vyuh/web test",
     "gen:schemas": "pnpm --filter @vyuh/shared export:jsonschema && pnpm --filter @vyuh/api gen:pydantic",
     "e2e": "echo \"e2e: Playwright suite arrives in Phase 1 (placeholder)\""
   },

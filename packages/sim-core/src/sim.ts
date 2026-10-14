@@ -239,6 +239,7 @@ export function createSim(scenario: Scenario, terrain: Heightmap, opts: SimOptio
       track.headingDeg = bearingDeg(track.pos, pos);
     }
     track.pos = pos;
+    track.altitudeAglM = contact.agl;
     track.rangeM = rangeM;
     track.bearingDeg = bearing;
     track.lastUpdateTMs = tMs;
@@ -280,6 +281,7 @@ export function createSim(scenario: Scenario, terrain: Heightmap, opts: SimOptio
               rangeM: ret.rangeM,
               bearingDeg: ret.bearingDeg,
               pos: { ...contact.pos },
+              altitudeAglM: contact.agl,
               headingDeg: null,
               speedMps: null,
               markedDetected: false,

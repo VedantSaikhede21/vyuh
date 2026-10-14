@@ -63,6 +63,8 @@ export interface TrackState {
   bearingDeg: number;
   /** Position estimate in the scenario frame. */
   pos: Vec3;
+  /** Measured height above ground (not perturbed in Phase 1). */
+  altitudeAglM: number;
   /** Estimated from the last two measurements; null until there are two. */
   headingDeg: number | null;
   speedMps: number | null;
