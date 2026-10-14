@@ -13,7 +13,7 @@ import {
 } from '@vyuh/shared';
 import { TICK_MS, TICK_S, advanceClock, ceilToTick, createClock, type SimClock } from './clock.ts';
 import { createContactState, stepContact, type ContactState } from './contacts.ts';
-import { bearingDeg, headingVector, horizontalRange, slantRange, type Vec3 } from './coords.ts';
+import { bearingDeg, headingVector, slantRange, type Vec3 } from './coords.ts';
 import { createEffectorState, resolveIntercept, type EffectorState } from './effectors.ts';
 import {
   appendEvent,
@@ -39,9 +39,12 @@ import { sampleHeight, type Heightmap } from './terrain.ts';
 import { createWorld, isWorld, type World } from './world.ts';
 import {
   createScanHistory,
+  createTrackFilter,
   formatTrackId,
   lostReason,
+  predictFilter,
   recordScan,
+  updateTrackFilter,
   type ScanHistory,
   type TrackState,
 } from './tracks.ts';
@@ -103,6 +106,8 @@ export function commandFromEvent(ev: SimEvent): SimCommand | null {
   delete cmd.tMs;
   return cmd as SimCommand;
 }
+
+const ORIGIN: Readonly<Vec3> = { x: 0, y: 0, z: 0 };
 
 const byId = <T extends { id: string }>(a: T, b: T): number =>
   a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
@@ -252,6 +257,31 @@ export function createSim(
     }
   }
 
+  /** Horizontal position of a radar measurement (height is not measured with noise). */
+  function measuredXZ(radarPos: Vec3, contact: ContactState, rangeM: number, bearing: number) {
+    const dh = contact.pos.y - radarPos.y;
+    const horiz = Math.sqrt(Math.max(rangeM * rangeM - dh * dh, 0));
+    const [east, north] = headingVector(bearing);
+    return { x: radarPos.x + east * horiz, z: radarPos.z + north * horiz };
+  }
+
+  /** Set the displayed estimate from the filter, predicted to `tMs` (decision 51). */
+  function refreshTrack(track: TrackState, tMs: number): void {
+    const radarPos = sensorPositions[track.sensorId];
+    if (radarPos === undefined) return;
+    const { x, z } = predictFilter(track.filter, tMs);
+    const contact = contactsById.get(track.contactId);
+    if (contact !== undefined) track.altitudeAglM = contact.agl;
+    track.pos = { x, y: contact?.pos.y ?? track.pos.y, z };
+    track.rangeM = slantRange(radarPos, track.pos);
+    track.bearingDeg = bearingDeg(radarPos, track.pos);
+    const f = track.filter;
+    if (f.hasVelocity) {
+      track.speedMps = Math.hypot(f.vx, f.vz);
+      track.headingDeg = bearingDeg(ORIGIN, { x: f.vx, y: 0, z: f.vz });
+    }
+  }
+
   function updateTrackFromHit(
     track: TrackState,
     radarPos: Vec3,
@@ -260,22 +290,17 @@ export function createSim(
     bearing: number,
     tMs: number,
   ): void {
-    // 3D radar: horizontal position from measured range/bearing; height not
-    // perturbed in Phase 1.
-    const dh = contact.pos.y - radarPos.y;
-    const horiz = Math.sqrt(Math.max(rangeM * rangeM - dh * dh, 0));
-    const [east, north] = headingVector(bearing);
-    const pos = { x: radarPos.x + east * horiz, y: contact.pos.y, z: radarPos.z + north * horiz };
-    const dtS = (tMs - track.lastUpdateTMs) / 1000;
-    if (dtS > 0) {
-      track.speedMps = horizontalRange(track.pos, pos) / dtS;
-      track.headingDeg = bearingDeg(track.pos, pos);
-    }
-    track.pos = pos;
-    track.altitudeAglM = contact.agl;
-    track.rangeM = rangeM;
-    track.bearingDeg = bearing;
+    const m = measuredXZ(radarPos, contact, rangeM, bearing);
+    updateTrackFilter(track.filter, m.x, m.z, tMs);
     track.lastUpdateTMs = tMs;
+    refreshTrack(track, tMs);
+  }
+
+  /** Extrapolate every live track between scans so the EO lock and HUD move smoothly. */
+  function predictTracks(tMs: number): void {
+    for (const track of state.tracks) {
+      if (track.status === 'ACTIVE' && track.lastUpdateTMs !== tMs) refreshTrack(track, tMs);
+    }
   }
 
   function scanRadars(tMs: number): void {
@@ -285,11 +310,11 @@ export function createSim(
       if (radarPos === undefined) continue;
       const inLos = (c: ContactState) =>
         los.visible(state.clock.tick, radar.cfg.id, radarPos, c.id, c.pos);
+      const rain = state.environment.weather.rainMmph;
       const returns = new Map(
-        radarScan(radar.cfg, radarPos, state.contacts, specs, radar.stream, inLos).map((r) => [
-          r.contactId,
-          r,
-        ]),
+        radarScan(radar.cfg, radarPos, state.contacts, specs, radar.stream, inLos, rain).map(
+          (r) => [r.contactId, r],
+        ),
       );
       for (const contact of state.contacts) {
         const key = `${radar.cfg.id}:${contact.id}`;
@@ -305,6 +330,7 @@ export function createSim(
         const live = history.trackId !== null ? tracksById.get(history.trackId) : undefined;
         if (ret?.hit === true && ret.rangeM !== undefined && ret.bearingDeg !== undefined) {
           if (update === 'CONFIRMED') {
+            const m = measuredXZ(radarPos, contact, ret.rangeM, ret.bearingDeg);
             const track: TrackState = {
               id: formatTrackId(nextTrackNo++),
               contactId: contact.id,
@@ -315,18 +341,19 @@ export function createSim(
               lastUpdateTMs: tMs,
               rangeM: ret.rangeM,
               bearingDeg: ret.bearingDeg,
-              pos: { ...contact.pos },
+              pos: { x: m.x, y: contact.pos.y, z: m.z },
               altitudeAglM: contact.agl,
+              filter: createTrackFilter(m.x, m.z, tMs),
               headingDeg: null,
               speedMps: null,
               markedDetected: false,
               classifiedAs: null,
               affiliation: 'UNKNOWN',
             };
-            updateTrackFromHit(track, radarPos, contact, ret.rangeM, ret.bearingDeg, tMs);
             history.trackId = track.id;
             state.tracks.push(track);
             tracksById.set(track.id, track);
+            refreshTrack(track, tMs);
             emit({
               tMs,
               type: 'SENSOR_TRACK_CREATED',
@@ -438,6 +465,7 @@ export function createSim(
     }
 
     scanRadars(tMs);
+    predictTracks(tMs);
     followLock();
     scanEo(tMs);
 
