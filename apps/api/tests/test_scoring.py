@@ -509,6 +509,7 @@ LEAF_CASES_V2: list[tuple[str, dict[str, Any], str | None, float]] = [
         None,
         -5,
     ),
+    ("BIRD_EW_ORDERED", non_threat(trueClass="BIRD_LARGE", ewOnBird=True), None, 0),
 ]
 
 
@@ -680,8 +681,35 @@ def test_birds_are_never_penalised_for_ew() -> None:
         ev(4, 31_000, "RESPONSE_ORDERED", trackId="T001", payload={"response": "EW_SPOOF"}),
         outcome_ev(5, 31_000, "T001", "c04", "EW_SPOOF", "NO_EFFECT"),
     ]
-    assert by_id(sc, events)["c04"]["outcome"] == "IGNORED_OK"
-    assert [p for p in score_session(sc, events).penalties if p.contact_id == "c04"] == []
+    m = by_id(sc, events)["c04"]
+    assert (m["outcome"], m["ewOnBird"]) == ("IGNORED_OK", True)
+    score = score_session(sc, events)
+    # No points lost, but the mistake is listed for the AAR with its feedback (decision 57).
+    [entry] = [p for p in score.penalties if p.contact_id == "c04"]
+    assert (entry.code, entry.points) == ("BIRD_EW_ORDERED", 0)
+    assert "this was a bird" in entry.feedback
+    c04 = next(p for p in score.per_contact if p.contact_id == "c04")
+    assert c04.leaves[-1].root == "BIRD_EW_ORDERED"
+    assert c04.response_appropriate is False
+    # Even a correctly classified bird gets no "held fire" bonus once EW was ordered on it.
+    classified = [
+        *events,
+        ev(6, 25_000, "CLASSIFIED", trackId="T001", payload={"class": "BIRD_LARGE"}),
+    ]
+    leaves = [leaf.leaf for leaf in evaluate(TREE_V2, by_id(sc, classified)["c04"])]
+    assert leaves == ["BIRD_EW_ORDERED"]
+
+
+def test_birds_shot_by_an_interceptor_stay_wrongly_engaged() -> None:
+    sc = _ew_scenario()
+    events = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c04", trackId="T001"),
+        outcome_ev(2, 30_000, "T001", "c04", "INTERCEPT", "MISSED"),
+    ]
+    score = score_session(sc, events)
+    assert [(p.code, p.points) for p in score.penalties if p.contact_id == "c04"] == [
+        ("WRONGLY_ENGAGED", -25)
+    ]
 
 
 def test_ineffective_ew_against_fibre_optic() -> None:

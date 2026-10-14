@@ -1,6 +1,6 @@
 {
   "id": "default_v2",
-  "description": "Phase 2B tree: v1 plus EW (jam / spoof) decisions, ineffective-EW feedback, UNAVOIDABLE decision exclusion (decision only), FRIENDLY_JAMMED and CIVILIAN_JAMMED.",
+  "description": "Phase 2B tree: v1 plus EW (jam / spoof) decisions, ineffective-EW feedback, UNAVOIDABLE decision exclusion (decision only), FRIENDLY_JAMMED and CIVILIAN_JAMMED. EW ordered on a bird is listed with 0 points (decision 57).",
   "componentMax": {
     "detection": 25,
     "classification": 25,
@@ -293,6 +293,19 @@
         "leaf": "CIVILIAN_JAMMED",
         "adjust": -5,
         "feedback": "A civilian drone in the jam sector lost its link — check the sector before jamming."
+      },
+      "else": "nonThreatBirdEw"
+    },
+    "nonThreatBirdEw": {
+      "if": {
+        "metric": "ewOnBird",
+        "op": "==",
+        "value": true
+      },
+      "then": {
+        "leaf": "BIRD_EW_ORDERED",
+        "adjust": 0,
+        "feedback": "You ordered EW on a {trueClass}: this was a bird — check the spectrogram/EO before engaging."
       },
       "else": "nonThreatIdentified"
     },
