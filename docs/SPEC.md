@@ -383,6 +383,11 @@ Outcomes are rolled with the seeded `effectors` RNG stream and emitted as `RESPO
 - Session components: detection 25, classification 25, decision 30, report 10, efficiency 10 (ammo wasted, time to neutralise) → normalised to 100. Penalties listed separately with timestamps.
 - Every leaf has a `feedback` string used in the result screen and fed to the LLM debrief.
 - Instructor can adjust weights (not structure) from the UI; tree version stored with each score.
+- **`default_v2` (Phase 2B, decisions 55–56)** = `default_v1` plus:
+  - decision branch: neutralised (feedback names the method: jammed / spoofed / N round(s); a feedback-only `DECISION_EW_LESSON` note when an ineffective EW order came first) → else `DECISION_UNAVOIDABLE` (excludes the decision component only) → else engaged-not-neutralised (any effector fired, 15) → else `DECISION_INEFFECTIVE_EW` (EW against a link it cannot affect, 5, e.g. "Jamming has no effect on a fibre-optic drone.") → else ordered-but-no-effect (5) → else none (0);
+  - non-threat branch, in precedence order: `FRATRICIDE` −40 (intercept fired at a friendly), `FRIENDLY_JAMMED` −15 (a friendly affected by a jam, targeted or collateral), `WRONGLY_ENGAGED` −25 (intercept fired at, or jam/spoof ordered on, a non-threat's own track), `CIVILIAN_JAMMED` −5 (civilian affected by a jam **only as collateral**), `NON_THREAT_IDENTIFIED` +5, left alone 0. Birds are never penalised for EW (no RF link); firing an interceptor at a bird stays `WRONGLY_ENGAGED`.
+  - Leaves may carry `excludeComponents` (e.g. `["decision"]`); each component is averaged over the threats not excluded for it (per-component denominators). `default_v1` scores are unchanged.
+  - `default_v1` stays immutable (it has scored sessions); scenarios with sessions (S01, S03, S11, S12) keep it; new scenarios (S13, S14) use `default_v2`.
 
 ### 9.3 Adaptive difficulty (Elo)
 User rating R (start 1000). Scenario rating D = 800 + 150 × difficulty. Expected E = 1 / (1 + 10^((D − R)/400)); actual A = total/100; R' = R + 32 × (A − E). Recommended next difficulty = the level whose D is closest to R + 50.
@@ -404,6 +409,7 @@ User rating R (start 1000). Scenario rating D = 800 + 150 × difficulty. Expecte
 - No penalty for missing a contact that was never detectable (no track, never EO-identifiable, always LOS-masked).
 - Latency is measured from `firstDetectableTMs`, not spawn time.
 - Penalties caused by an outcome the trainee could not influence (e.g. a contact spawns inside effector range and reaches the asset within one cooldown) are flagged `UNAVOIDABLE` and excluded.
+- **UNAVOIDABLE (Phase 2B rule, decision 56):** for a threat that was not neutralised and reached an asset, if `reachedAssetTMs − firstDetectableTMs < max(shortest cooldown among effectors able to engage it, 10 s)` the decision component for that contact is excluded (`DECISION_UNAVOIDABLE`, with feedback). Detection and classification are still scored. "Able to engage": INTERCEPT always; EW_JAM if `RF_MANUAL`; EW_SPOOF if `AUTONOMOUS_GNSS`. There is no separate leak penalty (a leak already forfeits the decision points).
 - A tree change never re-scores old sessions silently; re-scoring is an explicit instructor action that writes a new score row with the new `tree_version`.
 
 ---

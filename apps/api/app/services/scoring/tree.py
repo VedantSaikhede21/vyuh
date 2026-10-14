@@ -37,6 +37,8 @@ class TreeLeaf(_Strict):
     adjust: float | None = None
     #: Leave this contact out of component averages (fairness, SPEC §9.6).
     excluded: bool = False
+    #: Leave this contact out of only these components' averages (decision 56).
+    exclude_components: Annotated[list[Component], Field(alias="excludeComponents")] = []
     feedback: str
     next: str | None = None
 

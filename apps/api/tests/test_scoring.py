@@ -1,6 +1,7 @@
 """Scoring: every decision-tree leaf, metrics extraction, aggregation, tree validation."""
 
 import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -16,6 +17,7 @@ from tests.conftest import fixture_log
 TREE = load_tree("default_v1")
 S01_RAW = json.loads((SCENARIO_DIR / "S01.json").read_text(encoding="utf-8"))
 S01 = Scenario.model_validate(S01_RAW)
+FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 def threat(**overrides: Any) -> dict[str, Any]:
@@ -408,3 +410,362 @@ def test_penalties_are_listed_and_clamped() -> None:
     score = score_session(scenario, events)
     assert score.total == 0  # c01 detectable but ignored: 0 base - 40, clamped
     assert len(score.penalties) == 1  # one penalty per contact, not per shot
+
+
+# ---- default_v1 re-scores identically after the Part B engine changes ------------------
+
+
+def test_v1_golden_cases_rescore_identically() -> None:
+    """Golden cases were scored by the pre-Part-B engine (tests/fixtures/v1_golden.json)."""
+    golden = json.loads((FIXTURES / "v1_golden.json").read_text(encoding="utf-8"))
+    assert len(golden) >= 6
+    for name, case in golden.items():
+        scenario = Scenario.model_validate(case["scenario"])
+        assert scenario.scoring_tree_id == "default_v1"
+        score = score_session(scenario, case["events"]).model_dump(mode="json")
+        assert score == case["score"], name
+
+
+# ---- default_v2 (Phase 2B: EW, UNAVOIDABLE, jammed non-threats) ---------------------------
+
+TREE_V2 = load_tree("default_v2")
+
+LEAF_CASES_V2: list[tuple[str, dict[str, Any], str | None, float]] = [
+    *[case for case in LEAF_CASES if not case[0].startswith(("DECISION", "FRATRICIDE"))],
+    (
+        "DECISION_NEUTRALISED",
+        threat(neutralisedMethod="jammed", ineffectiveEw=0),
+        "decision",
+        30,
+    ),
+    (
+        "DECISION_EW_LESSON",
+        threat(
+            neutralisedMethod="1 round(s)",
+            ineffectiveEw=1,
+            ineffectiveEwVerb="Jamming",
+            controlLinkLabel="fibre-optic",
+        ),
+        None,
+        0,
+    ),
+    (
+        "DECISION_UNAVOIDABLE",
+        threat(outcome="LEAKED", unavoidableDecision=True, warningS=8.0, responsesFired=0),
+        None,
+        0,
+    ),
+    (
+        "DECISION_ENGAGED_NOT_NEUTRALISED",
+        threat(
+            outcome="LEAKED", unavoidableDecision=False, responsesFired=2, engagements="2 round(s)"
+        ),
+        "decision",
+        15,
+    ),
+    (
+        "DECISION_INEFFECTIVE_EW",
+        threat(
+            outcome="LEAKED",
+            unavoidableDecision=False,
+            responsesFired=0,
+            ineffectiveEw=1,
+            ineffectiveEwVerb="Jamming",
+            controlLinkLabel="fibre-optic",
+        ),
+        "decision",
+        5,
+    ),
+    (
+        "DECISION_INEFFECTIVE",
+        threat(
+            outcome="LEAKED",
+            unavoidableDecision=False,
+            responsesFired=0,
+            ineffectiveEw=0,
+            responsesOrdered=1,
+            lastResult="OUT_OF_RANGE",
+        ),
+        "decision",
+        5,
+    ),
+    (
+        "DECISION_NONE",
+        threat(
+            outcome="UNRESOLVED",
+            unavoidableDecision=False,
+            responsesFired=0,
+            ineffectiveEw=0,
+            responsesOrdered=0,
+        ),
+        "decision",
+        0,
+    ),
+    ("FRATRICIDE", non_threat(outcome="FRATRICIDE"), None, -40),
+    ("FRIENDLY_JAMMED", non_threat(outcome="FRIENDLY_JAMMED"), None, -15),
+    (
+        "CIVILIAN_JAMMED",
+        non_threat(trueClass="CIVILIAN_HOBBY", outcome="CIVILIAN_JAMMED"),
+        None,
+        -5,
+    ),
+]
+
+
+@pytest.mark.parametrize(("leaf_id", "metrics", "component", "points"), LEAF_CASES_V2)
+def test_leaf_v2(
+    leaf_id: str, metrics: dict[str, Any], component: str | None, points: float
+) -> None:
+    reached = {leaf.leaf: leaf for leaf in evaluate(TREE_V2, metrics)}
+    assert leaf_id in reached, list(reached)
+    leaf = reached[leaf_id]
+    assert leaf.component == component
+    assert (leaf.adjust if leaf.adjust is not None else leaf.points) == points
+    text = render_feedback(leaf.feedback, metrics)
+    assert "{" not in text and "?" not in text
+    assert text.strip()
+
+
+def test_every_v2_leaf_has_a_case() -> None:
+    assert {leaf.leaf for leaf in TREE_V2.all_leaves()} == {case[0] for case in LEAF_CASES_V2}
+
+
+def test_v2_keeps_v1_fairness_leaves_and_max() -> None:
+    assert TREE_V2.component_max == TREE.component_max
+    v1 = {leaf.leaf: leaf for leaf in TREE.all_leaves()}
+    v2 = {leaf.leaf: leaf for leaf in TREE_V2.all_leaves()}
+    assert v2["NOT_DETECTABLE"] == v1["NOT_DETECTABLE"]
+    assert v2["CLASS_WRONG_BEFORE_IDENTIFIABLE"] == v1["CLASS_WRONG_BEFORE_IDENTIFIABLE"]
+    assert v2["DECISION_UNAVOIDABLE"].exclude_components == ["decision"]
+    assert not v2["DECISION_UNAVOIDABLE"].excluded
+
+
+def _ew_scenario(intercept_cooldown_s: float = 6) -> Scenario:
+    """S01 with a jammer, a friendly, a civilian, a bird and a fibre-optic FPV."""
+    raw = json.loads(json.dumps(S01_RAW))
+    raw["scoringTreeId"] = "default_v2"
+    raw["effectors"] = [
+        {"id": "jam1", "kind": "EW_JAM", "x": 0, "z": 0, "rangeM": 1500, "cooldownS": 10},
+        {
+            "id": "int1",
+            "kind": "INTERCEPT",
+            "x": 0,
+            "z": 0,
+            "rangeM": 1500,
+            "cooldownS": intercept_cooldown_s,
+            "ammo": 4,
+        },
+    ]
+    base = raw["contacts"][0]
+    raw["contacts"] += [
+        {
+            **base,
+            "id": "c02",
+            "class": "FRIENDLY_QUAD",
+            "isThreat": False,
+            "affiliation": "FRIENDLY",
+            "behaviour": "FRIENDLY_PATROL",
+        },
+        {
+            **base,
+            "id": "c03",
+            "class": "CIVILIAN_HOBBY",
+            "isThreat": False,
+            "affiliation": "NEUTRAL",
+            "behaviour": "TRANSIT",
+        },
+        {
+            **base,
+            "id": "c04",
+            "class": "BIRD_LARGE",
+            "isThreat": False,
+            "affiliation": "NEUTRAL",
+            "controlLink": "NONE",
+            "behaviour": "BIRD_FLOCK",
+            "emissions": {"rfActive": False},
+        },
+        {
+            **base,
+            "id": "c05",
+            "class": "FPV",
+            "controlLink": "FIBRE_OPTIC",
+            "emissions": {"rfActive": False},
+        },
+    ]
+    return Scenario.model_validate(raw)
+
+
+def outcome_ev(seq: int, t: int, track: str, contact: str, response: str, result: str, **p: Any):
+    return ev(
+        seq,
+        t,
+        "RESPONSE_OUTCOME",
+        trackId=track,
+        contactId=contact,
+        payload={"response": response, "result": result, **p},
+    )
+
+
+def by_id(scenario: Scenario, events: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    return {m["contactId"]: m for m in contact_metrics(scenario, events)}
+
+
+def test_jam_collateral_friendly_and_civilian() -> None:
+    sc = _ew_scenario()
+    events = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c01", trackId="T001"),
+        ev(2, 40_000, "RESPONSE_ORDERED", trackId="T001", payload={"response": "EW_JAM"}),
+        outcome_ev(
+            3,
+            40_000,
+            "T001",
+            "c01",
+            "EW_JAM",
+            "NEUTRALISED",
+            collateral={"contactIds": ["c02", "c03"]},
+        ),
+        ev(4, 40_000, "CONTACT_NEUTRALISED", contactId="c01", payload={"by": "EW_JAM"}),
+        ev(5, 40_000, "CONTACT_NEUTRALISED", contactId="c02", payload={"by": "EW_JAM"}),
+        ev(6, 40_000, "CONTACT_NEUTRALISED", contactId="c03", payload={"by": "EW_JAM"}),
+    ]
+    m = by_id(sc, events)
+    assert (m["c01"]["outcome"], m["c01"]["neutralisedMethod"]) == ("NEUTRALISED", "jammed")
+    assert m["c02"]["outcome"] == "FRIENDLY_JAMMED"
+    assert m["c03"]["outcome"] == "CIVILIAN_JAMMED"
+    score = score_session(sc, events)
+    assert [(p.code, p.points, p.contact_id) for p in score.penalties] == [
+        ("FRIENDLY_JAMMED", -15, "c02"),
+        ("CIVILIAN_JAMMED", -5, "c03"),
+    ]
+    c01 = next(p for p in score.per_contact if p.contact_id == "c01")
+    assert "DECISION_NEUTRALISED" in [leaf.root for leaf in c01.leaves]
+    assert any("(jammed)" in f for f in c01.feedback)
+    assert c01.response_appropriate is True
+
+
+def test_targeted_non_threats_are_wrongly_engaged_and_friendlies_fratricide() -> None:
+    sc = _ew_scenario()
+    jam_civilian = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c03", trackId="T001"),
+        outcome_ev(2, 30_000, "T001", "c03", "EW_JAM", "NEUTRALISED"),
+        ev(3, 30_000, "CONTACT_NEUTRALISED", contactId="c03", payload={"by": "EW_JAM"}),
+    ]
+    assert by_id(sc, jam_civilian)["c03"]["outcome"] == "WRONGLY_ENGAGED"  # not CIVILIAN_JAMMED
+    jam_friendly = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c02", trackId="T001"),
+        outcome_ev(2, 30_000, "T001", "c02", "EW_JAM", "NEUTRALISED"),
+        ev(3, 30_000, "CONTACT_NEUTRALISED", contactId="c02", payload={"by": "EW_JAM"}),
+    ]
+    assert by_id(sc, jam_friendly)["c02"]["outcome"] == "FRIENDLY_JAMMED"
+    spoof_friendly = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c02", trackId="T001"),
+        outcome_ev(2, 30_000, "T001", "c02", "EW_SPOOF", "NO_EFFECT"),
+    ]
+    assert by_id(sc, spoof_friendly)["c02"]["outcome"] == "WRONGLY_ENGAGED"
+    shoot_friendly = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c02", trackId="T001"),
+        outcome_ev(2, 30_000, "T001", "c02", "INTERCEPT", "MISSED"),
+        outcome_ev(3, 40_000, "T001", "c02", "EW_JAM", "NEUTRALISED"),
+        ev(4, 40_000, "CONTACT_NEUTRALISED", contactId="c02", payload={"by": "EW_JAM"}),
+    ]
+    assert by_id(sc, shoot_friendly)["c02"]["outcome"] == "FRATRICIDE"
+
+
+def test_birds_are_never_penalised_for_ew() -> None:
+    sc = _ew_scenario()
+    events = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c04", trackId="T001"),
+        ev(2, 30_000, "RESPONSE_ORDERED", trackId="T001", payload={"response": "EW_JAM"}),
+        outcome_ev(3, 30_000, "T001", "c04", "EW_JAM", "NO_EFFECT"),
+        ev(4, 31_000, "RESPONSE_ORDERED", trackId="T001", payload={"response": "EW_SPOOF"}),
+        outcome_ev(5, 31_000, "T001", "c04", "EW_SPOOF", "NO_EFFECT"),
+    ]
+    assert by_id(sc, events)["c04"]["outcome"] == "IGNORED_OK"
+    assert [p for p in score_session(sc, events).penalties if p.contact_id == "c04"] == []
+
+
+def test_ineffective_ew_against_fibre_optic() -> None:
+    sc = _ew_scenario()
+    jam_only = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c05", trackId="T001"),
+        ev(2, 21_000, "MARKED_DETECTED", trackId="T001"),
+        ev(3, 30_000, "RESPONSE_ORDERED", trackId="T001", payload={"response": "EW_JAM"}),
+        outcome_ev(4, 30_000, "T001", "c05", "EW_JAM", "NO_EFFECT"),
+        ev(5, 120_000, "CONTACT_REACHED_ASSET", contactId="c05", payload={"assetId": "a1"}),
+    ]
+    m = by_id(sc, jam_only)["c05"]
+    assert (m["ineffectiveEw"], m["ineffectiveEwVerb"], m["controlLinkLabel"]) == (
+        1,
+        "Jamming",
+        "fibre-optic",
+    )
+    leaves = [leaf.leaf for leaf in evaluate(TREE_V2, m)]
+    assert leaves[-1] == "DECISION_INEFFECTIVE_EW"
+    text = render_feedback(evaluate(TREE_V2, m)[-1].feedback, m)
+    assert text.startswith("Jamming has no effect on a fibre-optic drone.")
+
+    then_shot = [
+        *jam_only[:-1],
+        outcome_ev(5, 40_000, "T001", "c05", "INTERCEPT", "NEUTRALISED"),
+        ev(6, 40_000, "CONTACT_NEUTRALISED", contactId="c05", payload={"by": "INTERCEPT"}),
+    ]
+    m = by_id(sc, then_shot)["c05"]
+    reached = evaluate(TREE_V2, m)
+    assert [leaf.leaf for leaf in reached][-2:] == ["DECISION_EW_LESSON", "DECISION_NEUTRALISED"]
+    assert render_feedback(reached[-1].feedback, m).endswith("(1 round(s)).")
+
+
+@pytest.mark.parametrize(
+    ("cooldown_s", "warning_s", "unavoidable"),
+    [
+        (6, 9.95, True),  # below the 10 s floor (cooldown 6 s)
+        (6, 10.0, False),
+        (15, 14.95, True),  # cooldown above the floor sets the threshold
+        (15, 15.0, False),
+    ],
+)
+def test_unavoidable_threshold(cooldown_s: float, warning_s: float, unavoidable: bool) -> None:
+    sc = _ew_scenario(intercept_cooldown_s=cooldown_s)
+    reached = 20_000 + round(warning_s * 1000)
+    events = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c05", trackId="T001"),
+        ev(2, reached, "CONTACT_REACHED_ASSET", contactId="c05", payload={"assetId": "a1"}),
+    ]
+    m = by_id(sc, events)["c05"]
+    # Fibre-optic: only the interceptor is able to engage it.
+    assert m["respondingEffectorCooldownMinS"] == cooldown_s
+    assert m["unavoidableDecision"] is unavoidable
+
+
+def test_unavoidable_uses_the_shortest_able_effector() -> None:
+    sc = _ew_scenario(intercept_cooldown_s=30)
+    # c01 is RF_MANUAL: the jammer (10 s) can engage it; c05 (fibre) only the interceptor (30 s).
+    assert by_id(sc, [])["c01"]["respondingEffectorCooldownMinS"] == 10
+    assert by_id(sc, [])["c05"]["respondingEffectorCooldownMinS"] == 30
+
+
+def test_unavoidable_excludes_only_the_decision_component() -> None:
+    sc = _ew_scenario()
+    events = [
+        # c01: handled perfectly → 25 / 25 / 30.
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c01", trackId="T001"),
+        ev(2, 21_000, "CLASSIFIED", trackId="T001", payload={"class": "QUAD_SMALL"}),
+        ev(3, 50_000, "CONTACT_NEUTRALISED", contactId="c01", payload={"by": "INTERCEPT"}),
+        # c05: popped up 5 s before impact; detected in 20 s, never classified.
+        ev(4, 100_000, "SENSOR_TRACK_CREATED", contactId="c05", trackId="T002"),
+        ev(5, 104_000, "MARKED_DETECTED", trackId="T002"),
+        ev(6, 105_000, "CONTACT_REACHED_ASSET", contactId="c05", payload={"assetId": "a1"}),
+    ]
+    score = score_session(sc, events)
+    c05 = next(p for p in score.per_contact if p.contact_id == "c05")
+    assert [leaf.root for leaf in c05.leaves] == [
+        "LATENCY_UNDER_5S",
+        "NOT_CLASSIFIED",
+        "DECISION_UNAVOIDABLE",
+    ]
+    # Detection and classification still averaged over both threats; decision over c01 only.
+    assert score.components.detection == 25
+    assert score.components.classification == 12.5
+    assert score.components.decision == 30
+    assert score.metrics["scoredThreats"] == 2
+    assert score.penalties == []  # no separate leak penalty

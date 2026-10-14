@@ -1,9 +1,11 @@
 """Session scoring: metrics → decision tree → Score (SPEC §9).
 
-Each component is the mean over scored threat contacts of the points that
-contact earned (so it never exceeds the tree's max). The total is scaled to 100
-over the components the tree scores (max > 0), then session-level adjustments
-(penalties / bonuses) are added and the result clamped to 0..100.
+Each component is the mean, over the threat contacts scored for that component,
+of the points each earned (so it never exceeds the tree's max). A leaf with
+`excluded` drops the contact from every component; `excludeComponents` drops it
+from only those (per-component denominators, decision 56). The total is scaled
+to 100 over the components the tree scores (max > 0), then session-level
+adjustments (penalties / bonuses) are added and the result clamped to 0..100.
 """
 
 from typing import Any
@@ -29,7 +31,7 @@ def _per_contact(
     m: dict[str, Any], points: float, leaves: list[str], feedback: list[str]
 ) -> PerContactMetrics:
     """Optional metrics that are None are left unset, so they are omitted (not null) in JSON."""
-    fired = m["interceptsFired"] > 0
+    fired = m["responsesFired"] > 0
     optional: dict[str, Any] = {
         "first_detectable_t_ms": m["firstDetectableTMs"],
         "trainee_detected_t_ms": m["traineeDetectedTMs"],
@@ -38,8 +40,8 @@ def _per_contact(
         "classification_correct": m["classificationCorrect"]
         and ClassificationResult(m["classificationCorrect"]),
         "identifiable_when_classified": m["identifiableWhenClassified"],
-        # Threat: an intercept was actually fired. Non-threat: held fire.
-        "response_appropriate": fired if m["isThreat"] else not fired,
+        # Threat: an effector actually fired. Non-threat: left alone.
+        "response_appropriate": fired if m["isThreat"] else m["outcome"] == "IGNORED_OK",
     }
     return PerContactMetrics(
         contact_id=m["contactId"],
@@ -60,6 +62,7 @@ def score_session(
     tree = tree or load_tree(scenario.scoring_tree_id)
     maxima = tree.component_max.model_dump()
     totals = dict.fromkeys(COMPONENTS, 0.0)
+    counts = dict.fromkeys(COMPONENTS, 0)
     scored_threats = 0
     penalties: list[Penalty] = []
     per_contact: list[PerContactMetrics] = []
@@ -82,10 +85,13 @@ def score_session(
                     )
                 )
         excluded = any(leaf.excluded for leaf in leaves)
+        partial = {c for leaf in leaves for c in leaf.exclude_components}
         if m["isThreat"] and not excluded:
             scored_threats += 1
             for c in COMPONENTS:
-                totals[c] += earned[c]
+                if c not in partial:
+                    totals[c] += earned[c]
+                    counts[c] += 1
         per_contact.append(
             _per_contact(
                 m,
@@ -96,8 +102,7 @@ def score_session(
         )
 
     components = {
-        c: round(totals[c] / scored_threats, 2) if scored_threats else float(maxima[c])
-        for c in COMPONENTS
+        c: round(totals[c] / counts[c], 2) if counts[c] else float(maxima[c]) for c in COMPONENTS
     }
     possible = sum(v for v in maxima.values() if v > 0)
     base = 100 * sum(components[c] for c in COMPONENTS if maxima[c] > 0) / possible
