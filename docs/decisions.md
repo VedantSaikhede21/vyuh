@@ -38,3 +38,7 @@ Short entries: date, decision, why. Newest at the bottom.
 The repo moved from a OneDrive-synced folder on C: to `D:\dev\vyuh` (C: was full; OneDrive also locks `node_modules`). pnpm store → `D:/.pnpm-store`, uv cache → `D:/.uv-cache` (user-level config, not in the repo).
 
 15. **`unrs-resolver` build script denied** (`allowBuilds` in `pnpm-workspace.yaml`). *Why:* pnpm 12 blocks unapproved install scripts; the package (via eslint-config-next) ships prebuilt binaries, so its postinstall is unnecessary.
+
+## 2026-10-14 — Merge strategy
+
+16. **PRs are rebase-merged, not squash-merged** (CLAUDE.md §12). *Why:* VYUH has a single developer, and individual commits on `main` keep a readable history and count on the contribution graph; CI still gates every PR. Phase 0 history was restored to its 9 original commits after an initial squash.
