@@ -34,7 +34,7 @@ export function TacticalScene({
     <>
       <PerspectiveCamera makeDefault position={start} fov={50} near={5} far={40_000} />
       <Environment env={runtime.sim.getState().environment} variant="tactical" />
-      <TerrainMesh world={runtime.world} />
+      <TerrainMesh world={runtime.world} edgeFade />
       <BuildingsMesh index={runtime.world.buildings} />
       <SiteMarkers />
       <Drones />

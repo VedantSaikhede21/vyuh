@@ -9,6 +9,7 @@ import { AFFILIATION_STYLE, affiliationOutline } from '@/lib/affiliation';
 import { useHudStore, type TrackView } from '@/lib/sim/store';
 import { useSimRuntime } from './sim-context';
 import { SITES } from '@/lib/theme/scene-colours';
+import { cn } from '@/lib/utils';
 
 const MARKER_M = 22;
 
@@ -98,10 +99,13 @@ function TrackMarker({
           {...(labelPortal ? { portal: labelPortal as RefObject<HTMLElement> } : {})}
         >
           <div
-            className="pointer-events-none whitespace-nowrap text-readout"
-            style={{ color: style.hex }}
+            className={cn(
+              'pointer-events-none whitespace-nowrap border bg-bg-1 px-1 text-readout leading-4',
+              style.textClass,
+              selected ? 'border-select' : 'border-line-2',
+            )}
           >
-            [{style.letter}] {track.id}
+            {style.letter} {track.id}
           </div>
         </Html>
       )}

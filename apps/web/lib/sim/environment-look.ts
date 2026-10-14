@@ -1,7 +1,7 @@
 import type { SimEnvironment } from '@vyuh/sim-core';
 import { toThree } from '@vyuh/sim-core';
 import { Color } from 'three';
-import { SKY } from '@/lib/theme/scene-colours';
+import { SKY, UI } from '@/lib/theme/scene-colours';
 
 // One environment for every view (SPEC §14): sun direction / colour / intensity
 // from the sim's computed sun, sky by day and stars by night, fog from
@@ -21,6 +21,8 @@ const HEMI_GROUND_DAY = new Color(SKY.hemiGroundDay);
 const HEMI_GROUND_NIGHT = new Color(SKY.hemiGroundNight);
 const SUN_LOW = new Color(SKY.sunLow);
 const SUN_HIGH = new Color(SKY.sunHigh);
+/** The tactical map is a C2 display: it sits on --bg-0 (DESIGN §3.1), with no sky dome. */
+const TACTICAL_BACKGROUND = new Color(UI.bg0);
 /** Intensity of the tactical map's overhead display light when the real sun is weaker. */
 const TACTICAL_MAP_LIGHT = 1.2;
 const MAP_LIGHT_DIR: [number, number, number] = [0.3, 0.9, 0.3];
@@ -45,6 +47,7 @@ export interface EnvironmentLook {
   fogNear: number;
   fogFar: number;
   showSky: boolean;
+  showStars: boolean;
   turbidity: number;
 }
 
@@ -82,10 +85,11 @@ export function environmentLook(env: SimEnvironment, variant: EnvironmentVariant
     hemiSky: HEMI_SKY_NIGHT.clone().lerp(HEMI_SKY_DAY, ambient),
     hemiGround: HEMI_GROUND_NIGHT.clone().lerp(HEMI_GROUND_DAY, ambient),
     hemiIntensity: Math.max(0.04, 0.9 * ambient),
-    background,
+    background: variant === 'tactical' ? TACTICAL_BACKGROUND.clone() : background,
     fogNear: variant === 'eo' ? vis * 0.05 : Math.max(vis, 4000) * 0.6,
     fogFar: variant === 'eo' ? Math.max(vis, 50) : Math.max(vis * 2.5, 9000),
-    showSky: elDeg > -6,
+    showSky: variant === 'eo' && elDeg > -6,
+    showStars: variant === 'eo' && elDeg <= -6,
     turbidity: 2 + 10 * haze,
   };
 }
