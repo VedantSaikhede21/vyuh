@@ -260,7 +260,7 @@ export default function LandingPage() {
               ],
               [
                 'Integrated graphics',
-                'S14 measured at 78–91 fps at 1920×1000 on an AMD Radeon integrated GPU (Ryzen 7 5800H). Budget: 30 fps.',
+                'S14 runs at 99 fps (mean, production build, 1920×1080) on an AMD Radeon integrated GPU (Ryzen 7 5800H). Budget: 30 fps.',
               ],
               [
                 'Small downloads',
