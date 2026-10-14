@@ -299,17 +299,17 @@ docker compose up        # offline full stack
 
 **Phases**
 - [x] 0 Foundations
-- [ ] 1 MVP loop
+- [x] 1 MVP loop
 - [ ] 2 Realism core
 - [ ] 3 Generator & scenarios
 - [ ] 4 AAR & instructor
 - [ ] 5 AI layer
 - [ ] 6 Polish & deploy
 
-- Current phase: **1 — MVP loop: built on `feat/phase1-mvp-loop`, awaiting manual browser playthrough + FPS check before it is marked done**
-- Last completed: Phase 0 Foundations (merged 2026-10-14, PR #1, CI green).
-- Phase 1 so far (all 9 plan steps committed): shared schemas (list/detail/session detail, `componentMax`); sim-core clock/coords/procedural terrain/kinematics/radar/N-of-M tracks/intercept/`createSim`; S01–S03 seeded; `/scenarios` + `/sessions` endpoints with plausibility checks; decision-tree scoring (`default_v1`) + `complete`; web runtime loop, batcher, R3F tactical scene, HUD, `/train` → player → result screen. Verified: `pnpm lint`, `pnpm test` (shared 32, sim-core 60, web 10), `uv run pytest` (120), `pnpm gen:schemas` no diff, `next build`, HTTP smoke test (login → session → events → complete → score 100 → GET).
-- Next up: user plays S01–S03 in the browser at 1366×768 (check FPS ≥ 30 on integrated graphics), then close out Phase 1 (done-criteria evidence, PR).
+- Current phase: **1 — MVP loop: complete on `feat/phase1-mvp-loop` (PR open, awaiting CI + rebase-merge)**
+- Last completed: Phase 1 MVP loop (2026-10-14). Shared schemas; sim-core clock/coords/procedural terrain/kinematics/radar/N-of-M tracks/intercept/`createSim`; S01–S03 seeded; `/scenarios` + `/sessions` endpoints with plausibility checks; decision-tree scoring (`default_v1`) + `complete`; web runtime loop, batcher, R3F tactical scene, HUD, `/train` → player → result screen.
+- Phase 1 evidence: determinism `packages/sim-core/test/sim.test.ts` ("determinism (SPEC §3.4)", incl. exact replay); every scoring leaf `apps/api/tests/test_scoring.py::test_leaf` + `test_every_leaf_has_a_case`; browser playthrough S01 (28.8) and S03 (60.0) completed with server scores matching the tree, avg 117 FPS on AMD Radeon integrated graphics. `pnpm lint`, `pnpm test` (32/60/10), `uv run pytest` (120), `pnpm gen:schemas` no diff, `next build`.
+- Next up: Phase 2 Realism core — do not start until approved; plan first (SPEC §12, §6, §14).
 - Known issues: the old pre-move container `sih-2026-postgres-1` (from the OneDrive copy) holds port 5432, so `docker compose up` from this repo fails until it is stopped. It has the same DBs and credentials, and is in use for now. Web auth guard is client-side only (tech debt, decision 9).
 - Tech debt (Phase 1): unsent event batches are kept in memory only (no `sessionStorage` yet); a reloaded mid-run session cannot be resumed; `ABANDONED` (15 min idle) is not automated; no Playwright E2E yet; Elo update deferred to Phase 5 (decision 28).
 - Open decisions:
