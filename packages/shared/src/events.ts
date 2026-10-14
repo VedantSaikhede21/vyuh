@@ -3,6 +3,7 @@ import {
   Affiliation,
   ContactClass,
   EoLevel,
+  EoMode,
   ResponseKind,
   ResponseResult,
   SensorKind,
@@ -191,12 +192,15 @@ export const CameraSlewedEvent = named(
   z.object({
     ...base,
     type: z.literal('CAMERA_SLEWED'),
+    /** Present = camera locked on this track (sim-core follows it every tick). */
+    trackId: ID.optional(),
     payload: named(
       'CameraSlewedPayload',
       z.object({
         azDeg: z.number().min(0).lt(360),
         elDeg: z.number().min(-90).max(90),
         zoom: z.number().positive(),
+        mode: EoMode.optional(),
       }),
     ),
   }),

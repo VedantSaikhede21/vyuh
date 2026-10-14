@@ -181,6 +181,18 @@ export type Activity = z.infer<typeof Activity>;
 export const WaypointAction = named('WaypointAction', z.enum(['DROP', 'DIVE', 'RTH']));
 export type WaypointAction = z.infer<typeof WaypointAction>;
 
+/** Waypoint altitude reference: above ground level (default) or above mean sea level. */
+export const AltitudeRef = named('AltitudeRef', z.enum(['AGL', 'MSL']));
+export type AltitudeRef = z.infer<typeof AltitudeRef>;
+
+/** EO/IR camera mode: visible-light day camera or thermal (white-hot). */
+export const EoMode = named('EoMode', z.enum(['DAY', 'IR']));
+export type EoMode = z.infer<typeof EoMode>;
+
+/** Whether a terrain preset's OSM building footprints were fetched (SPEC §14). */
+export const BuildingsStatus = named('BuildingsStatus', z.enum(['OK', 'EMPTY', 'UNAVAILABLE']));
+export type BuildingsStatus = z.infer<typeof BuildingsStatus>;
+
 export const FalseContactDensity = named('FalseContactDensity', z.enum(['LOW', 'MED', 'HIGH']));
 export type FalseContactDensity = z.infer<typeof FalseContactDensity>;
 

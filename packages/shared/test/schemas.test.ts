@@ -14,7 +14,9 @@ import {
   ScenarioRequest,
   SessionDetailResponse,
   SimEvent,
+  TerrainPresetMeta,
   ThreatClass,
+  CLASS_PROFILES,
   type Scenario as ScenarioT,
 } from '../src/index.ts';
 
@@ -273,5 +275,69 @@ describe('ScenarioListResponse', () => {
     expect(ScenarioListResponse.safeParse({ items: [{ ...item, difficulty: 0 }] }).success).toBe(
       false,
     );
+  });
+});
+
+describe('Phase 2 additive fields', () => {
+  it('accepts CAMERA_SLEWED with and without a lock and mode', () => {
+    const ev = {
+      seq: 3,
+      tMs: 100,
+      type: 'CAMERA_SLEWED',
+      payload: { azDeg: 10, elDeg: 2, zoom: 4 },
+    };
+    expect(SimEvent.safeParse(ev).success).toBe(true);
+    const locked = { ...ev, trackId: 'T001', payload: { ...ev.payload, mode: 'IR' } };
+    expect(SimEvent.safeParse(locked).success).toBe(true);
+    expect(SimEvent.safeParse({ ...ev, payload: { ...ev.payload, mode: 'NIGHT' } }).success).toBe(
+      false,
+    );
+  });
+
+  it('accepts altRef on waypoints and irResolution on EO/IR sensors', () => {
+    const s = clone();
+    s.contacts[0]!.path[0]!.altRef = 'MSL';
+    const eo = s.sensors.find((x) => x.kind === 'EO_IR');
+    if (eo?.kind === 'EO_IR') eo.irResolution = [320, 256];
+    expect(Scenario.safeParse(s).success).toBe(true);
+  });
+
+  it('gives every class a thermal contrast in 0..1', () => {
+    for (const cls of ContactClass.options) {
+      const t = CLASS_PROFILES[cls].thermalContrast;
+      expect(t).toBeGreaterThan(0);
+      expect(t).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
+describe('TerrainPresetMeta (SPEC §14)', () => {
+  const meta = {
+    name: 'TEST_PRESET',
+    origin: { lat: 30.52, lon: 75.7 },
+    utcOffsetMin: 330,
+    sizeM: 14_000,
+    resolution: 512,
+    metresPerPx: 14_000 / 511,
+    originElevM: 237,
+    relMinM: -6,
+    relMaxM: 14,
+    minElevM: 231,
+    maxElevM: 251,
+    buildingsStatus: 'OK',
+    buildingCount: 41,
+    files: { heightmap: 'heightmap.u16', preview: 'heightmap.png', buildings: 'buildings.geojson' },
+    source: 'Copernicus GLO-30',
+    attribution: ['© DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018'],
+  };
+
+  it('accepts a valid meta', () => {
+    expect(TerrainPresetMeta.safeParse(meta).success).toBe(true);
+  });
+
+  it('rejects an inconsistent metresPerPx, inverted range or bad status', () => {
+    expect(TerrainPresetMeta.safeParse({ ...meta, metresPerPx: 30 }).success).toBe(false);
+    expect(TerrainPresetMeta.safeParse({ ...meta, relMinM: 20 }).success).toBe(false);
+    expect(TerrainPresetMeta.safeParse({ ...meta, buildingsStatus: 'ok' }).success).toBe(false);
   });
 });
