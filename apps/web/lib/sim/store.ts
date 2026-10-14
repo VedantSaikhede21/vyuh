@@ -20,6 +20,19 @@ export interface TrackView {
   markedDetected: boolean;
   classifiedAs: ContactClass | null;
   affiliation: Affiliation;
+  /** RF strobe lined up with the track (band, friendly ID), or null. */
+  rf: { band: string | null; friendlyIdCode: string | null } | null;
+}
+
+/** An RF bearing strobe as the operator sees it (no contact id, no range). */
+export interface RfStrobeView {
+  id: string;
+  sensorId: string;
+  bearingDeg: number;
+  band: string | null;
+  friendlyIdCode: string | null;
+  /** Time since first heard. */
+  ageMs: number;
 }
 
 export interface EffectorView {
@@ -44,6 +57,7 @@ export interface HudSnapshot {
   roe: Roe;
   paused: boolean;
   tracks: TrackView[];
+  rfStrobes: RfStrobeView[];
   effectors: EffectorView[];
   selectedTrackId: string | null;
   /** Newest first; built only from what the operator could observe. */
@@ -95,6 +109,15 @@ export function snapshot(rt: SimRuntime): HudSnapshot {
       markedDetected: t.markedDetected,
       classifiedAs: t.classifiedAs,
       affiliation: t.affiliation,
+      rf: t.rf && { band: t.rf.band, friendlyIdCode: t.rf.friendlyIdCode },
+    })),
+    rfStrobes: s.rfStrobes.map((r) => ({
+      id: r.id,
+      sensorId: r.sensorId,
+      bearingDeg: r.bearingDeg,
+      band: r.band,
+      friendlyIdCode: r.friendlyIdCode,
+      ageMs: s.clock.tMs - r.firstTMs,
     })),
     effectors: s.effectors.map((e) => ({
       id: e.id,

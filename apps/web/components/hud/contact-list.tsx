@@ -1,6 +1,7 @@
 'use client';
 
 import { AffiliationSymbol } from './affiliation-symbol';
+import { RF_HEX, rfBadgeText } from '@/lib/rf';
 import type { Commands } from '@/lib/sim/commands';
 import { useHudStore } from '@/lib/sim/store';
 import { CLASS_LABEL, pad3 } from '@/lib/strings';
@@ -20,6 +21,7 @@ export function ContactList({ commands }: { commands: Commands }) {
           <th className="px-2 py-1">Track</th>
           <th className="px-2 py-1">Aff</th>
           <th className="px-2 py-1">Class</th>
+          <th className="px-2 py-1">RF</th>
           <th className="px-2 py-1 text-right">Brg</th>
           <th className="px-2 py-1 text-right">Rng m</th>
           <th className="px-2 py-1 text-right">Alt m</th>
@@ -48,6 +50,9 @@ export function ContactList({ commands }: { commands: Commands }) {
               </td>
               <td className="px-2 py-1">
                 {t.classifiedAs ? CLASS_LABEL[t.classifiedAs] : 'UNKNOWN'}
+              </td>
+              <td className="px-2 py-1 text-xs" style={t.rf ? { color: RF_HEX } : undefined}>
+                {t.rf ? rfBadgeText(t.rf) : '—'}
               </td>
               <td className="px-2 py-1 text-right">{pad3(t.bearingDeg)}</td>
               <td className="px-2 py-1 text-right">{Math.round(t.rangeM)}</td>

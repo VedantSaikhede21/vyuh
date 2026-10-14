@@ -6,7 +6,7 @@ import { AFFILIATION_STYLE } from '@/lib/affiliation';
 import type { Commands } from '@/lib/sim/commands';
 import { useHudStore } from '@/lib/sim/store';
 import { useUiStore } from '@/lib/sim/ui-store';
-import { CLASS_MENU, ROE_HINT } from '@/lib/strings';
+import { CLASS_MENU, EFFECTOR_LABEL, ROE_HINT } from '@/lib/strings';
 
 const AFFILIATIONS: Affiliation[] = ['HOSTILE', 'FRIENDLY', 'NEUTRAL', 'UNKNOWN'];
 
@@ -27,11 +27,12 @@ export function ActionBar({ commands }: { commands: Commands }) {
   if (!hud) return null;
   const selected = hud.tracks.find((t) => t.id === hud.selectedTrackId) ?? null;
   const interceptor = hud.effectors.find((e) => e.kind === 'INTERCEPT') ?? null;
-  const cooldownLeft = interceptor ? Math.max(0, interceptor.readyAtMs - hud.tMs) : 0;
+  const jammer = hud.effectors.find((e) => e.kind === 'EW_JAM') ?? null;
+  const spoofer = hud.effectors.find((e) => e.kind === 'EW_SPOOF') ?? null;
   const noTrack = selected === null || hud.endReason !== null;
 
   return (
-    <div className="flex h-full flex-col gap-2 text-sm">
+    <div className="flex h-full flex-col gap-1.5 overflow-y-auto text-sm">
       <div className="hud-label">
         Selected: <span className="font-mono text-foreground">{selected?.id ?? 'none'}</span>
       </div>
@@ -113,35 +114,51 @@ export function ActionBar({ commands }: { commands: Commands }) {
         )}
       </div>
       <div className="grid grid-cols-2 gap-1.5">
-        <Button size="sm" variant="outline" disabled title="EW jamming arrives in a later phase">
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={noTrack || !jammer}
+          onClick={commands.jam}
+          title="Jam the RF link of everything in a ±10° sector toward the track"
+        >
           Jam <Key k="J" />
         </Button>
-        <Button size="sm" variant="outline" disabled title="EW spoofing arrives in a later phase">
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={noTrack || !spoofer}
+          onClick={commands.spoof}
+          title="Spoof GNSS navigation in a ±10° sector toward the track"
+        >
           Spoof <Key k="S" />
         </Button>
       </div>
 
-      {interceptor && (
-        <div className="mt-auto space-y-1 border-t border-border pt-2 font-mono text-xs">
-          <div className="flex justify-between">
-            <span className="hud-label">Interceptor {interceptor.id}</span>
-            <span>
-              {interceptor.ammo === null ? '∞' : interceptor.ammo} rnd ·{' '}
-              {(interceptor.rangeM / 1000).toFixed(1)} km
-            </span>
-          </div>
-          <div className="h-1.5 bg-muted" aria-label="Interceptor cooldown">
-            <div
-              className="h-full bg-warning"
-              style={{
-                width: `${interceptor.cooldownMs ? (cooldownLeft / interceptor.cooldownMs) * 100 : 0}%`,
-              }}
-            />
-          </div>
-          <div className="text-muted-foreground">
-            {cooldownLeft > 0 ? `Reloading ${(cooldownLeft / 1000).toFixed(1)} s` : 'Ready'} ·{' '}
-            {ROE_HINT[hud.roe]}
-          </div>
+      {hud.effectors.length > 0 && (
+        <div className="mt-auto space-y-1 border-t border-border pt-1.5 font-mono text-xs">
+          {hud.effectors.map((e) => {
+            const left = Math.max(0, e.readyAtMs - hud.tMs);
+            return (
+              <div key={e.id}>
+                <div className="flex justify-between gap-2">
+                  <span className="hud-label">
+                    {EFFECTOR_LABEL[e.kind]} {e.id}
+                  </span>
+                  <span>
+                    {e.ammo === null ? '∞' : e.ammo} · {(e.rangeM / 1000).toFixed(1)} km ·{' '}
+                    {left > 0 ? `${(left / 1000).toFixed(1)} s` : 'ready'}
+                  </span>
+                </div>
+                <div className="h-1 bg-muted" aria-label={`${e.id} cooldown`}>
+                  <div
+                    className="h-full bg-warning"
+                    style={{ width: `${e.cooldownMs ? (left / e.cooldownMs) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+          <div className="text-muted-foreground">{ROE_HINT[hud.roe]}</div>
         </div>
       )}
     </div>
