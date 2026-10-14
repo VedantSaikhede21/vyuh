@@ -378,6 +378,7 @@ class ResponseResult(StrEnum):
     BLOCKED_BY_ROE = "BLOCKED_BY_ROE"
     OUT_OF_RANGE = "OUT_OF_RANGE"
     COOLDOWN = "COOLDOWN"
+    NO_AMMO = "NO_AMMO"
 
 
 class RfSensor(BaseModel):
