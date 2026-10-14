@@ -259,7 +259,8 @@ docker compose up        # offline full stack
 - **Scenario schema:** bump `schema_version` on breaking changes and keep a loader that upgrades old scenario JSON.
 - **Raw data:** `scripts/terrain/raw/` is git-ignored. Built presets in `apps/web/public/terrain/` are committed (keep each ≤ ~10 MB).
 - **Never commit:** `.env*` (except `.env.example`), API keys, raw DEM tiles, user data.
-- **Branches:** `feat/<stream>-<short-name>`, `fix/<short-name>`; PR into `main`; CI must pass; squash-merge.
+- **Branches:** `feat/<short-name>`, `fix/<short-name>`; PR into `main`; CI must pass; **rebase-merge** (never squash — every commit lands on `main` individually).
+- **Team reality:** one developer builds VYUH; the stream split in SPEC §18 describes ownership areas, not separate people.
 - **Ownership:** `packages/shared` has one owner (stream C, SPEC §18). Schema PRs merge first; dependent PRs rebase after.
 - **Parallel sessions:** each teammate's Claude Code session stays inside its stream's folders unless the task says otherwise.
 
@@ -297,7 +298,7 @@ docker compose up        # offline full stack
 ## 14. Current status (update this)
 
 **Phases**
-- [ ] 0 Foundations
+- [x] 0 Foundations
 - [ ] 1 MVP loop
 - [ ] 2 Realism core
 - [ ] 3 Generator & scenarios
@@ -305,9 +306,9 @@ docker compose up        # offline full stack
 - [ ] 5 AI layer
 - [ ] 6 Polish & deploy
 
-- Current phase: **0 — Foundations: all done-criteria pass locally; CI not yet run (branch `feat/c-phase0-foundations` not pushed)**
-- Last completed: Phase 0 scaffold — shared schemas + codegen, sim-core RNG, API skeleton (auth, RBAC, migrations, seed), web (login, /train), CI workflow. Verified 2026-10-14: `pnpm lint`, `pnpm test` (38), `uv run pytest` (40), `pnpm gen:schemas` no diff, `next build`, `pnpm dev` + dev-login → `/auth/me`.
-- Next up: push branch, confirm CI green, merge → tick Phase 0; then Phase 1 (needs approval)
+- Current phase: **1 — MVP loop: planning (branch `feat/phase1-mvp-loop`)**
+- Last completed: Phase 0 Foundations (merged 2026-10-14, PR #1, CI green) — shared schemas + codegen, sim-core RNG, API skeleton (auth, RBAC, migrations, seed), web (login, /train), CI workflow. Verified: `pnpm lint`, `pnpm test` (38), `uv run pytest` (40), `pnpm gen:schemas` no diff, `next build`, `pnpm dev` + dev-login → `/auth/me`.
+- Next up: Phase 1 plan → approval → build
 - Known issues: the old pre-move container `sih-2026-postgres-1` (from the OneDrive copy) holds port 5432, so `docker compose up` from this repo fails until it is stopped. It has the same DBs and credentials, and is in use for now. Web auth guard is client-side only (tech debt, decision 9).
 - Open decisions:
 - Open ideas (parked, not approved):
