@@ -1,4 +1,4 @@
-"""Seed demo units, users and scripted scenarios (SPEC §22). Idempotent.
+"""Seed demo units, users, the threat library and scripted scenarios (SPEC §22). Idempotent.
 
 Run: `uv run python -m app.seed.demo`
 
@@ -19,6 +19,7 @@ from app.core.security import local_auth_id
 from app.models import Unit, User
 from app.schemas.generated import UserRole
 from app.seed.scenarios import seed_scenarios
+from app.seed.threats import seed_threat_types
 
 logger = logging.getLogger(__name__)
 
@@ -67,11 +68,12 @@ def run() -> None:
     with factory() as db:
         units = seed_units(db)
         created = seed_users(db, units) if settings.auth_mode is AuthMode.LOCAL else 0
+        threats = seed_threat_types(db)
         scenarios = seed_scenarios(db)
         db.commit()
     print(
         f"Seeded {len(units)} units, {created} new demo users (auth mode: {settings.auth_mode}), "
-        f"{scenarios} scenarios written"
+        f"{threats} threat types, {scenarios} scenarios written"
     )
 
 
