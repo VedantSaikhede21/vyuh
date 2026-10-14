@@ -1,7 +1,7 @@
 'use client';
 
 import type { Affiliation, ContactClass } from '@vyuh/shared';
-import { bearingDeg, horizontalRange, type SimCommand } from '@vyuh/sim-core';
+import type { SimCommand } from '@vyuh/sim-core';
 import { useMemo } from 'react';
 import type { SimRuntime } from './runtime';
 import { snapshot, useHudStore } from './store';
@@ -9,7 +9,11 @@ import { useUiStore } from './ui-store';
 
 /** EO zoom steps as fractions between the sensor's widest and narrowest FOV. */
 const ZOOM_STEPS = 5;
-/** SPEC §4.2: CAMERA_SLEWED is throttled to at most 2 per second. */
+/**
+ * SPEC §4.2: CAMERA_SLEWED is throttled to at most 2 per second. A trailing
+ * event always follows the end of a gesture, so the sim's pointing settles on
+ * exactly what the trainee sees (decision 37).
+ */
 const SLEW_LOG_INTERVAL_MS = 500;
 
 export function eoFovSteps(fovMax: number, fovMin: number): number[] {
@@ -19,25 +23,6 @@ export function eoFovSteps(fovMax: number, fovMin: number): number[] {
 
 export function eoSensor(rt: SimRuntime) {
   return rt.scenario.sensors.find((s) => s.kind === 'EO_IR') ?? null;
-}
-
-/** Az/el (deg) from the EO mast to a track's estimated position. */
-export function pointingToTrack(
-  rt: SimRuntime,
-  trackId: string,
-): { azDeg: number; elDeg: number } | null {
-  const eo = eoSensor(rt);
-  const track = rt.sim.getState().tracks.find((t) => t.id === trackId);
-  if (!eo || !track) return null;
-  const from = rt.sim.getState().sensorPositions[eo.id];
-  if (!from) return null;
-  const to = {
-    x: track.pos.x,
-    y: rt.groundHeight(track.pos.x, track.pos.z) + track.altitudeAglM,
-    z: track.pos.z,
-  };
-  const elDeg = (Math.atan2(to.y - from.y, horizontalRange(from, to)) * 180) / Math.PI;
-  return { azDeg: bearingDeg(from, to), elDeg };
 }
 
 export function useCommands(rt: SimRuntime | null) {
@@ -73,10 +58,12 @@ export function useCommands(rt: SimRuntime | null) {
         const cur = ui().eo;
         rt.dispatch({
           type: 'CAMERA_SLEWED',
+          ...(cur.lockTrackId ? { trackId: cur.lockTrackId } : {}),
           payload: {
             azDeg: ((cur.azDeg % 360) + 360) % 360,
             elDeg: Math.max(-90, Math.min(90, cur.elDeg)),
             zoom: fovMax / cur.hfovDeg,
+            mode: cur.mode,
           },
         });
       };
@@ -132,12 +119,11 @@ export function useCommands(rt: SimRuntime | null) {
         rt.setPaused(!rt.paused);
         useHudStore.getState().publish(snapshot(rt));
       },
+      /** Lock the camera on the selected track; sim-core slews and follows it. */
       slewToSelected() {
         const id = selected();
         if (!id) return;
-        const p = pointingToTrack(rt, id);
-        if (!p) return;
-        ui().setEo({ ...p, lockTrackId: id });
+        ui().setEo({ lockTrackId: id });
         logSlew();
       },
       slewBy(dAzDeg: number, dElDeg: number) {
@@ -147,6 +133,13 @@ export function useCommands(rt: SimRuntime | null) {
           elDeg: Math.max(-10, Math.min(60, eo.elDeg + dElDeg)),
           lockTrackId: null,
         });
+        logSlew();
+      },
+      toggleEoMode() {
+        const mode = ui().eo.mode === 'DAY' ? 'IR' : 'DAY';
+        ui().setEo({ mode });
+        say(mode === 'IR' ? 'EO/IR: thermal (white-hot)' : 'EO/IR: day camera');
+        logSlew();
       },
       endSlew: logSlew,
       zoom(dir: 1 | -1) {

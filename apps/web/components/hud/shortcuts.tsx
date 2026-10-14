@@ -13,7 +13,7 @@ const AFFILIATION_KEYS: Record<string, Affiliation> = {
   n: 'NEUTRAL',
   u: 'UNKNOWN',
 };
-const LATER_KEYS = new Set(['j', 's', 'r', 't', 'y', 'x']);
+const LATER_KEYS = new Set(['j', 's', 'r', 'y', 'x']);
 
 /** SPEC §15.1 keyboard shortcuts. Ignored while typing in a form field. */
 export function useShortcuts(commands: Commands | null): void {
@@ -56,6 +56,7 @@ export function useShortcuts(commands: Commands | null): void {
       else if (k === 'm') commands.monitor();
       else if (k === 'i') commands.armIntercept();
       else if (k === 'p') commands.togglePause();
+      else if (k === 't') commands.toggleEoMode();
       else if (LATER_KEYS.has(k)) {
         ui.set({ message: { text: 'That action arrives in a later phase.', tone: 'info' } });
       } else handled = false;
