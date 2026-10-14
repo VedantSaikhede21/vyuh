@@ -47,6 +47,11 @@ class AltitudeBand(StrEnum):
     HIGH = "HIGH"
 
 
+class AltitudeRef(StrEnum):
+    AGL = "AGL"
+    MSL = "MSL"
+
+
 class AreaZoneKind(StrEnum):
     PROTECTED_ASSET = "PROTECTED_ASSET"
     NO_KINETIC = "NO_KINETIC"
@@ -75,13 +80,17 @@ class Behaviour(StrEnum):
     BIRD_FLOCK = "BIRD_FLOCK"
 
 
-class CameraSlewedPayload(BaseModel):
+class BuildingProperties(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    az_deg: Annotated[float, Field(alias="azDeg", ge=0.0, lt=360.0)]
-    el_deg: Annotated[float, Field(alias="elDeg", ge=-90.0, le=90.0)]
-    zoom: Annotated[float, Field(gt=0.0)]
+    height_m: Annotated[float, Field(alias="heightM", gt=0.0)]
+
+
+class BuildingsStatus(StrEnum):
+    OK = "OK"
+    EMPTY = "EMPTY"
+    UNAVAILABLE = "UNAVAILABLE"
 
 
 class ClassificationResult(StrEnum):
@@ -187,6 +196,10 @@ class ResolutionItem(RootModel[int]):
     root: Annotated[int, Field(gt=0, le=9007199254740991)]
 
 
+class IrResolutionItem(RootModel[int]):
+    root: Annotated[int, Field(gt=0, le=9007199254740991)]
+
+
 class EoIrSensor(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -199,12 +212,20 @@ class EoIrSensor(BaseModel):
     fov_deg_min: Annotated[float, Field(alias="fovDegMin", gt=0.0)]
     fov_deg_max: Annotated[float, Field(alias="fovDegMax", gt=0.0)]
     resolution: tuple[ResolutionItem, ResolutionItem]
+    ir_resolution: Annotated[
+        tuple[IrResolutionItem, IrResolutionItem] | None, Field(alias="irResolution")
+    ] = None
 
 
 class EoLevel(StrEnum):
     DETECT = "DETECT"
     RECOGNISE = "RECOGNISE"
     IDENTIFY = "IDENTIFY"
+
+
+class EoMode(StrEnum):
+    DAY = "DAY"
+    IR = "IR"
 
 
 class ErrorCode(StrEnum):
@@ -511,6 +532,41 @@ class SystemEventType(StrEnum):
     SESSION_ENDED = "SESSION_ENDED"
 
 
+class TerrainPresetFiles(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    heightmap: Annotated[str, Field(min_length=1)]
+    preview: Annotated[str | None, Field(min_length=1)] = None
+    buildings: Annotated[str, Field(min_length=1)]
+
+
+class AttributionItem(RootModel[str]):
+    root: Annotated[str, Field(min_length=1)]
+
+
+class TerrainPresetMeta(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: Annotated[str, Field(pattern="^[A-Z][A-Z0-9_]*$")]
+    origin: LatLon
+    utc_offset_min: Annotated[int, Field(alias="utcOffsetMin", ge=-720, le=840)]
+    size_m: Annotated[float, Field(alias="sizeM", gt=0.0)]
+    resolution: Annotated[int, Field(ge=2, le=4097)]
+    metres_per_px: Annotated[float, Field(alias="metresPerPx", gt=0.0)]
+    origin_elev_m: Annotated[float, Field(alias="originElevM")]
+    rel_min_m: Annotated[float, Field(alias="relMinM")]
+    rel_max_m: Annotated[float, Field(alias="relMaxM")]
+    min_elev_m: Annotated[float, Field(alias="minElevM")]
+    max_elev_m: Annotated[float, Field(alias="maxElevM")]
+    buildings_status: Annotated[BuildingsStatus, Field(alias="buildingsStatus")]
+    building_count: Annotated[int, Field(alias="buildingCount", ge=0, le=9007199254740991)]
+    files: TerrainPresetFiles
+    source: Annotated[str, Field(min_length=1)]
+    attribution: Annotated[list[AttributionItem], Field(min_length=1)]
+
+
 class TerrainRef(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -675,14 +731,14 @@ class BorderLineZone(BaseModel):
     polyline: Annotated[list[tuple[float, float]], Field(min_length=2)]
 
 
-class CameraSlewedEvent(BaseModel):
+class CameraSlewedPayload(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    seq: Annotated[int, Field(ge=0, le=9007199254740991)]
-    t_ms: Annotated[int, Field(alias="tMs", ge=0, le=9007199254740991)]
-    type: Literal["CAMERA_SLEWED"]
-    payload: CameraSlewedPayload
+    az_deg: Annotated[float, Field(alias="azDeg", ge=0.0, lt=360.0)]
+    el_deg: Annotated[float, Field(alias="elDeg", ge=-90.0, le=90.0)]
+    zoom: Annotated[float, Field(gt=0.0)]
+    mode: EoMode | None = None
 
 
 class ClassifiedPayload(BaseModel):
@@ -979,6 +1035,7 @@ class Waypoint(BaseModel):
     speed_mps: Annotated[float, Field(alias="speedMps", ge=0.0)]
     hold_s: Annotated[float | None, Field(alias="holdS", ge=0.0)] = None
     action: WaypointAction | None = None
+    alt_ref: Annotated[AltitudeRef | None, Field(alias="altRef")] = None
 
 
 class AiSuggestionAcceptedEvent(BaseModel):
@@ -990,6 +1047,17 @@ class AiSuggestionAcceptedEvent(BaseModel):
     type: Literal["AI_SUGGESTION_ACCEPTED"]
     track_id: Annotated[str, Field(alias="trackId", max_length=64, min_length=1)]
     payload: AiSuggestionPayload
+
+
+class CameraSlewedEvent(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    seq: Annotated[int, Field(ge=0, le=9007199254740991)]
+    t_ms: Annotated[int, Field(alias="tMs", ge=0, le=9007199254740991)]
+    type: Literal["CAMERA_SLEWED"]
+    track_id: Annotated[str | None, Field(alias="trackId", max_length=64, min_length=1)] = None
+    payload: CameraSlewedPayload
 
 
 class ClassifiedEvent(BaseModel):

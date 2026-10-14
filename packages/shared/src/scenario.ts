@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   AreaZoneKind,
   Affiliation,
+  AltitudeRef,
   Behaviour,
   ContactClass,
   ControlLink,
@@ -160,6 +161,8 @@ export const EoIrSensor = named(
     fovDegMin: z.number().positive(),
     fovDegMax: z.number().positive(),
     resolution: z.tuple([z.int().positive(), z.int().positive()]),
+    /** Thermal detector resolution; defaults to `resolution`. */
+    irResolution: z.tuple([z.int().positive(), z.int().positive()]).optional(),
   }),
 );
 export type EoIrSensor = z.infer<typeof EoIrSensor>;
@@ -205,6 +208,8 @@ export const Waypoint = named(
     speedMps: z.number().min(0),
     holdS: z.number().min(0).optional(),
     action: WaypointAction.optional(),
+    /** `y` reference; default AGL. MSL is converted with the preset's originElevM. */
+    altRef: AltitudeRef.optional(),
   }),
 );
 export type Waypoint = z.infer<typeof Waypoint>;

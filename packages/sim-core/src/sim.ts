@@ -148,7 +148,9 @@ export function createSim(scenario: Scenario, terrain: Heightmap, opts: SimOptio
 
   function validate(cmd: SimCommand): string | null {
     if (state.endReason !== null) return 'Session has ended';
-    if ('trackId' in cmd && !tracksById.has(cmd.trackId)) return `Unknown track ${cmd.trackId}`;
+    if ('trackId' in cmd && cmd.trackId !== undefined && !tracksById.has(cmd.trackId)) {
+      return `Unknown track ${cmd.trackId}`;
+    }
     if (cmd.type === 'RESPONSE_ORDERED') {
       const { response, effectorId } = cmd.payload;
       if (response === 'EW_JAM' || response === 'EW_SPOOF') {
@@ -194,7 +196,8 @@ export function createSim(scenario: Scenario, terrain: Heightmap, opts: SimOptio
 
   function applyCommand(cmd: SimCommand, tMs: number): void {
     emit({ ...cmd, tMs } as EventDraft);
-    const track = 'trackId' in cmd ? tracksById.get(cmd.trackId) : undefined;
+    const track =
+      'trackId' in cmd && cmd.trackId !== undefined ? tracksById.get(cmd.trackId) : undefined;
     switch (cmd.type) {
       case 'TRACK_SELECTED':
         state.selectedTrackId = cmd.trackId;
