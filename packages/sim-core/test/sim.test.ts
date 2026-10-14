@@ -21,44 +21,7 @@ import {
   type SimCommand,
   type TrackState,
 } from '../src/index.ts';
-import { attackQuad, flatTerrain, hills, testScenario } from './fixtures.ts';
-
-/**
- * A scripted trainee: selects, marks, classifies and calls hostile on each new
- * track, then orders an intercept every time the interceptor is ready and the
- * track is within 1100 m. Decisions read only sim state, so they are deterministic.
- */
-function playScripted(scenario: Scenario, terrain: Heightmap): Sim {
-  const sim = createSim(scenario, terrain, { mode: 'ASSESSMENT' });
-  const handled = new Set<string>();
-  while (sim.getState().endReason === null) {
-    const s = sim.getState();
-    for (const t of s.tracks) {
-      if (t.status !== 'ACTIVE') continue;
-      if (!handled.has(t.id)) {
-        handled.add(t.id);
-        sim.dispatch({ type: 'TRACK_SELECTED', trackId: t.id, payload: {} });
-        sim.dispatch({ type: 'MARKED_DETECTED', trackId: t.id, payload: {} });
-        sim.dispatch({ type: 'CLASSIFIED', trackId: t.id, payload: { class: 'QUAD_SMALL' } });
-        sim.dispatch({
-          type: 'AFFILIATION_SET',
-          trackId: t.id,
-          payload: { affiliation: 'HOSTILE' },
-        });
-      }
-      const eff = s.effectors[0];
-      if (eff && s.clock.tMs >= eff.readyAtMs && t.rangeM < 1100 && (eff.ammo ?? 1) > 0) {
-        sim.dispatch({
-          type: 'RESPONSE_ORDERED',
-          trackId: t.id,
-          payload: { response: 'INTERCEPT' },
-        });
-      }
-    }
-    sim.tick();
-  }
-  return sim;
-}
+import { attackQuad, flatTerrain, hills, playScripted, testScenario } from './fixtures.ts';
 
 /** Re-run a scenario applying logged trainee events as commands at their ticks. */
 function replay(scenario: Scenario, terrain: Heightmap, events: readonly SimEvent[]): Sim {

@@ -1,0 +1,111 @@
+{
+  "id": "S03",
+  "schemaVersion": 1,
+  "name": "Low and Fast",
+  "seed": 1003,
+  "difficulty": 2,
+  "briefing": "## Situation\nA small quadcopter is expected to approach low and fast from the south-west, giving you less warning.\n## Task\nIdentify the track, declare it HOSTILE and intercept it. Interceptor rounds are limited.\n## ROE\nWEAPONS TIGHT — engage only tracks you have identified as HOSTILE. Set affiliation before ordering an intercept.",
+  "terrain": {
+    "preset": "PROCEDURAL_HILLS",
+    "origin": {
+      "lat": 27.0,
+      "lon": 74.0
+    }
+  },
+  "environment": {
+    "date": "2026-11-20",
+    "time": "10:30",
+    "isNight": false,
+    "weather": {
+      "visibilityM": 10000,
+      "rainMmph": 0,
+      "windMps": 3,
+      "windDirDeg": 290,
+      "cloudPct": 10
+    }
+  },
+  "roe": "WEAPONS_TIGHT",
+  "zones": [],
+  "assets": [
+    {
+      "id": "a1",
+      "name": "Post Alpha",
+      "x": 0,
+      "z": 0,
+      "radiusM": 60
+    }
+  ],
+  "sensors": [
+    {
+      "id": "rad1",
+      "kind": "RADAR",
+      "x": 0,
+      "y": 6,
+      "z": 0,
+      "refRangeM": 3000,
+      "scanPeriodS": 2
+    },
+    {
+      "id": "eo1",
+      "kind": "EO_IR",
+      "x": 0,
+      "y": 8,
+      "z": 0,
+      "fovDegMin": 1.5,
+      "fovDegMax": 30,
+      "resolution": [
+        640,
+        360
+      ]
+    }
+  ],
+  "effectors": [
+    {
+      "id": "int1",
+      "kind": "INTERCEPT",
+      "x": 0,
+      "z": 0,
+      "rangeM": 1500,
+      "cooldownS": 6,
+      "ammo": 2
+    }
+  ],
+  "contacts": [
+    {
+      "id": "c01",
+      "class": "QUAD_SMALL",
+      "isThreat": true,
+      "affiliation": "HOSTILE",
+      "controlLink": "RF_MANUAL",
+      "behaviour": "ATTACK_RUN",
+      "spawnTMs": 30000,
+      "path": [
+        {
+          "x": -1300,
+          "y": 20,
+          "z": -1400,
+          "speedMps": 18
+        },
+        {
+          "x": -600,
+          "y": 20,
+          "z": -650,
+          "speedMps": 18
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "speedMps": 18,
+          "action": "DIVE"
+        }
+      ],
+      "emissions": {
+        "rfActive": true,
+        "rfBand": "2.4GHz"
+      }
+    }
+  ],
+  "durationS": 180,
+  "scoringTreeId": "default_v1"
+}

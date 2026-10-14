@@ -1,6 +1,7 @@
 """Test fixtures. Tests run against a real Postgres (jsonb, text[]), default `vyuh_test`
 from docker compose. Override with TEST_DATABASE_URL (CI does)."""
 
+import json
 import os
 from collections.abc import Callable, Iterator
 from pathlib import Path
@@ -12,14 +13,15 @@ from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.core.config import AuthMode, Env, Settings
 from app.core.security import create_local_token, local_auth_id
 from app.main import create_app
-from app.models import Base, Unit, User
+from app.models import Base, Scenario, Unit, User
 from app.schemas.generated import UserRole
+from app.seed.scenarios import seed_scenarios
 
 API_DIR = Path(__file__).resolve().parent.parent
 TEST_DATABASE_URL = os.environ.get(
@@ -122,3 +124,37 @@ def assert_error(response: Any, status: int, code: str) -> dict[str, Any]:
     assert isinstance(body["error"]["message"], str)
     assert isinstance(body["error"]["details"], dict)
     return body["error"]
+
+
+# ---- scenarios & sessions ------------------------------------------------------
+
+FIXTURES = Path(__file__).resolve().parent / "fixtures"
+
+
+def fixture_log(name: str) -> list[dict[str, Any]]:
+    """Real sim event log recorded by packages/sim-core/scripts/export-api-fixtures.ts."""
+    return json.loads((FIXTURES / f"{name}.json").read_text(encoding="utf-8"))
+
+
+@pytest.fixture
+def scenarios(db: Session) -> dict[str, Scenario]:
+    """The scripted scenarios, seeded; keyed by code."""
+    seed_scenarios(db)
+    db.commit()
+    return {row.code: row for row in db.scalars(select(Scenario)) if row.code}
+
+
+@pytest.fixture
+def start_session(
+    client: TestClient, auth_header: Callable[[User], dict[str, str]]
+) -> Callable[..., str]:
+    def _start(user: User, scenario: Scenario, mode: str = "PRACTICE") -> str:
+        response = client.post(
+            "/api/v1/sessions",
+            json={"scenarioId": str(scenario.id), "mode": mode},
+            headers=auth_header(user),
+        )
+        assert response.status_code == 201, response.text
+        return response.json()["sessionId"]
+
+    return _start

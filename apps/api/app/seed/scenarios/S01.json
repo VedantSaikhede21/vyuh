@@ -1,0 +1,111 @@
+{
+  "id": "S01",
+  "schemaVersion": 1,
+  "name": "First Contact",
+  "seed": 1001,
+  "difficulty": 1,
+  "briefing": "## Situation\nForward post on open, rolling ground in clear daylight. A single small quadcopter is expected from the north.\n## Task\nDetect the track on radar, mark it, classify it, set its affiliation and intercept it before it reaches Post Alpha.\n## ROE\nWEAPONS FREE — engage any track you assess as a threat.",
+  "terrain": {
+    "preset": "PROCEDURAL_HILLS",
+    "origin": {
+      "lat": 27.0,
+      "lon": 74.0
+    }
+  },
+  "environment": {
+    "date": "2026-11-20",
+    "time": "10:30",
+    "isNight": false,
+    "weather": {
+      "visibilityM": 10000,
+      "rainMmph": 0,
+      "windMps": 3,
+      "windDirDeg": 290,
+      "cloudPct": 10
+    }
+  },
+  "roe": "WEAPONS_FREE",
+  "zones": [],
+  "assets": [
+    {
+      "id": "a1",
+      "name": "Post Alpha",
+      "x": 0,
+      "z": 0,
+      "radiusM": 60
+    }
+  ],
+  "sensors": [
+    {
+      "id": "rad1",
+      "kind": "RADAR",
+      "x": 0,
+      "y": 6,
+      "z": 0,
+      "refRangeM": 3000,
+      "scanPeriodS": 2
+    },
+    {
+      "id": "eo1",
+      "kind": "EO_IR",
+      "x": 0,
+      "y": 8,
+      "z": 0,
+      "fovDegMin": 1.5,
+      "fovDegMax": 30,
+      "resolution": [
+        640,
+        360
+      ]
+    }
+  ],
+  "effectors": [
+    {
+      "id": "int1",
+      "kind": "INTERCEPT",
+      "x": 0,
+      "z": 0,
+      "rangeM": 1500,
+      "cooldownS": 6,
+      "ammo": 4
+    }
+  ],
+  "contacts": [
+    {
+      "id": "c01",
+      "class": "QUAD_SMALL",
+      "isThreat": true,
+      "affiliation": "HOSTILE",
+      "controlLink": "RF_MANUAL",
+      "behaviour": "ATTACK_RUN",
+      "spawnTMs": 15000,
+      "path": [
+        {
+          "x": 250,
+          "y": 50,
+          "z": 2400,
+          "speedMps": 16
+        },
+        {
+          "x": 120,
+          "y": 45,
+          "z": 1200,
+          "speedMps": 16
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "speedMps": 16,
+          "action": "DIVE"
+        }
+      ],
+      "emissions": {
+        "rfActive": true,
+        "rfBand": "2.4GHz"
+      }
+    }
+  ],
+  "durationS": 180,
+  "scoringTreeId": "default_v1"
+}
