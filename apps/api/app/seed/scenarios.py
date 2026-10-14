@@ -29,6 +29,8 @@ TAGS: dict[str, list[str]] = {
     "S02": ["demo"],
     "S11": ["test"],  # Phase 2 test scenarios (SPEC §7.2)
     "S12": ["test"],
+    "S13": ["test"],
+    "S14": ["test"],
 }
 
 

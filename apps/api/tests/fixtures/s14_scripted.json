@@ -1,0 +1,1284 @@
+[
+ {
+  "tMs": 0,
+  "type": "SESSION_STARTED",
+  "payload": {
+   "mode": "PRACTICE",
+   "scenarioId": "S14",
+   "seed": 1401
+  },
+  "seq": 0
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "b01",
+  "payload": {},
+  "seq": 1
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "b02",
+  "payload": {},
+  "seq": 2
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "b03",
+  "payload": {},
+  "seq": 3
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "b04",
+  "payload": {},
+  "seq": 4
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "b05",
+  "payload": {},
+  "seq": 5
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "b06",
+  "payload": {},
+  "seq": 6
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "c02",
+  "payload": {},
+  "seq": 7
+ },
+ {
+  "tMs": 5000,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "c01",
+  "payload": {},
+  "seq": 8
+ },
+ {
+  "tMs": 6000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "b01",
+  "trackId": "T001",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2640.5514429857953,
+   "bearingDeg": 330.28300154016813
+  },
+  "seq": 9
+ },
+ {
+  "tMs": 6000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "b03",
+  "trackId": "T002",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2620.2544757492615,
+   "bearingDeg": 329.6967904306045
+  },
+  "seq": 10
+ },
+ {
+  "tMs": 6000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "b06",
+  "trackId": "T003",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2616.089191958791,
+   "bearingDeg": 330.3307057899655
+  },
+  "seq": 11
+ },
+ {
+  "tMs": 6000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "c02",
+  "trackId": "T004",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 652.804482194607,
+   "bearingDeg": 32.151345203919384
+  },
+  "seq": 12
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T001",
+  "payload": {},
+  "tMs": 6050,
+  "seq": 13
+ },
+ {
+  "type": "MARKED_DETECTED",
+  "trackId": "T001",
+  "payload": {},
+  "tMs": 6050,
+  "seq": 14
+ },
+ {
+  "type": "CLASSIFIED",
+  "trackId": "T001",
+  "payload": {
+   "class": "QUAD_SMALL"
+  },
+  "tMs": 6050,
+  "seq": 15
+ },
+ {
+  "type": "AFFILIATION_SET",
+  "trackId": "T001",
+  "payload": {
+   "affiliation": "HOSTILE"
+  },
+  "tMs": 6050,
+  "seq": 16
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T002",
+  "payload": {},
+  "tMs": 6050,
+  "seq": 17
+ },
+ {
+  "type": "MARKED_DETECTED",
+  "trackId": "T002",
+  "payload": {},
+  "tMs": 6050,
+  "seq": 18
+ },
+ {
+  "type": "CLASSIFIED",
+  "trackId": "T002",
+  "payload": {
+   "class": "QUAD_SMALL"
+  },
+  "tMs": 6050,
+  "seq": 19
+ },
+ {
+  "type": "AFFILIATION_SET",
+  "trackId": "T002",
+  "payload": {
+   "affiliation": "HOSTILE"
+  },
+  "tMs": 6050,
+  "seq": 20
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T003",
+  "payload": {},
+  "tMs": 6050,
+  "seq": 21
+ },
+ {
+  "type": "MARKED_DETECTED",
+  "trackId": "T003",
+  "payload": {},
+  "tMs": 6050,
+  "seq": 22
+ },
+ {
+  "type": "CLASSIFIED",
+  "trackId": "T003",
+  "payload": {
+   "class": "QUAD_SMALL"
+  },
+  "tMs": 6050,
+  "seq": 23
+ },
+ {
+  "type": "AFFILIATION_SET",
+  "trackId": "T003",
+  "payload": {
+   "affiliation": "HOSTILE"
+  },
+  "tMs": 6050,
+  "seq": 24
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T004",
+  "payload": {},
+  "tMs": 6050,
+  "seq": 25
+ },
+ {
+  "type": "MARKED_DETECTED",
+  "trackId": "T004",
+  "payload": {},
+  "tMs": 6050,
+  "seq": 26
+ },
+ {
+  "type": "CLASSIFIED",
+  "trackId": "T004",
+  "payload": {
+   "class": "QUAD_SMALL"
+  },
+  "tMs": 6050,
+  "seq": 27
+ },
+ {
+  "type": "AFFILIATION_SET",
+  "trackId": "T004",
+  "payload": {
+   "affiliation": "HOSTILE"
+  },
+  "tMs": 6050,
+  "seq": 28
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 6050,
+  "seq": 29
+ },
+ {
+  "tMs": 6050,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NEUTRALISED"
+  },
+  "seq": 30
+ },
+ {
+  "tMs": 6050,
+  "type": "CONTACT_NEUTRALISED",
+  "contactId": "c02",
+  "payload": {
+   "by": "INTERCEPT"
+  },
+  "seq": 31
+ },
+ {
+  "tMs": 8000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "b02",
+  "trackId": "T005",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2631.3505396512383,
+   "bearingDeg": 328.99056964986204
+  },
+  "seq": 32
+ },
+ {
+  "tMs": 8000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "b04",
+  "trackId": "T006",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2617.565203799439,
+   "bearingDeg": 328.44028731367763
+  },
+  "seq": 33
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T005",
+  "payload": {},
+  "tMs": 8050,
+  "seq": 34
+ },
+ {
+  "type": "MARKED_DETECTED",
+  "trackId": "T005",
+  "payload": {},
+  "tMs": 8050,
+  "seq": 35
+ },
+ {
+  "type": "CLASSIFIED",
+  "trackId": "T005",
+  "payload": {
+   "class": "QUAD_SMALL"
+  },
+  "tMs": 8050,
+  "seq": 36
+ },
+ {
+  "type": "AFFILIATION_SET",
+  "trackId": "T005",
+  "payload": {
+   "affiliation": "HOSTILE"
+  },
+  "tMs": 8050,
+  "seq": 37
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T006",
+  "payload": {},
+  "tMs": 8050,
+  "seq": 38
+ },
+ {
+  "type": "MARKED_DETECTED",
+  "trackId": "T006",
+  "payload": {},
+  "tMs": 8050,
+  "seq": 39
+ },
+ {
+  "type": "CLASSIFIED",
+  "trackId": "T006",
+  "payload": {
+   "class": "QUAD_SMALL"
+  },
+  "tMs": 8050,
+  "seq": 40
+ },
+ {
+  "type": "AFFILIATION_SET",
+  "trackId": "T006",
+  "payload": {
+   "affiliation": "HOSTILE"
+  },
+  "tMs": 8050,
+  "seq": 41
+ },
+ {
+  "tMs": 10000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "b05",
+  "trackId": "T007",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2612.2892394732717,
+   "bearingDeg": 328.01784229861954
+  },
+  "seq": 42
+ },
+ {
+  "tMs": 10000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "c01",
+  "trackId": "T008",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2865.301559723212,
+   "bearingDeg": 32.59393367822117
+  },
+  "seq": 43
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T007",
+  "payload": {},
+  "tMs": 10050,
+  "seq": 44
+ },
+ {
+  "type": "MARKED_DETECTED",
+  "trackId": "T007",
+  "payload": {},
+  "tMs": 10050,
+  "seq": 45
+ },
+ {
+  "type": "CLASSIFIED",
+  "trackId": "T007",
+  "payload": {
+   "class": "QUAD_SMALL"
+  },
+  "tMs": 10050,
+  "seq": 46
+ },
+ {
+  "type": "AFFILIATION_SET",
+  "trackId": "T007",
+  "payload": {
+   "affiliation": "HOSTILE"
+  },
+  "tMs": 10050,
+  "seq": 47
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T008",
+  "payload": {},
+  "tMs": 10050,
+  "seq": 48
+ },
+ {
+  "type": "MARKED_DETECTED",
+  "trackId": "T008",
+  "payload": {},
+  "tMs": 10050,
+  "seq": 49
+ },
+ {
+  "type": "CLASSIFIED",
+  "trackId": "T008",
+  "payload": {
+   "class": "QUAD_SMALL"
+  },
+  "tMs": 10050,
+  "seq": 50
+ },
+ {
+  "type": "AFFILIATION_SET",
+  "trackId": "T008",
+  "payload": {
+   "affiliation": "HOSTILE"
+  },
+  "tMs": 10050,
+  "seq": 51
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12100,
+  "seq": 52
+ },
+ {
+  "tMs": 12100,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 53
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12150,
+  "seq": 54
+ },
+ {
+  "tMs": 12150,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 55
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12200,
+  "seq": 56
+ },
+ {
+  "tMs": 12200,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 57
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12250,
+  "seq": 58
+ },
+ {
+  "tMs": 12250,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 59
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12300,
+  "seq": 60
+ },
+ {
+  "tMs": 12300,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 61
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12350,
+  "seq": 62
+ },
+ {
+  "tMs": 12350,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 63
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12400,
+  "seq": 64
+ },
+ {
+  "tMs": 12400,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 65
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12450,
+  "seq": 66
+ },
+ {
+  "tMs": 12450,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 67
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12500,
+  "seq": 68
+ },
+ {
+  "tMs": 12500,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 69
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12550,
+  "seq": 70
+ },
+ {
+  "tMs": 12550,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 71
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12600,
+  "seq": 72
+ },
+ {
+  "tMs": 12600,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 73
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12650,
+  "seq": 74
+ },
+ {
+  "tMs": 12650,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 75
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12700,
+  "seq": 76
+ },
+ {
+  "tMs": 12700,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 77
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12750,
+  "seq": 78
+ },
+ {
+  "tMs": 12750,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 79
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12800,
+  "seq": 80
+ },
+ {
+  "tMs": 12800,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 81
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12850,
+  "seq": 82
+ },
+ {
+  "tMs": 12850,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 83
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12900,
+  "seq": 84
+ },
+ {
+  "tMs": 12900,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 85
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 12950,
+  "seq": 86
+ },
+ {
+  "tMs": 12950,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 87
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13000,
+  "seq": 88
+ },
+ {
+  "tMs": 13000,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 89
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13050,
+  "seq": 90
+ },
+ {
+  "tMs": 13050,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 91
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13100,
+  "seq": 92
+ },
+ {
+  "tMs": 13100,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 93
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13150,
+  "seq": 94
+ },
+ {
+  "tMs": 13150,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 95
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13200,
+  "seq": 96
+ },
+ {
+  "tMs": 13200,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 97
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13250,
+  "seq": 98
+ },
+ {
+  "tMs": 13250,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 99
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13300,
+  "seq": 100
+ },
+ {
+  "tMs": 13300,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 101
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13350,
+  "seq": 102
+ },
+ {
+  "tMs": 13350,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 103
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13400,
+  "seq": 104
+ },
+ {
+  "tMs": 13400,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 105
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13450,
+  "seq": 106
+ },
+ {
+  "tMs": 13450,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 107
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13500,
+  "seq": 108
+ },
+ {
+  "tMs": 13500,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 109
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13550,
+  "seq": 110
+ },
+ {
+  "tMs": 13550,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 111
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13600,
+  "seq": 112
+ },
+ {
+  "tMs": 13600,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 113
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13650,
+  "seq": 114
+ },
+ {
+  "tMs": 13650,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 115
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13700,
+  "seq": 116
+ },
+ {
+  "tMs": 13700,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 117
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13750,
+  "seq": 118
+ },
+ {
+  "tMs": 13750,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 119
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13800,
+  "seq": 120
+ },
+ {
+  "tMs": 13800,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 121
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13850,
+  "seq": 122
+ },
+ {
+  "tMs": 13850,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 123
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13900,
+  "seq": 124
+ },
+ {
+  "tMs": 13900,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 125
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 13950,
+  "seq": 126
+ },
+ {
+  "tMs": 13950,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 127
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T004",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 14000,
+  "seq": 128
+ },
+ {
+  "tMs": 14000,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NO_EFFECT"
+  },
+  "seq": 129
+ },
+ {
+  "tMs": 14000,
+  "type": "SENSOR_TRACK_LOST",
+  "trackId": "T004",
+  "contactId": "c02",
+  "payload": {
+   "reason": "MISSES"
+  },
+  "seq": 130
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T008",
+  "payload": {
+   "response": "INTERCEPT"
+  },
+  "tMs": 127950,
+  "seq": 131
+ },
+ {
+  "tMs": 127950,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T008",
+  "contactId": "c01",
+  "payload": {
+   "response": "INTERCEPT",
+   "result": "NEUTRALISED"
+  },
+  "seq": 132
+ },
+ {
+  "tMs": 127950,
+  "type": "CONTACT_NEUTRALISED",
+  "contactId": "c01",
+  "payload": {
+   "by": "INTERCEPT"
+  },
+  "seq": 133
+ },
+ {
+  "tMs": 127950,
+  "type": "SESSION_ENDED",
+  "payload": {
+   "reason": "ALL_RESOLVED"
+  },
+  "seq": 134
+ }
+]

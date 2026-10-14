@@ -338,6 +338,8 @@ Modules: `rng.ts`, `clock.ts`, `coords.ts`, `terrain.ts` (heightmap sampling + L
 |---|---|---|---|
 | S11 | Ridge Line | JK_MOUNTAIN, day | A quad's path passes behind a ridge: sensors lose it (LOS) and reacquire it |
 | S12 | Night Watch | PUNJAB_PLAINS, night | A quad that can only be identified in IR mode |
+| S13 | Silent Ridge | JK_MOUNTAIN, night | A fibre-optic FPV, silent to RF and hidden by the ridge until ~1.1 km, plus a bird flock that creates radar tracks |
+| S14 | Mixed Sky | PUNJAB_PLAINS, day | Bird flock, an RF-linked hostile quad and a friendly patrol (no ID code) on the same bearing: jamming the hostile also jams the friendly |
 
 ---
 

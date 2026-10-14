@@ -22,9 +22,9 @@ S01 = json.loads((SCENARIO_DIR / "S01.json").read_text(encoding="utf-8"))
 
 def test_scripted_scenarios_are_valid() -> None:
     codes = [s.id for s in load_scripted()]
-    assert codes == ["S01", "S02", "S03", "S11", "S12"]
+    assert codes == ["S01", "S02", "S03", "S11", "S12", "S13", "S14"]
     for s in load_scripted():
-        if s.id in {"S11", "S12"}:  # Phase 2 test scenarios on real-DEM presets
+        if s.id in {"S11", "S12", "S13", "S14"}:  # Phase 2 test scenarios on real-DEM presets
             assert s.terrain.preset in {"JK_MOUNTAIN", "PUNJAB_PLAINS"}
             continue
         assert s.duration_s == 180
@@ -77,10 +77,10 @@ def test_loader_rejects_rule_violations(tmp_path: Path) -> None:
 
 
 def test_seed_is_idempotent(db: Session) -> None:
-    assert seed_scenarios(db) == 5
+    assert seed_scenarios(db) == 7
     db.commit()
     assert seed_scenarios(db) == 0
-    assert db.scalar(select(func.count()).select_from(ScenarioRow)) == 5
+    assert db.scalar(select(func.count()).select_from(ScenarioRow)) == 7
     s01 = db.scalar(select(ScenarioRow).where(ScenarioRow.code == "S01"))
     assert s01 is not None
     assert s01.tags == ["tutorial", "demo"]
@@ -156,7 +156,7 @@ def test_list_scenarios(
 ) -> None:
     headers = auth_header(make_user())
     body = client.get("/api/v1/scenarios", headers=headers).json()
-    assert [i["code"] for i in body["items"]] == ["S01", "S02", "S03", "S11", "S12"]
+    assert [i["code"] for i in body["items"]] == ["S01", "S02", "S03", "S11", "S12", "S13", "S14"]
     first = body["items"][0]
     assert first == {
         "id": str(scenarios["S01"].id),
