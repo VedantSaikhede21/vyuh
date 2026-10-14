@@ -5,6 +5,7 @@ import {
   type EoIrSensor,
   type EoLevel,
   type RadarSensor,
+  type RfSensor,
   type Roe,
   type Scenario,
   type SessionEndReason,
@@ -40,6 +41,14 @@ import {
   type EoCameraState,
 } from './sensors/eoir.ts';
 import { gaussian, radarScan } from './sensors/radar.ts';
+import {
+  RF_SCAN_MS,
+  RF_STROBE_TTL_MS,
+  formatStrobeId,
+  rfBadgeFor,
+  rfScan,
+  type RfStrobe,
+} from './sensors/rf.ts';
 import { computeEnvironment, type SimEnvironment } from './sun.ts';
 import { sampleHeight, type Heightmap } from './terrain.ts';
 import { createWorld, isWorld, type World } from './world.ts';
@@ -79,6 +88,8 @@ export interface SimState {
   readonly contacts: ContactState[];
   /** In creation order (T001, T002, …). */
   readonly tracks: TrackState[];
+  /** Live RF bearing strobes, in id order (E01, E02, …). Sim state, not events. */
+  rfStrobes: RfStrobe[];
   readonly effectors: EffectorState[];
   /** Sensor positions in the scenario frame (y = terrain + mast height). */
   readonly sensorPositions: Readonly<Record<string, Vec3>>;
@@ -157,6 +168,7 @@ export function createSim(
     endReason: null,
     contacts: [...scenario.contacts].sort(byId).map(createContactState),
     tracks: [],
+    rfStrobes: [],
     effectors: [...scenario.effectors]
       .sort(byId)
       .map((e) => createEffectorState(e, sampleHeight(terrain, e.x, e.z))),
@@ -358,6 +370,7 @@ export function createSim(
               pos: { x: m.x, y: contact.pos.y, z: m.z },
               altitudeAglM: contact.agl,
               filter: createTrackFilter(m.x, m.z, tMs),
+              rf: null,
               headingDeg: null,
               speedMps: null,
               markedDetected: false,
@@ -558,6 +571,53 @@ export function createSim(
     }
   }
 
+  // ---- RF detector (SPEC §6.3, decision 53) -----------------------------------
+  const rfSensors = scenario.sensors
+    .filter((s): s is RfSensor => s.kind === 'RF')
+    .sort(byId)
+    .map((cfg) => ({
+      cfg,
+      pos: { x: cfg.x, y: sampleHeight(terrain, cfg.x, cfg.z) + cfg.y, z: cfg.z },
+      stream: rng.stream(`rf:${cfg.id}`),
+    }));
+  const rfById = new Map(rfSensors.map((s) => [s.cfg.id, s]));
+  let nextStrobeNo = 1;
+
+  function scanRf(tMs: number): void {
+    if (tMs % RF_SCAN_MS === 0) {
+      for (const rf of rfSensors) {
+        const inLos = (c: ContactState) =>
+          los.visible(state.clock.tick, rf.cfg.id, rf.pos, c.id, c.pos);
+        for (const d of rfScan(rf.cfg, rf.pos, state.contacts, specs, rf.stream, inLos)) {
+          const s = state.rfStrobes.find(
+            (x) => x.sensorId === rf.cfg.id && x.contactId === d.contactId,
+          );
+          if (s !== undefined) {
+            s.bearingDeg = d.bearingDeg;
+            s.band = d.band;
+            s.friendlyIdCode = d.friendlyIdCode;
+            s.lastTMs = tMs;
+          } else {
+            state.rfStrobes.push({
+              id: formatStrobeId(nextStrobeNo++),
+              contactId: d.contactId,
+              sensorId: rf.cfg.id,
+              bearingDeg: d.bearingDeg,
+              band: d.band,
+              friendlyIdCode: d.friendlyIdCode,
+              firstTMs: tMs,
+              lastTMs: tMs,
+            });
+          }
+        }
+      }
+    }
+    state.rfStrobes = state.rfStrobes.filter((s) => tMs - s.lastTMs < RF_STROBE_TTL_MS);
+    for (const t of state.tracks) {
+      t.rf = t.status === 'ACTIVE' ? rfBadgeFor(t.pos, state.rfStrobes, rfById) : null;
+    }
+  }
+
   const threatIds = scenario.contacts.filter((c) => c.isThreat).map((c) => c.id);
 
   function tick(): void {
@@ -575,6 +635,7 @@ export function createSim(
 
     scanRadars(tMs);
     predictTracks(tMs);
+    scanRf(tMs);
     updateCamera(tMs);
     scanEo(tMs);
 

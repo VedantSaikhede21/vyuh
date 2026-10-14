@@ -1,5 +1,6 @@
 import type { Affiliation, ContactClass, SensorKind } from '@vyuh/shared';
 import type { Vec3 } from './coords.ts';
+import type { RfBadge } from './sensors/rf.ts';
 
 // Track management (SPEC §5): a track is confirmed after 3 hits in the last 5
 // scans and lost after 4 consecutive misses. Track ids (T001…) are separate
@@ -128,6 +129,8 @@ export interface TrackState {
   altitudeAglM: number;
   /** α-β filter state behind `pos`. */
   filter: TrackFilter;
+  /** RF strobe lined up with this track (band, friendly ID), or null. */
+  rf: RfBadge | null;
   /** From the filter velocity; null until the second measurement. */
   headingDeg: number | null;
   speedMps: number | null;
