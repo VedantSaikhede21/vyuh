@@ -7,8 +7,8 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 from enum import StrEnum
-from typing_extensions import TypeAliasType
 from uuid import UUID
+from typing_extensions import TypeAliasType
 from datetime import date as date_aliased
 
 
@@ -130,6 +130,7 @@ class ContactClass(StrEnum):
 class ContactOutcome(StrEnum):
     NEUTRALISED = "NEUTRALISED"
     LEAKED = "LEAKED"
+    UNRESOLVED = "UNRESOLVED"
     IGNORED_OK = "IGNORED_OK"
     WRONGLY_ENGAGED = "WRONGLY_ENGAGED"
     FRATRICIDE = "FRATRICIDE"
@@ -312,6 +313,10 @@ class Penalty(BaseModel):
     unavoidable: bool | None = None
 
 
+class Leaf(RootModel[str]):
+    root: Annotated[str, Field(min_length=1)]
+
+
 class RadarSensor(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -398,6 +403,28 @@ class ScenarioKind(StrEnum):
     SCRIPTED = "SCRIPTED"
     GENERATED = "GENERATED"
     AUTHORED = "AUTHORED"
+
+
+class ScenarioListItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID
+    code: str | None
+    name: str
+    kind: ScenarioKind
+    difficulty: Annotated[int, Field(ge=1, le=5)]
+    duration_s: Annotated[int, Field(alias="durationS", gt=0, le=9007199254740991)]
+    roe: Roe
+    is_night: Annotated[bool, Field(alias="isNight")]
+    tags: list[str]
+
+
+class ScenarioListResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    items: list[ScenarioListItem]
 
 
 class ScoreComponents(BaseModel):
@@ -795,6 +822,7 @@ class PerContactMetrics(BaseModel):
     )
     contact_id: Annotated[str, Field(alias="contactId", min_length=1)]
     is_threat: Annotated[bool, Field(alias="isThreat")]
+    track_ids: Annotated[list[TrackId], Field(alias="trackIds")]
     first_detectable_t_ms: Annotated[
         int | None, Field(alias="firstDetectableTMs", ge=0, le=9007199254740991)
     ] = None
@@ -816,6 +844,7 @@ class PerContactMetrics(BaseModel):
     ai_suggestion_accepted: Annotated[bool | None, Field(alias="aiSuggestionAccepted")] = None
     ai_suggestion_correct: Annotated[bool | None, Field(alias="aiSuggestionCorrect")] = None
     points: float | None = None
+    leaves: list[Leaf]
     feedback: list[str]
 
 
@@ -879,6 +908,7 @@ class Score(BaseModel):
     )
     total: Annotated[float, Field(ge=0.0, le=100.0)]
     components: ScoreComponents
+    component_max: Annotated[ScoreComponents, Field(alias="componentMax")]
     penalties: list[Penalty]
     per_contact: Annotated[list[PerContactMetrics], Field(alias="perContact")]
     metrics: dict[str, Any]
@@ -902,6 +932,20 @@ class SensorTrackLostPayload(BaseModel):
         populate_by_name=True,
     )
     reason: TrackLostReason
+
+
+class SessionDetailResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID
+    scenario_id: Annotated[UUID, Field(alias="scenarioId")]
+    scenario_name: Annotated[str, Field(alias="scenarioName")]
+    mode: SessionMode
+    status: SessionStatus
+    started_at: Annotated[AwareDatetime, Field(alias="startedAt")]
+    ended_at: Annotated[AwareDatetime | None, Field(alias="endedAt")]
+    score: Score | None
 
 
 class SessionEndedEvent(BaseModel):
@@ -1035,6 +1079,16 @@ class Scenario(BaseModel):
     contacts: Annotated[list[ContactSpec], Field(min_length=1)]
     duration_s: Annotated[int, Field(alias="durationS", ge=30, le=3600)]
     scoring_tree_id: Annotated[str, Field(alias="scoringTreeId", min_length=1)]
+
+
+class ScenarioDetailResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    scenario_id: Annotated[UUID, Field(alias="scenarioId")]
+    code: str | None
+    kind: ScenarioKind
+    scenario: Scenario
 
 
 class SensorTrackLostEvent(BaseModel):
