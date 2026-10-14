@@ -94,8 +94,14 @@ function Session({ sessionId }: { sessionId: string }) {
           briefing={phase.scenario.briefing}
           mode={phase.mode}
           roe={phase.scenario.roe}
-          onStart={start}
+          onStart={() => void start()}
         />
+      );
+    case 'preparing':
+      return (
+        <p className="hud-label p-6" role="status">
+          Loading terrain…
+        </p>
       );
     case 'running':
       return commands ? (

@@ -1,9 +1,9 @@
 'use client';
 
 import type { Scenario, Score, SessionMode } from '@vyuh/shared';
-import { PROCEDURAL_HILLS, createProceduralTerrain } from '@vyuh/sim-core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, api, isRetryable } from '@/lib/api';
+import { loadWorld } from '@/lib/terrain/load-world';
 import { EventBatcher, FatalBatchError } from './event-batcher';
 import { SimRuntime } from './runtime';
 
@@ -13,16 +13,12 @@ import { SimRuntime } from './runtime';
 export type Phase =
   | { kind: 'loading' }
   | { kind: 'briefing'; scenario: Scenario; mode: SessionMode }
+  | { kind: 'preparing' }
   | { kind: 'running'; runtime: SimRuntime }
   | { kind: 'submitting'; runtime: SimRuntime }
   | { kind: 'result'; score: Score; scenarioName: string }
   | { kind: 'interrupted' }
   | { kind: 'error'; message: string; retry?: () => void };
-
-function loadTerrain(preset: string) {
-  if (preset !== PROCEDURAL_HILLS) throw new Error(`Terrain preset ${preset} is not available yet`);
-  return createProceduralTerrain();
-}
 
 function gpuName(): string | undefined {
   try {
@@ -59,6 +55,8 @@ export function useTrainingSession(sessionId: string) {
         return;
       }
       const detail = await api.getScenario(session.scenarioId, ctrl.signal);
+      // Prefetch the terrain preset while the trainee reads the briefing.
+      loadWorld(detail.scenario.terrain.preset).catch(() => undefined);
       setPhase({ kind: 'briefing', scenario: detail.scenario, mode: session.mode });
     })().catch((err: unknown) => {
       if (!ctrl.signal.aborted) setPhase({ kind: 'error', message: message(err) });
@@ -68,14 +66,13 @@ export function useTrainingSession(sessionId: string) {
 
   useEffect(() => () => batcherRef.current?.stop(), []);
 
-  const start = useCallback(() => {
+  const start = useCallback(async () => {
     if (phase.kind !== 'briefing') return;
+    const briefing = phase;
+    setPhase({ kind: 'preparing' });
     try {
-      const runtime = new SimRuntime(
-        phase.scenario,
-        loadTerrain(phase.scenario.terrain.preset),
-        phase.mode,
-      );
+      const world = await loadWorld(briefing.scenario.terrain.preset);
+      const runtime = new SimRuntime(briefing.scenario, world, briefing.mode);
       const batcher = new EventBatcher({
         send: async (seq, events) => {
           await api.postEvents(sessionId, seq, events);
@@ -96,7 +93,8 @@ export function useTrainingSession(sessionId: string) {
       frames.current = { count: 0, ms: 0 };
       setPhase({ kind: 'running', runtime });
     } catch (err) {
-      setPhase({ kind: 'error', message: message(err) });
+      // e.g. the terrain failed to download: let the trainee try again from the briefing.
+      setPhase({ kind: 'error', message: message(err), retry: () => setPhase(briefing) });
     }
   }, [phase, sessionId]);
 

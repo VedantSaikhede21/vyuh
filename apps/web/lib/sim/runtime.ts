@@ -2,11 +2,14 @@ import type { Scenario, SessionMode } from '@vyuh/shared';
 import {
   TICK_MS,
   createSim,
+  createWorld,
+  isWorld,
   sampleHeight,
   type Heightmap,
   type Sim,
   type SimCommand,
   type Vec3,
+  type World,
 } from '@vyuh/sim-core';
 
 // Drives sim-core from display frames (SPEC §3.1): a fixed 20 Hz tick from an
@@ -18,6 +21,7 @@ export const MAX_FRAME_MS = 250;
 
 export class SimRuntime {
   readonly sim: Sim;
+  readonly world: World;
   readonly terrain: Heightmap;
   readonly scenario: Scenario;
   readonly mode: SessionMode;
@@ -28,11 +32,12 @@ export class SimRuntime {
   paused = false;
   private accumulatorMs = 0;
 
-  constructor(scenario: Scenario, terrain: Heightmap, mode: SessionMode) {
+  constructor(scenario: Scenario, world: World | Heightmap, mode: SessionMode) {
     this.scenario = scenario;
-    this.terrain = terrain;
+    this.world = isWorld(world) ? world : createWorld(world);
+    this.terrain = this.world.heightmap;
     this.mode = mode;
-    this.sim = createSim(scenario, terrain, { mode });
+    this.sim = createSim(scenario, this.world, { mode });
     this.capturePositions();
   }
 
