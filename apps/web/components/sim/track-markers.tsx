@@ -1,13 +1,30 @@
 'use client';
 
-import { Html, Line } from '@react-three/drei';
+import { Billboard, Html, Line } from '@react-three/drei';
+import type { Affiliation } from '@vyuh/shared';
 import { toThree } from '@vyuh/sim-core';
 import type { RefObject } from 'react';
-import { AFFILIATION_STYLE } from '@/lib/affiliation';
+import { Shape, ShapeGeometry } from 'three';
+import { AFFILIATION_STYLE, affiliationOutline } from '@/lib/affiliation';
 import { useHudStore, type TrackView } from '@/lib/sim/store';
 import { useSimRuntime } from './sim-context';
 
 const MARKER_M = 22;
+
+/** APP-6 frame per affiliation: filled geometry and closed outline, shared by all markers. */
+const FRAMES = new Map<Affiliation, { fill: ShapeGeometry; outline: [number, number, number][] }>();
+function frame(aff: Affiliation) {
+  let f = FRAMES.get(aff);
+  if (f === undefined) {
+    const pts = affiliationOutline(aff).map(([x, y]) => [x * MARKER_M, y * MARKER_M] as const);
+    const shape = new Shape();
+    pts.forEach(([x, y], i) => (i === 0 ? shape.moveTo(x, y) : shape.lineTo(x, y)));
+    const outline = [...pts, pts[0]!].map(([x, y]) => [x, y, 0] as [number, number, number]);
+    f = { fill: new ShapeGeometry(shape), outline };
+    FRAMES.set(aff, f);
+  }
+  return f;
+}
 
 function TrackMarker({
   track,
@@ -24,18 +41,26 @@ function TrackMarker({
   const ground = rt.groundHeight(track.x, track.z);
   const top = toThree({ x: track.x, y: ground + track.altitudeAglM, z: track.z });
   const style = AFFILIATION_STYLE[track.affiliation];
+  const shape = frame(track.affiliation);
   return (
     <group>
-      <mesh
-        position={[top.x, top.y + MARKER_M, top.z]}
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelect(track.id);
-        }}
-      >
-        <octahedronGeometry args={[MARKER_M, 0]} />
-        <meshBasicMaterial color={style.hex} wireframe={!track.markedDetected} />
-      </mesh>
+      <Billboard position={[top.x, top.y + MARKER_M, top.z]}>
+        <mesh
+          geometry={shape.fill}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(track.id);
+          }}
+        >
+          <meshBasicMaterial
+            color={style.hex}
+            transparent
+            opacity={track.markedDetected ? 0.55 : 0.08}
+            depthWrite={false}
+          />
+        </mesh>
+        <Line points={shape.outline} color={style.hex} lineWidth={2} />
+      </Billboard>
       <Line
         points={[
           [top.x, ground, top.z],
@@ -52,19 +77,22 @@ function TrackMarker({
           <meshBasicMaterial color="#ffffff" />
         </mesh>
       )}
-      <Html
-        position={[top.x, top.y + MARKER_M * 3, top.z]}
-        center
-        zIndexRange={[10, 0]}
-        {...(labelPortal ? { portal: labelPortal as RefObject<HTMLElement> } : {})}
-      >
-        <div
-          className="pointer-events-none whitespace-nowrap font-mono text-xs font-bold"
-          style={{ color: style.hex }}
+      {/* DOM labels only where they matter: each <Html> costs layout (FPS with bird flocks). */}
+      {(selected || track.markedDetected) && (
+        <Html
+          position={[top.x, top.y + MARKER_M * 3, top.z]}
+          center
+          zIndexRange={[10, 0]}
+          {...(labelPortal ? { portal: labelPortal as RefObject<HTMLElement> } : {})}
         >
-          [{style.letter}] {track.id}
-        </div>
-      </Html>
+          <div
+            className="pointer-events-none whitespace-nowrap font-mono text-xs font-bold"
+            style={{ color: style.hex }}
+          >
+            [{style.letter}] {track.id}
+          </div>
+        </Html>
+      )}
     </group>
   );
 }

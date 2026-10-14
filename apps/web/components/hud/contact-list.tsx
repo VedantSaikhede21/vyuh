@@ -1,12 +1,12 @@
 'use client';
 
-import { AFFILIATION_STYLE } from '@/lib/affiliation';
+import { AffiliationSymbol } from './affiliation-symbol';
 import type { Commands } from '@/lib/sim/commands';
 import { useHudStore } from '@/lib/sim/store';
 import { CLASS_LABEL, pad3 } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 
-/** Track table (SPEC §15): state goes UNKNOWN → classified, with affiliation colour + letter. */
+/** Track table (SPEC §15): state goes UNKNOWN → classified, with APP-6 frame, colour + letter. */
 export function ContactList({ commands }: { commands: Commands }) {
   const hud = useHudStore((s) => s.hud);
   const tracks = hud?.tracks ?? [];
@@ -29,7 +29,6 @@ export function ContactList({ commands }: { commands: Commands }) {
       </thead>
       <tbody>
         {tracks.map((t) => {
-          const style = AFFILIATION_STYLE[t.affiliation];
           const selected = t.id === hud?.selectedTrackId;
           const lost = t.status === 'LOST';
           return (
@@ -44,8 +43,8 @@ export function ContactList({ commands }: { commands: Commands }) {
               )}
             >
               <td className="px-2 py-1 font-bold">{t.id}</td>
-              <td className="px-2 py-1 font-bold" style={{ color: style.hex }}>
-                [{style.letter}]
+              <td className="px-2 py-1">
+                <AffiliationSymbol affiliation={t.affiliation} filled={t.markedDetected} />
               </td>
               <td className="px-2 py-1">
                 {t.classifiedAs ? CLASS_LABEL[t.classifiedAs] : 'UNKNOWN'}
