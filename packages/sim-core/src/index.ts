@@ -159,3 +159,5 @@ export {
   pointingTo,
 } from './sensors/eoir.ts';
 export type { EoCameraState, EoConditions, EoTrackMode } from './sensors/eoir.ts';
+export { DEFENDER_RANGE_FRACTION, createDefender, trueAffiliation } from './defender.ts';
+export type { Defender } from './defender.ts';
