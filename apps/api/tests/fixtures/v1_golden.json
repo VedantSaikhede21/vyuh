@@ -1,0 +1,1750 @@
+{
+ "eo_identified_then_wrong_class": {
+  "events": [
+   {
+    "contactId": "c01",
+    "payload": {},
+    "seq": 1,
+    "tMs": 20000,
+    "trackId": "T001",
+    "type": "SENSOR_TRACK_CREATED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "level": "IDENTIFY",
+     "rangeM": 800
+    },
+    "seq": 2,
+    "tMs": 30000,
+    "type": "EO_IDENTIFIABLE"
+   },
+   {
+    "payload": {
+     "class": "BIRD_SMALL"
+    },
+    "seq": 3,
+    "tMs": 35000,
+    "trackId": "T001",
+    "type": "CLASSIFIED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "response": "INTERCEPT",
+     "result": "MISSED"
+    },
+    "seq": 4,
+    "tMs": 60000,
+    "trackId": "T001",
+    "type": "RESPONSE_OUTCOME"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "assetId": "a1"
+    },
+    "seq": 5,
+    "tMs": 160000,
+    "type": "CONTACT_REACHED_ASSET"
+   }
+  ],
+  "scenario": {
+   "assets": [
+    {
+     "id": "a1",
+     "name": "Post Alpha",
+     "radiusM": 60,
+     "x": 0,
+     "z": 0
+    }
+   ],
+   "briefing": "## Situation\nForward post on open, rolling ground in clear daylight. A single small quadcopter is expected from the north.\n## Task\nDetect the track on radar, mark it, classify it, set its affiliation and intercept it before it reaches Post Alpha.\n## ROE\nWEAPONS FREE \u2014 engage any track you assess as a threat.",
+   "contacts": [
+    {
+     "affiliation": "HOSTILE",
+     "behaviour": "ATTACK_RUN",
+     "class": "QUAD_SMALL",
+     "controlLink": "RF_MANUAL",
+     "emissions": {
+      "rfActive": true,
+      "rfBand": "2.4GHz"
+     },
+     "id": "c01",
+     "isThreat": true,
+     "path": [
+      {
+       "speedMps": 16,
+       "x": 250,
+       "y": 50,
+       "z": 2400
+      },
+      {
+       "speedMps": 16,
+       "x": 120,
+       "y": 45,
+       "z": 1200
+      },
+      {
+       "action": "DIVE",
+       "speedMps": 16,
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ],
+     "spawnTMs": 15000
+    }
+   ],
+   "difficulty": 1,
+   "durationS": 180,
+   "effectors": [
+    {
+     "ammo": 4,
+     "cooldownS": 6,
+     "id": "int1",
+     "kind": "INTERCEPT",
+     "rangeM": 1500,
+     "x": 0,
+     "z": 0
+    }
+   ],
+   "environment": {
+    "date": "2026-11-20",
+    "isNight": false,
+    "time": "10:30",
+    "weather": {
+     "cloudPct": 10,
+     "rainMmph": 0,
+     "visibilityM": 10000,
+     "windDirDeg": 290,
+     "windMps": 3
+    }
+   },
+   "id": "S01",
+   "name": "First Contact",
+   "roe": "WEAPONS_FREE",
+   "schemaVersion": 1,
+   "scoringTreeId": "default_v1",
+   "seed": 1001,
+   "sensors": [
+    {
+     "id": "rad1",
+     "kind": "RADAR",
+     "refRangeM": 3000,
+     "scanPeriodS": 2,
+     "x": 0,
+     "y": 6,
+     "z": 0
+    },
+    {
+     "fovDegMax": 30,
+     "fovDegMin": 1.5,
+     "id": "eo1",
+     "kind": "EO_IR",
+     "resolution": [
+      640,
+      360
+     ],
+     "x": 0,
+     "y": 8,
+     "z": 0
+    }
+   ],
+   "terrain": {
+    "origin": {
+     "lat": 27.0,
+     "lon": 74.0
+    },
+    "preset": "PROCEDURAL_HILLS"
+   },
+   "zones": []
+  },
+  "score": {
+   "component_max": {
+    "classification": 25.0,
+    "decision": 30.0,
+    "detection": 25.0,
+    "efficiency": 0.0,
+    "report": 0.0
+   },
+   "components": {
+    "classification": 0.0,
+    "decision": 15.0,
+    "detection": 10.0,
+    "efficiency": 0.0,
+    "report": 0.0
+   },
+   "metrics": {
+    "eventCount": 5,
+    "leaked": 1,
+    "neutralised": 0,
+    "scoredThreats": 1,
+    "threats": 1
+   },
+   "penalties": [],
+   "per_contact": [
+    {
+     "ai_suggestion_accepted": null,
+     "ai_suggestion_correct": null,
+     "ai_suggestion_shown": null,
+     "classification_correct": "WRONG",
+     "classified_as": "BIRD_SMALL",
+     "contact_id": "c01",
+     "detection_latency_s": 15.0,
+     "feedback": [
+      "Slow detection: 15.0 s after the track appeared. Scan the radar continuously.",
+      "Misclassified as BIRD_SMALL; it was a QUAD_SMALL.",
+      "Engaged (1 round(s)) but did not neutralise. Engage earlier to leave time to re-attack."
+     ],
+     "first_detectable_t_ms": 20000,
+     "identifiable_when_classified": true,
+     "is_threat": true,
+     "leaves": [
+      "LATENCY_15_TO_30S",
+      "CLASS_WRONG",
+      "DECISION_ENGAGED_NOT_NEUTRALISED"
+     ],
+     "outcome": "LEAKED",
+     "points": 25.0,
+     "response_appropriate": true,
+     "responses": [],
+     "track_ids": [
+      "T001"
+     ],
+     "trainee_detected_t_ms": 35000
+    }
+   ],
+   "total": 31.2,
+   "tree_version": "default_v1"
+  }
+ },
+ "friendly_fired_bird_shot_threat_leaked": {
+  "events": [
+   {
+    "contactId": "c02",
+    "payload": {},
+    "seq": 1,
+    "tMs": 20000,
+    "trackId": "T001",
+    "type": "SENSOR_TRACK_CREATED"
+   },
+   {
+    "contactId": "c02",
+    "payload": {
+     "response": "INTERCEPT",
+     "result": "MISSED"
+    },
+    "seq": 2,
+    "tMs": 30000,
+    "trackId": "T001",
+    "type": "RESPONSE_OUTCOME"
+   },
+   {
+    "contactId": "c03",
+    "payload": {},
+    "seq": 3,
+    "tMs": 20000,
+    "trackId": "T002",
+    "type": "SENSOR_TRACK_CREATED"
+   },
+   {
+    "payload": {
+     "class": "BIRD_SMALL"
+    },
+    "seq": 4,
+    "tMs": 31000,
+    "trackId": "T002",
+    "type": "CLASSIFIED"
+   },
+   {
+    "contactId": "c03",
+    "payload": {
+     "response": "INTERCEPT",
+     "result": "NEUTRALISED"
+    },
+    "seq": 5,
+    "tMs": 40000,
+    "trackId": "T002",
+    "type": "RESPONSE_OUTCOME"
+   },
+   {
+    "contactId": "c01",
+    "payload": {},
+    "seq": 6,
+    "tMs": 22000,
+    "trackId": "T003",
+    "type": "SENSOR_TRACK_CREATED"
+   },
+   {
+    "payload": {
+     "class": "FPV"
+    },
+    "seq": 7,
+    "tMs": 40000,
+    "trackId": "T003",
+    "type": "CLASSIFIED"
+   },
+   {
+    "payload": {
+     "response": "INTERCEPT"
+    },
+    "seq": 8,
+    "tMs": 50000,
+    "trackId": "T003",
+    "type": "RESPONSE_ORDERED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "response": "INTERCEPT",
+     "result": "OUT_OF_RANGE"
+    },
+    "seq": 9,
+    "tMs": 50000,
+    "trackId": "T003",
+    "type": "RESPONSE_OUTCOME"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "assetId": "a1"
+    },
+    "seq": 10,
+    "tMs": 160000,
+    "type": "CONTACT_REACHED_ASSET"
+   }
+  ],
+  "scenario": {
+   "assets": [
+    {
+     "id": "a1",
+     "name": "Post Alpha",
+     "radiusM": 60,
+     "x": 0,
+     "z": 0
+    }
+   ],
+   "briefing": "## Situation\nForward post on open, rolling ground in clear daylight. A single small quadcopter is expected from the north.\n## Task\nDetect the track on radar, mark it, classify it, set its affiliation and intercept it before it reaches Post Alpha.\n## ROE\nWEAPONS FREE \u2014 engage any track you assess as a threat.",
+   "contacts": [
+    {
+     "affiliation": "HOSTILE",
+     "behaviour": "ATTACK_RUN",
+     "class": "QUAD_SMALL",
+     "controlLink": "RF_MANUAL",
+     "emissions": {
+      "rfActive": true,
+      "rfBand": "2.4GHz"
+     },
+     "id": "c01",
+     "isThreat": true,
+     "path": [
+      {
+       "speedMps": 16,
+       "x": 250,
+       "y": 50,
+       "z": 2400
+      },
+      {
+       "speedMps": 16,
+       "x": 120,
+       "y": 45,
+       "z": 1200
+      },
+      {
+       "action": "DIVE",
+       "speedMps": 16,
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ],
+     "spawnTMs": 15000
+    },
+    {
+     "affiliation": "FRIENDLY",
+     "behaviour": "ATTACK_RUN",
+     "class": "FRIENDLY_QUAD",
+     "controlLink": "RF_MANUAL",
+     "emissions": {
+      "rfActive": true,
+      "rfBand": "2.4GHz"
+     },
+     "id": "c02",
+     "isThreat": false,
+     "path": [
+      {
+       "speedMps": 16,
+       "x": 250,
+       "y": 50,
+       "z": 2400
+      },
+      {
+       "speedMps": 16,
+       "x": 120,
+       "y": 45,
+       "z": 1200
+      },
+      {
+       "action": "DIVE",
+       "speedMps": 16,
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ],
+     "spawnTMs": 15000
+    },
+    {
+     "affiliation": "NEUTRAL",
+     "behaviour": "ATTACK_RUN",
+     "class": "BIRD_LARGE",
+     "controlLink": "NONE",
+     "emissions": {
+      "rfActive": false
+     },
+     "id": "c03",
+     "isThreat": false,
+     "path": [
+      {
+       "speedMps": 16,
+       "x": 250,
+       "y": 50,
+       "z": 2400
+      },
+      {
+       "speedMps": 16,
+       "x": 120,
+       "y": 45,
+       "z": 1200
+      },
+      {
+       "action": "DIVE",
+       "speedMps": 16,
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ],
+     "spawnTMs": 15000
+    }
+   ],
+   "difficulty": 1,
+   "durationS": 180,
+   "effectors": [
+    {
+     "ammo": 4,
+     "cooldownS": 6,
+     "id": "int1",
+     "kind": "INTERCEPT",
+     "rangeM": 1500,
+     "x": 0,
+     "z": 0
+    }
+   ],
+   "environment": {
+    "date": "2026-11-20",
+    "isNight": false,
+    "time": "10:30",
+    "weather": {
+     "cloudPct": 10,
+     "rainMmph": 0,
+     "visibilityM": 10000,
+     "windDirDeg": 290,
+     "windMps": 3
+    }
+   },
+   "id": "S01",
+   "name": "First Contact",
+   "roe": "WEAPONS_FREE",
+   "schemaVersion": 1,
+   "scoringTreeId": "default_v1",
+   "seed": 1001,
+   "sensors": [
+    {
+     "id": "rad1",
+     "kind": "RADAR",
+     "refRangeM": 3000,
+     "scanPeriodS": 2,
+     "x": 0,
+     "y": 6,
+     "z": 0
+    },
+    {
+     "fovDegMax": 30,
+     "fovDegMin": 1.5,
+     "id": "eo1",
+     "kind": "EO_IR",
+     "resolution": [
+      640,
+      360
+     ],
+     "x": 0,
+     "y": 8,
+     "z": 0
+    }
+   ],
+   "terrain": {
+    "origin": {
+     "lat": 27.0,
+     "lon": 74.0
+    },
+    "preset": "PROCEDURAL_HILLS"
+   },
+   "zones": []
+  },
+  "score": {
+   "component_max": {
+    "classification": 25.0,
+    "decision": 30.0,
+    "detection": 25.0,
+    "efficiency": 0.0,
+    "report": 0.0
+   },
+   "components": {
+    "classification": 12.0,
+    "decision": 5.0,
+    "detection": 10.0,
+    "efficiency": 0.0,
+    "report": 0.0
+   },
+   "metrics": {
+    "eventCount": 10,
+    "leaked": 1,
+    "neutralised": 0,
+    "scoredThreats": 1,
+    "threats": 1
+   },
+   "penalties": [
+    {
+     "code": "FRATRICIDE",
+     "contact_id": "c02",
+     "feedback": "Engaged a friendly FRIENDLY_QUAD. Confirm affiliation before engaging.",
+     "points": -40.0,
+     "t_ms": null,
+     "unavoidable": null
+    },
+    {
+     "code": "WRONGLY_ENGAGED",
+     "contact_id": "c03",
+     "feedback": "Engaged a non-threat (BIRD_LARGE). Identify before you engage.",
+     "points": -25.0,
+     "t_ms": null,
+     "unavoidable": null
+    }
+   ],
+   "per_contact": [
+    {
+     "ai_suggestion_accepted": null,
+     "ai_suggestion_correct": null,
+     "ai_suggestion_shown": null,
+     "classification_correct": "CATEGORY",
+     "classified_as": "FPV",
+     "contact_id": "c01",
+     "detection_latency_s": 18.0,
+     "feedback": [
+      "Slow detection: 18.0 s after the track appeared. Scan the radar continuously.",
+      "Classified as FPV: right category, but it was a QUAD_SMALL.",
+      "Intercept ordered but never fired (last result: OUT_OF_RANGE). Check range, cooldown and ROE."
+     ],
+     "first_detectable_t_ms": 22000,
+     "identifiable_when_classified": false,
+     "is_threat": true,
+     "leaves": [
+      "LATENCY_15_TO_30S",
+      "CLASS_CATEGORY",
+      "DECISION_INEFFECTIVE"
+     ],
+     "outcome": "LEAKED",
+     "points": 27.0,
+     "response_appropriate": false,
+     "responses": [
+      "INTERCEPT"
+     ],
+     "track_ids": [
+      "T003"
+     ],
+     "trainee_detected_t_ms": 40000
+    },
+    {
+     "ai_suggestion_accepted": null,
+     "ai_suggestion_correct": null,
+     "ai_suggestion_shown": null,
+     "classification_correct": null,
+     "classified_as": null,
+     "contact_id": "c02",
+     "detection_latency_s": null,
+     "feedback": [
+      "Engaged a friendly FRIENDLY_QUAD. Confirm affiliation before engaging."
+     ],
+     "first_detectable_t_ms": 20000,
+     "identifiable_when_classified": null,
+     "is_threat": false,
+     "leaves": [
+      "FRATRICIDE"
+     ],
+     "outcome": "FRATRICIDE",
+     "points": -40.0,
+     "response_appropriate": false,
+     "responses": [],
+     "track_ids": [
+      "T001"
+     ],
+     "trainee_detected_t_ms": null
+    },
+    {
+     "ai_suggestion_accepted": null,
+     "ai_suggestion_correct": null,
+     "ai_suggestion_shown": null,
+     "classification_correct": "CATEGORY",
+     "classified_as": "BIRD_SMALL",
+     "contact_id": "c03",
+     "detection_latency_s": 11.0,
+     "feedback": [
+      "Engaged a non-threat (BIRD_LARGE). Identify before you engage."
+     ],
+     "first_detectable_t_ms": 20000,
+     "identifiable_when_classified": false,
+     "is_threat": false,
+     "leaves": [
+      "WRONGLY_ENGAGED"
+     ],
+     "outcome": "WRONGLY_ENGAGED",
+     "points": -25.0,
+     "response_appropriate": false,
+     "responses": [],
+     "track_ids": [
+      "T002"
+     ],
+     "trainee_detected_t_ms": 31000
+    }
+   ],
+   "total": 0.0,
+   "tree_version": "default_v1"
+  }
+ },
+ "s01_defended": {
+  "events": [
+   {
+    "payload": {
+     "mode": "PRACTICE",
+     "scenarioId": "S01",
+     "seed": 1001
+    },
+    "seq": 0,
+    "tMs": 0,
+    "type": "SESSION_STARTED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {},
+    "seq": 1,
+    "tMs": 15000,
+    "type": "CONTACT_SPAWNED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "bearingDeg": 3.621577851531018,
+     "rangeM": 2328.28807501485,
+     "sensorId": "rad1",
+     "sensorKind": "RADAR"
+    },
+    "seq": 2,
+    "tMs": 20000,
+    "trackId": "T001",
+    "type": "SENSOR_TRACK_CREATED"
+   },
+   {
+    "payload": {},
+    "seq": 3,
+    "tMs": 20050,
+    "trackId": "T001",
+    "type": "TRACK_SELECTED"
+   },
+   {
+    "payload": {},
+    "seq": 4,
+    "tMs": 20050,
+    "trackId": "T001",
+    "type": "MARKED_DETECTED"
+   },
+   {
+    "payload": {
+     "class": "QUAD_SMALL"
+    },
+    "seq": 5,
+    "tMs": 20050,
+    "trackId": "T001",
+    "type": "CLASSIFIED"
+   },
+   {
+    "payload": {
+     "affiliation": "HOSTILE"
+    },
+    "seq": 6,
+    "tMs": 20050,
+    "trackId": "T001",
+    "type": "AFFILIATION_SET"
+   },
+   {
+    "payload": {
+     "response": "INTERCEPT"
+    },
+    "seq": 7,
+    "tMs": 97100,
+    "trackId": "T001",
+    "type": "RESPONSE_ORDERED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "response": "INTERCEPT",
+     "result": "NEUTRALISED"
+    },
+    "seq": 8,
+    "tMs": 97100,
+    "trackId": "T001",
+    "type": "RESPONSE_OUTCOME"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "by": "INTERCEPT"
+    },
+    "seq": 9,
+    "tMs": 97100,
+    "type": "CONTACT_NEUTRALISED"
+   },
+   {
+    "payload": {
+     "reason": "ALL_RESOLVED"
+    },
+    "seq": 10,
+    "tMs": 97100,
+    "type": "SESSION_ENDED"
+   }
+  ],
+  "scenario": {
+   "assets": [
+    {
+     "id": "a1",
+     "name": "Post Alpha",
+     "radiusM": 60,
+     "x": 0,
+     "z": 0
+    }
+   ],
+   "briefing": "## Situation\nForward post on open, rolling ground in clear daylight. A single small quadcopter is expected from the north.\n## Task\nDetect the track on radar, mark it, classify it, set its affiliation and intercept it before it reaches Post Alpha.\n## ROE\nWEAPONS FREE \u2014 engage any track you assess as a threat.",
+   "contacts": [
+    {
+     "affiliation": "HOSTILE",
+     "behaviour": "ATTACK_RUN",
+     "class": "QUAD_SMALL",
+     "controlLink": "RF_MANUAL",
+     "emissions": {
+      "rfActive": true,
+      "rfBand": "2.4GHz"
+     },
+     "id": "c01",
+     "isThreat": true,
+     "path": [
+      {
+       "speedMps": 16,
+       "x": 250,
+       "y": 50,
+       "z": 2400
+      },
+      {
+       "speedMps": 16,
+       "x": 120,
+       "y": 45,
+       "z": 1200
+      },
+      {
+       "action": "DIVE",
+       "speedMps": 16,
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ],
+     "spawnTMs": 15000
+    }
+   ],
+   "difficulty": 1,
+   "durationS": 180,
+   "effectors": [
+    {
+     "ammo": 4,
+     "cooldownS": 6,
+     "id": "int1",
+     "kind": "INTERCEPT",
+     "rangeM": 1500,
+     "x": 0,
+     "z": 0
+    }
+   ],
+   "environment": {
+    "date": "2026-11-20",
+    "isNight": false,
+    "time": "10:30",
+    "weather": {
+     "cloudPct": 10,
+     "rainMmph": 0,
+     "visibilityM": 10000,
+     "windDirDeg": 290,
+     "windMps": 3
+    }
+   },
+   "id": "S01",
+   "name": "First Contact",
+   "roe": "WEAPONS_FREE",
+   "schemaVersion": 1,
+   "scoringTreeId": "default_v1",
+   "seed": 1001,
+   "sensors": [
+    {
+     "id": "rad1",
+     "kind": "RADAR",
+     "refRangeM": 3000,
+     "scanPeriodS": 2,
+     "x": 0,
+     "y": 6,
+     "z": 0
+    },
+    {
+     "fovDegMax": 30,
+     "fovDegMin": 1.5,
+     "id": "eo1",
+     "kind": "EO_IR",
+     "resolution": [
+      640,
+      360
+     ],
+     "x": 0,
+     "y": 8,
+     "z": 0
+    }
+   ],
+   "terrain": {
+    "origin": {
+     "lat": 27.0,
+     "lon": 74.0
+    },
+    "preset": "PROCEDURAL_HILLS"
+   },
+   "zones": []
+  },
+  "score": {
+   "component_max": {
+    "classification": 25.0,
+    "decision": 30.0,
+    "detection": 25.0,
+    "efficiency": 0.0,
+    "report": 0.0
+   },
+   "components": {
+    "classification": 25.0,
+    "decision": 30.0,
+    "detection": 25.0,
+    "efficiency": 0.0,
+    "report": 0.0
+   },
+   "metrics": {
+    "eventCount": 11,
+    "leaked": 0,
+    "neutralised": 1,
+    "scoredThreats": 1,
+    "threats": 1
+   },
+   "penalties": [],
+   "per_contact": [
+    {
+     "ai_suggestion_accepted": null,
+     "ai_suggestion_correct": null,
+     "ai_suggestion_shown": null,
+     "classification_correct": "EXACT",
+     "classified_as": "QUAD_SMALL",
+     "contact_id": "c01",
+     "detection_latency_s": 0.05,
+     "feedback": [
+      "Fast detection: acted 0.1 s after the track appeared.",
+      "Correctly classified as QUAD_SMALL.",
+      "Neutralised before it reached the asset (1 round(s) used)."
+     ],
+     "first_detectable_t_ms": 20000,
+     "identifiable_when_classified": false,
+     "is_threat": true,
+     "leaves": [
+      "LATENCY_UNDER_5S",
+      "CLASS_EXACT",
+      "DECISION_NEUTRALISED"
+     ],
+     "outcome": "NEUTRALISED",
+     "points": 80.0,
+     "response_appropriate": true,
+     "responses": [
+      "INTERCEPT"
+     ],
+     "track_ids": [
+      "T001"
+     ],
+     "trainee_detected_t_ms": 20050
+    }
+   ],
+   "total": 100.0,
+   "tree_version": "default_v1"
+  }
+ },
+ "s01_ignored": {
+  "events": [
+   {
+    "payload": {
+     "mode": "PRACTICE",
+     "scenarioId": "S01",
+     "seed": 1001
+    },
+    "seq": 0,
+    "tMs": 0,
+    "type": "SESSION_STARTED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {},
+    "seq": 1,
+    "tMs": 15000,
+    "type": "CONTACT_SPAWNED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "bearingDeg": 3.621577851531018,
+     "rangeM": 2328.28807501485,
+     "sensorId": "rad1",
+     "sensorKind": "RADAR"
+    },
+    "seq": 2,
+    "tMs": 20000,
+    "trackId": "T001",
+    "type": "SENSOR_TRACK_CREATED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "level": "IDENTIFY",
+     "rangeM": 14.790526851004296
+    },
+    "seq": 3,
+    "tMs": 165600,
+    "trackId": "T001",
+    "type": "EO_IDENTIFIABLE"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "assetId": "a1"
+    },
+    "seq": 4,
+    "tMs": 166750,
+    "type": "CONTACT_REACHED_ASSET"
+   },
+   {
+    "payload": {
+     "reason": "ALL_RESOLVED"
+    },
+    "seq": 5,
+    "tMs": 166750,
+    "type": "SESSION_ENDED"
+   }
+  ],
+  "scenario": {
+   "assets": [
+    {
+     "id": "a1",
+     "name": "Post Alpha",
+     "radiusM": 60,
+     "x": 0,
+     "z": 0
+    }
+   ],
+   "briefing": "## Situation\nForward post on open, rolling ground in clear daylight. A single small quadcopter is expected from the north.\n## Task\nDetect the track on radar, mark it, classify it, set its affiliation and intercept it before it reaches Post Alpha.\n## ROE\nWEAPONS FREE \u2014 engage any track you assess as a threat.",
+   "contacts": [
+    {
+     "affiliation": "HOSTILE",
+     "behaviour": "ATTACK_RUN",
+     "class": "QUAD_SMALL",
+     "controlLink": "RF_MANUAL",
+     "emissions": {
+      "rfActive": true,
+      "rfBand": "2.4GHz"
+     },
+     "id": "c01",
+     "isThreat": true,
+     "path": [
+      {
+       "speedMps": 16,
+       "x": 250,
+       "y": 50,
+       "z": 2400
+      },
+      {
+       "speedMps": 16,
+       "x": 120,
+       "y": 45,
+       "z": 1200
+      },
+      {
+       "action": "DIVE",
+       "speedMps": 16,
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ],
+     "spawnTMs": 15000
+    }
+   ],
+   "difficulty": 1,
+   "durationS": 180,
+   "effectors": [
+    {
+     "ammo": 4,
+     "cooldownS": 6,
+     "id": "int1",
+     "kind": "INTERCEPT",
+     "rangeM": 1500,
+     "x": 0,
+     "z": 0
+    }
+   ],
+   "environment": {
+    "date": "2026-11-20",
+    "isNight": false,
+    "time": "10:30",
+    "weather": {
+     "cloudPct": 10,
+     "rainMmph": 0,
+     "visibilityM": 10000,
+     "windDirDeg": 290,
+     "windMps": 3
+    }
+   },
+   "id": "S01",
+   "name": "First Contact",
+   "roe": "WEAPONS_FREE",
+   "schemaVersion": 1,
+   "scoringTreeId": "default_v1",
+   "seed": 1001,
+   "sensors": [
+    {
+     "id": "rad1",
+     "kind": "RADAR",
+     "refRangeM": 3000,
+     "scanPeriodS": 2,
+     "x": 0,
+     "y": 6,
+     "z": 0
+    },
+    {
+     "fovDegMax": 30,
+     "fovDegMin": 1.5,
+     "id": "eo1",
+     "kind": "EO_IR",
+     "resolution": [
+      640,
+      360
+     ],
+     "x": 0,
+     "y": 8,
+     "z": 0
+    }
+   ],
+   "terrain": {
+    "origin": {
+     "lat": 27.0,
+     "lon": 74.0
+    },
+    "preset": "PROCEDURAL_HILLS"
+   },
+   "zones": []
+  },
+  "score": {
+   "component_max": {
+    "classification": 25.0,
+    "decision": 30.0,
+    "detection": 25.0,
+    "efficiency": 0.0,
+    "report": 0.0
+   },
+   "components": {
+    "classification": 0.0,
+    "decision": 0.0,
+    "detection": 0.0,
+    "efficiency": 0.0,
+    "report": 0.0
+   },
+   "metrics": {
+    "eventCount": 6,
+    "leaked": 1,
+    "neutralised": 0,
+    "scoredThreats": 1,
+    "threats": 1
+   },
+   "penalties": [],
+   "per_contact": [
+    {
+     "ai_suggestion_accepted": null,
+     "ai_suggestion_correct": null,
+     "ai_suggestion_shown": null,
+     "classification_correct": null,
+     "classified_as": null,
+     "contact_id": "c01",
+     "detection_latency_s": null,
+     "feedback": [
+      "Threat was on radar from 20 s but you never acted on its track."
+     ],
+     "first_detectable_t_ms": 20000,
+     "identifiable_when_classified": null,
+     "is_threat": true,
+     "leaves": [
+      "MISSED"
+     ],
+     "outcome": "LEAKED",
+     "points": 0.0,
+     "response_appropriate": false,
+     "responses": [],
+     "track_ids": [
+      "T001"
+     ],
+     "trainee_detected_t_ms": null
+    }
+   ],
+   "total": 0.0,
+   "tree_version": "default_v1"
+  }
+ },
+ "second_threat_undetectable": {
+  "events": [
+   {
+    "payload": {
+     "mode": "PRACTICE",
+     "scenarioId": "S01",
+     "seed": 1001
+    },
+    "seq": 0,
+    "tMs": 0,
+    "type": "SESSION_STARTED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {},
+    "seq": 1,
+    "tMs": 15000,
+    "type": "CONTACT_SPAWNED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "bearingDeg": 3.621577851531018,
+     "rangeM": 2328.28807501485,
+     "sensorId": "rad1",
+     "sensorKind": "RADAR"
+    },
+    "seq": 2,
+    "tMs": 20000,
+    "trackId": "T001",
+    "type": "SENSOR_TRACK_CREATED"
+   },
+   {
+    "payload": {},
+    "seq": 3,
+    "tMs": 20050,
+    "trackId": "T001",
+    "type": "TRACK_SELECTED"
+   },
+   {
+    "payload": {},
+    "seq": 4,
+    "tMs": 20050,
+    "trackId": "T001",
+    "type": "MARKED_DETECTED"
+   },
+   {
+    "payload": {
+     "class": "QUAD_SMALL"
+    },
+    "seq": 5,
+    "tMs": 20050,
+    "trackId": "T001",
+    "type": "CLASSIFIED"
+   },
+   {
+    "payload": {
+     "affiliation": "HOSTILE"
+    },
+    "seq": 6,
+    "tMs": 20050,
+    "trackId": "T001",
+    "type": "AFFILIATION_SET"
+   },
+   {
+    "payload": {
+     "response": "INTERCEPT"
+    },
+    "seq": 7,
+    "tMs": 97100,
+    "trackId": "T001",
+    "type": "RESPONSE_ORDERED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "response": "INTERCEPT",
+     "result": "NEUTRALISED"
+    },
+    "seq": 8,
+    "tMs": 97100,
+    "trackId": "T001",
+    "type": "RESPONSE_OUTCOME"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "by": "INTERCEPT"
+    },
+    "seq": 9,
+    "tMs": 97100,
+    "type": "CONTACT_NEUTRALISED"
+   },
+   {
+    "payload": {
+     "reason": "ALL_RESOLVED"
+    },
+    "seq": 10,
+    "tMs": 97100,
+    "type": "SESSION_ENDED"
+   }
+  ],
+  "scenario": {
+   "assets": [
+    {
+     "id": "a1",
+     "name": "Post Alpha",
+     "radiusM": 60,
+     "x": 0,
+     "z": 0
+    }
+   ],
+   "briefing": "## Situation\nForward post on open, rolling ground in clear daylight. A single small quadcopter is expected from the north.\n## Task\nDetect the track on radar, mark it, classify it, set its affiliation and intercept it before it reaches Post Alpha.\n## ROE\nWEAPONS FREE \u2014 engage any track you assess as a threat.",
+   "contacts": [
+    {
+     "affiliation": "HOSTILE",
+     "behaviour": "ATTACK_RUN",
+     "class": "QUAD_SMALL",
+     "controlLink": "RF_MANUAL",
+     "emissions": {
+      "rfActive": true,
+      "rfBand": "2.4GHz"
+     },
+     "id": "c01",
+     "isThreat": true,
+     "path": [
+      {
+       "speedMps": 16,
+       "x": 250,
+       "y": 50,
+       "z": 2400
+      },
+      {
+       "speedMps": 16,
+       "x": 120,
+       "y": 45,
+       "z": 1200
+      },
+      {
+       "action": "DIVE",
+       "speedMps": 16,
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ],
+     "spawnTMs": 15000
+    },
+    {
+     "affiliation": "HOSTILE",
+     "behaviour": "ATTACK_RUN",
+     "class": "QUAD_SMALL",
+     "controlLink": "RF_MANUAL",
+     "emissions": {
+      "rfActive": true,
+      "rfBand": "2.4GHz"
+     },
+     "id": "c02",
+     "isThreat": true,
+     "path": [
+      {
+       "speedMps": 16,
+       "x": 250,
+       "y": 50,
+       "z": 2400
+      },
+      {
+       "speedMps": 16,
+       "x": 120,
+       "y": 45,
+       "z": 1200
+      },
+      {
+       "action": "DIVE",
+       "speedMps": 16,
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ],
+     "spawnTMs": 15000
+    }
+   ],
+   "difficulty": 1,
+   "durationS": 180,
+   "effectors": [
+    {
+     "ammo": 4,
+     "cooldownS": 6,
+     "id": "int1",
+     "kind": "INTERCEPT",
+     "rangeM": 1500,
+     "x": 0,
+     "z": 0
+    }
+   ],
+   "environment": {
+    "date": "2026-11-20",
+    "isNight": false,
+    "time": "10:30",
+    "weather": {
+     "cloudPct": 10,
+     "rainMmph": 0,
+     "visibilityM": 10000,
+     "windDirDeg": 290,
+     "windMps": 3
+    }
+   },
+   "id": "S01",
+   "name": "First Contact",
+   "roe": "WEAPONS_FREE",
+   "schemaVersion": 1,
+   "scoringTreeId": "default_v1",
+   "seed": 1001,
+   "sensors": [
+    {
+     "id": "rad1",
+     "kind": "RADAR",
+     "refRangeM": 3000,
+     "scanPeriodS": 2,
+     "x": 0,
+     "y": 6,
+     "z": 0
+    },
+    {
+     "fovDegMax": 30,
+     "fovDegMin": 1.5,
+     "id": "eo1",
+     "kind": "EO_IR",
+     "resolution": [
+      640,
+      360
+     ],
+     "x": 0,
+     "y": 8,
+     "z": 0
+    }
+   ],
+   "terrain": {
+    "origin": {
+     "lat": 27.0,
+     "lon": 74.0
+    },
+    "preset": "PROCEDURAL_HILLS"
+   },
+   "zones": []
+  },
+  "score": {
+   "component_max": {
+    "classification": 25.0,
+    "decision": 30.0,
+    "detection": 25.0,
+    "efficiency": 0.0,
+    "report": 0.0
+   },
+   "components": {
+    "classification": 25.0,
+    "decision": 30.0,
+    "detection": 25.0,
+    "efficiency": 0.0,
+    "report": 0.0
+   },
+   "metrics": {
+    "eventCount": 11,
+    "leaked": 0,
+    "neutralised": 1,
+    "scoredThreats": 1,
+    "threats": 2
+   },
+   "penalties": [],
+   "per_contact": [
+    {
+     "ai_suggestion_accepted": null,
+     "ai_suggestion_correct": null,
+     "ai_suggestion_shown": null,
+     "classification_correct": "EXACT",
+     "classified_as": "QUAD_SMALL",
+     "contact_id": "c01",
+     "detection_latency_s": 0.05,
+     "feedback": [
+      "Fast detection: acted 0.1 s after the track appeared.",
+      "Correctly classified as QUAD_SMALL.",
+      "Neutralised before it reached the asset (1 round(s) used)."
+     ],
+     "first_detectable_t_ms": 20000,
+     "identifiable_when_classified": false,
+     "is_threat": true,
+     "leaves": [
+      "LATENCY_UNDER_5S",
+      "CLASS_EXACT",
+      "DECISION_NEUTRALISED"
+     ],
+     "outcome": "NEUTRALISED",
+     "points": 80.0,
+     "response_appropriate": true,
+     "responses": [
+      "INTERCEPT"
+     ],
+     "track_ids": [
+      "T001"
+     ],
+     "trainee_detected_t_ms": 20050
+    },
+    {
+     "ai_suggestion_accepted": null,
+     "ai_suggestion_correct": null,
+     "ai_suggestion_shown": null,
+     "classification_correct": null,
+     "classified_as": null,
+     "contact_id": "c02",
+     "detection_latency_s": null,
+     "feedback": [
+      "This threat was never detectable by your sensors, so it is not scored."
+     ],
+     "first_detectable_t_ms": null,
+     "identifiable_when_classified": null,
+     "is_threat": true,
+     "leaves": [
+      "NOT_DETECTABLE"
+     ],
+     "outcome": "UNRESOLVED",
+     "points": 0.0,
+     "response_appropriate": false,
+     "responses": [],
+     "track_ids": [],
+     "trainee_detected_t_ms": null
+    }
+   ],
+   "total": 100.0,
+   "tree_version": "default_v1"
+  }
+ },
+ "two_threats_averaged": {
+  "events": [
+   {
+    "payload": {},
+    "seq": 0,
+    "tMs": 0,
+    "type": "SESSION_STARTED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {},
+    "seq": 1,
+    "tMs": 20000,
+    "trackId": "T001",
+    "type": "SENSOR_TRACK_CREATED"
+   },
+   {
+    "payload": {},
+    "seq": 2,
+    "tMs": 21000,
+    "trackId": "T001",
+    "type": "MARKED_DETECTED"
+   },
+   {
+    "payload": {
+     "class": "QUAD_SMALL"
+    },
+    "seq": 3,
+    "tMs": 21000,
+    "trackId": "T001",
+    "type": "CLASSIFIED"
+   },
+   {
+    "contactId": "c01",
+    "payload": {
+     "by": "INTERCEPT"
+    },
+    "seq": 4,
+    "tMs": 50000,
+    "type": "CONTACT_NEUTRALISED"
+   },
+   {
+    "contactId": "c02",
+    "payload": {},
+    "seq": 5,
+    "tMs": 20000,
+    "trackId": "T002",
+    "type": "SENSOR_TRACK_CREATED"
+   },
+   {
+    "payload": {},
+    "seq": 6,
+    "tMs": 40000,
+    "trackId": "T002",
+    "type": "MARKED_DETECTED"
+   }
+  ],
+  "scenario": {
+   "assets": [
+    {
+     "id": "a1",
+     "name": "Post Alpha",
+     "radiusM": 60,
+     "x": 0,
+     "z": 0
+    }
+   ],
+   "briefing": "## Situation\nForward post on open, rolling ground in clear daylight. A single small quadcopter is expected from the north.\n## Task\nDetect the track on radar, mark it, classify it, set its affiliation and intercept it before it reaches Post Alpha.\n## ROE\nWEAPONS FREE \u2014 engage any track you assess as a threat.",
+   "contacts": [
+    {
+     "affiliation": "HOSTILE",
+     "behaviour": "ATTACK_RUN",
+     "class": "QUAD_SMALL",
+     "controlLink": "RF_MANUAL",
+     "emissions": {
+      "rfActive": true,
+      "rfBand": "2.4GHz"
+     },
+     "id": "c01",
+     "isThreat": true,
+     "path": [
+      {
+       "speedMps": 16,
+       "x": 250,
+       "y": 50,
+       "z": 2400
+      },
+      {
+       "speedMps": 16,
+       "x": 120,
+       "y": 45,
+       "z": 1200
+      },
+      {
+       "action": "DIVE",
+       "speedMps": 16,
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ],
+     "spawnTMs": 15000
+    },
+    {
+     "affiliation": "HOSTILE",
+     "behaviour": "ATTACK_RUN",
+     "class": "QUAD_SMALL",
+     "controlLink": "RF_MANUAL",
+     "emissions": {
+      "rfActive": true,
+      "rfBand": "2.4GHz"
+     },
+     "id": "c02",
+     "isThreat": true,
+     "path": [
+      {
+       "speedMps": 16,
+       "x": 250,
+       "y": 50,
+       "z": 2400
+      },
+      {
+       "speedMps": 16,
+       "x": 120,
+       "y": 45,
+       "z": 1200
+      },
+      {
+       "action": "DIVE",
+       "speedMps": 16,
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ],
+     "spawnTMs": 15000
+    }
+   ],
+   "difficulty": 1,
+   "durationS": 180,
+   "effectors": [
+    {
+     "ammo": 4,
+     "cooldownS": 6,
+     "id": "int1",
+     "kind": "INTERCEPT",
+     "rangeM": 1500,
+     "x": 0,
+     "z": 0
+    }
+   ],
+   "environment": {
+    "date": "2026-11-20",
+    "isNight": false,
+    "time": "10:30",
+    "weather": {
+     "cloudPct": 10,
+     "rainMmph": 0,
+     "visibilityM": 10000,
+     "windDirDeg": 290,
+     "windMps": 3
+    }
+   },
+   "id": "S01",
+   "name": "First Contact",
+   "roe": "WEAPONS_FREE",
+   "schemaVersion": 1,
+   "scoringTreeId": "default_v1",
+   "seed": 1001,
+   "sensors": [
+    {
+     "id": "rad1",
+     "kind": "RADAR",
+     "refRangeM": 3000,
+     "scanPeriodS": 2,
+     "x": 0,
+     "y": 6,
+     "z": 0
+    },
+    {
+     "fovDegMax": 30,
+     "fovDegMin": 1.5,
+     "id": "eo1",
+     "kind": "EO_IR",
+     "resolution": [
+      640,
+      360
+     ],
+     "x": 0,
+     "y": 8,
+     "z": 0
+    }
+   ],
+   "terrain": {
+    "origin": {
+     "lat": 27.0,
+     "lon": 74.0
+    },
+    "preset": "PROCEDURAL_HILLS"
+   },
+   "zones": []
+  },
+  "score": {
+   "component_max": {
+    "classification": 25.0,
+    "decision": 30.0,
+    "detection": 25.0,
+    "efficiency": 0.0,
+    "report": 0.0
+   },
+   "components": {
+    "classification": 12.5,
+    "decision": 15.0,
+    "detection": 17.5,
+    "efficiency": 0.0,
+    "report": 0.0
+   },
+   "metrics": {
+    "eventCount": 7,
+    "leaked": 0,
+    "neutralised": 1,
+    "scoredThreats": 2,
+    "threats": 2
+   },
+   "penalties": [],
+   "per_contact": [
+    {
+     "ai_suggestion_accepted": null,
+     "ai_suggestion_correct": null,
+     "ai_suggestion_shown": null,
+     "classification_correct": "EXACT",
+     "classified_as": "QUAD_SMALL",
+     "contact_id": "c01",
+     "detection_latency_s": 1.0,
+     "feedback": [
+      "Fast detection: acted 1.0 s after the track appeared.",
+      "Correctly classified as QUAD_SMALL.",
+      "Neutralised before it reached the asset (0 round(s) used)."
+     ],
+     "first_detectable_t_ms": 20000,
+     "identifiable_when_classified": false,
+     "is_threat": true,
+     "leaves": [
+      "LATENCY_UNDER_5S",
+      "CLASS_EXACT",
+      "DECISION_NEUTRALISED"
+     ],
+     "outcome": "NEUTRALISED",
+     "points": 80.0,
+     "response_appropriate": false,
+     "responses": [],
+     "track_ids": [
+      "T001"
+     ],
+     "trainee_detected_t_ms": 21000
+    },
+    {
+     "ai_suggestion_accepted": null,
+     "ai_suggestion_correct": null,
+     "ai_suggestion_shown": null,
+     "classification_correct": null,
+     "classified_as": null,
+     "contact_id": "c02",
+     "detection_latency_s": 20.0,
+     "feedback": [
+      "Slow detection: 20.0 s after the track appeared. Scan the radar continuously.",
+      "Never classified. Identify every track you act on.",
+      "No response ordered against a confirmed threat."
+     ],
+     "first_detectable_t_ms": 20000,
+     "identifiable_when_classified": null,
+     "is_threat": true,
+     "leaves": [
+      "LATENCY_15_TO_30S",
+      "NOT_CLASSIFIED",
+      "DECISION_NONE"
+     ],
+     "outcome": "UNRESOLVED",
+     "points": 10.0,
+     "response_appropriate": false,
+     "responses": [],
+     "track_ids": [
+      "T002"
+     ],
+     "trainee_detected_t_ms": 40000
+    }
+   ],
+   "total": 56.2,
+   "tree_version": "default_v1"
+  }
+ }
+}
