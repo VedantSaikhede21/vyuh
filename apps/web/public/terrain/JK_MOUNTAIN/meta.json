@@ -1,0 +1,27 @@
+{
+  "name": "JK_MOUNTAIN",
+  "origin": {
+    "lat": 33.75,
+    "lon": 75.875
+  },
+  "utcOffsetMin": 330,
+  "sizeM": 14000.0,
+  "resolution": 512,
+  "metresPerPx": 27.397260273972602,
+  "originElevM": 2788.87,
+  "relMinM": -357.422,
+  "relMaxM": 2525.912,
+  "minElevM": 2431.45,
+  "maxElevM": 5314.78,
+  "buildingsStatus": "UNAVAILABLE",
+  "buildingCount": 0,
+  "files": {
+    "heightmap": "heightmap.u16",
+    "preview": "heightmap.png",
+    "buildings": "buildings.geojson"
+  },
+  "source": "Copernicus DEM GLO-30 (Copernicus_DSM_COG_10_N33_00_E075_00_DEM); local AEQD grid, bilinear",
+  "attribution": [
+    "Copernicus DEM GLO-30: © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved"
+  ]
+}
