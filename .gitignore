@@ -41,3 +41,6 @@ test-results/
 # playwright
 apps/web/test-results/
 apps/web/playwright-report/
+
+# local review screenshots (not baselines)
+apps/web/e2e/checkpoint/
