@@ -119,6 +119,19 @@ function Session({ sessionId }: { sessionId: string }) {
         trackMode: 'MANUAL',
       });
   }, [runtime, eoFov]);
+  // Playwright hook (decision 67): never part of a production build.
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || !runtime) return;
+    let uninstall: (() => void) | undefined;
+    let live = true;
+    void import('@/lib/e2e/hook').then((m) => {
+      if (live) uninstall = m.installE2EHook(runtime);
+    });
+    return () => {
+      live = false;
+      uninstall?.();
+    };
+  }, [runtime]);
 
   switch (phase.kind) {
     case 'loading':

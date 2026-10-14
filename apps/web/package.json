@@ -10,8 +10,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run",
-    "e2e": "playwright test",
-    "e2e:update": "playwright test --update-snapshots",
+    "e2e": "playwright test --grep-invert @fps",
+    "e2e:update": "playwright test --grep-invert @fps --update-snapshots",
+    "e2e:fps": "playwright test --grep @fps",
     "record:landing": "node scripts/record-landing.ts"
   },
   "dependencies": {

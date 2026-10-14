@@ -30,6 +30,8 @@ import S14 from '../../../../api/app/seed/scenarios/S14.json';
 //   zoom=3      EO zoom steps after cueing     ir=1   thermal
 //   tab=rf      open the RF tab                 pause=1  hold the picture (practice pause)
 //   defend=0    no defender (the threats are left to the trainee)
+//   birds=60    replace the birds with N copies of the first flock bird, in flocks of
+//               ten spread around the site (FPS stress case, e2e/fps.spec.ts)
 //   submit=1    play to the end with the defender as a real session for the signed-in
 //               user (events posted, scored on the server), then open its result page
 // window.__vyuhHero = { ready, tMs } reports progress to scripts.
@@ -45,6 +47,28 @@ declare global {
   interface Window {
     __vyuhHero?: { ready: boolean; tMs: number };
   }
+}
+
+/** Replace the birds with `n` copies of the first one, ten to a flock (deterministic). */
+function withBirds(scenario: Scenario, n: number): Scenario {
+  const bird = scenario.contacts.find((c) => c.behaviour === 'BIRD_FLOCK');
+  if (!bird || n <= 0) return scenario;
+  const birds = Array.from({ length: n }, (_, i) => {
+    const flock = Math.floor(i / 10);
+    const angle = (flock * 2 * Math.PI) / Math.ceil(n / 10);
+    const dx = Math.cos(angle) * 1500 - bird.path[0]!.x + (i % 10) * 12;
+    const dz = Math.sin(angle) * 1500 - bird.path[0]!.z + (i % 10) * 9;
+    return {
+      ...bird,
+      id: `s${String(i).padStart(2, '0')}`,
+      groupId: `sf${flock}`,
+      path: bird.path.map((p) => ({ ...p, x: p.x + dx, z: p.z + dz })),
+    };
+  });
+  return Scenario.parse({
+    ...scenario,
+    contacts: [...scenario.contacts.filter((c) => c.behaviour !== 'BIRD_FLOCK'), ...birds],
+  });
 }
 
 /** Batch size for posting a finished run (the API accepts ≤ 500 per batch). */
@@ -100,7 +124,7 @@ function Hero() {
     (async () => {
       const raw = SCENARIOS[code];
       if (!raw) throw new Error(`Unknown scenario ${code}`);
-      const scenario = Scenario.parse(raw);
+      const scenario = withBirds(Scenario.parse(raw), Number(q.get('birds') ?? 0));
       const world = await loadWorld(scenario.terrain.preset);
       const runtime = new SimRuntime(scenario, world, 'PRACTICE');
       if (q.get('defend') !== '0') {
