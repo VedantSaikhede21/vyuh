@@ -41,6 +41,8 @@ export {
   radarSnrDb,
 } from './sensors/radar.ts';
 export type { RadarReturn } from './sensors/radar.ts';
+export { RF_SCAN_MS, RF_STROBE_TTL_MS, formatStrobeId, rfBadgeFor, rfScan } from './sensors/rf.ts';
+export type { RfBadge, RfDetection, RfStrobe } from './sensors/rf.ts';
 export {
   CONFIRM_HITS,
   CONFIRM_WINDOW,
