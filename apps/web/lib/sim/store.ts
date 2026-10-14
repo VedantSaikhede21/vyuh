@@ -31,6 +31,12 @@ export interface EffectorView {
   cooldownMs: number;
 }
 
+export interface HudAlert {
+  tMs: number;
+  text: string;
+  tone: 'info' | 'good' | 'warn' | 'bad';
+}
+
 export interface HudSnapshot {
   tMs: number;
   durationMs: number;
@@ -40,6 +46,31 @@ export interface HudSnapshot {
   tracks: TrackView[];
   effectors: EffectorView[];
   selectedTrackId: string | null;
+  /** Newest first; built only from what the operator could observe. */
+  alerts: HudAlert[];
+}
+
+const MAX_ALERTS = 4;
+
+function recentAlerts(rt: SimRuntime): HudAlert[] {
+  const events = rt.sim.getEvents();
+  const out: HudAlert[] = [];
+  for (let i = events.length - 1; i >= 0 && out.length < MAX_ALERTS; i--) {
+    const e = events[i]!;
+    if (e.type === 'SENSOR_TRACK_CREATED') {
+      out.push({ tMs: e.tMs, text: `New track ${e.trackId}`, tone: 'warn' });
+    } else if (e.type === 'SENSOR_TRACK_LOST') {
+      out.push({ tMs: e.tMs, text: `Track ${e.trackId} lost`, tone: 'info' });
+    } else if (e.type === 'RESPONSE_OUTCOME') {
+      const r = e.payload.result;
+      const tone = r === 'NEUTRALISED' ? 'good' : r === 'MISSED' ? 'warn' : 'bad';
+      out.push({ tMs: e.tMs, text: `${e.trackId} ${e.payload.response}: ${r}`, tone });
+    } else if (e.type === 'CONTACT_REACHED_ASSET') {
+      const asset = rt.scenario.assets.find((a) => a.id === e.payload.assetId);
+      out.push({ tMs: e.tMs, text: `IMPACT at ${asset?.name ?? 'asset'}`, tone: 'bad' });
+    }
+  }
+  return out;
 }
 
 export function snapshot(rt: SimRuntime): HudSnapshot {
@@ -74,6 +105,7 @@ export function snapshot(rt: SimRuntime): HudSnapshot {
       cooldownMs: e.cooldownMs,
     })),
     selectedTrackId: s.selectedTrackId,
+    alerts: recentAlerts(rt),
   };
 }
 
