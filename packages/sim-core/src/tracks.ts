@@ -14,6 +14,8 @@ export interface ScanHistory {
   /** Most recent scans, oldest first, at most CONFIRM_WINDOW long. */
   hits: boolean[];
   consecutiveMisses: number;
+  /** How many of the consecutive misses were LOS-masked. */
+  consecutiveMaskedMisses: number;
   /** Id of the live track for this history, or null when there is none. */
   trackId: string | null;
 }
@@ -21,17 +23,18 @@ export interface ScanHistory {
 export type ScanUpdate = 'CONFIRMED' | 'LOST' | null;
 
 export function createScanHistory(): ScanHistory {
-  return { hits: [], consecutiveMisses: 0, trackId: null };
+  return { hits: [], consecutiveMisses: 0, consecutiveMaskedMisses: 0, trackId: null };
 }
 
 /**
  * Record one scan result. Returns CONFIRMED when a new track should be created,
  * LOST when the live track should be dropped. The caller sets `trackId`.
  */
-export function recordScan(h: ScanHistory, hit: boolean): ScanUpdate {
+export function recordScan(h: ScanHistory, hit: boolean, masked = false): ScanUpdate {
   h.hits.push(hit);
   if (h.hits.length > CONFIRM_WINDOW) h.hits.shift();
   h.consecutiveMisses = hit ? 0 : h.consecutiveMisses + 1;
+  h.consecutiveMaskedMisses = hit ? 0 : h.consecutiveMaskedMisses + (masked ? 1 : 0);
 
   if (h.trackId === null) {
     return h.hits.filter(Boolean).length >= CONFIRM_HITS ? 'CONFIRMED' : null;
@@ -41,6 +44,11 @@ export function recordScan(h: ScanHistory, hit: boolean): ScanUpdate {
     return 'LOST';
   }
   return null;
+}
+
+/** Why a track was just lost: LOS when every losing miss was masked. */
+export function lostReason(h: Readonly<ScanHistory>): 'LOS' | 'MISSES' {
+  return h.consecutiveMaskedMisses >= h.consecutiveMisses ? 'LOS' : 'MISSES';
 }
 
 export function formatTrackId(n: number): string {

@@ -19,6 +19,7 @@ import {
   type EventDraft,
   type TraineeEvent,
 } from './events.ts';
+import { createLosCache } from './los.ts';
 import { createRng, type RandomStream } from './rng.ts';
 import { radarScan } from './sensors/radar.ts';
 import { sampleHeight, type Heightmap } from './terrain.ts';
@@ -26,6 +27,7 @@ import { createWorld, isWorld, type World } from './world.ts';
 import {
   createScanHistory,
   formatTrackId,
+  lostReason,
   recordScan,
   type ScanHistory,
   type TrackState,
@@ -119,6 +121,7 @@ export function createSim(
     sensorPositions[s.id] = { x: s.x, y: sampleHeight(terrain, s.x, s.z) + s.y, z: s.z };
   }
   const histories = new Map<string, ScanHistory>();
+  const los = createLosCache(world);
   let nextTrackNo = 1;
   const queue: SimCommand[] = [];
 
@@ -261,8 +264,10 @@ export function createSim(
       if (tMs % radar.scanMs !== 0) continue;
       const radarPos = sensorPositions[radar.cfg.id];
       if (radarPos === undefined) continue;
+      const inLos = (c: ContactState) =>
+        los.visible(state.clock.tick, radar.cfg.id, radarPos, c.id, c.pos);
       const returns = new Map(
-        radarScan(radar.cfg, radarPos, state.contacts, specs, radar.stream).map((r) => [
+        radarScan(radar.cfg, radarPos, state.contacts, specs, radar.stream, inLos).map((r) => [
           r.contactId,
           r,
         ]),
@@ -277,7 +282,7 @@ export function createSim(
           histories.set(key, history);
         }
         const hit = ret?.hit === true;
-        const update = recordScan(history, hit);
+        const update = recordScan(history, hit, ret?.masked === true);
         const live = history.trackId !== null ? tracksById.get(history.trackId) : undefined;
         if (ret?.hit === true && ret.rangeM !== undefined && ret.bearingDeg !== undefined) {
           if (update === 'CONFIRMED') {
@@ -327,7 +332,7 @@ export function createSim(
             type: 'SENSOR_TRACK_LOST',
             trackId: live.id,
             contactId: contact.id,
-            payload: { reason: 'MISSES' },
+            payload: { reason: lostReason(history) },
           });
         }
       }

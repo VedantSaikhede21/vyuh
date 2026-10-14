@@ -41,6 +41,7 @@ export {
   LOSE_MISSES,
   createScanHistory,
   formatTrackId,
+  lostReason,
   recordScan,
 } from './tracks.ts';
 export type { ScanHistory, ScanUpdate, TrackState, TrackStatus } from './tracks.ts';
