@@ -165,6 +165,7 @@ def contact_metrics(scenario: Scenario, events: list[dict[str, Any]]) -> list[di
             friendly = spec.affiliation.value == "FRIENDLY"
             # Birds have no RF link: EW orders on them are pointless, never penalised (rule 10).
             ew_targeted = bool(ew_outcomes) and truth not in BIRD_CLASSES
+            ew_on_bird = bool(ew_outcomes) and truth in BIRD_CLASSES
             if fired > 0 and friendly:
                 outcome = "FRATRICIDE"
             elif friendly and jammed:
@@ -175,6 +176,8 @@ def contact_metrics(scenario: Scenario, events: list[dict[str, Any]]) -> list[di
                 outcome = "CIVILIAN_JAMMED"
             else:
                 outcome = "IGNORED_OK"
+        if is_threat:
+            ew_on_bird = False
         warning_s = (
             (reached - first_detectable) / 1000
             if reached is not None and first_detectable is not None
@@ -231,6 +234,7 @@ def contact_metrics(scenario: Scenario, events: list[dict[str, Any]]) -> list[di
                 "neutralisedBy": neutralised_by,
                 "neutralisedMethod": neutralised_method(neutralised_by, rounds),
                 "jammedAsCollateral": collateral and jammed,
+                "ewOnBird": ew_on_bird,
                 "reachedAssetTMs": reached,
                 "warningS": warning_s,
                 "respondingEffectorCooldownMinS": cooldown_min,
