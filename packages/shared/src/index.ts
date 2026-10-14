@@ -4,4 +4,5 @@ export * from './report.ts';
 export * from './events.ts';
 export * from './score.ts';
 export * from './api.ts';
+export * from './threats.ts';
 export { schemaRegistry } from './registry.ts';
