@@ -4,10 +4,12 @@ from fastapi import APIRouter, status
 
 from app.core.auth import CurrentUser, DbDep
 from app.schemas.generated import (
+    CompleteSessionRequest,
     CreateSessionRequest,
     CreateSessionResponse,
     EventBatchRequest,
     EventBatchResponse,
+    Score,
     SessionDetailResponse,
 )
 from app.services import sessions
@@ -34,6 +36,14 @@ def append_events(
     session_id: uuid.UUID, body: EventBatchRequest, user: CurrentUser, db: DbDep
 ) -> EventBatchResponse:
     return sessions.ingest_batch(db, user, session_id, body)
+
+
+@router.post("/{session_id}/complete", response_model=Score, response_model_exclude_unset=True)
+def complete_session(
+    session_id: uuid.UUID, body: CompleteSessionRequest, user: CurrentUser, db: DbDep
+) -> Score:
+    """Validate the event log, score it on the server and store the score."""
+    return sessions.complete_session(db, user, session_id, body)
 
 
 @router.get(

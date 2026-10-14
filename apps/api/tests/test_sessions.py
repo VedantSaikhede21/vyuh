@@ -1,5 +1,6 @@
 """POST /sessions, POST /sessions/{id}/events, GET /sessions/{id}."""
 
+import json
 import uuid
 from collections.abc import Callable
 from typing import Any
@@ -206,3 +207,112 @@ def test_get_session(
     assert_error(
         client.get(f"/api/v1/sessions/{sid}", headers=auth_header(other)), 403, "FORBIDDEN"
     )
+
+
+# ---- complete + score ----------------------------------------------------------------
+
+
+def _play(
+    client: TestClient, sid: str, headers: dict[str, str], name: str = "s01_defended"
+) -> list[Any]:
+    log = fixture_log(name)
+    assert post_batch(client, sid, headers, 0, log).status_code == 200
+    return log
+
+
+def _complete(client: TestClient, sid: str, headers: dict[str, str], end_t_ms: int) -> Any:
+    return client.post(
+        f"/api/v1/sessions/{sid}/complete",
+        json={"endTMs": end_t_ms, "clientMeta": {"avgFps": 55, "browser": "Test"}},
+        headers=headers,
+    )
+
+
+def test_complete_scores_on_server(
+    client: TestClient,
+    db: Session,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    auth_header: Headers,
+    start_session: Callable[..., str],
+) -> None:
+    user = make_user()
+    headers = auth_header(user)
+    sid = start_session(user, scenarios["S01"])
+    log = _play(client, sid, headers)
+    response = _complete(client, sid, headers, log[-1]["tMs"])
+    assert response.status_code == 200, response.text
+    score = response.json()
+    assert score["total"] == 100
+    assert score["componentMax"]["decision"] == 30
+    assert score["treeVersion"] == "default_v1"
+    assert "unavoidable" not in json.dumps(score)  # unset optionals are omitted, not null
+    assert "null" not in json.dumps(score)
+
+    row = db.get(TrainingSession, uuid.UUID(sid))
+    db.refresh(row)
+    assert row is not None
+    assert row.status is SessionStatus.COMPLETED
+    assert row.ended_at is not None
+    assert row.client_meta == {"avgFps": 55, "browser": "Test"}
+
+    detail = client.get(f"/api/v1/sessions/{sid}", headers=headers).json()
+    assert detail["status"] == "COMPLETED"
+    assert detail["score"] == score  # stored score reads back identically
+
+    again = _complete(client, sid, headers, log[-1]["tMs"])
+    assert_error(again, 409, "SESSION_NOT_ACTIVE")
+    assert_error(post_batch(client, sid, headers, 1, []), 409, "SESSION_NOT_ACTIVE")
+
+
+def test_complete_ignored_run_scores_zero(
+    client: TestClient,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    auth_header: Headers,
+    start_session: Callable[..., str],
+) -> None:
+    user = make_user()
+    headers = auth_header(user)
+    sid = start_session(user, scenarios["S01"])
+    log = _play(client, sid, headers, "s01_ignored")
+    score = _complete(client, sid, headers, log[-1]["tMs"]).json()
+    assert score["total"] == 0
+    assert score["perContact"][0]["leaves"] == ["MISSED"]
+    assert score["perContact"][0]["outcome"] == "LEAKED"
+
+
+def test_complete_rejects_unfinished_or_inconsistent_logs(
+    client: TestClient,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    auth_header: Headers,
+    start_session: Callable[..., str],
+) -> None:
+    user = make_user()
+    headers = auth_header(user)
+    sid = start_session(user, scenarios["S01"])
+    log = fixture_log("s01_defended")
+    post_batch(client, sid, headers, 0, log[:-1])  # no SESSION_ENDED yet
+    error = assert_error(_complete(client, sid, headers, 100_000), 422, "IMPLAUSIBLE_EVENTS")
+    assert {v["rule"] for v in error["details"]["violations"]} == {"NOT_ENDED"}
+
+    post_batch(client, sid, headers, 1, log[-1:])
+    error = assert_error(_complete(client, sid, headers, 1_000), 422, "IMPLAUSIBLE_EVENTS")
+    assert {v["rule"] for v in error["details"]["violations"]} == {"END_TIME_MISMATCH"}
+    assert _complete(client, sid, headers, log[-1]["tMs"]).status_code == 200
+
+
+def test_complete_ownership_and_state(
+    client: TestClient,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    auth_header: Headers,
+    start_session: Callable[..., str],
+) -> None:
+    owner = make_user()
+    sid = start_session(owner, scenarios["S01"])
+    other = make_user(email="other@test")
+    assert_error(_complete(client, sid, auth_header(other), 0), 403, "FORBIDDEN")
+    # CREATED (no events yet) cannot be completed.
+    assert_error(_complete(client, sid, auth_header(owner), 0), 409, "SESSION_NOT_ACTIVE")

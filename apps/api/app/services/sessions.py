@@ -1,26 +1,33 @@
-"""Session lifecycle (SPEC §4.5): create, ingest event batches, read."""
+"""Session lifecycle (SPEC §4.5): create, ingest event batches, complete + score, read."""
 
 import uuid
+from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.errors import ApiError
 from app.models import Scenario as ScenarioRow
-from app.models import SessionEvent, TrainingSession, User
+from app.models import ScoreRow, SessionEvent, TrainingSession, User
 from app.schemas.events import event_to_dict
 from app.schemas.generated import (
+    CompleteSessionRequest,
     CreateSessionRequest,
     CreateSessionResponse,
     ErrorCode,
     EventBatchRequest,
     EventBatchResponse,
+    Score,
+    ScoreComponents,
     SessionDetailResponse,
     SessionStatus,
     UserRole,
 )
-from app.services.plausibility import LogState, advance_state, check_batch
+from app.services.plausibility import LogState, Violation, advance_state, check_batch
 from app.services.scenarios import get_scenario_row, load_scenario
+from app.services.scoring.engine import score_session
+from app.services.scoring.tree import load_tree
 
 ACCEPTS_EVENTS = frozenset({SessionStatus.CREATED, SessionStatus.ACTIVE})
 VIEWER_ROLES = frozenset({UserRole.INSTRUCTOR, UserRole.ADMIN})
@@ -128,6 +135,107 @@ def ingest_batch(
     return EventBatchResponse(accepted=len(events), last_seq=state.last_seq)
 
 
+def _stored_events(db: Session, session_id: uuid.UUID) -> list[dict[str, Any]]:
+    rows = db.scalars(
+        select(SessionEvent).where(SessionEvent.session_id == session_id).order_by(SessionEvent.seq)
+    )
+    events = []
+    for r in rows:
+        ev: dict[str, Any] = {"seq": r.seq, "tMs": r.t_ms, "type": r.type, "payload": r.payload}
+        if r.contact_id is not None:
+            ev["contactId"] = r.contact_id
+        if r.track_id is not None:
+            ev["trackId"] = r.track_id
+        events.append(ev)
+    return events
+
+
+def complete_session(
+    db: Session, user: User, session_id: uuid.UUID, body: CompleteSessionRequest
+) -> Score:
+    """Validate the whole log, score it with the scenario's tree and store the score."""
+    row = get_owned_session(db, user, session_id, for_update=True)
+    if row.status is not SessionStatus.ACTIVE:
+        raise ApiError(
+            ErrorCode.SESSION_NOT_ACTIVE, "Session is not active", {"status": row.status.value}
+        )
+    scenario = load_scenario(db.get_one(ScenarioRow, row.scenario_id))
+    events = _stored_events(db, row.id)
+    violations = check_batch(scenario, LogState(), events, mode=row.mode.value)
+    if not any(e["type"] == "SESSION_ENDED" for e in events):
+        violations.append(Violation("NOT_ENDED", None, "The log has no SESSION_ENDED event"))
+    last_t = events[-1]["tMs"] if events else 0
+    if not last_t <= body.end_t_ms <= scenario.duration_s * 1000:
+        violations.append(
+            Violation("END_TIME_MISMATCH", None, f"endTMs {body.end_t_ms} does not fit the log")
+        )
+    if violations:
+        db.rollback()
+        raise ApiError(
+            ErrorCode.IMPLAUSIBLE_EVENTS,
+            "Event log failed plausibility checks",
+            {"violations": [v.as_detail() for v in violations]},
+        )
+
+    score = score_session(scenario, events)
+    c = score.components
+    db.add(
+        ScoreRow(
+            session_id=row.id,
+            total=score.total,
+            detection=c.detection,
+            classification=c.classification,
+            decision=c.decision,
+            report=c.report,
+            efficiency=c.efficiency,
+            penalties=[
+                p.model_dump(mode="json", by_alias=True, exclude_unset=True)
+                for p in score.penalties
+            ],
+            per_contact=[
+                p.model_dump(mode="json", by_alias=True, exclude_unset=True)
+                for p in score.per_contact
+            ],
+            metrics=score.metrics,
+            tree_version=score.tree_version,
+        )
+    )
+    row.status = SessionStatus.COMPLETED
+    row.ended_at = datetime.now(UTC)
+    row.client_meta = body.client_meta.model_dump(mode="json", by_alias=True, exclude_unset=True)
+    db.commit()
+    return score
+
+
+def latest_score(db: Session, session_id: uuid.UUID) -> Score | None:
+    row = db.scalar(
+        select(ScoreRow)
+        .where(ScoreRow.session_id == session_id)
+        .order_by(ScoreRow.created_at.desc())
+        .limit(1)
+    )
+    if row is None:
+        return None
+    return Score.model_validate(
+        {
+            "total": row.total,
+            "components": ScoreComponents(
+                detection=row.detection,
+                classification=row.classification,
+                decision=row.decision,
+                report=row.report,
+                efficiency=row.efficiency,
+            ),
+            # Tree versions are immutable, so the max per component comes from the file.
+            "componentMax": load_tree(row.tree_version).component_max,
+            "penalties": row.penalties,
+            "perContact": row.per_contact,
+            "metrics": row.metrics,
+            "treeVersion": row.tree_version,
+        }
+    )
+
+
 def session_detail(db: Session, row: TrainingSession) -> SessionDetailResponse:
     scenario_row = db.get_one(ScenarioRow, row.scenario_id)
     return SessionDetailResponse(
@@ -138,5 +246,5 @@ def session_detail(db: Session, row: TrainingSession) -> SessionDetailResponse:
         status=row.status,
         started_at=row.started_at,
         ended_at=row.ended_at,
-        score=None,
+        score=latest_score(db, row.id),
     )
