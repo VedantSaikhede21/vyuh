@@ -1,0 +1,54 @@
+{
+  "chain-assess": {
+    "w": 1104,
+    "h": 422
+  },
+  "chain-decide": {
+    "w": 638,
+    "h": 542
+  },
+  "chain-detect": {
+    "w": 638,
+    "h": 574
+  },
+  "chain-identify": {
+    "w": 862,
+    "h": 542
+  },
+  "chain-respond": {
+    "w": 638,
+    "h": 338
+  },
+  "chain-track": {
+    "w": 1228,
+    "h": 542
+  },
+  "hero-poster": {
+    "w": 1280,
+    "h": 720
+  },
+  "login-hillshade": {
+    "w": 1200,
+    "h": 1200
+  },
+  "measure-result": {
+    "w": 2240,
+    "h": 884
+  },
+  "realism-false-contacts": {
+    "w": 638,
+    "h": 574
+  },
+  "realism-night-ir": {
+    "w": 862,
+    "h": 542
+  },
+  "realism-silent": {
+    "w": 1228,
+    "h": 240
+  },
+  "realism-terrain": {
+    "w": 2092,
+    "h": 912
+  }
+}

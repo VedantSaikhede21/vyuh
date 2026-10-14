@@ -44,3 +44,6 @@ apps/web/playwright-report/
 
 # local review screenshots (not baselines)
 apps/web/e2e/checkpoint/
+
+# build-time copy of docs/realism-sources.md (scripts/copy-sources.ts)
+apps/web/.generated/

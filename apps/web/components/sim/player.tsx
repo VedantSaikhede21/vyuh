@@ -82,7 +82,8 @@ export function SimPlayer({
 }: {
   runtime: SimRuntime;
   commands: Commands;
-  upload: BatcherStatus | null;
+  /** Event upload status; leave undefined for a local replay with no server session. */
+  upload?: BatcherStatus | null;
 }) {
   useShortcuts(commands);
   const container = useRef<HTMLDivElement>(null);
