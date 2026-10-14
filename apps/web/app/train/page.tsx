@@ -1,6 +1,7 @@
 'use client';
 
-import type { ScenarioListItem, SessionMode } from '@vyuh/shared';
+import type { ScenarioListItem, SessionMode, TerrainPresetMeta } from '@vyuh/shared';
+import { isNightAt } from '@vyuh/sim-core';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { RequireAuth } from '@/components/require-auth';
@@ -8,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api';
+import { loadPresetMeta } from '@/lib/terrain/load-world';
 import { useAuth } from '@/lib/auth';
 import { ROE_LABEL } from '@/lib/strings';
 import { cn } from '@/lib/utils';
@@ -57,6 +59,7 @@ function ScenarioList() {
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<SessionMode>('PRACTICE');
   const [starting, setStarting] = useState<string | null>(null);
+  const [metas, setMetas] = useState<Record<string, TerrainPresetMeta>>({});
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -68,6 +71,27 @@ function ScenarioList() {
       });
     return () => ctrl.abort();
   }, []);
+
+  // Night is computed from the preset meta (as in the sim); the stored flag shows until it loads.
+  useEffect(() => {
+    if (!items) return;
+    let live = true;
+    for (const preset of new Set(items.map((s) => s.terrainPreset))) {
+      loadPresetMeta(preset)
+        .then((meta) => {
+          if (live) setMetas((m) => ({ ...m, [preset]: meta }));
+        })
+        .catch(() => undefined);
+    }
+    return () => {
+      live = false;
+    };
+  }, [items]);
+
+  const isNight = (s: ScenarioListItem): boolean => {
+    const meta = metas[s.terrainPreset];
+    return meta ? isNightAt(s.date, s.time, meta) : s.isNight;
+  };
 
   const begin = async (scenarioId: string) => {
     setStarting(scenarioId);
@@ -125,7 +149,7 @@ function ScenarioList() {
               </div>
               <div className="hud-label">
                 Difficulty {s.difficulty} · {Math.round(s.durationS / 60)} min · {ROE_LABEL[s.roe]}
-                {s.isNight ? ' · night' : ''}
+                {isNight(s) ? ' · night' : ''}
               </div>
             </div>
             <Button size="sm" disabled={starting !== null} onClick={() => void begin(s.id)}>

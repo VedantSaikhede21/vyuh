@@ -26,7 +26,7 @@
   "id": "S11",
   "name": "Ridge Line",
   "seed": 1101,
-  "briefing": "## Situation\nTest scenario (Phase 2). Post Alpha sits on a valley floor in high mountains. A heavy quadcopter is expected from the north-north-east, flying low along the valley side.\n## Task\nWatch the radar: the track will drop out when a spur masks it, then reappear. Re-acquire it, identify it on EO and intercept it.\n## ROE\nWEAPONS FREE - engage any track you assess as a threat.",
+  "briefing": "## Situation\nTest scenario (Phase 2). Post Alpha sits on a valley floor in high mountains. A heavy quadcopter is expected from the north-north-east, flying low along the valley side.\n## Task\nWatch the radar: the track will drop out when a spur masks it, then reappear. Re-acquire it, identify it on EO and intercept it.\n## ROE\nWEAPONS FREE — engage any track you assess as a threat.",
   "terrain": {
     "preset": "JK_MOUNTAIN",
     "origin": {

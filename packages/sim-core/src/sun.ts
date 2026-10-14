@@ -46,6 +46,18 @@ export interface SimEnvironment {
   readonly weather: Weather;
 }
 
+/** Computed night flag for a local date/time at a preset (same rule as computeEnvironment). */
+export function isNightAt(
+  date: string,
+  time: string,
+  meta: Pick<TerrainPresetMeta, 'origin' | 'utcOffsetMin'>,
+): boolean {
+  const { lat, lon } = meta.origin;
+  return (
+    sunPosition(lat, lon, localInstantMs(date, time, meta.utcOffsetMin)).elDeg < NIGHT_SUN_EL_DEG
+  );
+}
+
 export function computeEnvironment(
   scenario: Pick<Scenario, 'environment' | 'terrain'>,
   meta: Pick<TerrainPresetMeta, 'origin' | 'utcOffsetMin'> | null,

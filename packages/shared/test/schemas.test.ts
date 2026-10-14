@@ -269,6 +269,9 @@ describe('ScenarioListResponse', () => {
       durationS: 180,
       roe: 'WEAPONS_FREE',
       isNight: false,
+      terrainPreset: 'PROCEDURAL_HILLS',
+      date: '2026-11-20',
+      time: '10:30',
       tags: ['tutorial'],
     };
     expect(ScenarioListResponse.safeParse({ items: [item] }).success).toBe(true);

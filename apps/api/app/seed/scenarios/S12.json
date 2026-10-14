@@ -26,7 +26,7 @@
   "id": "S12",
   "name": "Night Watch",
   "seed": 1201,
-  "briefing": "## Situation\nTest scenario (Phase 2). Post Alpha on open farmland, 01:30, no moon assumed. A heavy quadcopter is expected from the north-west.\n## Task\nThe day camera is useless at night: press T for thermal (IR) to identify the track before you declare it HOSTILE and intercept.\n## ROE\nWEAPONS TIGHT - engage only tracks you have identified as HOSTILE.",
+  "briefing": "## Situation\nTest scenario (Phase 2). Post Alpha on open farmland, 01:30, no moon assumed. A heavy quadcopter is expected from the north-west.\n## Task\nThe day camera is useless at night: press T for thermal (IR) to identify the track before you declare it HOSTILE and intercept.\n## ROE\nWEAPONS TIGHT — engage only tracks you have identified as HOSTILE.",
   "terrain": {
     "preset": "PUNJAB_PLAINS",
     "origin": {
