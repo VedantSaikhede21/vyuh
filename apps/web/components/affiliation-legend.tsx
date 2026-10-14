@@ -1,30 +1,17 @@
 import type { Affiliation } from '@vyuh/shared';
-import { Badge } from '@/components/ui/badge';
+import { AffiliationSymbol } from '@/components/hud/affiliation-symbol';
+import { AFFILIATION_STYLE } from '@/lib/affiliation';
 
-// Colour is never the only cue (SPEC §15.2): each affiliation also has a letter.
-const AFFILIATIONS: {
-  value: Affiliation;
-  letter: string;
-  label: string;
-  tone: 'hostile' | 'friendly' | 'neutral' | 'unknown';
-}[] = [
-  { value: 'HOSTILE', letter: 'H', label: 'Hostile', tone: 'hostile' },
-  { value: 'FRIENDLY', letter: 'F', label: 'Friendly', tone: 'friendly' },
-  { value: 'NEUTRAL', letter: 'N', label: 'Neutral', tone: 'neutral' },
-  { value: 'UNKNOWN', letter: 'U', label: 'Unknown', tone: 'unknown' },
-];
+// Colour is never the only cue (SPEC §15.2): each affiliation has an APP-6 frame and a letter.
+const AFFILIATIONS: Affiliation[] = ['HOSTILE', 'FRIENDLY', 'NEUTRAL', 'UNKNOWN'];
 
 export function AffiliationLegend() {
   return (
-    <ul className="flex flex-wrap gap-2" aria-label="Affiliation colours (APP-6)">
+    <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs" aria-label="Affiliation symbols (APP-6)">
       {AFFILIATIONS.map((a) => (
-        <li key={a.value}>
-          <Badge tone={a.tone}>
-            <span aria-hidden className="font-bold">
-              [{a.letter}]
-            </span>
-            {a.label}
-          </Badge>
+        <li key={a} className="flex items-center gap-1" style={{ color: AFFILIATION_STYLE[a].hex }}>
+          <AffiliationSymbol affiliation={a} size={16} />
+          {AFFILIATION_STYLE[a].label}
         </li>
       ))}
     </ul>

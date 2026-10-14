@@ -1,4 +1,4 @@
-import type { ContactClass, Roe } from '@vyuh/shared';
+import type { ContactClass, EffectorKind, Roe } from '@vyuh/shared';
 import type { EoTrackMode } from '@vyuh/sim-core';
 
 // User-facing strings for the sim player, kept in one file so they can be
@@ -54,7 +54,7 @@ export const SHORTCUTS: { keys: string; action: string; later?: boolean }[] = [
   { keys: 'C then 1–9, 0', action: 'Classify' },
   { keys: 'H F N U', action: 'Affiliation hostile / friendly / neutral / unknown' },
   { keys: 'M', action: 'Monitor' },
-  { keys: 'J S', action: 'Jam / spoof', later: true },
+  { keys: 'J / S', action: 'EW jam / spoof (sector toward the track; hits everything in it)' },
   { keys: 'I then Enter', action: 'Intercept (confirm)' },
   { keys: 'R', action: 'Contact report', later: true },
   { keys: 'Y / X', action: 'Accept / reject AI suggestion', later: true },
@@ -77,4 +77,10 @@ export const TRACK_MODE_LABEL: Readonly<Record<EoTrackMode, string>> = {
   MANUAL: 'MAN',
   CUE: 'CUE',
   TRACK: 'TRK',
+};
+
+export const EFFECTOR_LABEL: Readonly<Record<EffectorKind, string>> = {
+  INTERCEPT: 'INT',
+  EW_JAM: 'JAM',
+  EW_SPOOF: 'SPF',
 };

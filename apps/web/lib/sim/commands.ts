@@ -103,6 +103,15 @@ export function useCommands(rt: SimRuntime | null) {
         const id = selected();
         if (id) send({ type: 'RESPONSE_ORDERED', trackId: id, payload: { response: 'MONITOR' } });
       },
+      /** EW is non-kinetic and not ROE-gated, so it needs no confirm step (decision 54). */
+      jam() {
+        const id = selected();
+        if (id) send({ type: 'RESPONSE_ORDERED', trackId: id, payload: { response: 'EW_JAM' } });
+      },
+      spoof() {
+        const id = selected();
+        if (id) send({ type: 'RESPONSE_ORDERED', trackId: id, payload: { response: 'EW_SPOOF' } });
+      },
       armIntercept() {
         if (selected()) ui().set({ interceptArmed: true, classifyMenu: false });
       },

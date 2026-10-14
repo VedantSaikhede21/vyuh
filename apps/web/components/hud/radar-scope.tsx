@@ -3,6 +3,7 @@
 import { TICK_MS } from '@vyuh/sim-core';
 import { useEffect, useRef } from 'react';
 import { AFFILIATION_STYLE, traceAffiliation } from '@/lib/affiliation';
+import { RF_HEX } from '@/lib/rf';
 import type { Commands } from '@/lib/sim/commands';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useHudStore } from '@/lib/sim/store';
@@ -89,6 +90,24 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
       ctx.moveTo(c, c);
       ctx.arc(c, c, r, sweep - Math.PI / 2 - 0.6, sweep - Math.PI / 2);
       ctx.fill();
+
+      // RF strobes: dashed bearing lines from the RF sensor (no range).
+      ctx.setLineDash([3, 4]);
+      ctx.strokeStyle = RF_HEX;
+      ctx.fillStyle = RF_HEX;
+      for (const s of hud?.rfStrobes ?? []) {
+        const sensor = runtime.scenario.sensors.find((x) => x.id === s.sensorId);
+        if (!sensor) continue;
+        const a = (s.bearingDeg * Math.PI) / 180;
+        const sx = c + (sensor.x - origin.x) * pxPerM;
+        const sy = c - (sensor.z - origin.z) * pxPerM;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(sx + Math.sin(a) * r, sy - Math.cos(a) * r);
+        ctx.stroke();
+        ctx.fillText(s.id, sx + Math.sin(a) * (r - 18) + 4, sy - Math.cos(a) * (r - 18));
+      }
+      ctx.setLineDash([]);
 
       // Blips.
       for (const tr of hud?.tracks ?? []) {
