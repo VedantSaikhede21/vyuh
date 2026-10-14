@@ -405,6 +405,7 @@ export const EoPanel = forwardRef<HTMLDivElement, { runtime: SimRuntime; command
         </PanelHeader>
         <div
           ref={ref}
+          data-testid="eo-picture"
           className="relative aspect-video w-full cursor-grab touch-none select-none overflow-hidden active:cursor-grabbing"
           onPointerDown={(e) => {
             e.currentTarget.setPointerCapture(e.pointerId);

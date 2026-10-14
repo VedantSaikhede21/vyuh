@@ -65,6 +65,7 @@ export function TrackList({ commands }: { commands: Commands }) {
                 else rows.current.delete(t.id);
               }}
               tabIndex={-1}
+              data-track-id={t.id}
               aria-selected={selected}
               onClick={() => !lost && commands.select(t.id)}
               className={cn(
