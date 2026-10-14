@@ -149,7 +149,15 @@ export type EventType = z.infer<typeof EventType>;
 
 export const ResponseResult = named(
   'ResponseResult',
-  z.enum(['NEUTRALISED', 'NO_EFFECT', 'MISSED', 'BLOCKED_BY_ROE', 'OUT_OF_RANGE', 'COOLDOWN']),
+  z.enum([
+    'NEUTRALISED',
+    'NO_EFFECT',
+    'MISSED',
+    'BLOCKED_BY_ROE',
+    'OUT_OF_RANGE',
+    'COOLDOWN',
+    'NO_AMMO',
+  ]),
 );
 export type ResponseResult = z.infer<typeof ResponseResult>;
 

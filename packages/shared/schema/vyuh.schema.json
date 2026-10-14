@@ -1697,7 +1697,8 @@
         "MISSED",
         "BLOCKED_BY_ROE",
         "OUT_OF_RANGE",
-        "COOLDOWN"
+        "COOLDOWN",
+        "NO_AMMO"
       ]
     },
     "RfSensor": {

@@ -24,3 +24,34 @@ export { DIVE_START_RATIO, createContactState, stepContact } from './contacts.ts
 export type { ContactState, ContactStatus, ContactStepContext } from './contacts.ts';
 export { appendEvent, createEventLog } from './events.ts';
 export type { DistributiveOmit, EventDraft, EventLog, TraineeEvent } from './events.ts';
+export {
+  BEARING_SIGMA_DEG,
+  PD_SLOPE_DB,
+  RANGE_SIGMA_M,
+  REF_RCS_M2,
+  gaussian,
+  radarPd,
+  radarScan,
+  radarSnrDb,
+} from './sensors/radar.ts';
+export type { RadarReturn } from './sensors/radar.ts';
+export {
+  CONFIRM_HITS,
+  CONFIRM_WINDOW,
+  LOSE_MISSES,
+  createScanHistory,
+  formatTrackId,
+  recordScan,
+} from './tracks.ts';
+export type { ScanHistory, ScanUpdate, TrackState, TrackStatus } from './tracks.ts';
+export {
+  PKILL_MAX,
+  PKILL_MIN,
+  createEffectorState,
+  interceptPkill,
+  resolveIntercept,
+  roeAllowsIntercept,
+} from './effectors.ts';
+export type { EffectorState } from './effectors.ts';
+export { commandFromEvent, createSim } from './sim.ts';
+export type { CameraState, DispatchResult, Sim, SimCommand, SimOptions, SimState } from './sim.ts';
