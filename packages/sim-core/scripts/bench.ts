@@ -69,8 +69,8 @@ function run(): number[] {
 run(); // warm-up (JIT)
 const times = run().sort((a, b) => a - b);
 const mean = times.reduce((s, t) => s + t, 0) / times.length;
-const pct = (p: number) => times[Math.min(times.length - 1, Math.floor(times.length * p))]!;
+const pct = (p: number) => times[Math.min(times.length - 1, Math.floor(times.length * p))] ?? 0;
 console.log(
   `ticks ${times.length} · mean ${mean.toFixed(3)} ms · p50 ${pct(0.5).toFixed(3)} · ` +
-    `p99 ${pct(0.99).toFixed(3)} · max ${times.at(-1)!.toFixed(3)} ms (budget 2 ms)`,
+    `p99 ${pct(0.99).toFixed(3)} · max ${pct(1).toFixed(3)} ms (budget 2 ms)`,
 );
