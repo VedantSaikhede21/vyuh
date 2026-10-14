@@ -5,6 +5,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { toThree } from '@vyuh/sim-core';
 import { useRef } from 'react';
 import type { PerspectiveCamera } from 'three';
+import { BuildingsMesh } from '@/components/sim/buildings-mesh';
 import { Drones } from '@/components/sim/drones';
 import { SimRuntimeContext, useSimRuntime } from '@/components/sim/sim-context';
 import { TerrainMesh } from '@/components/sim/terrain-mesh';
@@ -129,7 +130,8 @@ export function EoView({ runtime, commands }: { runtime: SimRuntime; commands: C
           <Sky distance={45_000} sunPosition={[-0.4, 0.6, -0.5]} turbidity={6} rayleigh={1.2} />
           <hemisphereLight args={['#dfe9f0', '#3a3a2a', 0.9]} />
           <directionalLight position={[-3000, 5000, 2000]} intensity={1.6} />
-          <TerrainMesh map={runtime.terrain} />
+          <TerrainMesh world={runtime.world} />
+          <BuildingsMesh index={runtime.world.buildings} />
           <Drones />
           <EoCamera />
         </SimRuntimeContext.Provider>
