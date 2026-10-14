@@ -10,6 +10,8 @@ import { gaussian } from './radar.ts';
 // FIBRE_OPTIC and NONE links are silent. Strobes are sim state, not events.
 
 export const RF_SCAN_MS = 1000;
+/** RF scans run at x.5 s, off the whole-second ticks where 2 s radar scans fall, to spread LOS work. */
+export const RF_SCAN_OFFSET_MS = 500;
 /** A strobe disappears this long after its last detection. */
 export const RF_STROBE_TTL_MS = 3000;
 
