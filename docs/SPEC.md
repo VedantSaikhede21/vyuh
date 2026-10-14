@@ -596,6 +596,8 @@ All errors: `{ "error": { "code": "...", "message": "...", "details": {} } }`
 
 ## §15. UI / UX
 
+Visual and UX rules are defined in `docs/DESIGN.md` and are binding.
+
 - **Style:** dark tactical HUD, high-contrast, monospace numerics, APP-6 affiliation colours, shadcn components, **no glassmorphism**, minimal animation. Must be readable on a 1366×768 laptop.
 - **Screens:** landing (what it is + "Try demo") → guided tour → scenario select / assignments → briefing (2D map, ROE, assets, weather) → sim player → result screen → AAR → trends; instructor dashboard; scenario builder.
 - **Sim player layout:** centre 3D tactical view; right radar PPI; bottom-left EO/IR view (slewable, zoom); bottom-centre contact list with track state (UNKNOWN → classified, affiliation colour); bottom-right action bar + response buttons with cooldown/ammo; top bar clock, ROE state, alerts; RF panel and spectrogram as tabs; AI-assist chip on the selected track.
