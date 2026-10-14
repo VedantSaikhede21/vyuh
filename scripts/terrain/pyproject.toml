@@ -1,0 +1,35 @@
+[project]
+name = "vyuh-terrain"
+version = "0.1.0"
+description = "VYUH terrain preset builder (SPEC §14): DEM + OSM → heightmap.u16, meta.json, buildings.geojson"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "numpy>=2.2",
+  "rasterio>=1.4",
+  "osmnx>=2.0",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=9.1",
+  "ruff==0.17.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "S", "SIM", "RUF", "ANN"]
+ignore = ["ANN401"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "ANN"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
