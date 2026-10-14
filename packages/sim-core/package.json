@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc --noEmit -p . && tsc --noEmit -p tsconfig.test.json"
+    "typecheck": "tsc --noEmit -p . && tsc --noEmit -p tsconfig.test.json",
+    "bench": "node scripts/bench.ts"
   },
   "dependencies": {
     "@vyuh/shared": "workspace:*",
