@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Panel, PanelBody, PanelHeader } from '@/components/hud/primitives';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
@@ -46,11 +46,9 @@ function LoginForm() {
   }
 
   return (
-    <Card className="mx-auto w-full max-w-md">
-      <CardHeader>
-        <CardTitle>{mode === 'local' ? 'Dev login (local mode)' : 'Sign in'}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Panel className="mx-auto w-full max-w-md">
+      <PanelHeader title={mode === 'local' ? 'Dev login (local mode)' : 'Sign in'} />
+      <PanelBody>
         <form className="space-y-4" onSubmit={(e) => void onSubmit(e)}>
           {mode === 'local' ? (
             <div className="space-y-1.5">
@@ -106,8 +104,8 @@ function LoginForm() {
             {busy ? 'Signing in…' : 'Sign in'}
           </Button>
         </form>
-      </CardContent>
-    </Card>
+      </PanelBody>
+    </Panel>
   );
 }
 

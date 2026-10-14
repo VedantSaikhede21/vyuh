@@ -92,6 +92,17 @@
 
   --ease-*: initial;
   --ease-ui: var(--ease-ui);
+
+  /* §7 value-change flash: --bg-3 for 300 ms, no colour change. */
+  --animate-value-flash: value-flash 300ms var(--ease-ui);
+  @keyframes value-flash {
+    from {
+      background-color: var(--bg-3);
+    }
+    to {
+      background-color: transparent;
+    }
+  }
 }
 
 /*

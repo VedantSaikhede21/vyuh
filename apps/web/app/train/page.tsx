@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { RequireAuth } from '@/components/require-auth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Panel, PanelBody, PanelHeader } from '@/components/hud/primitives';
 import { api } from '@/lib/api';
 import { loadPresetMeta } from '@/lib/terrain/load-world';
 import { useAuth } from '@/lib/auth';
@@ -23,14 +23,13 @@ function OperatorCard() {
     ['Unit', user.unit?.name ?? 'Unassigned'],
   ];
   return (
-    <Card>
-      <CardHeader className="flex items-center justify-between">
-        <CardTitle>Operator</CardTitle>
+    <Panel>
+      <PanelHeader title="Operator">
         <Badge tone="strong" data-testid="role">
           {user.role}
         </Badge>
-      </CardHeader>
-      <CardContent>
+      </PanelHeader>
+      <PanelBody>
         <dl className="grid grid-cols-[8rem_1fr] gap-y-2 text-body">
           {rows.map(([k, v]) => (
             <div key={k} className="contents">
@@ -43,8 +42,8 @@ function OperatorCard() {
           <dt className="text-label self-center">Rating</dt>
           <dd className="font-mono tnum">{user.rating}</dd>
         </dl>
-      </CardContent>
-    </Card>
+      </PanelBody>
+    </Panel>
   );
 }
 
@@ -105,9 +104,8 @@ function ScenarioList() {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-wrap items-center justify-between gap-2">
-        <CardTitle>Scenarios</CardTitle>
+    <Panel>
+      <PanelHeader title="Scenarios">
         <div className="flex gap-1" role="radiogroup" aria-label="Session mode">
           {MODES.map((m) => (
             <button
@@ -127,8 +125,8 @@ function ScenarioList() {
             </button>
           ))}
         </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
+      </PanelHeader>
+      <PanelBody className="space-y-2">
         {error && <p className="text-body text-crit">{error}</p>}
         {items === null && !error && <p className="text-label">Loading scenarios…</p>}
         {items?.length === 0 && (
@@ -157,8 +155,8 @@ function ScenarioList() {
             </Button>
           </div>
         ))}
-      </CardContent>
-    </Card>
+      </PanelBody>
+    </Panel>
   );
 }
 

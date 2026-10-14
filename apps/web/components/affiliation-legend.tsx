@@ -1,5 +1,5 @@
 import type { Affiliation } from '@vyuh/shared';
-import { AffiliationSymbol } from '@/components/hud/affiliation-symbol';
+import { AffiliationSymbol } from '@/components/hud/primitives';
 import { AFFILIATION_STYLE } from '@/lib/affiliation';
 
 // Colour is never the only cue (SPEC §15.2): each affiliation has an APP-6 frame and a letter.
