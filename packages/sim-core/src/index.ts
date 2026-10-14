@@ -22,6 +22,28 @@ export {
 } from './terrain.ts';
 export type { Heightmap, ProceduralTerrainOptions } from './terrain.ts';
 export { DIVE_START_RATIO, createContactState, stepContact } from './contacts.ts';
+export type { ContactControl, DriftState } from './contacts.ts';
+export {
+  DRIFT_MAX_M,
+  LAND_RATE_MPS,
+  LINK_LOSS_HOVER_MS,
+  RTH_ARRIVAL_M,
+  TOUCHDOWN_AGL_M,
+  driftOffset,
+  remainingRouteM,
+  startDrift,
+  stepHoverLand,
+  stepRth,
+} from './behaviours/link-loss.ts';
+export {
+  BIRD_MIN_AGL_M,
+  BIRD_WANDER_MAX_M,
+  BOID_NEIGHBOUR_M,
+  BOID_SEPARATION_M,
+  createFlocks,
+  stepFlock,
+} from './boids.ts';
+export type { Flock } from './boids.ts';
 export type { ContactState, ContactStatus, ContactStepContext } from './contacts.ts';
 export { appendEvent, createEventLog } from './events.ts';
 export type { DistributiveOmit, EventDraft, EventLog, TraineeEvent } from './events.ts';

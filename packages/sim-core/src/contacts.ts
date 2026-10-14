@@ -8,6 +8,7 @@ import {
   wrapDeg,
   type Vec3,
 } from './coords.ts';
+import { driftOffset, stepHoverLand, stepRth } from './behaviours/link-loss.ts';
 import type { EventDraft } from './events.ts';
 import { sampleHeight, type Heightmap } from './terrain.ts';
 
@@ -16,6 +17,22 @@ import { sampleHeight, type Heightmap } from './terrain.ts';
 // heightmap. A DIVE waypoint ends the path with a straight terminal dive.
 
 export type ContactStatus = 'PENDING' | 'ACTIVE' | 'NEUTRALISED' | 'REACHED_ASSET' | 'DESPAWNED';
+
+/**
+ * How the contact moves: PATH = its waypoints; HOVER_LAND / RTH = link-loss
+ * failsafes; DRIFT = waypoints shifted by a growing GNSS-spoof offset; BOID =
+ * bird-flock follower moved by boids.ts.
+ */
+export type ContactControl = 'PATH' | 'HOVER_LAND' | 'RTH' | 'DRIFT' | 'BOID';
+
+export interface DriftState {
+  /** Unit lateral direction [east, north]. */
+  readonly ex: number;
+  readonly ez: number;
+  /** Offset growth, m/s. */
+  readonly rateMps: number;
+  readonly startMs: number;
+}
 
 export interface ContactState {
   readonly id: string;
@@ -30,6 +47,10 @@ export interface ContactState {
   /** Hovering at a waypoint until this sim time. */
   holdUntilMs: number | null;
   diving: boolean;
+  control: ContactControl;
+  /** Defeated by EW: still flying, but can never reach an asset; counts as resolved. */
+  defeated: boolean;
+  drift: DriftState | null;
 }
 
 /** Terminal dive starts when horizontal distance ≤ AGL × this (≈ 34° dive). */
@@ -56,6 +77,9 @@ export function createContactState(spec: ContactSpec): ContactState {
     wpIndex: 0,
     holdUntilMs: null,
     diving: false,
+    control: 'PATH',
+    defeated: false,
+    drift: null,
   };
 }
 
@@ -110,7 +134,9 @@ function finishPath(
 ): void {
   const last = spec.path.at(-1);
   if (last?.action !== 'DIVE') return; // hover at the last waypoint until despawn
-  const asset = ctx.assets.find((a) => Math.hypot(a.x - c.pos.x, a.z - c.pos.z) <= a.radiusM);
+  const asset = c.defeated
+    ? undefined
+    : ctx.assets.find((a) => Math.hypot(a.x - c.pos.x, a.z - c.pos.z) <= a.radiusM);
   if (asset) {
     c.status = 'REACHED_ASSET';
     out.push({
@@ -165,6 +191,19 @@ export function stepContact(
     return out;
   }
 
+  switch (c.control) {
+    case 'BOID':
+      return out; // moved by boids.ts
+    case 'HOVER_LAND':
+      stepHoverLand(c, spec, ctx, out);
+      return out;
+    case 'RTH':
+      stepRth(c, spec, ctx, out);
+      return out;
+    default:
+      break;
+  }
+
   if (c.holdUntilMs !== null) {
     if (ctx.tMs < c.holdUntilMs) return out;
     c.holdUntilMs = null;
@@ -177,7 +216,12 @@ export function stepContact(
 
   const profile = CLASS_PROFILES[spec.class];
   const speed = Math.min(wp.speedMps, profile.maxSpeedMps);
-  const target = waypointPos(ctx.terrain, wp, ctx.originElevM ?? 0);
+  const [dx, dz] = driftOffset(c, ctx.tMs);
+  const target = waypointPos(
+    ctx.terrain,
+    dx === 0 && dz === 0 ? wp : { ...wp, x: wp.x + dx, z: wp.z + dz },
+    ctx.originElevM ?? 0,
+  );
   const step = speed * ctx.dtS;
   c.speedMps = speed;
 

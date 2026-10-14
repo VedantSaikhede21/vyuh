@@ -12,6 +12,7 @@ import {
   type SessionMode,
   type SimEvent,
 } from '@vyuh/shared';
+import { createFlocks, stepFlock } from './boids.ts';
 import { TICK_MS, TICK_S, advanceClock, ceilToTick, createClock, type SimClock } from './clock.ts';
 import { createContactState, stepContact, type ContactState } from './contacts.ts';
 import { bearingDeg, headingVector, slantRange, type Vec3 } from './coords.ts';
@@ -177,6 +178,13 @@ export function createSim(
     camera: { azDeg: 0, elDeg: 0, zoom: 1, mode: 'DAY', lockTrackId: null, trackMode: 'MANUAL' },
   };
   const contactsById = new Map(state.contacts.map((c) => [c.id, c]));
+  const flocks = createFlocks([...scenario.contacts].sort(byId), rng);
+  for (const f of flocks) {
+    for (const id of f.followerIds) {
+      const c = contactsById.get(id);
+      if (c) c.control = 'BOID';
+    }
+  }
   const tracksById = new Map<string, TrackState>();
 
   const emit = (draft: EventDraft): SimEvent => appendEvent(log, draft);
@@ -632,6 +640,7 @@ export function createSim(
       const spec = specs.get(contact.id);
       if (spec !== undefined) for (const ev of stepContact(contact, spec, ctx)) emit(ev);
     }
+    for (const f of flocks) stepFlock(f, contactsById, specs, terrain, TICK_S);
 
     scanRadars(tMs);
     predictTracks(tMs);
