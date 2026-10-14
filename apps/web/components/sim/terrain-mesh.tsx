@@ -5,6 +5,7 @@ import { toThree } from '@vyuh/sim-core';
 import { useMemo } from 'react';
 import { BufferAttribute, BufferGeometry, Color, LOD, Mesh, MeshLambertMaterial } from 'three';
 import { IR_MATERIALS } from '@/lib/sim/ir-materials';
+import { GROUND } from '@/lib/theme/scene-colours';
 
 // Chunked terrain with LOD (SPEC §16): CHUNKS × CHUNKS tiles, each with levels
 // sampling every 1/2/4/8 grid nodes, plus skirts that hide cracks where
@@ -18,10 +19,10 @@ const LEVEL_STEPS = [1, 2, 4, 8] as const;
 /** LOD switch distances as fractions of the map size. */
 const LEVEL_DISTANCE_FRACTIONS = [0, 0.2, 0.4, 0.7] as const;
 
-const FIELD_LOW = new Color('#3b5228');
-const FIELD_HIGH = new Color('#6a6a3e');
-const ROCK = new Color('#6e6a62');
-const SNOW = new Color('#e6eaee');
+const FIELD_LOW = new Color(GROUND.fieldLow);
+const FIELD_HIGH = new Color(GROUND.fieldHigh);
+const ROCK = new Color(GROUND.rock);
+const SNOW = new Color(GROUND.snow);
 /** Snow above this absolute elevation (m MSL), representative for the western Himalaya. */
 const SNOW_LINE_M = 4300;
 

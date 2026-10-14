@@ -31,10 +31,10 @@ export function ResultScreen({ score, scenarioName }: { score: Score; scenarioNa
     <div className="space-y-4" data-testid="result-screen">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="hud-label">Debrief · {scenarioName}</p>
-          <h1 className="font-mono text-5xl font-bold tabular-nums" data-testid="score-total">
+          <p className="text-label">Debrief · {scenarioName}</p>
+          <h1 className="font-mono text-readout-lg font-semibold tnum" data-testid="score-total">
             {score.total.toFixed(0)}
-            <span className="text-xl text-muted-foreground"> / 100</span>
+            <span className="text-h2 text-text-2"> / 100</span>
           </h1>
         </div>
         <div className="flex gap-2">
@@ -52,18 +52,18 @@ export function ResultScreen({ score, scenarioName }: { score: Score; scenarioNa
           {components.map((c) => {
             const pct = (score.components[c] / score.componentMax[c]) * 100;
             return (
-              <div key={c} className="grid grid-cols-[9rem_1fr_6rem] items-center gap-3 text-sm">
-                <span className="hud-label">{COMPONENT_LABEL[c]}</span>
-                <div className="h-3 bg-muted" role="meter" aria-valuenow={pct} aria-label={c}>
-                  <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+              <div key={c} className="grid grid-cols-[9rem_1fr_6rem] items-center gap-3 text-body">
+                <span className="text-label">{COMPONENT_LABEL[c]}</span>
+                <div className="h-3 bg-bg-3" role="meter" aria-valuenow={pct} aria-label={c}>
+                  <div className="h-full bg-primary-bg" style={{ width: `${pct}%` }} />
                 </div>
-                <span className="text-right font-mono tabular-nums">
+                <span className="text-right font-mono tnum">
                   {score.components[c].toFixed(1)} / {score.componentMax[c]}
                 </span>
               </div>
             );
           })}
-          <p className="text-xs text-muted-foreground">
+          <p className="text-small text-text-2">
             Scored on the server with tree {score.treeVersion}. Contact reports and efficiency are
             scored from a later phase.
           </p>
@@ -76,14 +76,10 @@ export function ResultScreen({ score, scenarioName }: { score: Score; scenarioNa
             <CardTitle>Penalties and bonuses</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-1 text-sm">
+            <ul className="space-y-1 text-body">
               {score.penalties.map((p, i) => (
                 <li key={i} className="flex gap-3">
-                  <span
-                    className={
-                      p.points < 0 ? 'font-mono text-destructive' : 'font-mono text-neutral'
-                    }
-                  >
+                  <span className={p.points < 0 ? 'font-mono text-crit' : 'font-mono text-ok'}>
                     {p.points > 0 ? '+' : ''}
                     {p.points}
                   </span>
@@ -104,15 +100,15 @@ export function ResultScreen({ score, scenarioName }: { score: Score; scenarioNa
               </CardTitle>
               {c.outcome && <Badge tone={OUTCOME_TONE[c.outcome] ?? 'unknown'}>{c.outcome}</Badge>}
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <dl className="grid grid-cols-[10rem_1fr] gap-y-1 font-mono text-xs">
-                <dt className="hud-label">Detection latency</dt>
+            <CardContent className="space-y-2 text-body">
+              <dl className="grid grid-cols-[10rem_1fr] gap-y-1 text-readout">
+                <dt className="text-label">Detection latency</dt>
                 <dd>
                   {c.detectionLatencyS === undefined ? '—' : `${c.detectionLatencyS.toFixed(1)} s`}
                 </dd>
-                <dt className="hud-label">Classified as</dt>
+                <dt className="text-label">Classified as</dt>
                 <dd>{c.classifiedAs ? CLASS_LABEL[c.classifiedAs] : '—'}</dd>
-                <dt className="hud-label">Responses</dt>
+                <dt className="text-label">Responses</dt>
                 <dd>{c.responses.length ? c.responses.join(', ') : '—'}</dd>
               </dl>
               <ul className="list-disc space-y-1 pl-5">

@@ -17,7 +17,7 @@ import { ROE_LABEL } from '@/lib/strings';
 // WebGL only exists in the browser.
 const SimPlayer = dynamic(() => import('@/components/sim/player').then((m) => m.SimPlayer), {
   ssr: false,
-  loading: () => <p className="hud-label p-6">Loading 3D view…</p>,
+  loading: () => <p className="text-label p-6">Loading 3D view…</p>,
 });
 
 function Briefing({
@@ -37,16 +37,16 @@ function Briefing({
     <Card className="mx-auto max-w-2xl">
       <CardHeader className="flex items-center justify-between">
         <CardTitle>{name}</CardTitle>
-        <span className="hud-label">
+        <span className="text-label">
           {mode} · {ROE_LABEL[roe]}
         </span>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Briefings are simple markdown; headings and paragraphs are shown as plain text. */}
-        <div className="space-y-2 text-sm">
+        <div className="space-y-2 text-body">
           {briefing.split('\n').map((line, i) =>
             line.startsWith('## ') ? (
-              <h3 key={i} className="hud-label pt-2">
+              <h3 key={i} className="text-label pt-2">
                 {line.slice(3)}
               </h3>
             ) : (
@@ -54,8 +54,8 @@ function Briefing({
             ),
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
-          Press <kbd className="font-mono text-primary">?</kbd> during the session for keyboard
+        <p className="text-small text-text-2">
+          Press <kbd className="font-mono text-text-1">?</kbd> during the session for keyboard
           shortcuts.{' '}
           {mode === 'ASSESSMENT'
             ? 'Assessment runs on a fixed clock with no pause.'
@@ -93,7 +93,7 @@ function Session({ sessionId }: { sessionId: string }) {
 
   switch (phase.kind) {
     case 'loading':
-      return <p className="hud-label p-6">Loading session…</p>;
+      return <p className="text-label p-6">Loading session…</p>;
     case 'briefing':
       return (
         <Briefing
@@ -106,7 +106,7 @@ function Session({ sessionId }: { sessionId: string }) {
       );
     case 'preparing':
       return (
-        <p className="hud-label p-6" role="status">
+        <p className="text-label p-6" role="status">
           Loading terrain…
         </p>
       );
@@ -116,7 +116,7 @@ function Session({ sessionId }: { sessionId: string }) {
       ) : null;
     case 'submitting':
       return (
-        <p className="hud-label p-6" role="status">
+        <p className="text-label p-6" role="status">
           Session over. Uploading events and scoring on the server…
         </p>
       );
@@ -125,7 +125,7 @@ function Session({ sessionId }: { sessionId: string }) {
     case 'interrupted':
       return (
         <Card className="mx-auto max-w-xl">
-          <CardContent className="space-y-3 pt-4 text-sm">
+          <CardContent className="space-y-3 pt-4 text-body">
             <p>
               This session was interrupted (the page was reloaded or closed mid-run) and cannot be
               resumed.
@@ -139,8 +139,8 @@ function Session({ sessionId }: { sessionId: string }) {
     case 'error':
       return (
         <Card className="mx-auto max-w-xl">
-          <CardContent className="space-y-3 pt-4 text-sm">
-            <p className="text-destructive">{phase.message}</p>
+          <CardContent className="space-y-3 pt-4 text-body">
+            <p className="text-crit">{phase.message}</p>
             <div className="flex gap-2">
               {phase.retry && <Button onClick={phase.retry}>Retry</Button>}
               <Button asChild variant="outline">

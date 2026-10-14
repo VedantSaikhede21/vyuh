@@ -1,15 +1,36 @@
 import type { Affiliation } from '@vyuh/shared';
+import { AFFILIATION_HEX } from '@/lib/theme/scene-colours';
 
-// APP-6 affiliation colours (must match --hostile etc. in globals.css) plus a
-// letter, so colour is never the only cue (SPEC §15.2).
+// APP-6 affiliation colours (DESIGN §3.3; `hex` for canvas/WebGL, `textClass`
+// for DOM) plus a letter, so colour is never the only cue (DESIGN §10).
 export const AFFILIATION_STYLE: Record<
   Affiliation,
-  { hex: string; letter: string; label: string }
+  { hex: string; textClass: string; letter: string; label: string }
 > = {
-  HOSTILE: { hex: '#ff5050', letter: 'H', label: 'Hostile' },
-  FRIENDLY: { hex: '#4fb3ff', letter: 'F', label: 'Friendly' },
-  NEUTRAL: { hex: '#4be37a', letter: 'N', label: 'Neutral' },
-  UNKNOWN: { hex: '#ffe14a', letter: 'U', label: 'Unknown' },
+  HOSTILE: {
+    hex: AFFILIATION_HEX.HOSTILE,
+    textClass: 'text-aff-hostile',
+    letter: 'H',
+    label: 'Hostile',
+  },
+  FRIENDLY: {
+    hex: AFFILIATION_HEX.FRIENDLY,
+    textClass: 'text-aff-friendly',
+    letter: 'F',
+    label: 'Friendly',
+  },
+  NEUTRAL: {
+    hex: AFFILIATION_HEX.NEUTRAL,
+    textClass: 'text-aff-neutral',
+    letter: 'N',
+    label: 'Neutral',
+  },
+  UNKNOWN: {
+    hex: AFFILIATION_HEX.UNKNOWN,
+    textClass: 'text-aff-unknown',
+    letter: 'U',
+    label: 'Unknown',
+  },
 };
 
 /**

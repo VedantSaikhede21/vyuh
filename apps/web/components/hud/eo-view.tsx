@@ -187,18 +187,18 @@ export function EoScene() {
 function EoReadout() {
   const eo = useUiStore((s) => s.eo);
   return (
-    <div className="pointer-events-none absolute inset-0 z-[10] font-mono text-xs text-[#d7ffe9]">
+    <div className="pointer-events-none absolute inset-0 z-[10] text-readout text-text-1">
       <div className="absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2">
         <div className="absolute left-1/2 top-0 h-2 w-px bg-current" />
         <div className="absolute bottom-0 left-1/2 h-2 w-px bg-current" />
         <div className="absolute left-0 top-1/2 h-px w-2 bg-current" />
         <div className="absolute right-0 top-1/2 h-px w-2 bg-current" />
       </div>
-      <div className="absolute left-1.5 top-1 bg-black/60 px-1">
+      <div className="absolute left-1.5 top-1 bg-bg-1 px-1">
         {eo.mode === 'IR' ? 'IR WHT' : 'EO DAY'} · AZ {pad3(eo.azDeg)} · EL {eo.elDeg.toFixed(1)} ·
         FOV {eo.hfovDeg.toFixed(1)}°
       </div>
-      <div className="absolute bottom-1 left-1.5 bg-black/60 px-1">
+      <div className="absolute bottom-1 left-1.5 bg-bg-1 px-1">
         {TRACK_MODE_LABEL[eo.trackMode]}
         {eo.lockTrackId ? ` ${eo.lockTrackId}` : ' · drag to slew'} · T day/IR
       </div>
@@ -212,7 +212,7 @@ export const EoPanel = forwardRef<HTMLDivElement, { runtime: SimRuntime; command
     const drag = useRef<{ x: number; y: number } | null>(null);
     const eo = eoSensor(runtime);
     if (!eo || eo.kind !== 'EO_IR') {
-      return <p className="hud-label p-4">No EO/IR sensor in this scenario.</p>;
+      return <p className="text-label p-4">No EO/IR sensor in this scenario.</p>;
     }
 
     const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {

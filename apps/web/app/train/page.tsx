@@ -31,17 +31,17 @@ function OperatorCard() {
         </Badge>
       </CardHeader>
       <CardContent>
-        <dl className="grid grid-cols-[8rem_1fr] gap-y-2 text-sm">
+        <dl className="grid grid-cols-[8rem_1fr] gap-y-2 text-body">
           {rows.map(([k, v]) => (
             <div key={k} className="contents">
-              <dt className="hud-label self-center">{k}</dt>
+              <dt className="text-label self-center">{k}</dt>
               <dd className="font-mono" data-testid={`user-${k.toLowerCase()}`}>
                 {v}
               </dd>
             </div>
           ))}
-          <dt className="hud-label self-center">Rating</dt>
-          <dd className="num">{user.rating}</dd>
+          <dt className="text-label self-center">Rating</dt>
+          <dd className="font-mono tnum">{user.rating}</dd>
         </dl>
       </CardContent>
     </Card>
@@ -117,10 +117,10 @@ function ScenarioList() {
               title={m.hint}
               onClick={() => setMode(m.value)}
               className={cn(
-                'rounded-sm border px-2 py-0.5 font-mono text-xs uppercase',
+                'rounded-sm border px-2 py-0.5 text-readout uppercase',
                 mode === m.value
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border text-muted-foreground hover:text-foreground',
+                  ? 'border-select bg-primary-bg text-primary-fg'
+                  : 'border-line-1 text-text-2 hover:text-text-1',
               )}
             >
               {m.label}
@@ -129,25 +129,25 @@ function ScenarioList() {
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        {items === null && !error && <p className="hud-label">Loading scenarios…</p>}
+        {error && <p className="text-body text-crit">{error}</p>}
+        {items === null && !error && <p className="text-label">Loading scenarios…</p>}
         {items?.length === 0 && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-text-2">
             No scenarios yet. Run the seed: <code>uv run python -m app.seed.demo</code>
           </p>
         )}
         {items?.map((s) => (
           <div
             key={s.id}
-            className="flex items-center justify-between gap-3 border border-border p-2"
+            className="flex items-center justify-between gap-3 border border-line-1 p-2"
             data-testid={`scenario-${s.code ?? s.id}`}
           >
             <div className="min-w-0">
-              <div className="font-mono text-sm font-bold">
-                {s.code && <span className="text-primary">{s.code} · </span>}
+              <div className="text-readout">
+                {s.code && <span className="text-text-1">{s.code} · </span>}
                 {s.name}
               </div>
-              <div className="hud-label">
+              <div className="text-label">
                 Difficulty {s.difficulty} · {Math.round(s.durationS / 60)} min · {ROE_LABEL[s.roe]}
                 {isNight(s) ? ' · night' : ''}
               </div>
@@ -166,7 +166,7 @@ export default function TrainPage() {
   return (
     <RequireAuth>
       <div className="space-y-4">
-        <h1 className="font-mono text-xl font-semibold uppercase tracking-[0.2em]">Training</h1>
+        <h1 className="text-h1">Training</h1>
         <div className="grid gap-4 md:grid-cols-[1fr_2fr]">
           <OperatorCard />
           <ScenarioList />

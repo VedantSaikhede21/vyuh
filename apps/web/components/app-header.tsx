@@ -7,18 +7,18 @@ import { useAuth } from '@/lib/auth';
 export function AppHeader() {
   const { status, user, logout } = useAuth();
   return (
-    <header className="border-b border-border bg-card">
+    <header className="border-b border-line-1 bg-bg-1">
       <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="font-mono text-base font-bold tracking-[0.3em] text-primary">
+        <Link href="/" className="text-h2 tracking-[0.2em] text-text-1">
           VYUH
         </Link>
         <nav className="flex items-center gap-3">
           {status === 'authenticated' && user ? (
             <>
-              <Link href="/train" className="hud-label hover:text-foreground">
+              <Link href="/train" className="text-label hover:text-text-1">
                 Train
               </Link>
-              <span className="hud-label hidden sm:inline">
+              <span className="text-label hidden sm:inline">
                 {user.name} · {user.role}
               </span>
               <Button variant="ghost" size="sm" onClick={() => void logout()}>

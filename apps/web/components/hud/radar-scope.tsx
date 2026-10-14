@@ -3,7 +3,7 @@
 import { TICK_MS } from '@vyuh/sim-core';
 import { useEffect, useRef } from 'react';
 import { AFFILIATION_STYLE, traceAffiliation } from '@/lib/affiliation';
-import { RF_HEX } from '@/lib/rf';
+import { PPI, RF_STROBE, canvasMonoFont, withAlpha } from '@/lib/theme/scene-colours';
 import type { Commands } from '@/lib/sim/commands';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useHudStore } from '@/lib/sim/store';
@@ -36,15 +36,15 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
     const draw = () => {
       const hud = useHudStore.getState().hud;
       ctx.clearRect(0, 0, SIZE, SIZE);
-      ctx.fillStyle = '#04110f';
+      ctx.fillStyle = PPI.background;
       ctx.beginPath();
       ctx.arc(c, c, r, 0, Math.PI * 2);
       ctx.fill();
 
       // Range rings + labels.
-      ctx.strokeStyle = '#1f4a43';
-      ctx.fillStyle = '#5f8f86';
-      ctx.font = '11px ui-monospace, monospace';
+      ctx.strokeStyle = PPI.rings;
+      ctx.fillStyle = PPI.ringLabels;
+      ctx.font = canvasMonoFont(11);
       ctx.lineWidth = 1;
       for (let km = 1; km * 1000 <= maxRangeM; km++) {
         ctx.beginPath();
@@ -59,12 +59,12 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
         ctx.lineTo(c + Math.sin(a) * r, c - Math.cos(a) * r);
         ctx.stroke();
       }
-      ctx.fillStyle = '#9fd8cf';
+      ctx.fillStyle = PPI.north;
       ctx.fillText('N', c - 4, 11);
 
-      // Interceptor range (dashed amber).
+      // Effector ranges (dashed chrome).
       ctx.setLineDash([5, 4]);
-      ctx.strokeStyle = '#ffb347';
+      ctx.strokeStyle = PPI.assetRing;
       for (const e of runtime.scenario.effectors) {
         ctx.beginPath();
         ctx.arc(
@@ -82,9 +82,9 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
       const t = (hud?.tMs ?? 0) + runtime.alpha * TICK_MS;
       const sweep = ((t % scanMs) / scanMs) * Math.PI * 2;
       const grad = ctx.createConicGradient(sweep - Math.PI / 2 - 0.6, c, c);
-      grad.addColorStop(0, 'rgba(63,214,192,0)');
-      grad.addColorStop(0.095, 'rgba(63,214,192,0.28)');
-      grad.addColorStop(0.1, 'rgba(63,214,192,0)');
+      grad.addColorStop(0, withAlpha(PPI.sweep, 0));
+      grad.addColorStop(0.095, withAlpha(PPI.sweep, 0.22));
+      grad.addColorStop(0.1, withAlpha(PPI.sweep, 0));
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.moveTo(c, c);
@@ -93,8 +93,8 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
 
       // RF strobes: dashed bearing lines from the RF sensor (no range).
       ctx.setLineDash([3, 4]);
-      ctx.strokeStyle = RF_HEX;
-      ctx.fillStyle = RF_HEX;
+      ctx.strokeStyle = RF_STROBE;
+      ctx.fillStyle = RF_STROBE;
       for (const s of hud?.rfStrobes ?? []) {
         const sensor = runtime.scenario.sensors.find((x) => x.id === s.sensorId);
         if (!sensor) continue;
@@ -129,7 +129,7 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
           ctx.stroke();
         }
         if (tr.id === hud?.selectedTrackId) {
-          ctx.strokeStyle = '#ffffff';
+          ctx.strokeStyle = PPI.selected;
           ctx.strokeRect(x - 8, y - 8, 16, 16);
         }
         ctx.fillStyle = style.hex;
@@ -169,7 +169,7 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
         className="aspect-square w-full max-w-[320px] cursor-crosshair"
         aria-label={`Radar scope, ${maxRangeM / 1000} km range. Click a track to select it.`}
       />
-      <p className="hud-label">PPI · {maxRangeM / 1000} km · rings 1 km</p>
+      <p className="text-label">PPI · {maxRangeM / 1000} km · rings 1 km</p>
     </div>
   );
 }

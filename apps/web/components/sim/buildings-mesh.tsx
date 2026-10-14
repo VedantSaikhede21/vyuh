@@ -12,6 +12,7 @@ import {
   Vector2,
 } from 'three';
 import { IR_MATERIALS } from '@/lib/sim/ir-materials';
+import { GROUND } from '@/lib/theme/scene-colours';
 
 // All building footprints merged into ONE geometry (one draw call, SPEC §16):
 // walls from the footprint ring, roof from a triangulated ring, standing on the
@@ -60,7 +61,7 @@ export function buildBuildingsGeometry(index: BuildingIndex): BufferGeometry | n
   return geo;
 }
 
-const DAY_MATERIAL = new MeshLambertMaterial({ color: '#9a9284', side: 2 });
+const DAY_MATERIAL = new MeshLambertMaterial({ color: GROUND.buildings, side: 2 });
 
 export function BuildingsMesh({ index }: { index: BuildingIndex }) {
   const mesh = useMemo(() => {

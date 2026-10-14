@@ -15,7 +15,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
   if (status !== 'authenticated') {
     return (
-      <p className="hud-label px-4 py-10 text-center" role="status">
+      <p className="text-label px-4 py-10 text-center" role="status">
         {status === 'loading' ? 'Verifying credentials…' : 'Redirecting to login…'}
       </p>
     );

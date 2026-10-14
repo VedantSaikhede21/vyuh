@@ -7,7 +7,10 @@ const AFFILIATIONS: Affiliation[] = ['HOSTILE', 'FRIENDLY', 'NEUTRAL', 'UNKNOWN'
 
 export function AffiliationLegend() {
   return (
-    <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs" aria-label="Affiliation symbols (APP-6)">
+    <ul
+      className="flex flex-wrap gap-x-3 gap-y-1 text-small"
+      aria-label="Affiliation symbols (APP-6)"
+    >
       {AFFILIATIONS.map((a) => (
         <li key={a} className="flex items-center gap-1" style={{ color: AFFILIATION_STYLE[a].hex }}>
           <AffiliationSymbol affiliation={a} size={16} />

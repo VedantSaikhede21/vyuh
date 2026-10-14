@@ -4,23 +4,18 @@ import { cn } from '@/lib/utils';
 export function Card({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
-      className={cn('rounded-lg border border-border bg-card text-card-foreground', className)}
+      className={cn('rounded-sm border border-line-1 bg-bg-1 text-text-1', className)}
       {...props}
     />
   );
 }
 
 export function CardHeader({ className, ...props }: ComponentProps<'div'>) {
-  return <div className={cn('border-b border-border px-5 py-3', className)} {...props} />;
+  return <div className={cn('border-b border-line-1 px-5 py-3', className)} {...props} />;
 }
 
 export function CardTitle({ className, ...props }: ComponentProps<'h2'>) {
-  return (
-    <h2
-      className={cn('font-mono text-sm font-semibold uppercase tracking-[0.14em]', className)}
-      {...props}
-    />
-  );
+  return <h2 className={cn('text-panel-title', className)} {...props} />;
 }
 
 export function CardContent({ className, ...props }: ComponentProps<'div'>) {

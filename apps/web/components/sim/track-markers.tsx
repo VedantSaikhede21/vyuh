@@ -8,6 +8,7 @@ import { Path, Shape, ShapeGeometry } from 'three';
 import { AFFILIATION_STYLE, affiliationOutline } from '@/lib/affiliation';
 import { useHudStore, type TrackView } from '@/lib/sim/store';
 import { useSimRuntime } from './sim-context';
+import { SITES } from '@/lib/theme/scene-colours';
 
 const MARKER_M = 22;
 
@@ -85,7 +86,7 @@ function TrackMarker({
       {selected && (
         <mesh position={[top.x, top.y + MARKER_M, top.z]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[MARKER_M * 1.8, MARKER_M * 2.2, 32]} />
-          <meshBasicMaterial color="#ffffff" />
+          <meshBasicMaterial color={SITES.markerStem} />
         </mesh>
       )}
       {/* DOM labels only where they matter: each <Html> costs layout (FPS with bird flocks). */}
@@ -97,7 +98,7 @@ function TrackMarker({
           {...(labelPortal ? { portal: labelPortal as RefObject<HTMLElement> } : {})}
         >
           <div
-            className="pointer-events-none whitespace-nowrap font-mono text-xs font-bold"
+            className="pointer-events-none whitespace-nowrap text-readout"
             style={{ color: style.hex }}
           >
             [{style.letter}] {track.id}

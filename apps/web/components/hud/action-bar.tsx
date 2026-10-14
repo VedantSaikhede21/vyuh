@@ -12,9 +12,7 @@ const AFFILIATIONS: Affiliation[] = ['HOSTILE', 'FRIENDLY', 'NEUTRAL', 'UNKNOWN'
 
 function Key({ k }: { k: string }) {
   return (
-    <kbd className="ml-1 rounded-sm border border-border px-1 text-xs text-muted-foreground">
-      {k}
-    </kbd>
+    <kbd className="ml-1 rounded-sm border border-line-1 px-1 text-small text-text-2">{k}</kbd>
   );
 }
 
@@ -32,9 +30,9 @@ export function ActionBar({ commands }: { commands: Commands }) {
   const noTrack = selected === null || hud.endReason !== null;
 
   return (
-    <div className="flex h-full flex-col gap-1.5 overflow-y-auto text-sm">
-      <div className="hud-label">
-        Selected: <span className="font-mono text-foreground">{selected?.id ?? 'none'}</span>
+    <div className="flex h-full flex-col gap-1.5 overflow-y-auto text-body">
+      <div className="text-label">
+        Selected: <span className="font-mono text-text-1">{selected?.id ?? 'none'}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-1.5">
@@ -53,7 +51,7 @@ export function ActionBar({ commands }: { commands: Commands }) {
 
       {classifyMenu && !noTrack && (
         <div
-          className="grid grid-cols-2 gap-1 border border-border bg-card p-1.5"
+          className="grid grid-cols-2 gap-1 border border-line-1 bg-bg-1 p-1.5"
           role="menu"
           aria-label="Classify"
         >
@@ -61,10 +59,10 @@ export function ActionBar({ commands }: { commands: Commands }) {
             <button
               key={c.cls}
               role="menuitem"
-              className="flex items-center gap-1.5 px-1.5 py-0.5 text-left text-xs hover:bg-muted"
+              className="flex items-center gap-1.5 px-1.5 py-0.5 text-left text-small hover:bg-bg-3"
               onClick={() => commands.classify(c.cls)}
             >
-              <kbd className="font-mono text-primary">{c.key}</kbd> {c.label}
+              <kbd className="font-mono text-text-1">{c.key}</kbd> {c.label}
             </button>
           ))}
         </div>
@@ -81,10 +79,10 @@ export function ActionBar({ commands }: { commands: Commands }) {
               onClick={() => commands.setAffiliation(a)}
               title={`${s.label} (${s.letter})`}
               aria-pressed={active}
-              className="rounded-sm border px-1 py-1 font-mono text-xs font-bold disabled:opacity-40"
+              className="rounded-sm border px-1 py-1 text-readout disabled:opacity-40"
               style={{
                 borderColor: s.hex,
-                color: active ? '#000' : s.hex,
+                color: active ? 'var(--bg-0)' : s.hex,
                 background: active ? s.hex : 'transparent',
               }}
             >
@@ -135,13 +133,13 @@ export function ActionBar({ commands }: { commands: Commands }) {
       </div>
 
       {hud.effectors.length > 0 && (
-        <div className="mt-auto space-y-1 border-t border-border pt-1.5 font-mono text-xs">
+        <div className="mt-auto space-y-1 border-t border-line-1 pt-1.5 text-readout">
           {hud.effectors.map((e) => {
             const left = Math.max(0, e.readyAtMs - hud.tMs);
             return (
               <div key={e.id}>
                 <div className="flex justify-between gap-2">
-                  <span className="hud-label">
+                  <span className="text-label">
                     {EFFECTOR_LABEL[e.kind]} {e.id}
                   </span>
                   <span>
@@ -149,16 +147,16 @@ export function ActionBar({ commands }: { commands: Commands }) {
                     {left > 0 ? `${(left / 1000).toFixed(1)} s` : 'ready'}
                   </span>
                 </div>
-                <div className="h-1 bg-muted" aria-label={`${e.id} cooldown`}>
+                <div className="h-1 bg-bg-3" aria-label={`${e.id} cooldown`}>
                   <div
-                    className="h-full bg-warning"
+                    className="h-full bg-warn"
                     style={{ width: `${e.cooldownMs ? (left / e.cooldownMs) * 100 : 0}%` }}
                   />
                 </div>
               </div>
             );
           })}
-          <div className="text-muted-foreground">{ROE_HINT[hud.roe]}</div>
+          <div className="text-text-2">{ROE_HINT[hud.roe]}</div>
         </div>
       )}
     </div>

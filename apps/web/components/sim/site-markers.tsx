@@ -4,6 +4,7 @@ import { Line } from '@react-three/drei';
 import { toThree } from '@vyuh/sim-core';
 import { useMemo } from 'react';
 import { useSimRuntime } from './sim-context';
+import { SITES } from '@/lib/theme/scene-colours';
 
 /** A ring that follows the terrain, `liftM` above ground. */
 function GroundRing({
@@ -55,21 +56,28 @@ export function SiteMarkers() {
           <group key={a.id}>
             <mesh position={[p.x, p.y + 4, p.z]}>
               <boxGeometry args={[18, 8, 12]} />
-              <meshLambertMaterial color="#8a8f7a" />
+              <meshLambertMaterial color={SITES.assetMast} />
             </mesh>
-            <GroundRing x={a.x} z={a.z} radiusM={a.radiusM} color="#3fd6c0" />
+            <GroundRing x={a.x} z={a.z} radiusM={a.radiusM} color={SITES.assetRing} />
           </group>
         );
       })}
       {effectors.map((e) => (
-        <GroundRing key={e.id} x={e.x} z={e.z} radiusM={e.rangeM} color="#ffb347" dashed />
+        <GroundRing
+          key={e.id}
+          x={e.x}
+          z={e.z}
+          radiusM={e.rangeM}
+          color={SITES.effectorRing}
+          dashed
+        />
       ))}
       {sensors.map((s) => {
         const p = toThree({ x: s.x, y: rt.groundHeight(s.x, s.z), z: s.z });
         return (
           <mesh key={s.id} position={[p.x + (s.kind === 'RADAR' ? 14 : -14), p.y + s.y / 2, p.z]}>
             <cylinderGeometry args={[0.6, 0.9, s.y, 8]} />
-            <meshLambertMaterial color="#c9ced3" />
+            <meshLambertMaterial color={SITES.sensorMast} />
           </mesh>
         );
       })}
