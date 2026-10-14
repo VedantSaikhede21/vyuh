@@ -22,8 +22,11 @@ S01 = json.loads((SCENARIO_DIR / "S01.json").read_text(encoding="utf-8"))
 
 def test_scripted_scenarios_are_valid() -> None:
     codes = [s.id for s in load_scripted()]
-    assert codes == ["S01", "S02", "S03"]
+    assert codes == ["S01", "S02", "S03", "S11", "S12"]
     for s in load_scripted():
+        if s.id in {"S11", "S12"}:  # Phase 2 test scenarios on real-DEM presets
+            assert s.terrain.preset in {"JK_MOUNTAIN", "PUNJAB_PLAINS"}
+            continue
         assert s.duration_s == 180
         assert {c.class_.value for c in s.contacts} == {"QUAD_SMALL"}
         assert {c.behaviour.value for c in s.contacts} == {"ATTACK_RUN"}
@@ -60,13 +63,15 @@ def test_loader_rejects_rule_violations(tmp_path: Path) -> None:
 
 
 def test_seed_is_idempotent(db: Session) -> None:
-    assert seed_scenarios(db) == 3
+    assert seed_scenarios(db) == 5
     db.commit()
     assert seed_scenarios(db) == 0
-    assert db.scalar(select(func.count()).select_from(ScenarioRow)) == 3
+    assert db.scalar(select(func.count()).select_from(ScenarioRow)) == 5
     s01 = db.scalar(select(ScenarioRow).where(ScenarioRow.code == "S01"))
     assert s01 is not None
     assert s01.tags == ["tutorial", "demo"]
+    s11 = db.scalar(select(ScenarioRow).where(ScenarioRow.code == "S11"))
+    assert s11 is not None and s11.tags == ["test"]
     assert s01.content["contacts"][0]["id"] == "c01"
     assert "despawnTMs" not in s01.content["contacts"][0]  # unset optionals are not stored
 
@@ -95,7 +100,7 @@ def test_list_scenarios(
 ) -> None:
     headers = auth_header(make_user())
     body = client.get("/api/v1/scenarios", headers=headers).json()
-    assert [i["code"] for i in body["items"]] == ["S01", "S02", "S03"]
+    assert [i["code"] for i in body["items"]] == ["S01", "S02", "S03", "S11", "S12"]
     first = body["items"][0]
     assert first == {
         "id": str(scenarios["S01"].id),
@@ -109,7 +114,7 @@ def test_list_scenarios(
         "tags": ["tutorial", "demo"],
     }
     filtered = client.get("/api/v1/scenarios?difficulty=2", headers=headers).json()
-    assert [i["code"] for i in filtered["items"]] == ["S03"]
+    assert [i["code"] for i in filtered["items"]] == ["S03", "S11", "S12"]
 
 
 def test_get_scenario_omits_unset_optionals(

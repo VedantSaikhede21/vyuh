@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "difficulty": 2,
+  "zones": [],
+  "assets": [
+    {
+      "id": "a1",
+      "name": "Post Alpha",
+      "x": 0,
+      "z": 0,
+      "radiusM": 60
+    }
+  ],
+  "effectors": [
+    {
+      "id": "int1",
+      "kind": "INTERCEPT",
+      "x": 0,
+      "z": 0,
+      "rangeM": 1500,
+      "cooldownS": 6,
+      "ammo": 4
+    }
+  ],
+  "scoringTreeId": "default_v1",
+  "id": "S12",
+  "name": "Night Watch",
+  "seed": 1201,
+  "briefing": "## Situation\nTest scenario (Phase 2). Post Alpha on open farmland, 01:30, no moon assumed. A heavy quadcopter is expected from the north-west.\n## Task\nThe day camera is useless at night: press T for thermal (IR) to identify the track before you declare it HOSTILE and intercept.\n## ROE\nWEAPONS TIGHT - engage only tracks you have identified as HOSTILE.",
+  "terrain": {
+    "preset": "PUNJAB_PLAINS",
+    "origin": {
+      "lat": 30.52,
+      "lon": 75.7
+    }
+  },
+  "environment": {
+    "date": "2026-11-20",
+    "time": "01:30",
+    "isNight": true,
+    "weather": {
+      "visibilityM": 8000,
+      "rainMmph": 0,
+      "windMps": 2,
+      "windDirDeg": 300,
+      "cloudPct": 10
+    }
+  },
+  "roe": "WEAPONS_TIGHT",
+  "sensors": [
+    {
+      "id": "rad1",
+      "kind": "RADAR",
+      "x": 0,
+      "y": 6,
+      "z": 0,
+      "refRangeM": 3000,
+      "scanPeriodS": 2
+    },
+    {
+      "id": "eo1",
+      "kind": "EO_IR",
+      "x": 0,
+      "y": 8,
+      "z": 0,
+      "fovDegMin": 1.5,
+      "fovDegMax": 30,
+      "resolution": [
+        640,
+        360
+      ],
+      "irResolution": [
+        640,
+        512
+      ]
+    }
+  ],
+  "contacts": [
+    {
+      "id": "c01",
+      "class": "QUAD_HEAVY",
+      "isThreat": true,
+      "affiliation": "HOSTILE",
+      "controlLink": "RF_MANUAL",
+      "behaviour": "ATTACK_RUN",
+      "spawnTMs": 10000,
+      "path": [
+        {
+          "x": -2263,
+          "y": 40,
+          "z": 2263,
+          "speedMps": 12
+        },
+        {
+          "x": -636,
+          "y": 40,
+          "z": 636,
+          "speedMps": 12
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "speedMps": 12,
+          "action": "DIVE"
+        }
+      ],
+      "emissions": {
+        "rfActive": true,
+        "rfBand": "2.4GHz"
+      }
+    }
+  ],
+  "durationS": 330
+}
