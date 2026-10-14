@@ -2,7 +2,7 @@
 
 import { TICK_MS } from '@vyuh/sim-core';
 import { useEffect, useRef } from 'react';
-import { AFFILIATION_STYLE } from '@/lib/affiliation';
+import { AFFILIATION_STYLE, traceAffiliation } from '@/lib/affiliation';
 import type { Commands } from '@/lib/sim/commands';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useHudStore } from '@/lib/sim/store';
@@ -98,8 +98,7 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
         const y = c - (tr.z - origin.z) * pxPerM;
         ctx.fillStyle = style.hex;
         ctx.strokeStyle = style.hex;
-        ctx.beginPath();
-        ctx.rect(x - 4, y - 4, 8, 8);
+        traceAffiliation(ctx, tr.affiliation, x, y, 5);
         if (tr.markedDetected) ctx.fill();
         else ctx.stroke();
         if (tr.headingDeg !== null && tr.speedMps !== null) {
