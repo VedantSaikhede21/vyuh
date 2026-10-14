@@ -306,9 +306,9 @@ docker compose up        # offline full stack
 - [ ] 5 AI layer
 - [ ] 6 Polish & deploy
 
-- Current phase: **1 — MVP loop: planning (branch `feat/phase1-mvp-loop`)**
+- Current phase: **1 — MVP loop: plan approved (branch `feat/phase1-mvp-loop`)**
 - Last completed: Phase 0 Foundations (merged 2026-10-14, PR #1, CI green) — shared schemas + codegen, sim-core RNG, API skeleton (auth, RBAC, migrations, seed), web (login, /train), CI workflow. Verified: `pnpm lint`, `pnpm test` (38), `uv run pytest` (40), `pnpm gen:schemas` no diff, `next build`, `pnpm dev` + dev-login → `/auth/me`.
-- Next up: Phase 1 plan → approval → build
+- Next up: Phase 1 build — plan approved, follow `docs/plans/phase-1.md` (step 1 first)
 - Known issues: the old pre-move container `sih-2026-postgres-1` (from the OneDrive copy) holds port 5432, so `docker compose up` from this repo fails until it is stopped. It has the same DBs and credentials, and is in use for now. Web auth guard is client-side only (tech debt, decision 9).
 - Open decisions:
 - Open ideas (parked, not approved):
