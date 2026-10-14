@@ -32,7 +32,10 @@ def contact_metrics(scenario: Scenario, events: list[dict[str, Any]]) -> list[di
     for ev in events:
         if ev["type"] == "SENSOR_TRACK_CREATED":
             track_contact[ev["trackId"]] = ev["contactId"]
-    eo_modelled = any(ev["type"] == "EO_IDENTIFIABLE" for ev in events)
+    # Fairness flag (SPEC §9.6, decision 39): with an EO/IR sensor in the scenario,
+    # classifying before any EO_IDENTIFIABLE(IDENTIFY) means "before identifiable",
+    # even if the trainee never pointed the camera.
+    eo_modelled = any(s.kind == "EO_IR" for s in scenario.sensors)
 
     by_contact: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for ev in events:

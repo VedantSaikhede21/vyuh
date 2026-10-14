@@ -97,7 +97,9 @@ def check_batch(
             if track in tracks:
                 bad("DUPLICATE_TRACK", f"Track {track} created twice")
             tracks.add(track)
-        elif kind in TRACK_COMMAND_TYPES and track not in tracks:
+        elif (
+            kind in TRACK_COMMAND_TYPES or (kind == "CAMERA_SLEWED" and track is not None)
+        ) and track not in tracks:
             # Covers "no classification before detection".
             bad("UNKNOWN_TRACK", f"{kind} for track {track!r} before the track existed")
 
