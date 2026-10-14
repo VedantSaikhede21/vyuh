@@ -20,6 +20,11 @@ const HEMI_GROUND_DAY = new Color('#3a3a2a');
 const HEMI_GROUND_NIGHT = new Color('#0a0a0c');
 const SUN_LOW = new Color('#ffb26b');
 const SUN_HIGH = new Color('#fff6e8');
+/** Intensity of the tactical map's overhead display light when the real sun is weaker. */
+const TACTICAL_MAP_LIGHT = 1.2;
+const MAP_LIGHT_DIR: [number, number, number] = [0.3, 0.9, 0.3];
+/** Lowest daylight factor the tactical map's ambient light uses (keeps it readable at night). */
+const TACTICAL_MIN_DAYLIGHT = 0.85;
 /** Visibility at or beyond which the air counts as clear, metres. */
 const CLEAR_VIS_M = 20_000;
 
@@ -62,14 +67,20 @@ export function environmentLook(env: SimEnvironment, variant: EnvironmentVariant
     .lerp(SKY_DAY, day)
     .lerp(SKY_DUSK, dusk * 0.5);
   background.lerp(HAZE, haze * day * 0.7);
-  const floor = variant === 'tactical' ? 0.35 : 0.04;
+  // The tactical map is a C2 display: its ambient light never drops below a dusk-like level.
+  const ambient = variant === 'tactical' ? Math.max(day, TACTICAL_MIN_DAYLIGHT) : day;
+  const sunIntensity = 1.8 * smoothstep(-2, 15, elDeg) * (1 - 0.6 * cloud);
+  // When the sun is low or down, the tactical map gets a fixed overhead display light instead.
+  const mapLight = variant === 'tactical' && sunIntensity < TACTICAL_MAP_LIGHT;
   return {
-    sunDir: [d.x, d.y, d.z],
-    sunColor: SUN_LOW.clone().lerp(SUN_HIGH, smoothstep(0, 30, elDeg)),
-    sunIntensity: 1.8 * smoothstep(-2, 15, elDeg) * (1 - 0.6 * cloud),
-    hemiSky: HEMI_SKY_NIGHT.clone().lerp(HEMI_SKY_DAY, day),
-    hemiGround: HEMI_GROUND_NIGHT.clone().lerp(HEMI_GROUND_DAY, day),
-    hemiIntensity: Math.max(floor, 0.9 * day),
+    sunDir: mapLight ? MAP_LIGHT_DIR : [d.x, d.y, d.z],
+    sunColor: mapLight
+      ? SUN_HIGH.clone()
+      : SUN_LOW.clone().lerp(SUN_HIGH, smoothstep(0, 30, elDeg)),
+    sunIntensity: mapLight ? TACTICAL_MAP_LIGHT : sunIntensity,
+    hemiSky: HEMI_SKY_NIGHT.clone().lerp(HEMI_SKY_DAY, ambient),
+    hemiGround: HEMI_GROUND_NIGHT.clone().lerp(HEMI_GROUND_DAY, ambient),
+    hemiIntensity: Math.max(0.04, 0.9 * ambient),
     background,
     fogNear: variant === 'eo' ? vis * 0.05 : Math.max(vis, 4000) * 0.6,
     fogFar: variant === 'eo' ? Math.max(vis, 50) : Math.max(vis * 2.5, 9000),
