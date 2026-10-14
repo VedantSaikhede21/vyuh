@@ -622,7 +622,7 @@ Visual and UX rules are defined in `docs/DESIGN.md` and are binding.
 
 ### 15.2 Accessibility & usability
 - Affiliation is never shown by colour alone: APP-6-style shapes/letters too (colour-blind safe).
-- Minimum 14 px text in HUD; all critical alerts have a sound and a visual cue (sound can be muted).
+- Type sizes follow `docs/DESIGN.md` §4 (labels ≥ 11 px, other HUD text ≥ 12 px). Every critical alert has a visual cue; sound is optional, mutable and parked (DESIGN §10, decision 58).
 - Every interactive control reachable by keyboard; mouse-only flows are not allowed for core actions.
 - Hindi/English labels are out of scope for MVP; keep strings in one file so translation is possible later.
 

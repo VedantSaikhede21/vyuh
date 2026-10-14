@@ -55,7 +55,7 @@ A browser-based 3D simulator that trains military personnel to **detect, track, 
 | Monorepo | pnpm workspaces | `apps/*`, `packages/*` |
 | Frontend | Next.js (latest stable, App Router), TypeScript strict | |
 | 3D | React Three Fiber + drei, Three.js | Instanced meshes for drones/birds |
-| UI | Tailwind + shadcn/ui | Futuristic military-HUD look, dark default. **No glassmorphism.** |
+| UI | Tailwind + shadcn/ui | Tactical console look per `docs/DESIGN.md`, dark default. **No glassmorphism.** |
 | Client state | zustand | One store for HUD/UI; sim state owned by sim-core |
 | Schemas | zod → JSON Schema → Pydantic (datamodel-code-generator) | `pnpm gen:schemas` |
 | Sim core | Pure TypeScript package, vitest | Fixed 20 Hz tick |
@@ -324,6 +324,7 @@ docker compose up        # offline full stack
 - Open ideas (parked, not approved):
   - Act on RF strobes (jam along a bearing) and EO-initiated tracks — RF-only contacts are currently unactionable by design (Phase 2B plan, rule 2).
   - Procedural placeholder buildings at OSM village points (OSM building coverage in rural Punjab is sparse); revisit with URBAN_GENERIC in Phase 3.
+  - ROE interlocks — decide in Phase 4 whether Assessment mode allows attempting ROE-violating responses (and scores them) instead of pre-disabling, so ROE judgement is actually tested.
 
 ---
 
