@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "difficulty": 2,
+  "zones": [],
+  "assets": [
+    {
+      "id": "a1",
+      "name": "Post Alpha",
+      "x": 0,
+      "z": 0,
+      "radiusM": 60
+    }
+  ],
+  "effectors": [
+    {
+      "id": "int1",
+      "kind": "INTERCEPT",
+      "x": 0,
+      "z": 0,
+      "rangeM": 1500,
+      "cooldownS": 6,
+      "ammo": 4
+    }
+  ],
+  "scoringTreeId": "default_v1",
+  "id": "S11",
+  "name": "Ridge Line",
+  "seed": 1101,
+  "briefing": "## Situation\nTest scenario (Phase 2). Post Alpha sits on a valley floor in high mountains. A heavy quadcopter is expected from the north-north-east, flying low along the valley side.\n## Task\nWatch the radar: the track will drop out when a spur masks it, then reappear. Re-acquire it, identify it on EO and intercept it.\n## ROE\nWEAPONS FREE - engage any track you assess as a threat.",
+  "terrain": {
+    "preset": "JK_MOUNTAIN",
+    "origin": {
+      "lat": 33.75,
+      "lon": 75.875
+    }
+  },
+  "environment": {
+    "date": "2026-10-20",
+    "time": "11:00",
+    "isNight": false,
+    "weather": {
+      "visibilityM": 15000,
+      "rainMmph": 0,
+      "windMps": 4,
+      "windDirDeg": 250,
+      "cloudPct": 20
+    }
+  },
+  "roe": "WEAPONS_FREE",
+  "sensors": [
+    {
+      "id": "rad1",
+      "kind": "RADAR",
+      "x": 0,
+      "y": 6,
+      "z": 0,
+      "refRangeM": 3000,
+      "scanPeriodS": 2
+    },
+    {
+      "id": "eo1",
+      "kind": "EO_IR",
+      "x": 0,
+      "y": 8,
+      "z": 0,
+      "fovDegMin": 1.5,
+      "fovDegMax": 30,
+      "resolution": [
+        640,
+        360
+      ],
+      "irResolution": [
+        640,
+        512
+      ]
+    }
+  ],
+  "contacts": [
+    {
+      "id": "c01",
+      "class": "QUAD_HEAVY",
+      "isThreat": true,
+      "affiliation": "HOSTILE",
+      "controlLink": "RF_MANUAL",
+      "behaviour": "ATTACK_RUN",
+      "spawnTMs": 5000,
+      "path": [
+        {
+          "x": 608,
+          "y": 60,
+          "z": 3447,
+          "speedMps": 14
+        },
+        {
+          "x": 260,
+          "y": 60,
+          "z": 1477,
+          "speedMps": 14
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "speedMps": 14,
+          "action": "DIVE"
+        }
+      ],
+      "emissions": {
+        "rfActive": true,
+        "rfBand": "2.4GHz"
+      }
+    }
+  ],
+  "durationS": 300
+}

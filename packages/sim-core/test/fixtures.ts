@@ -1,13 +1,30 @@
-import type { ContactSpec, Scenario, SessionMode } from '@vyuh/shared';
+import { readFileSync } from 'node:fs';
+import { TerrainPresetMeta, type ContactSpec, type Scenario, type SessionMode } from '@vyuh/shared';
 import {
   createHeightmap,
   createProceduralTerrain,
+  builtinWorld,
   createSim,
+  worldFromPreset,
   type Heightmap,
   type Sim,
+  type World,
 } from '../src/index.ts';
 
 export const flatTerrain: Heightmap = createHeightmap(20_000, 2, new Float32Array(4));
+/** A preset's World: built-in, or decoded from apps/web/public/terrain/<NAME>/. */
+export function presetWorld(name: string): World {
+  const builtin = builtinWorld(name);
+  if (builtin) return builtin;
+  const dir = new URL(`../../../apps/web/public/terrain/${name}/`, import.meta.url);
+  const meta = TerrainPresetMeta.parse(JSON.parse(readFileSync(new URL('meta.json', dir), 'utf8')));
+  return worldFromPreset(
+    meta,
+    readFileSync(new URL(meta.files.heightmap, dir)),
+    JSON.parse(readFileSync(new URL(meta.files.buildings, dir), 'utf8')),
+  );
+}
+
 export const hills: Heightmap = createProceduralTerrain({ seed: 1, resolution: 129 });
 
 export function attackQuad(id: string, from: [number, number], spawnTMs = 0): ContactSpec {
@@ -62,7 +79,7 @@ export function testScenario(overrides: Partial<Scenario> = {}): Scenario {
  */
 export function playScripted(
   scenario: Scenario,
-  terrain: Heightmap,
+  terrain: Heightmap | World,
   mode: SessionMode = 'ASSESSMENT',
 ): Sim {
   const sim = createSim(scenario, terrain, { mode });

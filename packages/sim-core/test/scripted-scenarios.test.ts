@@ -1,9 +1,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { Scenario } from '@vyuh/shared';
 import { describe, expect, it } from 'vitest';
-import { PROCEDURAL_HILLS, createProceduralTerrain, createSim } from '../src/index.ts';
+import { PROCEDURAL_HILLS, createSim } from '../src/index.ts';
 import { FIXTURE_DIR, recordFixtureLogs } from './fixture-logs.ts';
-import { playScripted } from './fixtures.ts';
+import { playScripted, presetWorld } from './fixtures.ts';
 
 // Guards the hand-written scenarios in apps/api/app/seed/scenarios: valid
 // against the zod schema, a real threat if ignored, and defensible in time.
@@ -14,14 +14,15 @@ const MIN_WARNING_MS = 45_000;
 
 const DIR = new URL('../../../apps/api/app/seed/scenarios/', import.meta.url);
 const files = readdirSync(DIR).filter((f) => f.endsWith('.json'));
-const terrain = createProceduralTerrain();
 
 describe.each(files)('scripted scenario %s', (file) => {
   const scenario = Scenario.parse(JSON.parse(readFileSync(new URL(file, DIR), 'utf8')));
+  const terrain = presetWorld(scenario.terrain.preset);
 
-  it('uses the Phase 1 terrain and lasts 3 minutes', () => {
-    expect(scenario.terrain.preset).toBe(PROCEDURAL_HILLS);
-    expect(scenario.durationS).toBe(180);
+  it('loads its terrain preset; Phase 1 training scenarios last 3 minutes', () => {
+    expect(terrain.meta?.name).toBe(scenario.terrain.preset);
+    if (scenario.terrain.preset === PROCEDURAL_HILLS) expect(scenario.durationS).toBe(180);
+    else expect(scenario.durationS).toBeLessThanOrEqual(360);
   });
 
   it('every threat reaches the asset before time-up if ignored', () => {

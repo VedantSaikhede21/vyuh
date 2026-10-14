@@ -20,7 +20,12 @@ logger = logging.getLogger(__name__)
 
 SCENARIO_DIR = Path(__file__).resolve().parent / "scenarios"
 
-TAGS: dict[str, list[str]] = {"S01": ["tutorial", "demo"], "S02": ["demo"]}
+TAGS: dict[str, list[str]] = {
+    "S01": ["tutorial", "demo"],
+    "S02": ["demo"],
+    "S11": ["test"],  # Phase 2 test scenarios (SPEC §7.2)
+    "S12": ["test"],
+}
 
 
 def load_scripted(directory: Path = SCENARIO_DIR) -> list[Scenario]:
