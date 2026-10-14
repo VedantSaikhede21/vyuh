@@ -11,9 +11,7 @@ export default function LandingPage() {
     <div className="space-y-6">
       <section className="space-y-3">
         <p className="hud-label">SIH 2026 · PS 26247 · Training simulator</p>
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Counter-drone threat trainer
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Counter-drone threat trainer</h1>
         <p className="max-w-2xl text-muted-foreground">
           Practise detecting, tracking, identifying and responding to drone and swarm threats in a
           browser, under realistic conditions, with server-side scoring and after-action review.
@@ -40,7 +38,9 @@ export default function LandingPage() {
               {KILL_CHAIN.map((stage, i) => (
                 <li key={stage} className="flex items-center gap-2">
                   <span className="rounded-sm border border-border px-2 py-1">
-                    <span className="num text-muted-foreground">{String(i + 1).padStart(2, '0')}</span>{' '}
+                    <span className="num text-muted-foreground">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>{' '}
                     {stage}
                   </span>
                   {i < KILL_CHAIN.length - 1 ? (

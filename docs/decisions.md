@@ -27,3 +27,14 @@ Short entries: date, decision, why. Newest at the bottom.
 7. **Line endings forced to LF (`.gitattributes`)** and datamodel-codegen run with `--disable-timestamp`. *Why:* Windows dev machines must not create diffs in CI's no-diff check.
 8. **Tests use a real Postgres** (`vyuh_test` locally via docker compose, a service in CI). *Why:* tables use `jsonb` and `text[]`.
 9. **Web auth guard is client-side** (token in browser storage, as Supabase JS does). Middleware-based guard is tech debt for later.
+10. **Generated Pydantic enums use UPPER_SNAKE members** (`--capitalise-enum-members`) and unions get an explicit `discriminator` added by the JSON Schema export, so Pydantic uses tagged unions for `SimEvent` / `SensorConfig`. *Why:* readable Python, fast and precise validation errors.
+11. **uvicorn runs in factory mode** (`app.main:create_app --factory`). *Why:* importing the app module must not require env vars (tests and tooling build their own `Settings`).
+12. **Error code ↔ HTTP status map is duplicated in Python** and a pytest cross-checks it against `packages/shared/src/enums.ts`. *Why:* the map is a constant, not a type, and JSON Schema cannot carry it.
+13. **Web uses system font stacks** (no `next/font/google`). *Why:* builds and runs fully offline.
+14. **shadcn/ui components are added by hand** (`components/ui`, `components.json` present) instead of running the CLI. *Why:* the CLI is interactive and network-bound; output is equivalent.
+
+## 2026-10-14 — Repository location
+
+The repo moved from a OneDrive-synced folder on C: to `D:\dev\vyuh` (C: was full; OneDrive also locks `node_modules`). pnpm store → `D:/.pnpm-store`, uv cache → `D:/.uv-cache` (user-level config, not in the repo).
+
+15. **`unrs-resolver` build script denied** (`allowBuilds` in `pnpm-workspace.yaml`). *Why:* pnpm 12 blocks unapproved install scripts; the package (via eslint-config-next) ships prebuilt binaries, so its postinstall is unnecessary.

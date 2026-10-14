@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typescript:
+    name: TS lint + vitest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint:ts
+      - run: pnpm test
+
+  python:
+    name: ruff + pytest
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: vyuh
+          POSTGRES_PASSWORD: vyuh
+          POSTGRES_DB: vyuh_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U vyuh -d vyuh_test"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    defaults:
+      run:
+        working-directory: apps/api
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://vyuh:vyuh@localhost:5432/vyuh_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest
+
+  schemas:
+    name: gen:schemas produces no diff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: pnpm install --frozen-lockfile
+      - run: uv python install 3.12
+      - run: uv sync --locked
+        working-directory: apps/api
+      - run: pnpm gen:schemas
+      - name: Fail if generated files changed
+        run: |
+          git status --porcelain
+          git diff --exit-code -- packages/shared/schema apps/api/app/schemas/generated
+          test -z "$(git status --porcelain -- packages/shared/schema apps/api/app/schemas/generated)"

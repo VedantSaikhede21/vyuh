@@ -97,7 +97,10 @@ function LoginForm() {
             </>
           )}
           {error ? (
-            <p role="alert" className="rounded-md border border-destructive px-3 py-2 text-sm text-destructive">
+            <p
+              role="alert"
+              className="rounded-md border border-destructive px-3 py-2 text-sm text-destructive"
+            >
               {error}
             </p>
           ) : null}

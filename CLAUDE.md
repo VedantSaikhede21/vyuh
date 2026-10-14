@@ -305,9 +305,9 @@ docker compose up        # offline full stack
 - [ ] 5 AI layer
 - [ ] 6 Polish & deploy
 
-- Current phase: **0 — not started**
-- Last completed:
-- Next up: Phase 0 scaffold
-- Known issues:
+- Current phase: **0 — Foundations: all done-criteria pass locally; CI not yet run (branch `feat/c-phase0-foundations` not pushed)**
+- Last completed: Phase 0 scaffold — shared schemas + codegen, sim-core RNG, API skeleton (auth, RBAC, migrations, seed), web (login, /train), CI workflow. Verified 2026-10-14: `pnpm lint`, `pnpm test` (38), `uv run pytest` (40), `pnpm gen:schemas` no diff, `next build`, `pnpm dev` + dev-login → `/auth/me`.
+- Next up: push branch, confirm CI green, merge → tick Phase 0; then Phase 1 (needs approval)
+- Known issues: the old pre-move container `sih-2026-postgres-1` (from the OneDrive copy) holds port 5432, so `docker compose up` from this repo fails until it is stopped. It has the same DBs and credentials, and is in use for now. Web auth guard is client-side only (tech debt, decision 9).
 - Open decisions:
 - Open ideas (parked, not approved):

@@ -10,7 +10,8 @@ const PublicEnv = z
     guestMode: z.boolean(),
   })
   .refine((e) => e.authMode === 'local' || (e.supabaseUrl !== '' && e.supabaseAnonKey !== ''), {
-    message: 'NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are required in supabase mode',
+    message:
+      'NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are required in supabase mode',
   });
 
 export type PublicEnv = z.infer<typeof PublicEnv>;
