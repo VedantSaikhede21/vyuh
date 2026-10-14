@@ -36,10 +36,13 @@ export interface BuildingIndex {
 /** Even-odd ray-crossing test; the ring may be open or closed. */
 export function pointInRing(ring: readonly (readonly [number, number])[], x: number, z: number) {
   let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, zi] = ring[i]!;
-    const [xj, zj] = ring[j]!;
+  let prev = ring[ring.length - 1];
+  for (const cur of ring) {
+    if (prev === undefined) break;
+    const [xi, zi] = cur;
+    const [xj, zj] = prev;
     if (zi > z !== zj > z && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) inside = !inside;
+    prev = cur;
   }
   return inside;
 }
@@ -94,8 +97,8 @@ export function buildingTopAt(index: BuildingIndex, x: number, z: number): numbe
   if (list === undefined) return null;
   let top: number | null = null;
   for (const i of list) {
-    const b = index.buildings[i]!;
-    if (x < b.minX || x > b.maxX || z < b.minZ || z > b.maxZ) continue;
+    const b = index.buildings[i];
+    if (b === undefined || x < b.minX || x > b.maxX || z < b.minZ || z > b.maxZ) continue;
     if (pointInRing(b.ring, x, z) && (top === null || b.topY > top)) top = b.topY;
   }
   return top;
