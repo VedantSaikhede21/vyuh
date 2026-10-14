@@ -117,7 +117,15 @@ function Session({ sessionId }: { sessionId: string }) {
         />
       );
     case 'result':
-      return <ResultScreen score={phase.score} scenarioName={phase.scenarioName} />;
+      return (
+        <ResultScreen
+          score={phase.score}
+          scenarioName={phase.scenarioName}
+          scenarioId={phase.scenarioId}
+          mode={phase.mode}
+          ended={phase.ended}
+        />
+      );
     case 'interrupted':
       return (
         <Panel className="mx-auto max-w-xl">

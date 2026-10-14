@@ -1,6 +1,6 @@
 'use client';
 
-import type { Scenario, Score, SessionMode } from '@vyuh/shared';
+import type { Scenario, Score, SessionEndReason, SessionMode } from '@vyuh/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, api, isRetryable } from '@/lib/api';
 import { loadWorld } from '@/lib/terrain/load-world';
@@ -16,7 +16,16 @@ export type Phase =
   | { kind: 'preparing' }
   | { kind: 'running'; runtime: SimRuntime }
   | { kind: 'submitting'; runtime: SimRuntime }
-  | { kind: 'result'; score: Score; scenarioName: string }
+  | {
+      kind: 'result';
+      score: Score;
+      scenarioName: string;
+      /** DB id of the scenario, for Retry / Next. */
+      scenarioId: string;
+      mode: SessionMode;
+      /** How the run ended — known when it was just played here, not after a reload. */
+      ended: { reason: SessionEndReason; tMs: number } | null;
+    }
   | { kind: 'interrupted' }
   | { kind: 'error'; message: string; retry?: () => void };
 
@@ -41,13 +50,22 @@ export function useTrainingSession(sessionId: string) {
   const [upload, setUpload] = useState<BatcherStatus | null>(null);
   const batcherRef = useRef<EventBatcher | null>(null);
   const frames = useRef({ count: 0, ms: 0 });
+  const meta = useRef<{ scenarioId: string; mode: SessionMode } | null>(null);
 
   useEffect(() => {
     const ctrl = new AbortController();
     (async () => {
       const session = await api.getSession(sessionId, ctrl.signal);
+      meta.current = { scenarioId: session.scenarioId, mode: session.mode };
       if (session.status === 'COMPLETED' && session.score) {
-        setPhase({ kind: 'result', score: session.score, scenarioName: session.scenarioName });
+        setPhase({
+          kind: 'result',
+          score: session.score,
+          scenarioName: session.scenarioName,
+          scenarioId: session.scenarioId,
+          mode: session.mode,
+          ended: null,
+        });
         return;
       }
       if (session.status !== 'CREATED') {
@@ -105,7 +123,15 @@ export function useTrainingSession(sessionId: string) {
             ...(gpu ? { gpu } : {}),
             browser: navigator.userAgent.slice(0, 200),
           });
-          setPhase({ kind: 'result', score, scenarioName: runtime.scenario.name });
+          const st = runtime.sim.getState();
+          setPhase({
+            kind: 'result',
+            score,
+            scenarioName: runtime.scenario.name,
+            scenarioId: meta.current?.scenarioId ?? '',
+            mode: runtime.mode,
+            ended: st.endReason ? { reason: st.endReason, tMs: st.clock.tMs } : null,
+          });
         } catch (err) {
           setPhase({ kind: 'error', message: message(err), retry: () => void run() });
         }
