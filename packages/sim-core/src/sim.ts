@@ -25,15 +25,21 @@ import {
 import { createLosCache } from './los.ts';
 import { createRng, type RandomStream } from './rng.ts';
 import {
+  EO_ACQUIRE_FRAME_FRACTION,
+  EO_ACQUIRE_MS,
   EO_EPISODE_RESET_MS,
   EO_LEVEL_RANK,
+  EO_TRACK_DROP_MS,
+  EO_TRACK_JITTER_FOV,
+  eoHfovDeg,
   eoLevel,
   followPointing,
+  frameOffset,
   inEoFrustum,
   pointingTo,
   type EoCameraState,
 } from './sensors/eoir.ts';
-import { radarScan } from './sensors/radar.ts';
+import { gaussian, radarScan } from './sensors/radar.ts';
 import { computeEnvironment, type SimEnvironment } from './sun.ts';
 import { sampleHeight, type Heightmap } from './terrain.ts';
 import { createWorld, isWorld, type World } from './world.ts';
@@ -156,7 +162,7 @@ export function createSim(
       .map((e) => createEffectorState(e, sampleHeight(terrain, e.x, e.z))),
     sensorPositions,
     selectedTrackId: null,
-    camera: { azDeg: 0, elDeg: 0, zoom: 1, mode: 'DAY', lockTrackId: null },
+    camera: { azDeg: 0, elDeg: 0, zoom: 1, mode: 'DAY', lockTrackId: null, trackMode: 'MANUAL' },
   };
   const contactsById = new Map(state.contacts.map((c) => [c.id, c]));
   const tracksById = new Map<string, TrackState>();
@@ -232,13 +238,21 @@ export function createSim(
         state.selectedTrackId = cmd.trackId;
         break;
       case 'CAMERA_SLEWED':
+        if (state.camera.trackMode === 'TRACK' && cmd.trackId === state.camera.lockTrackId) {
+          // Zoom / mode change on the tracked target: the EO tracker keeps holding it.
+          state.camera.zoom = cmd.payload.zoom;
+          state.camera.mode = cmd.payload.mode ?? state.camera.mode;
+          break;
+        }
         state.camera = {
           azDeg: cmd.payload.azDeg,
           elDeg: cmd.payload.elDeg,
           zoom: cmd.payload.zoom,
           mode: cmd.payload.mode ?? state.camera.mode,
           lockTrackId: cmd.trackId ?? null,
+          trackMode: cmd.trackId !== undefined ? 'CUE' : 'MANUAL',
         };
+        resetEoTracker();
         break;
       case 'MARKED_DETECTED':
         if (track) track.markedDetected = true;
@@ -391,12 +405,76 @@ export function createSim(
   /** Per contact: highest level emitted in the current pointing episode, and when it last had one. */
   const eoEpisodes = new Map<string, { rank: number; lastSeenMs: number }>();
 
-  function followLock(): void {
+  // ---- EO video auto-track (decision 52) -------------------------------------
+  const eoTrackStream: RandomStream = rng.stream('eo-track');
+  const eoTracker = {
+    contactId: null as string | null,
+    centredSinceMs: null as number | null,
+    noLevelSinceMs: null as number | null,
+  };
+
+  function resetEoTracker(): void {
+    eoTracker.contactId = null;
+    eoTracker.centredSinceMs = null;
+    eoTracker.noLevelSinceMs = null;
+  }
+
+  /** EO level of a contact in the current pointing (frustum + LOS), or null. */
+  function eoLevelNow(c: ContactState, spec: ContactSpec): EoLevel | null {
+    if (eo === undefined || eoPos === undefined) return null;
+    if (!inEoFrustum(eo, state.camera, eoPos, c.pos)) return null;
+    const level = eoLevel(
+      eo,
+      state.camera,
+      { ...CLASS_PROFILES[spec.class], rangeM: slantRange(eoPos, c.pos) },
+      { isNight: state.environment.isNight, visibilityM: state.environment.weather.visibilityM },
+    );
+    if (level === null) return null;
+    return los.visible(state.clock.tick, eo.id, eoPos, c.id, c.pos) ? level : null;
+  }
+
+  /** TRACK -> CUE; with no live radar track to fall back on, -> MANUAL. */
+  function dropTrack(): void {
+    resetEoTracker();
+    const id = state.camera.lockTrackId;
+    const live = id !== null && tracksById.get(id)?.status === 'ACTIVE';
+    state.camera.trackMode = live ? 'CUE' : 'MANUAL';
+    if (!live) state.camera.lockTrackId = null;
+  }
+
+  /** One tick of the EO tracker; false when it lost the contact. */
+  function holdTrack(tMs: number): boolean {
+    if (eo === undefined || eoPos === undefined || eoTracker.contactId === null) return false;
+    const c = contactsById.get(eoTracker.contactId);
+    const spec = specs.get(eoTracker.contactId);
+    if (c === undefined || spec === undefined || c.status !== 'ACTIVE') return false;
+    // Break checks use last tick's pointing: did the contact leave the frame or the LOS?
+    if (!inEoFrustum(eo, state.camera, eoPos, c.pos)) return false;
+    if (!los.visible(state.clock.tick, eo.id, eoPos, c.id, c.pos)) return false;
+    if (eoLevelNow(c, spec) === null) {
+      eoTracker.noLevelSinceMs ??= tMs;
+      if (tMs - eoTracker.noLevelSinceMs > EO_TRACK_DROP_MS) return false;
+    } else {
+      eoTracker.noLevelSinceMs = null;
+    }
+    // Closed-loop tracker: aim at the contact itself plus a small jitter (2 draws per tick).
+    const sigma = EO_TRACK_JITTER_FOV * eoHfovDeg(eo, state.camera.zoom);
+    const aim = pointingTo(eoPos, c.pos);
+    const az = aim.azDeg + gaussian(eoTrackStream) * sigma;
+    state.camera.azDeg = ((az % 360) + 360) % 360;
+    state.camera.elDeg = aim.elDeg + gaussian(eoTrackStream) * sigma;
+    return true;
+  }
+
+  /** CUE: follow the filtered radar estimate; hand over to TRACK once the contact is centred. */
+  function followLock(tMs: number): void {
     const id = state.camera.lockTrackId;
     if (id === null || eoPos === undefined) return;
     const track = tracksById.get(id);
     if (track === undefined || track.status !== 'ACTIVE') {
       state.camera.lockTrackId = null;
+      state.camera.trackMode = 'MANUAL';
+      resetEoTracker();
       return;
     }
     const target = {
@@ -405,6 +483,37 @@ export function createSim(
       z: track.pos.z,
     };
     followPointing(state.camera, pointingTo(eoPos, target), TICK_S);
+
+    const c = contactsById.get(track.contactId);
+    const spec = specs.get(track.contactId);
+    const offset =
+      c !== undefined && eo !== undefined ? frameOffset(eo, state.camera, eoPos, c.pos) : null;
+    const centred =
+      c !== undefined &&
+      spec !== undefined &&
+      offset !== null &&
+      Math.abs(offset[0]) <= EO_ACQUIRE_FRAME_FRACTION &&
+      Math.abs(offset[1]) <= EO_ACQUIRE_FRAME_FRACTION &&
+      eoLevelNow(c, spec) !== null;
+    if (!centred) {
+      eoTracker.centredSinceMs = null;
+      return;
+    }
+    eoTracker.centredSinceMs ??= tMs;
+    if (tMs - eoTracker.centredSinceMs >= EO_ACQUIRE_MS) {
+      state.camera.trackMode = 'TRACK';
+      eoTracker.contactId = track.contactId;
+      eoTracker.centredSinceMs = null;
+      eoTracker.noLevelSinceMs = null;
+    }
+  }
+
+  function updateCamera(tMs: number): void {
+    if (state.camera.trackMode === 'TRACK') {
+      if (holdTrack(tMs)) return;
+      dropTrack();
+    }
+    if (state.camera.trackMode === 'CUE') followLock(tMs);
   }
 
   function liveTrackFor(contactId: string): string | undefined {
@@ -466,7 +575,7 @@ export function createSim(
 
     scanRadars(tMs);
     predictTracks(tMs);
-    followLock();
+    updateCamera(tMs);
     scanEo(tMs);
 
     if (tMs >= state.durationMs) {

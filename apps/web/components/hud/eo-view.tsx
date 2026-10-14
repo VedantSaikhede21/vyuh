@@ -13,7 +13,7 @@ import { eoSensor, type Commands } from '@/lib/sim/commands';
 import { swapToIr } from '@/lib/sim/ir-materials';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useUiStore } from '@/lib/sim/ui-store';
-import { pad3 } from '@/lib/strings';
+import { TRACK_MODE_LABEL, pad3 } from '@/lib/strings';
 
 // EO/IR view (SPEC §6.2). The camera on the EO mast renders the world into a
 // 640×360 target (the sensor resolution, so what the trainee sees matches the
@@ -79,6 +79,7 @@ interface EoFrame {
 function renderEoFrame({ rt, mast, fovMax, eoScene, camera, target, material, state }: EoFrame) {
   const ui = useUiStore.getState();
   const simCam = rt.sim.getState().camera;
+  if (ui.eo.trackMode !== simCam.trackMode) ui.setEo({ trackMode: simCam.trackMode });
   let { azDeg, elDeg } = ui.eo;
   if (simCam.lockTrackId) {
     // Locked: the sim slews and follows; mirror it so the readout and the next drag agree.
@@ -198,7 +199,8 @@ function EoReadout() {
         FOV {eo.hfovDeg.toFixed(1)}°
       </div>
       <div className="absolute bottom-1 left-1.5 bg-black/60 px-1">
-        {eo.lockTrackId ? `LOCK ${eo.lockTrackId}` : 'MANUAL · drag to slew'} · T day/IR
+        {TRACK_MODE_LABEL[eo.trackMode]}
+        {eo.lockTrackId ? ` ${eo.lockTrackId}` : ' · drag to slew'} · T day/IR
       </div>
     </div>
   );

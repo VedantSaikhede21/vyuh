@@ -131,7 +131,14 @@ describe('EO/IR Johnson criteria (SPEC §6.2)', () => {
 });
 
 describe('EO pointing', () => {
-  const cam: EoCameraState = { azDeg: 0, elDeg: 0, zoom: 1, mode: 'DAY', lockTrackId: null };
+  const cam: EoCameraState = {
+    azDeg: 0,
+    elDeg: 0,
+    zoom: 1,
+    mode: 'DAY',
+    lockTrackId: null,
+    trackMode: 'MANUAL',
+  };
   const from = { x: 0, y: 0, z: 0 };
   const at = (azDeg: number, elDeg: number, r = 1000) => {
     const a = (azDeg * Math.PI) / 180;

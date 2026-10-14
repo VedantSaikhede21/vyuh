@@ -81,9 +81,14 @@ function Session({ sessionId }: { sessionId: string }) {
   }, [runtime]);
   useEffect(() => {
     if (runtime)
-      useUiStore
-        .getState()
-        .reset({ azDeg: 0, elDeg: 0, hfovDeg: eoFov, lockTrackId: null, mode: 'DAY' });
+      useUiStore.getState().reset({
+        azDeg: 0,
+        elDeg: 0,
+        hfovDeg: eoFov,
+        lockTrackId: null,
+        mode: 'DAY',
+        trackMode: 'MANUAL',
+      });
   }, [runtime, eoFov]);
 
   switch (phase.kind) {
