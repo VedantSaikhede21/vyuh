@@ -353,6 +353,14 @@ Modules: `rng.ts`, `clock.ts`, `coords.ts`, `terrain.ts` (heightmap sampling + L
 
 Outcomes are rolled with the seeded `effectors` RNG stream and emitted as `RESPONSE_OUTCOME`.
 
+**EW rules (Phase 2B, decision 54):**
+- **Geometry:** EW_JAM and EW_SPOOF act on a **±10° sector** from the effector toward the ordered track's estimate, out to `rangeM` (range is checked to the ordered contact first: `OUT_OF_RANGE` spends nothing).
+- **Who is affected:** every susceptible, active, not-yet-defeated contact in the sector, in id order — jam: `RF_MANUAL` (P = 0.9 each); spoof: `AUTONOMOUS_GNSS` (P = 0.8 each). Friendlies and civilians are included (collateral). Rolls are drawn only when the effector fires.
+- **Result** for the ordered contact: `NEUTRALISED` if defeated, `MISSED` if susceptible but the roll failed, `NO_EFFECT` if its link is not susceptible (cooldown and ammo are still consumed); `COOLDOWN` / `NO_AMMO` / `OUT_OF_RANGE` spend nothing. Other affected contacts are listed in `collateral.contactIds`; every affected contact gets `CONTACT_NEUTRALISED {by}`.
+- **Reactions:** jam → `ATTACK_RUN` / `SWARM_SATURATION` hover 5 s then land; all other behaviours return to their first waypoint and despawn. Spoof → the remaining route drifts sideways, growing to ~400 m by its end, so a dive misses the asset. A defeated contact keeps flying visibly, can never reach an asset, and counts as resolved for `ALL_RESOLVED`.
+- **Not ROE-gated:** EW is non-kinetic; ROE and `NO_KINETIC` zones restrict only INTERCEPT.
+- **INTERCEPT on a contact already defeated by EW** returns `NO_EFFECT` and uses no round.
+
 ---
 
 ## §9. Scoring

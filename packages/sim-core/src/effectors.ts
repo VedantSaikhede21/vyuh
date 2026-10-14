@@ -1,11 +1,20 @@
-import type { EffectorConfig, EffectorKind, ResponseResult, Roe } from '@vyuh/shared';
-import type { ContactState } from './contacts.ts';
-import { slantRange, type Vec3 } from './coords.ts';
+import type {
+  Behaviour,
+  ContactSpec,
+  EffectorConfig,
+  EffectorKind,
+  ResponseResult,
+  Roe,
+} from '@vyuh/shared';
+import { startDrift } from './behaviours/link-loss.ts';
+import type { ContactControl, ContactState } from './contacts.ts';
+import { angleDiffDeg, bearingDeg, slantRange, type Vec3 } from './coords.ts';
 import type { RandomStream } from './rng.ts';
 import type { TrackState } from './tracks.ts';
 
-// Abstract effectors (SPEC §8). Phase 1 implements INTERCEPT only: range,
-// ammo, cooldown and a range-based Pkill rolled on the `effectors` stream.
+// Abstract effectors (SPEC §8): INTERCEPT (range-based Pkill, ROE-gated) and
+// EW_JAM / EW_SPOOF (a ±10° sector, not ROE-gated; decision 54). All rolls use
+// the `effectors` stream and are drawn only when the effector actually fires.
 
 export interface EffectorState {
   readonly id: string;
@@ -63,7 +72,8 @@ export function resolveIntercept(
   if (!roeAllowsIntercept(roe, track)) return 'BLOCKED_BY_ROE';
   if (tMs < eff.readyAtMs) return 'COOLDOWN';
   if (eff.ammo !== null && eff.ammo <= 0) return 'NO_AMMO';
-  if (contact.status !== 'ACTIVE') return 'NO_EFFECT';
+  // A contact already defeated by EW is not worth a round (decision 54).
+  if (contact.status !== 'ACTIVE' || contact.defeated) return 'NO_EFFECT';
   const range = slantRange(eff.pos, contact.pos);
   if (range > eff.rangeM) return 'OUT_OF_RANGE';
 
@@ -75,4 +85,83 @@ export function resolveIntercept(
     return 'NEUTRALISED';
   }
   return 'MISSED';
+}
+
+// ---- EW (SPEC §8, decision 54) ---------------------------------------------------
+
+/** Half-width of the jam / spoof sector around the bearing to the ordered track. */
+export const EW_SECTOR_HALF_DEG = 10;
+export const JAM_P = 0.9;
+export const SPOOF_P = 0.8;
+
+/** Link-loss reaction to a successful jam, by behaviour (representative failsafes). */
+export function jamReaction(behaviour: Behaviour): ContactControl {
+  return behaviour === 'ATTACK_RUN' || behaviour === 'SWARM_SATURATION' ? 'HOVER_LAND' : 'RTH';
+}
+
+export interface EwOutcome {
+  readonly result: ResponseResult;
+  /** Every contact the effector defeated, in id order (the ordered one included). */
+  readonly affected: readonly string[];
+}
+
+/**
+ * Resolve an EW_JAM or EW_SPOOF order. The sector is ±10° around the bearing
+ * from the effector to the ordered track's estimate, out to rangeM. Every
+ * susceptible contact in it (jam: RF_MANUAL; spoof: AUTONOMOUS_GNSS) — friendly
+ * and civilian included — is rolled in id order; a success defeats it (jam →
+ * hover-land or RTH, spoof → drift). Result for the ordered contact: NEUTRALISED
+ * if defeated, MISSED if susceptible but the roll failed, NO_EFFECT otherwise.
+ */
+export function resolveEw(
+  eff: EffectorState,
+  track: Readonly<TrackState>,
+  contacts: readonly ContactState[],
+  specs: ReadonlyMap<string, ContactSpec>,
+  tMs: number,
+  stream: RandomStream,
+): EwOutcome {
+  const none = (result: ResponseResult): EwOutcome => ({ result, affected: [] });
+  if (tMs < eff.readyAtMs) return none('COOLDOWN');
+  if (eff.ammo !== null && eff.ammo <= 0) return none('NO_AMMO');
+  const target = contacts.find((c) => c.id === track.contactId);
+  if (target === undefined || target.status !== 'ACTIVE' || target.defeated) {
+    return none('NO_EFFECT');
+  }
+  if (slantRange(eff.pos, target.pos) > eff.rangeM) return none('OUT_OF_RANGE');
+
+  if (eff.ammo !== null) eff.ammo -= 1;
+  eff.readyAtMs = tMs + eff.cooldownMs;
+  const link = eff.kind === 'EW_JAM' ? 'RF_MANUAL' : 'AUTONOMOUS_GNSS';
+  const p = eff.kind === 'EW_JAM' ? JAM_P : SPOOF_P;
+  const sectorDeg = bearingDeg(eff.pos, track.pos);
+  const affected: string[] = [];
+  let targetRolled = false;
+  for (const c of contacts) {
+    const spec = specs.get(c.id);
+    if (spec === undefined || c.status !== 'ACTIVE' || c.defeated) continue;
+    if (spec.controlLink !== link) continue;
+    if (slantRange(eff.pos, c.pos) > eff.rangeM) continue;
+    if (Math.abs(angleDiffDeg(bearingDeg(eff.pos, c.pos), sectorDeg)) > EW_SECTOR_HALF_DEG) {
+      continue;
+    }
+    if (c.id === target.id) targetRolled = true;
+    if (stream.next() >= p) continue;
+    affected.push(c.id);
+    c.defeated = true;
+    c.holdUntilMs = null;
+    c.diving = false;
+    if (eff.kind === 'EW_JAM') {
+      c.control = jamReaction(spec.behaviour);
+    } else {
+      c.control = 'DRIFT';
+      startDrift(c, spec, tMs);
+    }
+  }
+  const result = affected.includes(target.id)
+    ? 'NEUTRALISED'
+    : targetRolled
+      ? 'MISSED'
+      : 'NO_EFFECT';
+  return { result, affected };
 }
