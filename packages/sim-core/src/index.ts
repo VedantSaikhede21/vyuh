@@ -55,3 +55,28 @@ export {
 export type { EffectorState } from './effectors.ts';
 export { commandFromEvent, createSim } from './sim.ts';
 export type { CameraState, DispatchResult, Sim, SimCommand, SimOptions, SimState } from './sim.ts';
+export {
+  BUILDING_CELL_M,
+  buildingTopAt,
+  createBuildingIndex,
+  parseBuildingsGeoJson,
+  pointInRing,
+} from './buildings.ts';
+export type { Building, BuildingFootprint, BuildingIndex } from './buildings.ts';
+export {
+  LOS_OWN_SITE_M,
+  LOS_STEP_M,
+  LOS_TOLERANCE_M,
+  createLosCache,
+  hasLineOfSight,
+} from './los.ts';
+export type { LosCache } from './los.ts';
+export {
+  PROCEDURAL_HILLS_META,
+  builtinWorld,
+  createWorld,
+  decodeHeightmapU16,
+  isWorld,
+  worldFromPreset,
+} from './world.ts';
+export type { World } from './world.ts';

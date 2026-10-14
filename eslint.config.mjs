@@ -11,6 +11,7 @@ export default tseslint.config(
       '**/dist/**',
       '**/coverage/**',
       'apps/api/**',
+      'scripts/terrain/.venv/**',
       'apps/web/**',
       'packages/shared/schema/**',
     ],

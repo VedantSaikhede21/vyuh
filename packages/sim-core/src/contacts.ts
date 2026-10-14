@@ -37,6 +37,8 @@ export const DIVE_START_RATIO = 1.5;
 
 export interface ContactStepContext {
   readonly terrain: Heightmap;
+  /** Preset origin elevation (m MSL), for `altRef: 'MSL'` waypoints. */
+  readonly originElevM?: number;
   /** Sorted by id. */
   readonly assets: readonly Asset[];
   readonly tMs: number;
@@ -57,16 +59,37 @@ export function createContactState(spec: ContactSpec): ContactState {
   };
 }
 
-function waypointPos(terrain: Heightmap, wp: Waypoint): Vec3 {
-  return { x: wp.x, y: sampleHeight(terrain, wp.x, wp.z) + wp.y, z: wp.z };
+/** Waypoint height in the scenario frame: AGL over the terrain, or MSL − origin elevation. */
+function waypointY(terrain: Heightmap, wp: Waypoint, originElevM: number): number {
+  return wp.altRef === 'MSL' ? wp.y - originElevM : sampleHeight(terrain, wp.x, wp.z) + wp.y;
 }
 
-function spawn(c: ContactState, spec: ContactSpec, terrain: Heightmap): void {
+function waypointPos(terrain: Heightmap, wp: Waypoint, originElevM: number): Vec3 {
+  return { x: wp.x, y: waypointY(terrain, wp, originElevM), z: wp.z };
+}
+
+/** Height above ground the contact should hold at (x, z) while flying to wp. */
+function targetAglAt(
+  terrain: Heightmap,
+  wp: Waypoint,
+  originElevM: number,
+  x: number,
+  z: number,
+): number {
+  if (wp.altRef !== 'MSL') return wp.y;
+  return Math.max(wp.y - originElevM - sampleHeight(terrain, x, z), 0);
+}
+
+function spawn(c: ContactState, spec: ContactSpec, ctx: ContactStepContext): void {
   const first = spec.path[0];
   if (first === undefined) throw new RangeError(`Contact ${spec.id} has an empty path`);
   c.status = 'ACTIVE';
-  c.agl = first.y;
-  c.pos = waypointPos(terrain, first);
+  c.agl = targetAglAt(ctx.terrain, first, ctx.originElevM ?? 0, first.x, first.z);
+  c.pos = {
+    x: first.x,
+    y: sampleHeight(ctx.terrain, first.x, first.z) + c.agl,
+    z: first.z,
+  };
   c.speedMps = 0;
   c.wpIndex = 1;
   const next = spec.path[1];
@@ -128,7 +151,7 @@ export function stepContact(
   const out: EventDraft[] = [];
   if (c.status === 'PENDING') {
     if (ctx.tMs >= spec.spawnTMs) {
-      spawn(c, spec, ctx.terrain);
+      spawn(c, spec, ctx);
       out.push({ tMs: ctx.tMs, type: 'CONTACT_SPAWNED', contactId: c.id, payload: {} });
     }
     return out;
@@ -154,14 +177,15 @@ export function stepContact(
 
   const profile = CLASS_PROFILES[spec.class];
   const speed = Math.min(wp.speedMps, profile.maxSpeedMps);
-  const target = waypointPos(ctx.terrain, wp);
+  const target = waypointPos(ctx.terrain, wp, ctx.originElevM ?? 0);
   const step = speed * ctx.dtS;
   c.speedMps = speed;
 
   if (
     wp.action === 'DIVE' &&
     !c.diving &&
-    horizontalRange(c.pos, target) <= Math.max(c.agl - wp.y, 10) * DIVE_START_RATIO
+    horizontalRange(c.pos, target) <=
+      Math.max(wp.altRef === 'MSL' ? c.pos.y - target.y : c.agl - wp.y, 10) * DIVE_START_RATIO
   ) {
     c.diving = true;
   }
@@ -192,7 +216,8 @@ export function stepContact(
   const x = c.pos.x + east * step;
   const z = c.pos.z + north * step;
   // Cruise altitude is held toward a DIVE waypoint; the dive itself descends.
-  const targetAgl = wp.action === 'DIVE' ? c.agl : wp.y;
+  const targetAgl =
+    wp.action === 'DIVE' ? c.agl : targetAglAt(ctx.terrain, wp, ctx.originElevM ?? 0, x, z);
   const maxClimb = profile.maxClimbMps * ctx.dtS;
   c.agl += Math.max(-maxClimb, Math.min(maxClimb, targetAgl - c.agl));
   c.pos = { x, y: sampleHeight(ctx.terrain, x, z) + c.agl, z };

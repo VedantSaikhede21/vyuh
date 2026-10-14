@@ -22,6 +22,7 @@ import {
 import { createRng, type RandomStream } from './rng.ts';
 import { radarScan } from './sensors/radar.ts';
 import { sampleHeight, type Heightmap } from './terrain.ts';
+import { createWorld, isWorld, type World } from './world.ts';
 import {
   createScanHistory,
   formatTrackId,
@@ -92,7 +93,14 @@ export function commandFromEvent(ev: SimEvent): SimCommand | null {
 const byId = <T extends { id: string }>(a: T, b: T): number =>
   a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 
-export function createSim(scenario: Scenario, terrain: Heightmap, opts: SimOptions = {}): Sim {
+export function createSim(
+  scenario: Scenario,
+  worldOrHeightmap: World | Heightmap,
+  opts: SimOptions = {},
+): Sim {
+  const world = isWorld(worldOrHeightmap) ? worldOrHeightmap : createWorld(worldOrHeightmap);
+  const terrain = world.heightmap;
+  const originElevM = world.meta?.originElevM ?? 0;
   const rng = createRng(scenario.seed);
   const effectorStream: RandomStream = rng.stream('effectors');
   const log = createEventLog();
@@ -335,7 +343,7 @@ export function createSim(scenario: Scenario, terrain: Heightmap, opts: SimOptio
 
     for (const cmd of queue.splice(0)) applyCommand(cmd, tMs);
 
-    const ctx = { terrain, assets, tMs, dtS: TICK_S };
+    const ctx = { terrain, originElevM, assets, tMs, dtS: TICK_S };
     for (const contact of state.contacts) {
       const spec = specs.get(contact.id);
       if (spec !== undefined) for (const ev of stepContact(contact, spec, ctx)) emit(ev);
