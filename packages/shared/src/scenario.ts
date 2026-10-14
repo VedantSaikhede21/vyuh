@@ -251,6 +251,12 @@ export type ContactSpec = z.infer<typeof ContactSpec>;
 
 const THREAT_CLASSES: ReadonlySet<string> = new Set(ThreatClass.options);
 const NON_THREAT_CLASSES: ReadonlySet<string> = new Set(NonThreatClass.options);
+/** Links with no RF emission the RF detector could hear (SPEC §6.3). */
+export const SILENT_LINKS: ReadonlySet<string> = new Set([
+  'AUTONOMOUS_GNSS',
+  'FIBRE_OPTIC',
+  'NONE',
+]);
 
 function duplicates(ids: readonly string[]): string[] {
   const seen = new Set<string>();
@@ -314,6 +320,20 @@ export const Scenario = named(
             code: 'custom',
             path: ['contacts', i, 'spawnTMs'],
             message: 'Spawns after scenario ends',
+          });
+        }
+        if (c.emissions.rfActive && SILENT_LINKS.has(c.controlLink)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['contacts', i, 'emissions', 'rfActive'],
+            message: `rfActive must be false for control link ${c.controlLink}`,
+          });
+        }
+        if (c.emissions.friendlyIdCode !== undefined && !c.emissions.rfActive) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['contacts', i, 'emissions', 'friendlyIdCode'],
+            message: 'friendlyIdCode requires rfActive',
           });
         }
         if (c.despawnTMs !== undefined && c.despawnTMs <= c.spawnTMs) {

@@ -1,3 +1,4 @@
+export { SIM_VERSION } from './version.ts';
 export { createRng, deriveStreamSeed, mulberry32 } from './rng.ts';
 export type { RandomStream, Rng } from './rng.ts';
 export { TICK_HZ, TICK_MS, TICK_S, advanceClock, ceilToTick, createClock } from './clock.ts';

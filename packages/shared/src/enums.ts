@@ -38,6 +38,13 @@ export const ControlLink = named(
 );
 export type ControlLink = z.infer<typeof ControlLink>;
 
+/** Physical kind of a contact class (threat_types.category, SPEC §10). */
+export const ContactCategory = named(
+  'ContactCategory',
+  z.enum(['DRONE', 'BIRD', 'MANNED_AIRCRAFT']),
+);
+export type ContactCategory = z.infer<typeof ContactCategory>;
+
 export const Behaviour = named(
   'Behaviour',
   z.enum([
@@ -211,7 +218,16 @@ export type ClassificationResult = z.infer<typeof ClassificationResult>;
 /** UNRESOLVED: a threat neither neutralised nor at the asset when the session ended. */
 export const ContactOutcome = named(
   'ContactOutcome',
-  z.enum(['NEUTRALISED', 'LEAKED', 'UNRESOLVED', 'IGNORED_OK', 'WRONGLY_ENGAGED', 'FRATRICIDE']),
+  z.enum([
+    'NEUTRALISED',
+    'LEAKED',
+    'UNRESOLVED',
+    'IGNORED_OK',
+    'WRONGLY_ENGAGED',
+    'FRATRICIDE',
+    'FRIENDLY_JAMMED',
+    'CIVILIAN_JAMMED',
+  ]),
 );
 export type ContactOutcome = z.infer<typeof ContactOutcome>;
 

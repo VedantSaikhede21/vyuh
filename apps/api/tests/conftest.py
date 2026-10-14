@@ -151,7 +151,7 @@ def start_session(
     def _start(user: User, scenario: Scenario, mode: str = "PRACTICE") -> str:
         response = client.post(
             "/api/v1/sessions",
-            json={"scenarioId": str(scenario.id), "mode": mode},
+            json={"scenarioId": str(scenario.id), "mode": mode, "simVersion": 1},
             headers=auth_header(user),
         )
         assert response.status_code == 201, response.text

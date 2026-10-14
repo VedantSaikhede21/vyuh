@@ -1,0 +1,139 @@
+{
+  "_generated": "GENERATED FILE — DO NOT EDIT. Source: packages/shared/src/threats.ts; run `pnpm gen:schemas`.",
+  "classes": {
+    "QUAD_SMALL": {
+      "isThreat": true,
+      "sizeM": 0.35,
+      "rcsM2": 0.01,
+      "maxSpeedMps": 18,
+      "maxTurnRateDegS": 120,
+      "maxClimbMps": 5,
+      "thermalContrast": 0.45,
+      "typicalLinks": [
+        "RF_MANUAL",
+        "AUTONOMOUS_GNSS"
+      ],
+      "category": "DRONE"
+    },
+    "QUAD_HEAVY": {
+      "isThreat": true,
+      "sizeM": 1,
+      "rcsM2": 0.05,
+      "maxSpeedMps": 15,
+      "maxTurnRateDegS": 60,
+      "maxClimbMps": 4,
+      "thermalContrast": 0.6,
+      "typicalLinks": [
+        "RF_MANUAL",
+        "AUTONOMOUS_GNSS"
+      ],
+      "category": "DRONE"
+    },
+    "FPV": {
+      "isThreat": true,
+      "sizeM": 0.25,
+      "rcsM2": 0.005,
+      "maxSpeedMps": 40,
+      "maxTurnRateDegS": 200,
+      "maxClimbMps": 15,
+      "thermalContrast": 0.4,
+      "typicalLinks": [
+        "RF_MANUAL",
+        "FIBRE_OPTIC"
+      ],
+      "category": "DRONE"
+    },
+    "FIXED_WING_SMALL": {
+      "isThreat": true,
+      "sizeM": 2,
+      "rcsM2": 0.08,
+      "maxSpeedMps": 28,
+      "maxTurnRateDegS": 25,
+      "maxClimbMps": 5,
+      "thermalContrast": 0.7,
+      "typicalLinks": [
+        "AUTONOMOUS_GNSS",
+        "RF_MANUAL"
+      ],
+      "category": "DRONE"
+    },
+    "LOITERING_GENERIC": {
+      "isThreat": true,
+      "sizeM": 2.5,
+      "rcsM2": 0.1,
+      "maxSpeedMps": 45,
+      "maxTurnRateDegS": 20,
+      "maxClimbMps": 8,
+      "thermalContrast": 0.8,
+      "typicalLinks": [
+        "AUTONOMOUS_GNSS"
+      ],
+      "category": "DRONE"
+    },
+    "BIRD_SMALL": {
+      "isThreat": false,
+      "sizeM": 0.3,
+      "rcsM2": 0.005,
+      "maxSpeedMps": 15,
+      "maxTurnRateDegS": 180,
+      "maxClimbMps": 3,
+      "thermalContrast": 0.7,
+      "typicalLinks": [
+        "NONE"
+      ],
+      "category": "BIRD"
+    },
+    "BIRD_LARGE": {
+      "isThreat": false,
+      "sizeM": 1.5,
+      "rcsM2": 0.02,
+      "maxSpeedMps": 15,
+      "maxTurnRateDegS": 60,
+      "maxClimbMps": 2,
+      "thermalContrast": 0.8,
+      "typicalLinks": [
+        "NONE"
+      ],
+      "category": "BIRD"
+    },
+    "FRIENDLY_QUAD": {
+      "isThreat": false,
+      "sizeM": 0.5,
+      "rcsM2": 0.02,
+      "maxSpeedMps": 18,
+      "maxTurnRateDegS": 90,
+      "maxClimbMps": 5,
+      "thermalContrast": 0.5,
+      "typicalLinks": [
+        "RF_MANUAL"
+      ],
+      "category": "DRONE"
+    },
+    "CIVILIAN_HOBBY": {
+      "isThreat": false,
+      "sizeM": 0.35,
+      "rcsM2": 0.01,
+      "maxSpeedMps": 15,
+      "maxTurnRateDegS": 90,
+      "maxClimbMps": 4,
+      "thermalContrast": 0.45,
+      "typicalLinks": [
+        "RF_MANUAL"
+      ],
+      "category": "DRONE"
+    },
+    "HELICOPTER_FRIENDLY": {
+      "isThreat": false,
+      "sizeM": 12,
+      "rcsM2": 5,
+      "maxSpeedMps": 70,
+      "maxTurnRateDegS": 15,
+      "maxClimbMps": 8,
+      "thermalContrast": 1,
+      "typicalLinks": [
+        "NONE"
+      ],
+      "category": "MANNED_AIRCRAFT"
+    }
+  }
+}

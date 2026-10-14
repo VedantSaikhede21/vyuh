@@ -41,6 +41,20 @@ def test_scripted_scenarios_are_valid() -> None:
         (lambda s: s["contacts"][0].update(spawnTMs=181_000), "spawns after scenario ends"),
         (lambda s: s["contacts"][0].update(despawnTMs=1000), "despawnTMs must be after"),
         (lambda s: s["sensors"][1].update(fovDegMin=40), "fovDegMin > fovDegMax"),
+        (
+            lambda s: s["contacts"][0].update(controlLink="FIBRE_OPTIC"),
+            "rfActive must be false for control link FIBRE_OPTIC",
+        ),
+        (
+            lambda s: s["contacts"][0].update(controlLink="AUTONOMOUS_GNSS"),
+            "rfActive must be false for control link AUTONOMOUS_GNSS",
+        ),
+        (
+            lambda s: s["contacts"][0].update(
+                emissions={"rfActive": False, "friendlyIdCode": "B1"}
+            ),
+            "friendlyIdCode requires rfActive",
+        ),
     ],
 )
 def test_cross_field_rules(mutate: Callable[[dict], None], expected: str) -> None:

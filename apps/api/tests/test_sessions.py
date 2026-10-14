@@ -5,6 +5,7 @@ import uuid
 from collections.abc import Callable
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -37,14 +38,18 @@ def test_create_session_returns_scenario(
     user = make_user()
     response = client.post(
         "/api/v1/sessions",
-        json={"scenarioId": str(scenarios["S01"].id), "mode": "ASSESSMENT"},
+        json={"scenarioId": str(scenarios["S01"].id), "mode": "ASSESSMENT", "simVersion": 7},
         headers=auth_header(user),
     )
     assert response.status_code == 201, response.text
     body = response.json()
     assert body["scenario"] == scenarios["S01"].content
+    assert body["simVersion"] == 7
     row = db.get(TrainingSession, uuid.UUID(body["sessionId"]))
     assert row is not None
+    assert row.sim_version == 7
+    detail = client.get(f"/api/v1/sessions/{body['sessionId']}", headers=auth_header(user))
+    assert detail.json()["simVersion"] == 7
     assert (row.user_id, row.status, row.mode.value) == (
         user.id,
         SessionStatus.CREATED,
@@ -57,10 +62,25 @@ def test_create_session_unknown_scenario(
 ) -> None:
     response = client.post(
         "/api/v1/sessions",
-        json={"scenarioId": str(uuid.uuid4()), "mode": "PRACTICE"},
+        json={"scenarioId": str(uuid.uuid4()), "mode": "PRACTICE", "simVersion": 1},
         headers=auth_header(make_user()),
     )
     assert_error(response, 404, "NOT_FOUND")
+
+
+@pytest.mark.parametrize("sim_version", [None, 0])
+def test_create_session_requires_sim_version(
+    client: TestClient,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    auth_header: Headers,
+    sim_version: int | None,
+) -> None:
+    body: dict[str, object] = {"scenarioId": str(scenarios["S01"].id), "mode": "PRACTICE"}
+    if sim_version is not None:
+        body["simVersion"] = sim_version
+    response = client.post("/api/v1/sessions", json=body, headers=auth_header(make_user()))
+    assert_error(response, 422, "VALIDATION_ERROR")
 
 
 def test_ingest_real_log_in_batches(

@@ -161,7 +161,7 @@ Trainee: `TRACK_SELECTED, CAMERA_SLEWED, MARKED_DETECTED, CLASSIFIED, AFFILIATIO
 | `CLASSIFIED` | trainee | `{ class: ContactClass }` |
 | `AFFILIATION_SET` | trainee | `{ affiliation }` |
 | `RESPONSE_ORDERED` | trainee | `{ response: ResponseKind, effectorId? }` |
-| `RESPONSE_OUTCOME` | sim | `{ response, result: 'NEUTRALISED'\|'NO_EFFECT'\|'MISSED'\|'BLOCKED_BY_ROE'\|'OUT_OF_RANGE'\|'COOLDOWN', collateral?: {contactId} }` |
+| `RESPONSE_OUTCOME` | sim | `{ response, result: 'NEUTRALISED'\|'NO_EFFECT'\|'MISSED'\|'BLOCKED_BY_ROE'\|'OUT_OF_RANGE'\|'COOLDOWN', collateral?: {contactIds: string[]} }` — `collateral` lists every other contact the same response affected (e.g. all RF contacts in a jam sector) |
 | `REPORT_SUBMITTED` | trainee | `ContactReport` (§4.3) |
 | `AI_SUGGESTION_SHOWN` / `_ACCEPTED` / `_REJECTED` | sim / trainee | `{ suggestedClass, confidence }` |
 | `CONTACT_REACHED_ASSET` | sim | `{ assetId }` |
@@ -398,7 +398,7 @@ User rating R (start 1000). Scenario rating D = 800 + 150 × difficulty. Expecte
 | `terrain_presets` | code (pk), name, meta (jsonb), attribution |
 | `scenarios` | id, code (nullable unique, e.g. `S04`), name, kind (SCRIPTED/GENERATED/AUTHORED), seed, difficulty, tags (text[], e.g. `demo`, `tutorial`), request (jsonb), content (jsonb), schema_version, created_by, created_at |
 | `assignments` | id, scenario_id, unit_id (nullable), user_id (nullable), assigned_by, due_at, created_at |
-| `sessions` | id, user_id, scenario_id, mode (PRACTICE/ASSESSMENT), status (CREATED/ACTIVE/COMPLETED/ABANDONED), last_batch_seq, is_demo (bool), started_at, ended_at, client_meta (jsonb: fps, gpu, browser) |
+| `sessions` | id, user_id, scenario_id, mode (PRACTICE/ASSESSMENT), status (CREATED/ACTIVE/COMPLETED/ABANDONED), last_batch_seq, is_demo (bool), started_at, ended_at, client_meta (jsonb: fps, gpu, browser), sim_version (int, nullable: sim-core `SIM_VERSION` the session ran on; null before Phase 2B) |
 | `session_events` | id (bigserial), session_id, seq (unique with session_id), t_ms, type, contact_id, track_id, payload (jsonb). Index (session_id, t_ms) |
 | `scores` | id, session_id (unique with tree_version), total, detection, classification, decision, report, efficiency, penalties (jsonb), per_contact (jsonb), metrics (jsonb), tree_version, created_at |
 | `debriefs` | session_id (pk), model, content (jsonb), created_at |
@@ -439,8 +439,8 @@ The API owns all DB access (Supabase service key stays server-side; no client-si
 ### 11.1 Key payloads
 ```jsonc
 // POST /sessions
-{ "scenarioId": "uuid", "mode": "ASSESSMENT" }
-→ { "sessionId": "uuid", "scenario": { /* full Scenario */ }, "startedAt": "ISO" }
+{ "scenarioId": "uuid", "mode": "ASSESSMENT", "simVersion": 2 }   // sim-core SIM_VERSION of the client
+→ { "sessionId": "uuid", "scenario": { /* full Scenario */ }, "startedAt": "ISO", "simVersion": 2 }
 
 // POST /sessions/{id}/events   (idempotent by batchSeq — a re-sent batch is ignored)
 { "batchSeq": 7, "events": [ { "seq": 101, "tMs": 41250, "type": "CLASSIFIED", "trackId": "T003", "payload": { "class": "QUAD_HEAVY" } } ] }
