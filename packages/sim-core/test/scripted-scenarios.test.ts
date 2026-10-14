@@ -1,0 +1,54 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { Scenario } from '@vyuh/shared';
+import { describe, expect, it } from 'vitest';
+import { PROCEDURAL_HILLS, createProceduralTerrain, createSim } from '../src/index.ts';
+import { FIXTURE_DIR, recordFixtureLogs } from './fixture-logs.ts';
+
+// Guards the hand-written scenarios in apps/api/app/seed/scenarios: valid
+// against the zod schema, a real threat if ignored, and defensible in time.
+
+const DIR = new URL('../../../apps/api/app/seed/scenarios/', import.meta.url);
+const files = readdirSync(DIR).filter((f) => f.endsWith('.json'));
+const terrain = createProceduralTerrain();
+
+describe.each(files)('scripted scenario %s', (file) => {
+  const scenario = Scenario.parse(JSON.parse(readFileSync(new URL(file, DIR), 'utf8')));
+
+  it('uses the Phase 1 terrain and lasts 3 minutes', () => {
+    expect(scenario.terrain.preset).toBe(PROCEDURAL_HILLS);
+    expect(scenario.durationS).toBe(180);
+  });
+
+  it('every threat reaches the asset before time-up if ignored', () => {
+    const sim = createSim(scenario, terrain);
+    while (sim.getState().endReason === null) sim.tick();
+    const leaked = sim.getEvents().filter((e) => e.type === 'CONTACT_REACHED_ASSET');
+    expect(leaked.map((e) => e.contactId).sort()).toEqual(
+      scenario.contacts.filter((c) => c.isThreat).map((c) => c.id),
+    );
+    expect(sim.getState().endReason).toBe('ALL_RESOLVED');
+  });
+
+  it('every threat is tracked with at least 60 s of warning', () => {
+    const sim = createSim(scenario, terrain);
+    while (sim.getState().endReason === null) sim.tick();
+    const ev = sim.getEvents();
+    for (const c of scenario.contacts) {
+      const created = ev.find((e) => e.type === 'SENSOR_TRACK_CREATED' && e.contactId === c.id);
+      const leaked = ev.find((e) => e.type === 'CONTACT_REACHED_ASSET' && e.contactId === c.id);
+      expect(created).toBeDefined();
+      expect(leaked!.tMs - created!.tMs).toBeGreaterThanOrEqual(60_000);
+    }
+  });
+});
+
+describe('API fixture logs (apps/api/tests/fixtures)', () => {
+  it('match what the sim records today — re-run scripts/export-api-fixtures.ts if not', () => {
+    for (const [name, events] of Object.entries(recordFixtureLogs())) {
+      const committed: unknown = JSON.parse(
+        readFileSync(new URL(`${name}.json`, FIXTURE_DIR), 'utf8'),
+      );
+      expect(committed, name).toEqual(JSON.parse(JSON.stringify(events)));
+    }
+  });
+});

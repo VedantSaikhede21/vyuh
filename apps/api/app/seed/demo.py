@@ -1,4 +1,4 @@
-"""Seed demo units and users (SPEC §22). Idempotent.
+"""Seed demo units, users and scripted scenarios (SPEC §22). Idempotent.
 
 Run: `uv run python -m app.seed.demo`
 
@@ -18,6 +18,7 @@ from app.core.db import make_engine, make_session_factory
 from app.core.security import local_auth_id
 from app.models import Unit, User
 from app.schemas.generated import UserRole
+from app.seed.scenarios import seed_scenarios
 
 logger = logging.getLogger(__name__)
 
@@ -66,8 +67,12 @@ def run() -> None:
     with factory() as db:
         units = seed_units(db)
         created = seed_users(db, units) if settings.auth_mode is AuthMode.LOCAL else 0
+        scenarios = seed_scenarios(db)
         db.commit()
-    print(f"Seeded {len(units)} units, {created} new demo users (auth mode: {settings.auth_mode})")
+    print(
+        f"Seeded {len(units)} units, {created} new demo users (auth mode: {settings.auth_mode}), "
+        f"{scenarios} scenarios written"
+    )
 
 
 if __name__ == "__main__":

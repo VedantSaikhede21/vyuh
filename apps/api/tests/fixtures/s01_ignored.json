@@ -1,0 +1,49 @@
+[
+ {
+  "tMs": 0,
+  "type": "SESSION_STARTED",
+  "payload": {
+   "mode": "PRACTICE",
+   "scenarioId": "S01",
+   "seed": 1001
+  },
+  "seq": 0
+ },
+ {
+  "tMs": 15000,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "c01",
+  "payload": {},
+  "seq": 1
+ },
+ {
+  "tMs": 20000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "c01",
+  "trackId": "T001",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2328.28807501485,
+   "bearingDeg": 3.621577851531018
+  },
+  "seq": 2
+ },
+ {
+  "tMs": 166750,
+  "type": "CONTACT_REACHED_ASSET",
+  "contactId": "c01",
+  "payload": {
+   "assetId": "a1"
+  },
+  "seq": 3
+ },
+ {
+  "tMs": 166750,
+  "type": "SESSION_ENDED",
+  "payload": {
+   "reason": "ALL_RESOLVED"
+  },
+  "seq": 4
+ }
+]

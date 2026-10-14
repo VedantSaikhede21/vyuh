@@ -1,5 +1,11 @@
-import type { ContactSpec, Scenario } from '@vyuh/shared';
-import { createHeightmap, createProceduralTerrain, type Heightmap } from '../src/index.ts';
+import type { ContactSpec, Scenario, SessionMode } from '@vyuh/shared';
+import {
+  createHeightmap,
+  createProceduralTerrain,
+  createSim,
+  type Heightmap,
+  type Sim,
+} from '../src/index.ts';
 
 export const flatTerrain: Heightmap = createHeightmap(20_000, 2, new Float32Array(4));
 export const hills: Heightmap = createProceduralTerrain({ seed: 1, resolution: 129 });
@@ -47,4 +53,45 @@ export function testScenario(overrides: Partial<Scenario> = {}): Scenario {
     scoringTreeId: 'default_v1',
     ...overrides,
   };
+}
+
+/**
+ * A scripted trainee: selects, marks, classifies and calls hostile on each new
+ * track, then orders an intercept every time the interceptor is ready and the
+ * track is within 1100 m. Decisions read only sim state, so they are deterministic.
+ */
+export function playScripted(
+  scenario: Scenario,
+  terrain: Heightmap,
+  mode: SessionMode = 'ASSESSMENT',
+): Sim {
+  const sim = createSim(scenario, terrain, { mode });
+  const handled = new Set<string>();
+  while (sim.getState().endReason === null) {
+    const s = sim.getState();
+    for (const t of s.tracks) {
+      if (t.status !== 'ACTIVE') continue;
+      if (!handled.has(t.id)) {
+        handled.add(t.id);
+        sim.dispatch({ type: 'TRACK_SELECTED', trackId: t.id, payload: {} });
+        sim.dispatch({ type: 'MARKED_DETECTED', trackId: t.id, payload: {} });
+        sim.dispatch({ type: 'CLASSIFIED', trackId: t.id, payload: { class: 'QUAD_SMALL' } });
+        sim.dispatch({
+          type: 'AFFILIATION_SET',
+          trackId: t.id,
+          payload: { affiliation: 'HOSTILE' },
+        });
+      }
+      const eff = s.effectors[0];
+      if (eff && s.clock.tMs >= eff.readyAtMs && t.rangeM < 1100 && (eff.ammo ?? 1) > 0) {
+        sim.dispatch({
+          type: 'RESPONSE_ORDERED',
+          trackId: t.id,
+          payload: { response: 'INTERCEPT' },
+        });
+      }
+    }
+    sim.tick();
+  }
+  return sim;
 }
