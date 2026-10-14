@@ -65,7 +65,7 @@ export function TopBar({
       </Button>
       <Button
         size="sm"
-        variant="outline"
+        variant="secondary"
         disabled={hud.endReason !== null}
         onClick={commands.abort}
       >

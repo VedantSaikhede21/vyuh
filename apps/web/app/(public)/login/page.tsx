@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import { useAuth } from '@/lib/auth';
 
 // Seeded by `uv run python -m app.seed.demo` (SPEC §22). Local/offline mode only.
@@ -54,18 +55,13 @@ function LoginForm() {
           {mode === 'local' ? (
             <div className="space-y-1.5">
               <Label htmlFor="email">Demo account</Label>
-              <select
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-10 w-full rounded-sm border border-line-2 bg-bg-3 px-3 text-readout"
-              >
+              <Select id="email" value={email} onChange={(e) => setEmail(e.target.value)}>
                 {DEMO_ACCOUNTS.map((a) => (
                   <option key={a} value={a}>
                     {a}
                   </option>
                 ))}
-              </select>
+              </Select>
               <p className="text-body text-text-2">
                 Offline development only — no password. Disabled when the API runs with ENV=prod.
               </p>
@@ -101,7 +97,12 @@ function LoginForm() {
               {error}
             </p>
           ) : null}
-          <Button type="submit" className="w-full" disabled={busy || status === 'loading'}>
+          <Button
+            type="submit"
+            variant="primary"
+            className="w-full"
+            disabled={busy || status === 'loading'}
+          >
             {busy ? 'Signing in…' : 'Sign in'}
           </Button>
         </form>

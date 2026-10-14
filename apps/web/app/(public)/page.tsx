@@ -17,11 +17,11 @@ export default function LandingPage() {
           browser, under realistic conditions, with server-side scoring and after-action review.
         </p>
         <div className="flex flex-wrap gap-3 pt-1">
-          <Button asChild>
+          <Button asChild variant="primary">
             <Link href="/login">Log in</Link>
           </Button>
           {env.guestMode ? (
-            <Button variant="outline" disabled title="Guest demo arrives in Phase 6">
+            <Button variant="secondary" disabled title="Guest demo arrives in Phase 6">
               Try demo
             </Button>
           ) : null}

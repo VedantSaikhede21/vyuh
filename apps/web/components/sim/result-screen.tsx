@@ -13,13 +13,13 @@ const COMPONENT_LABEL: Record<keyof ScoreComponents, string> = {
   efficiency: 'Efficiency',
 };
 
-const OUTCOME_TONE: Record<string, 'hostile' | 'neutral' | 'unknown' | 'friendly'> = {
-  NEUTRALISED: 'neutral',
-  IGNORED_OK: 'neutral',
-  LEAKED: 'hostile',
-  FRATRICIDE: 'hostile',
-  WRONGLY_ENGAGED: 'hostile',
-  UNRESOLVED: 'unknown',
+const OUTCOME_TONE: Record<string, 'ok' | 'warn' | 'crit'> = {
+  NEUTRALISED: 'ok',
+  IGNORED_OK: 'ok',
+  LEAKED: 'crit',
+  FRATRICIDE: 'crit',
+  WRONGLY_ENGAGED: 'crit',
+  UNRESOLVED: 'warn',
 };
 
 /** Result screen: server-computed total, component bars and per-contact feedback. */
@@ -38,7 +38,7 @@ export function ResultScreen({ score, scenarioName }: { score: Score; scenarioNa
           </h1>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline">
+          <Button asChild variant="secondary">
             <Link href="/train">Back to scenarios</Link>
           </Button>
         </div>
@@ -98,7 +98,7 @@ export function ResultScreen({ score, scenarioName }: { score: Score; scenarioNa
               <CardTitle>
                 {c.isThreat ? 'Threat' : 'Non-threat'} · tracks {c.trackIds.join(', ') || 'none'}
               </CardTitle>
-              {c.outcome && <Badge tone={OUTCOME_TONE[c.outcome] ?? 'unknown'}>{c.outcome}</Badge>}
+              {c.outcome && <Badge tone={OUTCOME_TONE[c.outcome] ?? 'warn'}>{c.outcome}</Badge>}
             </CardHeader>
             <CardContent className="space-y-2 text-body">
               <dl className="grid grid-cols-[10rem_1fr] gap-y-1 text-readout">

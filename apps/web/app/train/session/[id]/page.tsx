@@ -61,7 +61,7 @@ function Briefing({
             ? 'Assessment runs on a fixed clock with no pause.'
             : 'Practice mode: P pauses.'}
         </p>
-        <Button onClick={onStart} autoFocus data-testid="start-session">
+        <Button variant="primary" onClick={onStart} autoFocus data-testid="start-session">
           Start session
         </Button>
       </CardContent>
@@ -130,7 +130,7 @@ function Session({ sessionId }: { sessionId: string }) {
               This session was interrupted (the page was reloaded or closed mid-run) and cannot be
               resumed.
             </p>
-            <Button asChild>
+            <Button asChild variant="primary">
               <Link href="/train">Start a new session</Link>
             </Button>
           </CardContent>
@@ -142,8 +142,12 @@ function Session({ sessionId }: { sessionId: string }) {
           <CardContent className="space-y-3 pt-4 text-body">
             <p className="text-crit">{phase.message}</p>
             <div className="flex gap-2">
-              {phase.retry && <Button onClick={phase.retry}>Retry</Button>}
-              <Button asChild variant="outline">
+              {phase.retry && (
+                <Button variant="primary" onClick={phase.retry}>
+                  Retry
+                </Button>
+              )}
+              <Button asChild variant="secondary">
                 <Link href="/train">Back to scenarios</Link>
               </Button>
             </div>

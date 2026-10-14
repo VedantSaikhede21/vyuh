@@ -36,12 +36,12 @@ export function ActionBar({ commands }: { commands: Commands }) {
       </div>
 
       <div className="grid grid-cols-2 gap-1.5">
-        <Button size="sm" variant="outline" disabled={noTrack} onClick={commands.markDetected}>
+        <Button size="sm" variant="secondary" disabled={noTrack} onClick={commands.markDetected}>
           Detected <Key k="D" />
         </Button>
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           disabled={noTrack}
           onClick={() => setUi({ classifyMenu: !classifyMenu, interceptArmed: false })}
         >
@@ -93,17 +93,17 @@ export function ActionBar({ commands }: { commands: Commands }) {
       </div>
 
       <div className="grid grid-cols-2 gap-1.5">
-        <Button size="sm" variant="outline" disabled={noTrack} onClick={commands.monitor}>
+        <Button size="sm" variant="secondary" disabled={noTrack} onClick={commands.monitor}>
           Monitor <Key k="M" />
         </Button>
         {interceptArmed ? (
-          <Button size="sm" variant="destructive" onClick={commands.confirmIntercept}>
+          <Button size="sm" variant="danger" onClick={commands.confirmIntercept}>
             Confirm <Key k="Enter" />
           </Button>
         ) : (
           <Button
             size="sm"
-            variant="destructive"
+            variant="danger"
             disabled={noTrack || !interceptor}
             onClick={commands.armIntercept}
           >
@@ -114,7 +114,7 @@ export function ActionBar({ commands }: { commands: Commands }) {
       <div className="grid grid-cols-2 gap-1.5">
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           disabled={noTrack || !jammer}
           onClick={commands.jam}
           title="Jam the RF link of everything in a ±10° sector toward the track"
@@ -123,7 +123,7 @@ export function ActionBar({ commands }: { commands: Commands }) {
         </Button>
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           disabled={noTrack || !spoofer}
           onClick={commands.spoof}
           title="Spoof GNSS navigation in a ±10° sector toward the track"

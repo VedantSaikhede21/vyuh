@@ -26,7 +26,7 @@ function OperatorCard() {
     <Card>
       <CardHeader className="flex items-center justify-between">
         <CardTitle>Operator</CardTitle>
-        <Badge tone="primary" data-testid="role">
+        <Badge tone="strong" data-testid="role">
           {user.role}
         </Badge>
       </CardHeader>

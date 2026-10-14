@@ -3,33 +3,34 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import type { ComponentProps } from 'react';
 import { cn } from '@/lib/utils';
 
+// DESIGN §2/§5/§12: flat, 1 px border, radius 2 px, Condensed UPPER label.
+// Sizes: hud 28 px and sm 32 px for the dense HUD, md 36 px for primary actions
+// elsewhere. Danger is outlined: --crit is reserved for genuinely critical moments.
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm border text-readout font-semibold uppercase tracking-wider transition-colors disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-sm border text-panel-title transition-colors duration-150 ease-ui disabled:cursor-not-allowed disabled:opacity-40',
   {
     variants: {
       variant: {
-        default: 'border-select bg-primary-bg text-primary-fg hover:bg-primary-bg/85',
-        outline: 'border-line-1 bg-transparent text-text-1 hover:border-select hover:text-text-1',
-        ghost: 'border-transparent bg-transparent text-text-2 hover:text-text-1',
-        destructive: 'border-crit bg-crit text-bg-0 hover:bg-crit/85',
+        primary:
+          'border-primary-bg bg-primary-bg text-primary-fg hover:bg-select hover:border-select',
+        secondary: 'border-line-2 bg-bg-2 text-text-1 hover:border-text-3 hover:bg-bg-3',
+        ghost: 'border-transparent bg-transparent text-text-2 hover:bg-bg-2 hover:text-text-1',
+        danger: 'border-crit bg-transparent text-crit hover:bg-bg-3',
       },
       size: {
-        default: 'h-10 px-4',
-        sm: 'h-8 px-3 text-small',
-        lg: 'h-11 px-6',
+        hud: 'h-7 px-2',
+        sm: 'h-8 px-3',
+        md: 'h-9 px-4',
       },
     },
-    defaultVariants: { variant: 'default', size: 'default' },
+    defaultVariants: { variant: 'secondary', size: 'md' },
   },
 );
 
-export function Button({
-  className,
-  variant,
-  size,
-  asChild = false,
-  ...props
-}: ComponentProps<'button'> & VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
+export type ButtonProps = ComponentProps<'button'> &
+  VariantProps<typeof buttonVariants> & { asChild?: boolean };
+
+export function Button({ className, variant, size, asChild = false, ...props }: ButtonProps) {
   const Comp = asChild ? Slot : 'button';
   return <Comp className={cn(buttonVariants({ variant, size }), className)} {...props} />;
 }

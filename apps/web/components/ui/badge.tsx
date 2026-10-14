@@ -2,17 +2,18 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import type { ComponentProps } from 'react';
 import { cn } from '@/lib/utils';
 
+// Static label with a tone. Status tones only; affiliation is shown with
+// AffiliationSymbol (shape + letter), never as a coloured badge.
 const badgeVariants = cva(
-  'inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-readout font-semibold uppercase tracking-wider',
+  'inline-flex h-5 items-center gap-1 rounded-sm border px-1.5 text-label leading-none',
   {
     variants: {
       tone: {
-        default: 'border-line-1 text-text-2',
-        primary: 'border-select text-text-1',
-        hostile: 'border-aff-hostile text-aff-hostile',
-        friendly: 'border-aff-friendly text-aff-friendly',
-        neutral: 'border-ok text-ok',
-        unknown: 'border-aff-unknown text-aff-unknown',
+        default: 'border-line-2 text-text-2',
+        strong: 'border-text-3 text-text-1',
+        ok: 'border-ok text-ok',
+        warn: 'border-warn text-warn',
+        crit: 'border-crit text-crit',
       },
     },
     defaultVariants: { tone: 'default' },
