@@ -294,7 +294,9 @@ export function ResultScreen({
 
       <Panel>
         <PanelHeader title="What was there vs what you did">
-          <span className="text-label">{contacts.length} contacts</span>
+          <span className="text-label">
+            {contacts.length} {contacts.length === 1 ? 'contact' : 'contacts'}
+          </span>
         </PanelHeader>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse" aria-label="Per contact">
