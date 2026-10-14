@@ -7,8 +7,8 @@ import { MeshBasicMaterial, MeshLambertMaterial, type Material, type Object3D } 
 
 export const IR_MATERIALS = {
   /** Cool ground; sun-facing slopes read slightly warmer through Lambert shading. */
-  terrain: new MeshLambertMaterial({ color: '#3a3a3a' }),
-  buildings: new MeshLambertMaterial({ color: '#5c5c5c' }),
+  terrain: new MeshLambertMaterial({ color: '#6a6a6a' }),
+  buildings: new MeshLambertMaterial({ color: '#8a8a8a' }),
   /** Contacts: per-instance colour = thermal contrast (white = hot). */
   contacts: new MeshBasicMaterial({ color: '#ffffff' }),
 } as const satisfies Record<string, Material>;

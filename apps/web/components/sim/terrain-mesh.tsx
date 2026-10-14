@@ -2,7 +2,7 @@
 
 import type { Heightmap, World } from '@vyuh/sim-core';
 import { toThree } from '@vyuh/sim-core';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { BufferAttribute, BufferGeometry, Color, LOD, Mesh, MeshLambertMaterial } from 'three';
 import { IR_MATERIALS } from '@/lib/sim/ir-materials';
 
@@ -207,8 +207,8 @@ export function TerrainMesh({ world }: { world: World }) {
       return lod;
     });
   }, [map, world.meta?.originElevM]);
-  // Geometry is cached per heightmap and shared; only the LOD wrappers are per view.
-  useEffect(() => () => lods.forEach((l) => l.clear()), [lods]);
+  // Geometry is cached per heightmap and shared by every view; the LOD wrappers are
+  // garbage-collected (no cleanup that empties them: StrictMode re-runs effects).
   return (
     <>
       {lods.map((lod, i) => (

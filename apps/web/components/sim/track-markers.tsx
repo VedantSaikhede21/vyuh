@@ -2,6 +2,7 @@
 
 import { Html, Line } from '@react-three/drei';
 import { toThree } from '@vyuh/sim-core';
+import type { RefObject } from 'react';
 import { AFFILIATION_STYLE } from '@/lib/affiliation';
 import { useHudStore, type TrackView } from '@/lib/sim/store';
 import { useSimRuntime } from './sim-context';
@@ -12,10 +13,12 @@ function TrackMarker({
   track,
   selected,
   onSelect,
+  labelPortal,
 }: {
   track: TrackView;
   selected: boolean;
   onSelect: (id: string) => void;
+  labelPortal?: RefObject<HTMLElement | null> | undefined;
 }) {
   const rt = useSimRuntime();
   const ground = rt.groundHeight(track.x, track.z);
@@ -49,7 +52,12 @@ function TrackMarker({
           <meshBasicMaterial color="#ffffff" />
         </mesh>
       )}
-      <Html position={[top.x, top.y + MARKER_M * 3, top.z]} center zIndexRange={[10, 0]}>
+      <Html
+        position={[top.x, top.y + MARKER_M * 3, top.z]}
+        center
+        zIndexRange={[10, 0]}
+        {...(labelPortal ? { portal: labelPortal as RefObject<HTMLElement> } : {})}
+      >
         <div
           className="pointer-events-none whitespace-nowrap font-mono text-xs font-bold"
           style={{ color: style.hex }}
@@ -62,7 +70,14 @@ function TrackMarker({
 }
 
 /** Radar tracks (what the trainee knows), not ground truth. */
-export function TrackMarkers({ onSelect }: { onSelect: (id: string) => void }) {
+export function TrackMarkers({
+  onSelect,
+  labelPortal,
+}: {
+  onSelect: (id: string) => void;
+  /** DOM element the track labels are placed in (the tactical view panel). */
+  labelPortal?: RefObject<HTMLElement | null>;
+}) {
   const hud = useHudStore((s) => s.hud);
   if (!hud) return null;
   return (
@@ -75,6 +90,7 @@ export function TrackMarkers({ onSelect }: { onSelect: (id: string) => void }) {
             track={t}
             selected={t.id === hud.selectedTrackId}
             onSelect={onSelect}
+            labelPortal={labelPortal}
           />
         ))}
     </>

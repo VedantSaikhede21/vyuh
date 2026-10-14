@@ -1,10 +1,12 @@
 'use client';
 
 import { useFrame } from '@react-three/fiber';
+import { CLASS_PROFILES } from '@vyuh/shared';
 import { toThree, type Vec3 } from '@vyuh/sim-core';
 import { useEffect, useMemo, useRef } from 'react';
 import {
   BoxGeometry,
+  Color,
   CylinderGeometry,
   type BufferGeometry,
   type InstancedMesh,
@@ -13,6 +15,7 @@ import {
   Vector3,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { IR_MATERIALS } from '@/lib/sim/ir-materials';
 import { useSimRuntime } from './sim-context';
 
 /** Low-poly small quadcopter, ~0.35 m across, nose toward −z. */
@@ -51,6 +54,22 @@ export function Drones() {
     }),
     [],
   );
+
+  // IR heat per contact = its class's thermal contrast (white = hot); the day
+  // material is dark, so the same instance colour only darkens it slightly.
+  useEffect(() => {
+    const mesh = ref.current;
+    if (!mesh) return;
+    const specs = new Map(rt.scenario.contacts.map((c) => [c.id, c]));
+    const heat = new Color();
+    contacts.forEach((c, i) => {
+      const spec = specs.get(c.id);
+      const t = spec ? CLASS_PROFILES[spec.class].thermalContrast : 0.5;
+      mesh.setColorAt(i, heat.setScalar(t));
+    });
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.userData.irMaterial = IR_MATERIALS.contacts;
+  }, [rt, contacts]);
 
   useFrame(() => {
     const mesh = ref.current;

@@ -27,6 +27,8 @@ export class SimRuntime {
   readonly mode: SessionMode;
   /** Contact positions before the most recent tick, by contact id. */
   readonly prevPositions = new Map<string, Vec3>();
+  /** Sim camera pointing before the most recent tick (a locked camera moves every tick). */
+  readonly prevCamera = { azDeg: 0, elDeg: 0 };
   /** Fraction of a tick elapsed since the last one, for interpolation. */
   alpha = 0;
   paused = false;
@@ -81,11 +83,25 @@ export class SimRuntime {
     return out;
   }
 
+  /** Interpolated sim camera pointing, for rendering a locked camera smoothly. */
+  cameraPointing(): { azDeg: number; elDeg: number } {
+    const cam = this.sim.getState().camera;
+    const dAz = ((((cam.azDeg - this.prevCamera.azDeg) % 360) + 540) % 360) - 180;
+    const az = (this.prevCamera.azDeg + dAz * this.alpha + 360) % 360;
+    return {
+      azDeg: az,
+      elDeg: this.prevCamera.elDeg + (cam.elDeg - this.prevCamera.elDeg) * this.alpha,
+    };
+  }
+
   groundHeight(x: number, z: number): number {
     return sampleHeight(this.terrain, x, z);
   }
 
   private capturePositions(): void {
+    const cam = this.sim.getState().camera;
+    this.prevCamera.azDeg = cam.azDeg;
+    this.prevCamera.elDeg = cam.elDeg;
     for (const c of this.sim.getState().contacts) {
       const p = this.prevPositions.get(c.id);
       if (p) {

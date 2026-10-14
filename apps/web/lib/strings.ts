@@ -46,9 +46,9 @@ export const RESULT_LABEL: Record<string, string> = {
 
 export const SHORTCUTS: { keys: string; action: string; later?: boolean }[] = [
   { keys: 'Tab / Shift+Tab', action: 'Next / previous track' },
-  { keys: 'Space', action: 'Slew EO camera to selected track' },
+  { keys: 'Space', action: 'Lock EO camera on selected track' },
   { keys: '+ / -', action: 'Zoom EO camera' },
-  { keys: 'T', action: 'Toggle day / thermal', later: true },
+  { keys: 'T', action: 'Toggle day / thermal (IR)' },
   { keys: 'D', action: 'Mark detected' },
   { keys: 'C then 1–9, 0', action: 'Classify' },
   { keys: 'H F N U', action: 'Affiliation hostile / friendly / neutral / unknown' },
