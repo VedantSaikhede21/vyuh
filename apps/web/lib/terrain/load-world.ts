@@ -1,5 +1,11 @@
 import { TerrainPresetMeta } from '@vyuh/shared';
-import { builtinWorld, worldFromPreset, type World } from '@vyuh/sim-core';
+import {
+  PROCEDURAL_HILLS,
+  PROCEDURAL_HILLS_META,
+  builtinWorld,
+  worldFromPreset,
+  type World,
+} from '@vyuh/sim-core';
 
 // Lazy, cached terrain preset loading (SPEC §14, §16): meta.json, heightmap.u16
 // and buildings.geojson from /terrain/<PRESET>/, fetched in parallel once per
@@ -7,6 +13,7 @@ import { builtinWorld, worldFromPreset, type World } from '@vyuh/sim-core';
 
 const PRESET_NAME = /^[A-Z][A-Z0-9_]*$/;
 const cache = new Map<string, Promise<World>>();
+const metaCache = new Map<string, Promise<TerrainPresetMeta>>();
 
 type Fetch = (url: string) => Promise<Response>;
 
@@ -20,10 +27,35 @@ async function fetchOk(fetchImpl: Fetch, url: string): Promise<Response> {
   return res;
 }
 
-async function fetchWorld(preset: string, fetchImpl: Fetch): Promise<World> {
+async function fetchMeta(preset: string, fetchImpl: Fetch): Promise<TerrainPresetMeta> {
   const metaRes = await fetchOk(fetchImpl, presetFileUrl(preset, 'meta.json'));
   const meta = TerrainPresetMeta.parse(await metaRes.json());
   if (meta.name !== preset) throw new Error(`Preset ${preset} has meta for ${meta.name}`);
+  return meta;
+}
+
+/** Load (or reuse) only a preset's meta.json, e.g. to compute night in a scenario list. */
+export function loadPresetMeta(
+  preset: string,
+  fetchImpl: Fetch = (u) => fetch(u),
+): Promise<TerrainPresetMeta> {
+  const cached = metaCache.get(preset);
+  if (cached) return cached;
+  let p: Promise<TerrainPresetMeta>;
+  if (!PRESET_NAME.test(preset)) {
+    p = Promise.reject(new Error(`Invalid terrain preset name "${preset}"`));
+  } else if (preset === PROCEDURAL_HILLS) {
+    p = Promise.resolve(PROCEDURAL_HILLS_META);
+  } else {
+    p = fetchMeta(preset, fetchImpl);
+  }
+  metaCache.set(preset, p);
+  p.catch(() => metaCache.delete(preset));
+  return p;
+}
+
+async function fetchWorld(preset: string, fetchImpl: Fetch): Promise<World> {
+  const meta = await loadPresetMeta(preset, fetchImpl);
   const [heightmap, buildings] = await Promise.all([
     fetchOk(fetchImpl, presetFileUrl(preset, meta.files.heightmap)).then((r) => r.arrayBuffer()),
     fetchOk(fetchImpl, presetFileUrl(preset, meta.files.buildings)).then((r) => r.json()),
@@ -50,4 +82,5 @@ export function loadWorld(preset: string, fetchImpl: Fetch = (u) => fetch(u)): P
 /** Test helper. */
 export function clearWorldCache(): void {
   cache.clear();
+  metaCache.clear();
 }

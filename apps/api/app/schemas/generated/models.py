@@ -7,8 +7,8 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 from enum import StrEnum
-from uuid import UUID
 from typing_extensions import TypeAliasType
+from uuid import UUID
 from datetime import date as date_aliased
 
 
@@ -425,28 +425,6 @@ class ScenarioKind(StrEnum):
     SCRIPTED = "SCRIPTED"
     GENERATED = "GENERATED"
     AUTHORED = "AUTHORED"
-
-
-class ScenarioListItem(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    id: UUID
-    code: str | None
-    name: str
-    kind: ScenarioKind
-    difficulty: Annotated[int, Field(ge=1, le=5)]
-    duration_s: Annotated[int, Field(alias="durationS", gt=0, le=9007199254740991)]
-    roe: Roe
-    is_night: Annotated[bool, Field(alias="isNight")]
-    tags: list[str]
-
-
-class ScenarioListResponse(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    items: list[ScenarioListItem]
 
 
 class ScoreComponents(BaseModel):
@@ -933,6 +911,31 @@ class ResponseOutcomePayload(BaseModel):
     response: ResponseKind
     result: ResponseResult
     collateral: Collateral | None = None
+
+
+class ScenarioListItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID
+    code: str | None
+    name: str
+    kind: ScenarioKind
+    difficulty: Annotated[int, Field(ge=1, le=5)]
+    duration_s: Annotated[int, Field(alias="durationS", gt=0, le=9007199254740991)]
+    roe: Roe
+    is_night: Annotated[bool, Field(alias="isNight")]
+    terrain_preset: Annotated[str, Field(alias="terrainPreset", min_length=1)]
+    date: date_aliased
+    time: Annotated[str, Field(pattern="^([01]\\d|2[0-3]):[0-5]\\d$")]
+    tags: list[str]
+
+
+class ScenarioListResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    items: list[ScenarioListItem]
 
 
 class ScenarioRequest(BaseModel):

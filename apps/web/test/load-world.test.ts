@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { sampleHeight } from '@vyuh/sim-core';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { clearWorldCache, loadWorld } from '../lib/terrain/load-world';
+import { clearWorldCache, loadPresetMeta, loadWorld } from '../lib/terrain/load-world';
 
 const PUBLIC = new URL('../public/', import.meta.url);
 
@@ -49,5 +49,19 @@ describe('loadWorld', () => {
     await expect(loadWorld('NOPE', fakeFetch(calls))).rejects.toThrow(/HTTP 404/);
     expect(calls).toHaveLength(2);
     await expect(loadWorld('../etc', fakeFetch())).rejects.toThrow(/Invalid/);
+  });
+
+  it('loads meta alone once, reuses it for the world, and serves built-in meta offline', async () => {
+    const calls: string[] = [];
+    const f = fakeFetch(calls);
+    const meta = await loadPresetMeta('PUNJAB_PLAINS', f);
+    expect(meta.name).toBe('PUNJAB_PLAINS');
+    expect(await loadPresetMeta('PUNJAB_PLAINS', f)).toBe(meta);
+    expect(calls).toEqual(['/terrain/PUNJAB_PLAINS/meta.json']);
+    const world = await loadWorld('PUNJAB_PLAINS', f);
+    expect(world.meta).toBe(meta);
+    expect(calls).toHaveLength(3);
+    expect((await loadPresetMeta('PROCEDURAL_HILLS', f)).name).toBe('PROCEDURAL_HILLS');
+    expect(calls).toHaveLength(3);
   });
 });

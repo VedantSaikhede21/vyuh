@@ -13,6 +13,7 @@ import {
   eoLevel,
   followPointing,
   inEoFrustum,
+  isNightAt,
   johnsonCycles,
   levelForCycles,
   localInstantMs,
@@ -59,6 +60,12 @@ describe('sun (SPEC §14)', () => {
     expect(env('17:30', true).isNight).toBe(false);
     expect(env('17:30', true).sun.elDeg).toBeLessThan(0);
     expect(env('18:15', false).isNight).toBe(true);
+    // The scenario-list helper applies the same rule.
+    for (const t of ['00:00', '12:30', '17:30', '18:15']) {
+      expect(isNightAt('2026-12-21', t, { origin: PUNJAB, utcOffsetMin: 330 })).toBe(
+        env(t, false).isNight,
+      );
+    }
   });
 });
 

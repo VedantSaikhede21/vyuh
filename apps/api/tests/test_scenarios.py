@@ -76,20 +76,62 @@ def test_seed_is_idempotent(db: Session) -> None:
     assert "despawnTMs" not in s01.content["contacts"][0]  # unset optionals are not stored
 
 
-def test_seed_does_not_change_scenarios_with_sessions(
+def _gameplay_bytes(content: dict) -> str:
+    rest = {k: v for k, v in content.items() if k not in ("name", "briefing")}
+    return json.dumps(rest, sort_keys=True)
+
+
+def test_seed_updates_display_fields_of_scenarios_with_sessions(
     db: Session,
     scenarios: dict[str, ScenarioRow],
     make_user: Callable[..., User],
     start_session: Callable[..., str],
     tmp_path: Path,
 ) -> None:
-    start_session(make_user(), scenarios["S01"])
+    row = scenarios["S01"]
+    start_session(make_user(), row)
+    before = _gameplay_bytes(row.content)
     edited = json.loads(json.dumps(S01))
-    edited["name"] = "Renamed"
+    edited["name"] = "First Contact (rev)"
+    edited["briefing"] = S01["briefing"] + "\nNote."
+    (tmp_path / "S01.json").write_text(json.dumps(edited), encoding="utf-8")
+    assert seed_scenarios(db, tmp_path) == 1
+    db.commit()
+    db.refresh(row)
+    assert row.name == "First Contact (rev)"
+    assert row.content["name"] == "First Contact (rev)"
+    assert row.content["briefing"].endswith("\nNote.")
+    assert row.tags == ["tutorial", "demo"]
+    assert _gameplay_bytes(row.content) == before  # gameplay content byte-identical
+    assert seed_scenarios(db, tmp_path) == 0
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda s: s.update(durationS=s["durationS"] + 10),
+        lambda s: s["contacts"][0]["path"][0].update(speedMps=99),
+        lambda s: s.update(name="Renamed", seed=s["seed"] + 1),
+    ],
+)
+def test_seed_does_not_change_gameplay_of_scenarios_with_sessions(
+    db: Session,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    start_session: Callable[..., str],
+    tmp_path: Path,
+    mutate: Callable[[dict], None],
+) -> None:
+    row = scenarios["S01"]
+    start_session(make_user(), row)
+    before = json.dumps(row.content, sort_keys=True)
+    edited = json.loads(json.dumps(S01))
+    mutate(edited)
     (tmp_path / "S01.json").write_text(json.dumps(edited), encoding="utf-8")
     assert seed_scenarios(db, tmp_path) == 0
-    db.refresh(scenarios["S01"])
-    assert scenarios["S01"].name == "First Contact"
+    db.refresh(row)
+    assert row.name == "First Contact"
+    assert json.dumps(row.content, sort_keys=True) == before
 
 
 def test_list_scenarios(
@@ -111,6 +153,9 @@ def test_list_scenarios(
         "durationS": 180,
         "roe": "WEAPONS_FREE",
         "isNight": False,
+        "terrainPreset": "PROCEDURAL_HILLS",
+        "date": "2026-11-20",
+        "time": "10:30",
         "tags": ["tutorial", "demo"],
     }
     filtered = client.get("/api/v1/scenarios?difficulty=2", headers=headers).json()

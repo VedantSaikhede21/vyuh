@@ -10,7 +10,7 @@ import {
 } from './enums.ts';
 import { SimEvent } from './events.ts';
 import { named } from './registry.ts';
-import { Scenario } from './scenario.ts';
+import { Scenario, TimeOfDay } from './scenario.ts';
 import { Score } from './score.ts';
 
 // Request/response shapes for /api/v1 (SPEC §11, §11.1, §11.2).
@@ -156,7 +156,11 @@ export const ScenarioListItem = named(
     difficulty: Difficulty,
     durationS: z.int().positive(),
     roe: Roe,
+    /** Stored flag; the client recomputes it from the preset meta (SPEC §4 Phase 2). */
     isNight: z.boolean(),
+    terrainPreset: z.string().min(1),
+    date: z.iso.date(),
+    time: TimeOfDay,
     tags: z.array(z.string()),
   }),
 );

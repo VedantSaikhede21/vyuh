@@ -69,6 +69,9 @@ def list_item(row: ScenarioRow) -> ScenarioListItem:
         duration_s=content.duration_s,
         roe=content.roe,
         is_night=content.environment.is_night,
+        terrain_preset=content.terrain.preset,
+        date=content.environment.date,
+        time=content.environment.time,
         tags=list(row.tags),
     )
 

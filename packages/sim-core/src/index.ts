@@ -85,6 +85,7 @@ export {
   DEFAULT_UTC_OFFSET_MIN,
   NIGHT_SUN_EL_DEG,
   computeEnvironment,
+  isNightAt,
   localInstantMs,
   sunPosition,
 } from './sun.ts';
