@@ -1,8 +1,8 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // @vyuh/shared ships TypeScript source.
-  transpilePackages: ['@vyuh/shared'],
+  // Workspace packages ship TypeScript source.
+  transpilePackages: ['@vyuh/shared', '@vyuh/sim-core'],
   reactStrictMode: true,
   poweredByHeader: false,
 };

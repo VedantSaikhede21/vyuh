@@ -1,9 +1,18 @@
 import {
+  CreateSessionResponse,
   ErrorEnvelope,
+  EventBatchResponse,
   MeResponse,
+  ScenarioDetailResponse,
+  ScenarioListResponse,
+  Score,
+  SessionDetailResponse,
   TokenResponse,
+  type ClientMeta,
   type ErrorCode,
   type MeResponse as MeResponseT,
+  type SessionMode,
+  type SimEvent,
   type TokenResponse as TokenResponseT,
 } from '@vyuh/shared';
 import type { z } from 'zod';
@@ -79,8 +88,30 @@ export async function apiFetch<S extends z.ZodType>(
   return parsed.data;
 }
 
+/** True for errors worth retrying: the API was unreachable or failed server-side. */
+export function isRetryable(err: unknown): boolean {
+  return err instanceof ApiError && (err.code === 'NETWORK' || err.status >= 500);
+}
+
 export const api = {
   me: (signal?: AbortSignal): Promise<MeResponseT> => apiFetch('/auth/me', MeResponse, { signal }),
   devLogin: (email: string): Promise<TokenResponseT> =>
     apiFetch('/auth/dev-login', TokenResponse, { method: 'POST', body: { email }, auth: false }),
+  listScenarios: (signal?: AbortSignal) => apiFetch('/scenarios', ScenarioListResponse, { signal }),
+  getScenario: (id: string, signal?: AbortSignal) =>
+    apiFetch(`/scenarios/${id}`, ScenarioDetailResponse, { signal }),
+  createSession: (scenarioId: string, mode: SessionMode) =>
+    apiFetch('/sessions', CreateSessionResponse, { method: 'POST', body: { scenarioId, mode } }),
+  postEvents: (sessionId: string, batchSeq: number, events: readonly SimEvent[]) =>
+    apiFetch(`/sessions/${sessionId}/events`, EventBatchResponse, {
+      method: 'POST',
+      body: { batchSeq, events },
+    }),
+  completeSession: (sessionId: string, endTMs: number, clientMeta: ClientMeta) =>
+    apiFetch(`/sessions/${sessionId}/complete`, Score, {
+      method: 'POST',
+      body: { endTMs, clientMeta },
+    }),
+  getSession: (sessionId: string, signal?: AbortSignal) =>
+    apiFetch(`/sessions/${sessionId}`, SessionDetailResponse, { signal }),
 };
