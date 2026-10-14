@@ -44,6 +44,7 @@ A browser-based 3D simulator that trains military personnel to **detect, track, 
 12. **Update §14 "Current status"** of this file at the end of every phase or significant feature.
 13. **Never silently diverge from the spec.** If the spec looks wrong or a better approach exists, say so, propose the change, and after approval update `docs/SPEC.md` and log it in `docs/decisions.md`.
 14. **No unrequested scope.** No extra features or refactors beyond the task; park ideas under "Open ideas" in §14.
+15. **UX is a requirement, not polish.** Read `docs/DESIGN.md` before any UI work, follow it exactly, and pass its §13 checklist. No generic AI-looking UI (gradients, glassmorphism, glow, emoji icons, card walls, marketing copy, unstyled shadcn defaults).
 
 ---
 
@@ -77,8 +78,10 @@ A browser-based 3D simulator that trains military personnel to **detect, track, 
 ├─ CLAUDE.md
 ├─ docs/
 │  ├─ SPEC.md                 # full detailed spec — read before each feature
+│  ├─ DESIGN.md               # UX & visual design guide — binding for all UI work
 │  ├─ realism-sources.md      # every data source / model / incident inspiration, cited
-│  └─ decisions.md            # short ADR log: date, decision, why
+│  ├─ decisions.md            # short ADR log: date, decision, why
+│  └─ plans/                  # approved per-phase / per-part plans
 ├─ apps/
 │  ├─ web/                    # Next.js
 │  │  ├─ app/
@@ -219,6 +222,7 @@ docker compose up        # offline full stack
 - [ ] No secrets, no real military data, no new unapproved dependency.
 - [ ] UI works at 1366×768 and does not drop below the FPS budget (SPEC §16) on integrated graphics, if UI/3D was touched.
 - [ ] Everything still works with `LLM_ENABLED=false`, if AI code was touched.
+- [ ] UI work passes `docs/DESIGN.md` §13 with screenshots at 1366×768 and 1920×1080 reviewed.
 - [ ] Short plain-language summary given.
 
 ---
@@ -284,6 +288,7 @@ docker compose up        # offline full stack
 | LLM features | §13 |
 | Terrain / sun / weather / signatures pipeline | §14 |
 | Screens, HUD layout, shortcuts | §15 |
+| Any UI, visual design, copy, states | `docs/DESIGN.md` |
 | Performance, testing, security | §16 |
 | Deployment, costs | §17 |
 | Team split | §18 |
@@ -319,3 +324,17 @@ docker compose up        # offline full stack
 - Open ideas (parked, not approved):
   - Act on RF strobes (jam along a bearing) and EO-initiated tracks — RF-only contacts are currently unactionable by design (Phase 2B plan, rule 2).
   - Procedural placeholder buildings at OSM village points (OSM building coverage in rural Punjab is sparse); revisit with URBAN_GENERIC in Phase 3.
+
+---
+
+## 15. UX & visual design (summary — full guide in docs/DESIGN.md)
+
+- **Intent:** a calm, dense, precise tactical console; colour means something; every number has a unit; every action gets an immediate answer.
+- **Banned patterns:** see DESIGN.md §2. If one appears, it is a bug.
+- **Colour is information.** Monochrome chrome; colour only for affiliation, status and the single cue accent. Tokens only (CSS variables mapped into Tailwind); no raw hex in components.
+- **Type:** IBM Plex Sans Condensed (labels, UPPERCASE), IBM Plex Sans (body), IBM Plex Mono (all numbers, tabular, with muted units). Sizes only from the DESIGN.md §4 scale.
+- **Shape:** panels with header strips, 1 px hairlines, radius 2 px, no shadows except overlays, no glow.
+- **Feedback:** every trainee action acknowledged within 100 ms in the Comms log; disabled controls explain why; labelled loading; worded empty and error states.
+- **Copy:** military brevity, consistent vocabulary (contact vs track, bearing, range, ROE, effector); no marketing language, no exclamation marks.
+- **Access:** works at 1366×768 without horizontal scroll; full keyboard control; affiliation readable without colour (shape + letter).
+- **Proof:** Playwright screenshots at 1366×768 and 1920×1080 for every changed screen, reviewed against DESIGN.md §13; the `/dev/ui` gallery shows every primitive and state.
