@@ -11,10 +11,12 @@
     "typecheck": "tsc --noEmit -p . && tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {
-    "@vyuh/shared": "workspace:*"
+    "@vyuh/shared": "workspace:*",
+    "suncalc": "1.9.0"
   },
   "devDependencies": {
     "@types/node": "^24",
+    "@types/suncalc": "1.9.2",
     "vitest": "^5.0.4"
   }
 }

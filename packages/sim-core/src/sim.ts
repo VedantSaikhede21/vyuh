@@ -1,6 +1,9 @@
 import {
+  CLASS_PROFILES,
   TraineeEventType,
   type ContactSpec,
+  type EoIrSensor,
+  type EoLevel,
   type RadarSensor,
   type Roe,
   type Scenario,
@@ -10,7 +13,7 @@ import {
 } from '@vyuh/shared';
 import { TICK_MS, TICK_S, advanceClock, ceilToTick, createClock, type SimClock } from './clock.ts';
 import { createContactState, stepContact, type ContactState } from './contacts.ts';
-import { bearingDeg, headingVector, horizontalRange, type Vec3 } from './coords.ts';
+import { bearingDeg, headingVector, horizontalRange, slantRange, type Vec3 } from './coords.ts';
 import { createEffectorState, resolveIntercept, type EffectorState } from './effectors.ts';
 import {
   appendEvent,
@@ -21,7 +24,17 @@ import {
 } from './events.ts';
 import { createLosCache } from './los.ts';
 import { createRng, type RandomStream } from './rng.ts';
+import {
+  EO_EPISODE_RESET_MS,
+  EO_LEVEL_RANK,
+  eoLevel,
+  followPointing,
+  inEoFrustum,
+  pointingTo,
+  type EoCameraState,
+} from './sensors/eoir.ts';
 import { radarScan } from './sensors/radar.ts';
+import { computeEnvironment, type SimEnvironment } from './sun.ts';
 import { sampleHeight, type Heightmap } from './terrain.ts';
 import { createWorld, isWorld, type World } from './world.ts';
 import {
@@ -42,16 +55,15 @@ export type SimCommand = DistributiveOmit<TraineeEvent, 'seq' | 'tMs'>;
 
 export type DispatchResult = { ok: true } | { ok: false; reason: string };
 
-export interface CameraState {
-  azDeg: number;
-  elDeg: number;
-  zoom: number;
-}
+/** EO/IR camera pointing — sim state, set only by logged CAMERA_SLEWED commands. */
+export type CameraState = EoCameraState;
 
 export interface SimState {
   readonly scenarioId: string;
   readonly roe: Roe;
   readonly durationMs: number;
+  /** Sun, night and weather, computed once from the preset and scenario date/time. */
+  readonly environment: SimEnvironment;
   clock: SimClock;
   endReason: SessionEndReason | null;
   /** Ground truth, sorted by id. Rendering may read it; the HUD shows tracks. */
@@ -129,6 +141,7 @@ export function createSim(
     scenarioId: scenario.id,
     roe: scenario.roe,
     durationMs: scenario.durationS * 1000,
+    environment: computeEnvironment(scenario, world.meta),
     clock: createClock(),
     endReason: null,
     contacts: [...scenario.contacts].sort(byId).map(createContactState),
@@ -138,7 +151,7 @@ export function createSim(
       .map((e) => createEffectorState(e, sampleHeight(terrain, e.x, e.z))),
     sensorPositions,
     selectedTrackId: null,
-    camera: { azDeg: 0, elDeg: 0, zoom: 1 },
+    camera: { azDeg: 0, elDeg: 0, zoom: 1, mode: 'DAY', lockTrackId: null },
   };
   const contactsById = new Map(state.contacts.map((c) => [c.id, c]));
   const tracksById = new Map<string, TrackState>();
@@ -214,7 +227,13 @@ export function createSim(
         state.selectedTrackId = cmd.trackId;
         break;
       case 'CAMERA_SLEWED':
-        state.camera = { ...cmd.payload };
+        state.camera = {
+          azDeg: cmd.payload.azDeg,
+          elDeg: cmd.payload.elDeg,
+          zoom: cmd.payload.zoom,
+          mode: cmd.payload.mode ?? state.camera.mode,
+          lockTrackId: cmd.trackId ?? null,
+        };
         break;
       case 'MARKED_DETECTED':
         if (track) track.markedDetected = true;
@@ -339,6 +358,70 @@ export function createSim(
     }
   }
 
+  // ---- EO/IR (SPEC §6.2) ----------------------------------------------------
+  const eo = scenario.sensors.filter((s): s is EoIrSensor => s.kind === 'EO_IR').sort(byId)[0];
+  const eoPos = eo ? sensorPositions[eo.id] : undefined;
+  /** Per contact: highest level emitted in the current pointing episode, and when it last had one. */
+  const eoEpisodes = new Map<string, { rank: number; lastSeenMs: number }>();
+
+  function followLock(): void {
+    const id = state.camera.lockTrackId;
+    if (id === null || eoPos === undefined) return;
+    const track = tracksById.get(id);
+    if (track === undefined || track.status !== 'ACTIVE') {
+      state.camera.lockTrackId = null;
+      return;
+    }
+    const target = {
+      x: track.pos.x,
+      y: sampleHeight(terrain, track.pos.x, track.pos.z) + track.altitudeAglM,
+      z: track.pos.z,
+    };
+    followPointing(state.camera, pointingTo(eoPos, target), TICK_S);
+  }
+
+  function liveTrackFor(contactId: string): string | undefined {
+    return state.tracks.find((t) => t.contactId === contactId && t.status === 'ACTIVE')?.id;
+  }
+
+  function scanEo(tMs: number): void {
+    if (eo === undefined || eoPos === undefined) return;
+    const cond = {
+      isNight: state.environment.isNight,
+      visibilityM: state.environment.weather.visibilityM,
+    };
+    for (const c of state.contacts) {
+      const spec = specs.get(c.id);
+      if (c.status !== 'ACTIVE' || spec === undefined) continue;
+      let level: EoLevel | null = null;
+      const rangeM = slantRange(eoPos, c.pos);
+      if (inEoFrustum(eo, state.camera, eoPos, c.pos)) {
+        const p = CLASS_PROFILES[spec.class];
+        level = eoLevel(eo, state.camera, { ...p, rangeM }, cond);
+        if (level !== null && !los.visible(state.clock.tick, eo.id, eoPos, c.id, c.pos)) {
+          level = null;
+        }
+      }
+      const ep = eoEpisodes.get(c.id);
+      if (level === null) {
+        if (ep && tMs - ep.lastSeenMs >= EO_EPISODE_RESET_MS) eoEpisodes.delete(c.id);
+        continue;
+      }
+      const rank = EO_LEVEL_RANK[level];
+      if (ep === undefined || rank > ep.rank) {
+        const trackId = liveTrackFor(c.id);
+        emit({
+          tMs,
+          type: 'EO_IDENTIFIABLE',
+          contactId: c.id,
+          ...(trackId ? { trackId } : {}),
+          payload: { level, rangeM },
+        });
+      }
+      eoEpisodes.set(c.id, { rank: Math.max(rank, ep?.rank ?? 0), lastSeenMs: tMs });
+    }
+  }
+
   const threatIds = scenario.contacts.filter((c) => c.isThreat).map((c) => c.id);
 
   function tick(): void {
@@ -355,6 +438,8 @@ export function createSim(
     }
 
     scanRadars(tMs);
+    followLock();
+    scanEo(tMs);
 
     if (tMs >= state.durationMs) {
       endSession('TIME_UP');

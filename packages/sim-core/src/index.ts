@@ -81,3 +81,28 @@ export {
   worldFromPreset,
 } from './world.ts';
 export type { World } from './world.ts';
+export {
+  DEFAULT_UTC_OFFSET_MIN,
+  NIGHT_SUN_EL_DEG,
+  computeEnvironment,
+  localInstantMs,
+  sunPosition,
+} from './sun.ts';
+export type { SimEnvironment, SunAzElDeg } from './sun.ts';
+export {
+  CAMERA_FOLLOW_RATE,
+  EO_EPISODE_RESET_MS,
+  EO_LEVEL_RANK,
+  IR_VISIBILITY_FACTOR,
+  JOHNSON_CYCLES,
+  eoHfovDeg,
+  eoIfovRad,
+  eoLevel,
+  eoResolution,
+  followPointing,
+  inEoFrustum,
+  johnsonCycles,
+  levelForCycles,
+  pointingTo,
+} from './sensors/eoir.ts';
+export type { EoCameraState, EoConditions } from './sensors/eoir.ts';
