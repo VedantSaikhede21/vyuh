@@ -10,6 +10,9 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p . && tsc --noEmit -p tsconfig.test.json"
   },
+  "dependencies": {
+    "@vyuh/shared": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^24",
     "vitest": "^5.0.4"
