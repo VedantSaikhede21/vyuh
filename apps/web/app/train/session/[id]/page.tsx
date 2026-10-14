@@ -7,7 +7,7 @@ import { useEffect, useMemo } from 'react';
 import { RequireAuth } from '@/components/require-auth';
 import { ResultScreen } from '@/components/sim/result-screen';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Panel, PanelBody, PanelHeader } from '@/components/hud/primitives';
 import { useCommands } from '@/lib/sim/commands';
 import { useSimLoop } from '@/lib/sim/use-sim-loop';
 import { useTrainingSession } from '@/lib/sim/use-training-session';
@@ -34,14 +34,13 @@ function Briefing({
   onStart: () => void;
 }) {
   return (
-    <Card className="mx-auto max-w-2xl">
-      <CardHeader className="flex items-center justify-between">
-        <CardTitle>{name}</CardTitle>
+    <Panel className="mx-auto max-w-2xl">
+      <PanelHeader title={name}>
         <span className="text-label">
           {mode} · {ROE_LABEL[roe]}
         </span>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      </PanelHeader>
+      <PanelBody className="space-y-4">
         {/* Briefings are simple markdown; headings and paragraphs are shown as plain text. */}
         <div className="space-y-2 text-body">
           {briefing.split('\n').map((line, i) =>
@@ -64,8 +63,8 @@ function Briefing({
         <Button variant="primary" onClick={onStart} autoFocus data-testid="start-session">
           Start session
         </Button>
-      </CardContent>
-    </Card>
+      </PanelBody>
+    </Panel>
   );
 }
 
@@ -124,8 +123,8 @@ function Session({ sessionId }: { sessionId: string }) {
       return <ResultScreen score={phase.score} scenarioName={phase.scenarioName} />;
     case 'interrupted':
       return (
-        <Card className="mx-auto max-w-xl">
-          <CardContent className="space-y-3 pt-4 text-body">
+        <Panel className="mx-auto max-w-xl">
+          <PanelBody className="space-y-3 pt-4 text-body">
             <p>
               This session was interrupted (the page was reloaded or closed mid-run) and cannot be
               resumed.
@@ -133,13 +132,13 @@ function Session({ sessionId }: { sessionId: string }) {
             <Button asChild variant="primary">
               <Link href="/train">Start a new session</Link>
             </Button>
-          </CardContent>
-        </Card>
+          </PanelBody>
+        </Panel>
       );
     case 'error':
       return (
-        <Card className="mx-auto max-w-xl">
-          <CardContent className="space-y-3 pt-4 text-body">
+        <Panel className="mx-auto max-w-xl">
+          <PanelBody className="space-y-3 pt-4 text-body">
             <p className="text-crit">{phase.message}</p>
             <div className="flex gap-2">
               {phase.retry && (
@@ -151,8 +150,8 @@ function Session({ sessionId }: { sessionId: string }) {
                 <Link href="/train">Back to scenarios</Link>
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </PanelBody>
+        </Panel>
       );
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { AffiliationSymbol } from './affiliation-symbol';
+import { AffiliationSymbol } from './primitives';
 import { rfBadgeText } from '@/lib/rf';
 import type { Commands } from '@/lib/sim/commands';
 import { useHudStore } from '@/lib/sim/store';

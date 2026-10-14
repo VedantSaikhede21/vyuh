@@ -2,7 +2,7 @@ import type { Score, ScoreComponents } from '@vyuh/shared';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Panel, PanelBody, PanelHeader } from '@/components/hud/primitives';
 import { CLASS_LABEL } from '@/lib/strings';
 
 const COMPONENT_LABEL: Record<keyof ScoreComponents, string> = {
@@ -44,11 +44,9 @@ export function ResultScreen({ score, scenarioName }: { score: Score; scenarioNa
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Kill-chain breakdown</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <Panel>
+        <PanelHeader title="Kill-chain breakdown" />
+        <PanelBody className="space-y-3">
           {components.map((c) => {
             const pct = (score.components[c] / score.componentMax[c]) * 100;
             return (
@@ -67,15 +65,13 @@ export function ResultScreen({ score, scenarioName }: { score: Score; scenarioNa
             Scored on the server with tree {score.treeVersion}. Contact reports and efficiency are
             scored from a later phase.
           </p>
-        </CardContent>
-      </Card>
+        </PanelBody>
+      </Panel>
 
       {score.penalties.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Penalties and bonuses</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Panel>
+          <PanelHeader title="Penalties and bonuses" />
+          <PanelBody>
             <ul className="space-y-1 text-body">
               {score.penalties.map((p, i) => (
                 <li key={i} className="flex gap-3">
@@ -87,20 +83,19 @@ export function ResultScreen({ score, scenarioName }: { score: Score; scenarioNa
                 </li>
               ))}
             </ul>
-          </CardContent>
-        </Card>
+          </PanelBody>
+        </Panel>
       )}
 
       <div className="grid gap-3 md:grid-cols-2">
         {score.perContact.map((c) => (
-          <Card key={c.contactId}>
-            <CardHeader className="flex items-center justify-between">
-              <CardTitle>
-                {c.isThreat ? 'Threat' : 'Non-threat'} · tracks {c.trackIds.join(', ') || 'none'}
-              </CardTitle>
+          <Panel key={c.contactId}>
+            <PanelHeader
+              title={`${c.isThreat ? 'Threat' : 'Non-threat'} · tracks ${c.trackIds.join(', ') || 'none'}`}
+            >
               {c.outcome && <Badge tone={OUTCOME_TONE[c.outcome] ?? 'warn'}>{c.outcome}</Badge>}
-            </CardHeader>
-            <CardContent className="space-y-2 text-body">
+            </PanelHeader>
+            <PanelBody className="space-y-2 text-body">
               <dl className="grid grid-cols-[10rem_1fr] gap-y-1 text-readout">
                 <dt className="text-label">Detection latency</dt>
                 <dd>
@@ -116,8 +111,8 @@ export function ResultScreen({ score, scenarioName }: { score: Score; scenarioNa
                   <li key={i}>{f}</li>
                 ))}
               </ul>
-            </CardContent>
-          </Card>
+            </PanelBody>
+          </Panel>
         ))}
       </div>
     </div>

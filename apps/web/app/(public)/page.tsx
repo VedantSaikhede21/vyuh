@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { AffiliationLegend } from '@/components/affiliation-legend';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Panel, PanelBody, PanelHeader } from '@/components/hud/primitives';
 import { env } from '@/lib/env';
 
 const KILL_CHAIN = ['Detect', 'Track', 'Identify', 'Decide', 'Respond', 'Assess'];
@@ -29,11 +29,9 @@ export default function LandingPage() {
       </section>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Kill chain</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Panel>
+          <PanelHeader title="Kill chain" />
+          <PanelBody>
             <ol className="flex flex-wrap items-center gap-2 text-readout">
               {KILL_CHAIN.map((stage, i) => (
                 <li key={stage} className="flex items-center gap-2">
@@ -51,16 +49,14 @@ export default function LandingPage() {
                 </li>
               ))}
             </ol>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Affiliation (APP-6)</CardTitle>
-          </CardHeader>
-          <CardContent>
+          </PanelBody>
+        </Panel>
+        <Panel>
+          <PanelHeader title="Affiliation (APP-6)" />
+          <PanelBody>
             <AffiliationLegend />
-          </CardContent>
-        </Card>
+          </PanelBody>
+        </Panel>
       </div>
 
       <p className="text-label">Status: Phase 0 foundations — simulator arrives in Phase 1.</p>
