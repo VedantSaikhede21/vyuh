@@ -415,13 +415,20 @@ def test_penalties_are_listed_and_clamped() -> None:
 # ---- default_v1 re-scores identically after the Part B engine changes ------------------
 
 
-def _drop_none(value: Any) -> Any:
-    """Remove None-valued keys recursively: optional fields added to Score later (decision 64)
-    must not count as a re-score difference, while every real value still has to match."""
+# Optional fields added to Score after the goldens were generated (decision 64). Only these
+# are ignored, and only when unset, so any other field turning None still fails the test.
+_ADDED_OPTIONALS = frozenset({"true_class", "recommended_difficulty", "recommendation_basis"})
+
+
+def _drop_added_optionals(value: Any) -> Any:
     if isinstance(value, dict):
-        return {k: _drop_none(v) for k, v in value.items() if v is not None}
+        return {
+            k: _drop_added_optionals(v)
+            for k, v in value.items()
+            if not (k in _ADDED_OPTIONALS and v is None)
+        }
     if isinstance(value, list):
-        return [_drop_none(v) for v in value]
+        return [_drop_added_optionals(v) for v in value]
     return value
 
 
@@ -433,7 +440,7 @@ def test_v1_golden_cases_rescore_identically() -> None:
         scenario = Scenario.model_validate(case["scenario"])
         assert scenario.scoring_tree_id == "default_v1"
         score = score_session(scenario, case["events"]).model_dump(mode="json")
-        assert _drop_none(score) == _drop_none(case["score"]), name
+        assert _drop_added_optionals(score) == case["score"], name
 
 
 # ---- default_v2 (Phase 2B: EW, UNAVOIDABLE, jammed non-threats) ---------------------------
