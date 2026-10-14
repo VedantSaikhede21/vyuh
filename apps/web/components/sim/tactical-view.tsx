@@ -1,16 +1,15 @@
 'use client';
 
-import { OrbitControls, Sky } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { BuildingsMesh } from './buildings-mesh';
 import { Drones } from './drones';
+import { Environment } from './environment';
 import { SimRuntimeContext } from './sim-context';
 import { SiteMarkers } from './site-markers';
 import { TerrainMesh } from './terrain-mesh';
 import { TrackMarkers } from './track-markers';
-
-const HORIZON = '#9fb4c4';
 
 /** Centre 3D view: orbit camera over the defended position (SPEC §15). */
 export function TacticalView({
@@ -28,11 +27,7 @@ export function TacticalView({
       className="h-full w-full"
     >
       <SimRuntimeContext.Provider value={runtime}>
-        <color attach="background" args={[HORIZON]} />
-        <fog attach="fog" args={[HORIZON, 4000, 16_000]} />
-        <Sky distance={45_000} sunPosition={[-0.4, 0.6, -0.5]} turbidity={6} rayleigh={1.2} />
-        <hemisphereLight args={['#dfe9f0', '#3a3a2a', 0.9]} />
-        <directionalLight position={[-3000, 5000, 2000]} intensity={1.6} />
+        <Environment env={runtime.sim.getState().environment} variant="tactical" />
         <TerrainMesh world={runtime.world} />
         <BuildingsMesh index={runtime.world.buildings} />
         <SiteMarkers />
