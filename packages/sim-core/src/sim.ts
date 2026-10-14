@@ -50,6 +50,7 @@ import {
 import { gaussian, radarScan } from './sensors/radar.ts';
 import {
   RF_SCAN_MS,
+  RF_SCAN_OFFSET_MS,
   RF_STROBE_TTL_MS,
   formatStrobeId,
   rfBadgeFor,
@@ -623,7 +624,7 @@ export function createSim(
   let nextStrobeNo = 1;
 
   function scanRf(tMs: number): void {
-    if (tMs % RF_SCAN_MS === 0) {
+    if (tMs % RF_SCAN_MS === RF_SCAN_OFFSET_MS) {
       for (const rf of rfSensors) {
         const inLos = (c: ContactState) =>
           los.visible(state.clock.tick, rf.cfg.id, rf.pos, c.id, c.pos);
