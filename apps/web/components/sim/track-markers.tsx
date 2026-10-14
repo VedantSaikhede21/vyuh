@@ -1,10 +1,17 @@
 'use client';
 
-import { Billboard, Html, Line } from '@react-three/drei';
+import { Billboard, Html } from '@react-three/drei';
 import type { Affiliation } from '@vyuh/shared';
 import { toThree } from '@vyuh/sim-core';
-import type { RefObject } from 'react';
-import { Path, Shape, ShapeGeometry } from 'three';
+import { useEffect, useMemo, type RefObject } from 'react';
+import {
+  BufferAttribute,
+  BufferGeometry,
+  LineBasicMaterial,
+  Path,
+  Shape,
+  ShapeGeometry,
+} from 'three';
 import { AFFILIATION_STYLE, affiliationOutline } from '@/lib/affiliation';
 import { useHudStore, type TrackView } from '@/lib/sim/store';
 import { useSimRuntime } from './sim-context';
@@ -38,6 +45,53 @@ function frame(aff: Affiliation) {
     FRAMES.set(aff, f);
   }
   return f;
+}
+
+/**
+ * Stalk material per affiliation, shared and never disposed. A material per
+ * marker (drei <Line>) freed its shader whenever bird tracks came and went, and
+ * three.js recompiled it ~15 times a second in a 60-bird scene.
+ */
+const STALKS = new Map<Affiliation, LineBasicMaterial>();
+function stalkMaterial(aff: Affiliation) {
+  let m = STALKS.get(aff);
+  if (m === undefined) {
+    m = new LineBasicMaterial({
+      color: AFFILIATION_STYLE[aff].hex,
+      transparent: true,
+      opacity: 0.6,
+    });
+    STALKS.set(aff, m);
+  }
+  return m;
+}
+
+/** Ground-to-marker stalk: one segment, positions updated in place. */
+function Stalk({
+  x,
+  z,
+  ground,
+  top,
+  aff,
+}: {
+  x: number;
+  z: number;
+  ground: number;
+  top: number;
+  aff: Affiliation;
+}) {
+  const geometry = useMemo(() => {
+    const g = new BufferGeometry();
+    g.setAttribute('position', new BufferAttribute(new Float32Array(6), 3));
+    return g;
+  }, []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  const pos = geometry.getAttribute('position') as BufferAttribute;
+  pos.setXYZ(0, x, ground, z);
+  pos.setXYZ(1, x, top, z);
+  pos.needsUpdate = true;
+  geometry.computeBoundingSphere();
+  return <lineSegments geometry={geometry} material={stalkMaterial(aff)} />;
 }
 
 function TrackMarker({
@@ -74,16 +128,7 @@ function TrackMarker({
           />
         </mesh>
       </Billboard>
-      <Line
-        points={[
-          [top.x, ground, top.z],
-          [top.x, top.y, top.z],
-        ]}
-        color={style.hex}
-        lineWidth={1}
-        transparent
-        opacity={0.6}
-      />
+      <Stalk x={top.x} z={top.z} ground={ground} top={top.y} aff={track.affiliation} />
       {selected && (
         <mesh position={[top.x, top.y + MARKER_M, top.z]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[MARKER_M * 1.8, MARKER_M * 2.2, 32]} />
