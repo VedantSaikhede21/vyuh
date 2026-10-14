@@ -42,3 +42,18 @@ The repo moved from a OneDrive-synced folder on C: to `D:\dev\vyuh` (C: was full
 ## 2026-10-14 — Merge strategy
 
 16. **PRs are rebase-merged, not squash-merged** (CLAUDE.md §12). *Why:* VYUH has a single developer, and individual commits on `main` keep a readable history and count on the contribution graph; CI still gates every PR. Phase 0 history was restored to its 9 original commits after an initial squash.
+
+## 2026-10-14 — Phase 1 (MVP loop)
+
+17. **Phase 1 terrain is a procedural heightmap** (`PROCEDURAL_HILLS`: seeded 3-octave value noise, ~60 m relief, flat 400 m around the origin), not a flat plane. *Why:* exercises the same `sampleHeight` path that Phase 2 real-DEM presets use.
+18. **Score scale:** the Phase 1 tree scores detection (25), classification (25) and decision (30); `total` is scaled to 100 over the components the tree scores (`componentMax > 0`), then penalties/bonuses are added and clamped to 0..100. Each component is the mean over scored threat contacts; a threat that was never detectable is excluded (SPEC §9.6). With no scored threat the base is full marks. `Score.componentMax` comes from the (immutable) tree file, so no DB column is needed.
+19. **"Trainee detected" = first MARKED_DETECTED, CLASSIFIED, AFFILIATION_SET or RESPONSE_ORDERED** on any of the contact's tracks (TRACK_SELECTED does not count). *Why:* a trainee who classifies without pressing D clearly noticed the track; scoring them as "missed" would be unfair.
+20. **Decision-tree format:** `if` nodes (metric/op/value), `bands` nodes (one leaf per band, then `next`), leaves with `component` + `points` or a session-level `adjust` (penalty/bonus, listed in `penalties`), `excluded` for fairness, and templated `feedback`. A pytest fails if any leaf lacks a test case.
+21. **Enum additions:** `ContactOutcome.UNRESOLVED` (threat neither neutralised nor leaked at time-up) and `ResponseResult.NO_AMMO`. `PerContactMetrics` gains `trackIds` and `leaves`.
+22. **EW_JAM / EW_SPOOF commands are rejected by `sim.dispatch` in Phase 1** (no EW effectors yet) rather than returning a fake outcome.
+23. **Radar tracks associate by ground truth** (one track per radar × contact); confirmation is still N-of-M on noisy detections. *Why:* data association is out of scope for the MVP; the trainee still only sees track ids.
+24. **Plausibility (SPEC §3.3) runs per batch and again on complete.** Extra rules beyond the spec list: contiguous `seq` (detects lost batches), first event is a matching SESSION_STARTED, no duplicate track ids, no events after SESSION_ENDED, and on complete the log must contain SESSION_ENDED with `endTMs` consistent. A failing batch is rejected whole and its `batchSeq` is not consumed.
+25. **Responses embedding a Scenario or Score use `response_model_exclude_unset`.** *Why:* zod `.optional()` rejects `null`; explicit nullable fields (e.g. `endedAt`) are still sent as `null`.
+26. **Real sim logs as API fixtures** (`apps/api/tests/fixtures/`, written by `packages/sim-core/scripts/export-api-fixtures.ts`); a sim-core test fails if they are stale. *Why:* API tests exercise exactly what the client sends.
+27. **`MAX_EVENTS_PER_SESSION` is mirrored in Python** with a test cross-checking `api.ts` (same pattern as decision 12).
+28. **Elo update on complete is deferred to Phase 5** (adaptive difficulty), where it is listed in SPEC §12.

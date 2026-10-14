@@ -1,0 +1,177 @@
+{
+  "id": "default_v1",
+  "description": "Phase 1 tree: detection (25), classification (25), decision (30). Report and efficiency arrive in later phases.",
+  "componentMax": { "detection": 25, "classification": 25, "decision": 30, "report": 0, "efficiency": 0 },
+  "root": "isThreat",
+  "nodes": {
+    "isThreat": {
+      "if": { "metric": "isThreat", "op": "==", "value": true },
+      "then": "detectable",
+      "else": "nonThreatFratricide"
+    },
+    "detectable": {
+      "if": { "metric": "firstDetectableTMs", "op": "exists" },
+      "then": "detected",
+      "else": {
+        "leaf": "NOT_DETECTABLE",
+        "excluded": true,
+        "feedback": "This threat was never detectable by your sensors, so it is not scored."
+      }
+    },
+    "detected": {
+      "if": { "metric": "traineeDetectedTMs", "op": "exists" },
+      "then": "latency",
+      "else": {
+        "leaf": "MISSED",
+        "component": "detection",
+        "points": 0,
+        "feedback": "Threat was on radar from {firstDetectableS:.0f} s but you never acted on its track."
+      }
+    },
+    "latency": {
+      "bands": { "metric": "detectionLatencyS", "edges": [5, 15, 30] },
+      "leaves": [
+        {
+          "leaf": "LATENCY_UNDER_5S",
+          "component": "detection",
+          "points": 25,
+          "feedback": "Fast detection: acted {detectionLatencyS:.1f} s after the track appeared."
+        },
+        {
+          "leaf": "LATENCY_5_TO_15S",
+          "component": "detection",
+          "points": 18,
+          "feedback": "Detected {detectionLatencyS:.1f} s after the track appeared; aim for under 5 s."
+        },
+        {
+          "leaf": "LATENCY_15_TO_30S",
+          "component": "detection",
+          "points": 10,
+          "feedback": "Slow detection: {detectionLatencyS:.1f} s after the track appeared. Scan the radar continuously."
+        },
+        {
+          "leaf": "LATENCY_OVER_30S",
+          "component": "detection",
+          "points": 4,
+          "feedback": "Very slow detection: {detectionLatencyS:.1f} s after the track appeared."
+        }
+      ],
+      "next": "classified"
+    },
+    "classified": {
+      "if": { "metric": "classifiedAs", "op": "exists" },
+      "then": "classExact",
+      "else": {
+        "leaf": "NOT_CLASSIFIED",
+        "component": "classification",
+        "points": 0,
+        "feedback": "Never classified. Identify every track you act on.",
+        "next": "decisionNeutralised"
+      }
+    },
+    "classExact": {
+      "if": { "metric": "classificationCorrect", "op": "==", "value": "EXACT" },
+      "then": {
+        "leaf": "CLASS_EXACT",
+        "component": "classification",
+        "points": 25,
+        "feedback": "Correctly classified as {classifiedAs}.",
+        "next": "decisionNeutralised"
+      },
+      "else": "classCategory"
+    },
+    "classCategory": {
+      "if": { "metric": "classificationCorrect", "op": "==", "value": "CATEGORY" },
+      "then": {
+        "leaf": "CLASS_CATEGORY",
+        "component": "classification",
+        "points": 12,
+        "feedback": "Classified as {classifiedAs}: right category, but it was a {trueClass}.",
+        "next": "decisionNeutralised"
+      },
+      "else": "classWrongWhy"
+    },
+    "classWrongWhy": {
+      "if": { "metric": "identifiableWhenClassified", "op": "==", "value": false },
+      "then": {
+        "leaf": "CLASS_WRONG_BEFORE_IDENTIFIABLE",
+        "component": "classification",
+        "points": 0,
+        "feedback": "Classified as {classifiedAs} before it was identifiable; it was a {trueClass}. Wait for a clear EO/IR view.",
+        "next": "decisionNeutralised"
+      },
+      "else": {
+        "leaf": "CLASS_WRONG",
+        "component": "classification",
+        "points": 0,
+        "feedback": "Misclassified as {classifiedAs}; it was a {trueClass}.",
+        "next": "decisionNeutralised"
+      }
+    },
+    "decisionNeutralised": {
+      "if": { "metric": "outcome", "op": "==", "value": "NEUTRALISED" },
+      "then": {
+        "leaf": "DECISION_NEUTRALISED",
+        "component": "decision",
+        "points": 30,
+        "feedback": "Neutralised before it reached the asset ({interceptsFired} round(s) used)."
+      },
+      "else": "decisionFired"
+    },
+    "decisionFired": {
+      "if": { "metric": "interceptsFired", "op": ">", "value": 0 },
+      "then": {
+        "leaf": "DECISION_ENGAGED_NOT_NEUTRALISED",
+        "component": "decision",
+        "points": 15,
+        "feedback": "Engaged ({interceptsFired} round(s)) but did not neutralise. Engage earlier to leave time to re-attack."
+      },
+      "else": "decisionOrdered"
+    },
+    "decisionOrdered": {
+      "if": { "metric": "interceptsOrdered", "op": ">", "value": 0 },
+      "then": {
+        "leaf": "DECISION_INEFFECTIVE",
+        "component": "decision",
+        "points": 5,
+        "feedback": "Intercept ordered but never fired (last result: {lastResult}). Check range, cooldown and ROE."
+      },
+      "else": {
+        "leaf": "DECISION_NONE",
+        "component": "decision",
+        "points": 0,
+        "feedback": "No response ordered against a confirmed threat."
+      }
+    },
+    "nonThreatFratricide": {
+      "if": { "metric": "outcome", "op": "==", "value": "FRATRICIDE" },
+      "then": {
+        "leaf": "FRATRICIDE",
+        "adjust": -40,
+        "feedback": "Engaged a friendly {trueClass}. Confirm affiliation before engaging."
+      },
+      "else": "nonThreatEngaged"
+    },
+    "nonThreatEngaged": {
+      "if": { "metric": "outcome", "op": "==", "value": "WRONGLY_ENGAGED" },
+      "then": {
+        "leaf": "WRONGLY_ENGAGED",
+        "adjust": -25,
+        "feedback": "Engaged a non-threat ({trueClass}). Identify before you engage."
+      },
+      "else": "nonThreatIdentified"
+    },
+    "nonThreatIdentified": {
+      "if": { "metric": "classificationCorrect", "op": "==", "value": "EXACT" },
+      "then": {
+        "leaf": "NON_THREAT_IDENTIFIED",
+        "adjust": 5,
+        "feedback": "Correctly identified a non-threat ({trueClass}) and held fire."
+      },
+      "else": {
+        "leaf": "NON_THREAT_LEFT_ALONE",
+        "feedback": "Non-threat ({trueClass}) was left alone."
+      }
+    }
+  }
+}
