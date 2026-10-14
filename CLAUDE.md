@@ -173,7 +173,7 @@ PostgreSQL ← all of the above
 pnpm install
 pnpm dev                 # web + api concurrently
 pnpm gen:schemas         # zod → JSON Schema → Pydantic
-pnpm test                # vitest across packages
+pnpm test                # vitest: packages + apps/web unit tests
 pnpm lint
 cd apps/api && uv run pytest
 cd apps/api && uv run alembic upgrade head
@@ -306,9 +306,11 @@ docker compose up        # offline full stack
 - [ ] 5 AI layer
 - [ ] 6 Polish & deploy
 
-- Current phase: **1 — MVP loop: plan approved (branch `feat/phase1-mvp-loop`)**
-- Last completed: Phase 0 Foundations (merged 2026-10-14, PR #1, CI green) — shared schemas + codegen, sim-core RNG, API skeleton (auth, RBAC, migrations, seed), web (login, /train), CI workflow. Verified: `pnpm lint`, `pnpm test` (38), `uv run pytest` (40), `pnpm gen:schemas` no diff, `next build`, `pnpm dev` + dev-login → `/auth/me`.
-- Next up: Phase 1 build — plan approved, follow `docs/plans/phase-1.md` (step 1 first)
+- Current phase: **1 — MVP loop: built on `feat/phase1-mvp-loop`, awaiting manual browser playthrough + FPS check before it is marked done**
+- Last completed: Phase 0 Foundations (merged 2026-10-14, PR #1, CI green).
+- Phase 1 so far (all 9 plan steps committed): shared schemas (list/detail/session detail, `componentMax`); sim-core clock/coords/procedural terrain/kinematics/radar/N-of-M tracks/intercept/`createSim`; S01–S03 seeded; `/scenarios` + `/sessions` endpoints with plausibility checks; decision-tree scoring (`default_v1`) + `complete`; web runtime loop, batcher, R3F tactical scene, HUD, `/train` → player → result screen. Verified: `pnpm lint`, `pnpm test` (shared 32, sim-core 60, web 10), `uv run pytest` (120), `pnpm gen:schemas` no diff, `next build`, HTTP smoke test (login → session → events → complete → score 100 → GET).
+- Next up: user plays S01–S03 in the browser at 1366×768 (check FPS ≥ 30 on integrated graphics), then close out Phase 1 (done-criteria evidence, PR).
 - Known issues: the old pre-move container `sih-2026-postgres-1` (from the OneDrive copy) holds port 5432, so `docker compose up` from this repo fails until it is stopped. It has the same DBs and credentials, and is in use for now. Web auth guard is client-side only (tech debt, decision 9).
+- Tech debt (Phase 1): unsent event batches are kept in memory only (no `sessionStorage` yet); a reloaded mid-run session cannot be resumed; `ABANDONED` (15 min idle) is not automated; no Playwright E2E yet; Elo update deferred to Phase 5 (decision 28).
 - Open decisions:
 - Open ideas (parked, not approved):
