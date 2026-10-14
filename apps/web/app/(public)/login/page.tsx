@@ -58,7 +58,7 @@ function LoginForm() {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-muted px-3 font-mono text-sm"
+                className="h-10 w-full rounded-sm border border-line-2 bg-bg-3 px-3 text-readout"
               >
                 {DEMO_ACCOUNTS.map((a) => (
                   <option key={a} value={a}>
@@ -66,7 +66,7 @@ function LoginForm() {
                   </option>
                 ))}
               </select>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-body text-text-2">
                 Offline development only — no password. Disabled when the API runs with ENV=prod.
               </p>
             </div>
@@ -97,10 +97,7 @@ function LoginForm() {
             </>
           )}
           {error ? (
-            <p
-              role="alert"
-              className="rounded-md border border-destructive px-3 py-2 text-sm text-destructive"
-            >
+            <p role="alert" className="rounded-sm border border-crit px-3 py-2 text-body text-crit">
               {error}
             </p>
           ) : null}

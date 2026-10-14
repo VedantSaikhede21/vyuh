@@ -18,6 +18,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { IR_MATERIALS } from '@/lib/sim/ir-materials';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useSimRuntime } from './sim-context';
+import { GROUND } from '@/lib/theme/scene-colours';
 
 // Contacts at true size, one InstancedMesh per shape family (≈ 4 draw calls).
 // Each geometry is normalised to a 1 m largest dimension (nose toward −z) and
@@ -159,7 +160,7 @@ function FamilyMesh({
 
   return (
     <instancedMesh ref={ref} args={[geometry, undefined, members.length]} frustumCulled={false}>
-      <meshLambertMaterial color="#1a1d21" />
+      <meshLambertMaterial color={GROUND.droneBody} />
     </instancedMesh>
   );
 }

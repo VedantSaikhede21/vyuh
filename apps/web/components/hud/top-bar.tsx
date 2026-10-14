@@ -8,10 +8,10 @@ import { ROE_LABEL, formatClock } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 
 const TONE: Record<string, string> = {
-  info: 'text-muted-foreground',
-  good: 'text-neutral',
-  warn: 'text-warning',
-  bad: 'text-destructive',
+  info: 'text-text-2',
+  good: 'text-ok',
+  warn: 'text-warn',
+  bad: 'text-crit',
 };
 
 /** Top bar (SPEC §15): scenario, clock, ROE state, latest alert or message. */
@@ -32,31 +32,29 @@ export function TopBar({
   if (!hud) return null;
   const alert = hud.alerts[0];
   return (
-    <div className="flex h-10 items-center gap-3 border-b border-border bg-card px-3 font-mono text-sm">
-      <span className="font-bold uppercase tracking-wider">{name}</span>
-      <span className="hud-label">{mode}</span>
-      <span className="tabular-nums" aria-label="Elapsed and remaining time">
+    <div className="flex h-10 items-center gap-3 border-b border-line-1 bg-bg-1 px-3 text-readout">
+      <span className="font-semibold uppercase tracking-wider">{name}</span>
+      <span className="text-label">{mode}</span>
+      <span className="tnum" aria-label="Elapsed and remaining time">
         T+{formatClock(hud.tMs)}{' '}
-        <span className="text-muted-foreground">/ −{formatClock(hud.durationMs - hud.tMs)}</span>
+        <span className="text-text-2">/ −{formatClock(hud.durationMs - hud.tMs)}</span>
       </span>
       <span
         className={cn(
-          'rounded-sm border px-1.5 text-xs font-bold',
-          hud.roe === 'WEAPONS_FREE'
-            ? 'border-neutral text-neutral'
-            : 'border-warning text-warning',
+          'rounded-sm border px-1.5 text-small font-semibold',
+          hud.roe === 'WEAPONS_FREE' ? 'border-ok text-ok' : 'border-warn text-warn',
         )}
       >
         {ROE_LABEL[hud.roe]}
       </span>
-      {hud.paused && <span className="font-bold text-warning">PAUSED</span>}
+      {hud.paused && <span className="font-semibold text-warn">PAUSED</span>}
       <span
         className={cn('min-w-0 flex-1 truncate', TONE[message?.tone ?? alert?.tone ?? 'info'])}
         role="status"
       >
         {message ? message.text : alert ? `T+${formatClock(alert.tMs)} ${alert.text}` : ''}
       </span>
-      <span className="hud-label hidden xl:inline">{upload}</span>
+      <span className="text-label hidden xl:inline">{upload}</span>
       <Button
         size="sm"
         variant="ghost"

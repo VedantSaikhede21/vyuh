@@ -1,6 +1,5 @@
 'use client';
 
-import { RF_HEX } from '@/lib/rf';
 import { useHudStore } from '@/lib/sim/store';
 import { pad3 } from '@/lib/strings';
 
@@ -10,15 +9,15 @@ export function RfPanel() {
   const strobes = hud?.rfStrobes ?? [];
   if (strobes.length === 0) {
     return (
-      <p className="hud-label p-3">
+      <p className="text-label p-3">
         No RF emissions heard. Silent links (GNSS, fibre-optic) never show here.
       </p>
     );
   }
   return (
-    <table className="w-full border-collapse font-mono text-sm">
+    <table className="w-full border-collapse text-readout">
       <thead>
-        <tr className="hud-label text-left">
+        <tr className="text-label text-left">
           <th className="px-2 py-1">Strobe</th>
           <th className="px-2 py-1">Sensor</th>
           <th className="px-2 py-1 text-right">Brg</th>
@@ -29,10 +28,8 @@ export function RfPanel() {
       </thead>
       <tbody>
         {strobes.map((s) => (
-          <tr key={s.id} className="border-t border-border">
-            <td className="px-2 py-1 font-bold" style={{ color: RF_HEX }}>
-              {s.id}
-            </td>
+          <tr key={s.id} className="border-t border-line-1">
+            <td className="px-2 py-1 font-semibold">{s.id}</td>
             <td className="px-2 py-1">{s.sensorId}</td>
             <td className="px-2 py-1 text-right">{pad3(s.bearingDeg)}</td>
             <td className="px-2 py-1">{s.band ?? '—'}</td>

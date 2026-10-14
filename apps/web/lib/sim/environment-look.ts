@@ -1,6 +1,7 @@
 import type { SimEnvironment } from '@vyuh/sim-core';
 import { toThree } from '@vyuh/sim-core';
 import { Color } from 'three';
+import { SKY } from '@/lib/theme/scene-colours';
 
 // One environment for every view (SPEC §14): sun direction / colour / intensity
 // from the sim's computed sun, sky by day and stars by night, fog from
@@ -10,16 +11,16 @@ import { Color } from 'three';
 
 export type EnvironmentVariant = 'tactical' | 'eo';
 
-const SKY_DAY = new Color('#9fb4c4');
-const SKY_NIGHT = new Color('#0b1020');
-const SKY_DUSK = new Color('#b4876a');
-const HAZE = new Color('#a9adb0');
-const HEMI_SKY_DAY = new Color('#dfe9f0');
-const HEMI_SKY_NIGHT = new Color('#27324d');
-const HEMI_GROUND_DAY = new Color('#3a3a2a');
-const HEMI_GROUND_NIGHT = new Color('#0a0a0c');
-const SUN_LOW = new Color('#ffb26b');
-const SUN_HIGH = new Color('#fff6e8');
+const SKY_DAY = new Color(SKY.day);
+const SKY_NIGHT = new Color(SKY.night);
+const SKY_DUSK = new Color(SKY.dusk);
+const HAZE = new Color(SKY.haze);
+const HEMI_SKY_DAY = new Color(SKY.hemiSkyDay);
+const HEMI_SKY_NIGHT = new Color(SKY.hemiSkyNight);
+const HEMI_GROUND_DAY = new Color(SKY.hemiGroundDay);
+const HEMI_GROUND_NIGHT = new Color(SKY.hemiGroundNight);
+const SUN_LOW = new Color(SKY.sunLow);
+const SUN_HIGH = new Color(SKY.sunHigh);
 /** Intensity of the tactical map's overhead display light when the real sun is weaker. */
 const TACTICAL_MAP_LIGHT = 1.2;
 const MAP_LIGHT_DIR: [number, number, number] = [0.3, 0.9, 0.3];

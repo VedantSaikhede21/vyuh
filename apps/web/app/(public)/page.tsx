@@ -10,9 +10,9 @@ export default function LandingPage() {
   return (
     <div className="space-y-6">
       <section className="space-y-3">
-        <p className="hud-label">SIH 2026 · PS 26247 · Training simulator</p>
-        <h1 className="text-3xl font-semibold tracking-tight">Counter-drone threat trainer</h1>
-        <p className="max-w-2xl text-muted-foreground">
+        <p className="text-label">SIH 2026 · PS 26247 · Training simulator</p>
+        <h1 className="text-h1 font-semibold tracking-tight">Counter-drone threat trainer</h1>
+        <p className="max-w-2xl text-text-2">
           Practise detecting, tracking, identifying and responding to drone and swarm threats in a
           browser, under realistic conditions, with server-side scoring and after-action review.
         </p>
@@ -34,17 +34,17 @@ export default function LandingPage() {
             <CardTitle>Kill chain</CardTitle>
           </CardHeader>
           <CardContent>
-            <ol className="flex flex-wrap items-center gap-2 font-mono text-sm">
+            <ol className="flex flex-wrap items-center gap-2 text-readout">
               {KILL_CHAIN.map((stage, i) => (
                 <li key={stage} className="flex items-center gap-2">
-                  <span className="rounded-sm border border-border px-2 py-1">
-                    <span className="num text-muted-foreground">
+                  <span className="rounded-sm border border-line-1 px-2 py-1">
+                    <span className="font-mono tnum text-text-2">
                       {String(i + 1).padStart(2, '0')}
                     </span>{' '}
                     {stage}
                   </span>
                   {i < KILL_CHAIN.length - 1 ? (
-                    <span aria-hidden className="text-muted-foreground">
+                    <span aria-hidden className="text-text-2">
                       →
                     </span>
                   ) : null}
@@ -63,7 +63,7 @@ export default function LandingPage() {
         </Card>
       </div>
 
-      <p className="hud-label">Status: Phase 0 foundations — simulator arrives in Phase 1.</p>
+      <p className="text-label">Status: Phase 0 foundations — simulator arrives in Phase 1.</p>
     </div>
   );
 }

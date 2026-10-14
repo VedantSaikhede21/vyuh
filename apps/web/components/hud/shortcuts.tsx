@@ -79,18 +79,18 @@ export function CheatSheet() {
       role="dialog"
       aria-label="Keyboard shortcuts"
     >
-      <div className="w-[520px] max-w-[95vw] border border-border bg-card p-4">
+      <div className="w-[520px] max-w-[95vw] border border-line-1 bg-bg-1 p-4">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-mono text-base font-bold uppercase tracking-wider">Shortcuts</h2>
+          <h2 className="text-panel-title">Shortcuts</h2>
           <Button size="sm" variant="ghost" onClick={() => set({ cheatSheet: false })}>
             Close (Esc)
           </Button>
         </div>
-        <dl className="grid grid-cols-[10rem_1fr] gap-y-1 text-sm">
+        <dl className="grid grid-cols-[10rem_1fr] gap-y-1 text-body">
           {SHORTCUTS.map((s) => (
             <div key={s.keys} className="contents">
-              <dt className="font-mono text-primary">{s.keys}</dt>
-              <dd className={s.later ? 'text-muted-foreground' : ''}>
+              <dt className="font-mono text-text-1">{s.keys}</dt>
+              <dd className={s.later ? 'text-text-2' : ''}>
                 {s.action}
                 {s.later && ' (later phase)'}
               </dd>

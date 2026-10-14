@@ -1,102 +1,209 @@
 @import 'tailwindcss';
 
 /*
- * VYUH tactical HUD theme. Dark by default, high contrast, flat surfaces.
- * No glassmorphism: no backdrop blur, no translucent panels, no glows.
+ * VYUH design tokens — docs/DESIGN.md §3–§7 (binding).
+ * Colour is information: monochrome chrome; colour only for affiliation,
+ * status and the single cue accent. Components use these tokens through
+ * Tailwind (bg-bg-1, text-text-2, border-line-1, text-aff-hostile …); raw hex
+ * is allowed only here and in lib/theme/scene-colours.ts (decision 62).
  */
 
 :root {
-  /* surfaces */
-  --background: #070b0f;
-  --foreground: #d7e3ea;
-  --card: #0d141b;
-  --card-foreground: #d7e3ea;
-  --muted: #121b24;
-  --muted-foreground: #8597a6;
-  --border: #22313f;
-  --input: #22313f;
+  /* 3.1 surfaces & text */
+  --bg-0: #0a0d0c;
+  --bg-1: #101513;
+  --bg-2: #161d1a;
+  --bg-3: #1e2723;
+  --line-1: #26312c;
+  --line-2: #34423b;
+  --text-1: #dce4df;
+  --text-2: #9aa9a1;
+  --text-3: #627069;
 
-  /* accent: HUD teal (kept distinct from APP-6 blue/green) */
-  --primary: #3fd6c0;
-  --primary-foreground: #031412;
-  --ring: #3fd6c0;
-  --destructive: #ff5a5a;
-  --destructive-foreground: #1a0303;
-  --warning: #ffb347;
+  /* 3.2 interaction */
+  --select: #f2f5f3;
+  --cue: #d46bc8;
+  --primary-bg: #e7e2d3;
+  --primary-fg: #0a0d0c;
 
-  /* APP-6 affiliation colours (on dark): hostile red, friendly blue, neutral green, unknown yellow */
-  --hostile: #ff5050;
-  --friendly: #4fb3ff;
-  --neutral: #4be37a;
-  --unknown: #ffe14a;
+  /* 3.3 affiliation — always paired with shape + letter */
+  --aff-hostile: #ff6b6b;
+  --aff-friendly: #5cc8ff;
+  --aff-neutral: #6fd08c;
+  --aff-unknown: #f2d45c;
 
-  --radius: 0.25rem;
+  /* 3.4 status */
+  --ok: #6fd08c;
+  --warn: #f0a94b;
+  --crit: #ff5a5f;
+  --info: #9aa9a1;
 
-  --font-sans:
-    'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
-  --font-mono:
-    'Cascadia Mono', 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo,
-    monospace;
+  /* §5 overlay shadow (menus, modals, tooltips only) */
+  --shadow-overlay: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  /* §7 motion */
+  --ease-ui: cubic-bezier(0.2, 0, 0, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-ring: var(--ring);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-warning: var(--warning);
-  --color-hostile: var(--hostile);
-  --color-friendly: var(--friendly);
-  --color-neutral: var(--neutral);
-  --color-unknown: var(--unknown);
-  --radius-sm: calc(var(--radius) - 1px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 2px);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-bg-0: var(--bg-0);
+  --color-bg-1: var(--bg-1);
+  --color-bg-2: var(--bg-2);
+  --color-bg-3: var(--bg-3);
+  --color-line-1: var(--line-1);
+  --color-line-2: var(--line-2);
+  --color-text-1: var(--text-1);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-select: var(--select);
+  --color-cue: var(--cue);
+  --color-primary-bg: var(--primary-bg);
+  --color-primary-fg: var(--primary-fg);
+  --color-aff-hostile: var(--aff-hostile);
+  --color-aff-friendly: var(--aff-friendly);
+  --color-aff-neutral: var(--aff-neutral);
+  --color-aff-unknown: var(--aff-unknown);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-crit: var(--crit);
+  --color-info: var(--info);
+
+  /* §4 families */
+  --font-*: initial;
+  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-cond: var(--font-plex-condensed), var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* §4 sizes: only the DESIGN scale exists (use the text-<role> utilities below) */
+  --text-*: initial;
+
+  /* §5 radius: 2 px default, 4 px overlays; rounded-full only for chips ≤ 20 px */
+  --radius-*: initial;
+  --radius-xs: 2px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+
+  /* §5 shadows: none, except overlays */
+  --shadow-*: initial;
+  --shadow-overlay: var(--shadow-overlay);
+
+  --ease-*: initial;
+  --ease-ui: var(--ease-ui);
+}
+
+/*
+ * §4 type scale. One utility per role sets family, size, line height, weight
+ * and case together, so a role can't be half-applied.
+ */
+@utility text-display {
+  font-family: var(--font-cond);
+  font-size: 40px;
+  line-height: 44px;
+  font-weight: 600;
+}
+@utility text-h1 {
+  font-family: var(--font-cond);
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 600;
+}
+@utility text-h2 {
+  font-family: var(--font-cond);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+}
+@utility text-panel-title {
+  font-family: var(--font-cond);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+@utility text-label {
+  font-family: var(--font-cond);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+}
+@utility text-body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 400;
+}
+@utility text-small {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 400;
+}
+@utility text-readout {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+@utility text-readout-lg {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+/* Tabular figures for any number not already in a readout role. */
+@utility tnum {
+  font-variant-numeric: tabular-nums slashed-zero;
 }
 
 @layer base {
   * {
-    border-color: var(--border);
+    border-color: var(--line-1);
   }
   html {
     color-scheme: dark;
+    background: var(--bg-0);
   }
   body {
-    background: var(--background);
-    color: var(--foreground);
+    background: var(--bg-0);
+    color: var(--text-1);
     font-family: var(--font-sans);
-    font-size: 15px; /* ≥ 14 px everywhere (SPEC §15.2) */
+    font-size: 14px;
+    line-height: 21px;
     -webkit-font-smoothing: antialiased;
+    /* Only the loaded Plex weights; never faux bold or italic. */
+    font-synthesis: none;
   }
+  /* §10: visible 2 px --select focus ring. */
   :focus-visible {
-    outline: 2px solid var(--ring);
+    outline: 2px solid var(--select);
     outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--bg-3);
+    color: var(--text-1);
+  }
+  * {
+    scrollbar-color: var(--line-2) transparent;
+    scrollbar-width: thin;
   }
 }
 
-@layer utilities {
-  /* Monospace, fixed-width digits for every number shown in the HUD. */
-  .num {
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums slashed-zero;
-    letter-spacing: 0.02em;
-  }
-  .hud-label {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--muted-foreground);
+/* §7: no flashes or transitions when the user asks for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

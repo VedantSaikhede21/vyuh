@@ -4,10 +4,11 @@ import { Sky, Stars } from '@react-three/drei';
 import type { SimEnvironment } from '@vyuh/sim-core';
 import { useMemo } from 'react';
 import { environmentLook, type EnvironmentVariant } from '@/lib/sim/environment-look';
+import { SKY } from '@/lib/theme/scene-colours';
 
 const SUN_DISTANCE = 20_000;
 
-const IR_SKY = '#050505';
+const IR_SKY = SKY.ir;
 
 /** Lights, sky and fog for a view. In IR mode the sky is cold (black) and no sky dome is drawn. */
 export function Environment({

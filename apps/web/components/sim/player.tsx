@@ -28,7 +28,7 @@ function TrackTabs({ commands }: { commands: Commands }) {
   ];
   return (
     <>
-      <div className="flex shrink-0 gap-1 border-b border-border px-2 pt-1" role="tablist">
+      <div className="flex shrink-0 gap-1 border-b border-line-1 px-2 pt-1" role="tablist">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -36,10 +36,10 @@ function TrackTabs({ commands }: { commands: Commands }) {
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
             className={cn(
-              'border-b-2 px-2 py-0.5 font-mono text-xs uppercase',
+              'border-b-2 px-2 py-0.5 text-readout uppercase',
               tab === t.id
-                ? 'border-primary text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground',
+                ? 'border-select text-text-1'
+                : 'border-transparent text-text-2 hover:text-text-1',
             )}
           >
             {t.label}
@@ -71,10 +71,7 @@ export function SimPlayer({
   const tactical = useRef<HTMLDivElement>(null);
   const eo = useRef<HTMLDivElement>(null);
   return (
-    <div
-      ref={container}
-      className="fixed inset-x-0 bottom-0 top-12 z-10 flex flex-col bg-background"
-    >
+    <div ref={container} className="fixed inset-x-0 bottom-0 top-12 z-10 flex flex-col bg-bg-0">
       <TopBar
         name={runtime.scenario.name}
         mode={runtime.mode}
@@ -83,19 +80,19 @@ export function SimPlayer({
       />
       <div className="flex min-h-0 flex-1">
         <div ref={tactical} className="relative min-w-0 flex-1" />
-        <aside className="flex w-[300px] shrink-0 flex-col gap-2 overflow-y-auto border-l border-border bg-card p-2">
+        <aside className="flex w-[300px] shrink-0 flex-col gap-2 overflow-y-auto border-l border-line-1 bg-bg-1 p-2">
           <RadarScope runtime={runtime} commands={commands} />
           <AffiliationLegend />
         </aside>
       </div>
-      <div className="flex h-[248px] shrink-0 border-t border-border bg-card">
-        <div className="w-[400px] shrink-0 border-r border-border p-2">
+      <div className="flex h-[248px] shrink-0 border-t border-line-1 bg-bg-1">
+        <div className="w-[400px] shrink-0 border-r border-line-1 p-2">
           <EoPanel ref={eo} runtime={runtime} commands={commands} />
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
           <TrackTabs commands={commands} />
         </div>
-        <div className="w-[290px] shrink-0 border-l border-border p-2">
+        <div className="w-[290px] shrink-0 border-l border-line-1 p-2">
           <ActionBar commands={commands} />
         </div>
       </div>
