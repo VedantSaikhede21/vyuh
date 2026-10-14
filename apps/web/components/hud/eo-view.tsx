@@ -1,12 +1,12 @@
 'use client';
 
-import { Sky } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { toThree } from '@vyuh/sim-core';
 import { useRef } from 'react';
 import type { PerspectiveCamera } from 'three';
 import { BuildingsMesh } from '@/components/sim/buildings-mesh';
 import { Drones } from '@/components/sim/drones';
+import { Environment } from '@/components/sim/environment';
 import { SimRuntimeContext, useSimRuntime } from '@/components/sim/sim-context';
 import { TerrainMesh } from '@/components/sim/terrain-mesh';
 import { eoSensor, pointingToTrack, type Commands } from '@/lib/sim/commands';
@@ -125,11 +125,7 @@ export function EoView({ runtime, commands }: { runtime: SimRuntime; commands: C
         style={{ width: '100%', height: '100%' }}
       >
         <SimRuntimeContext.Provider value={runtime}>
-          <color attach="background" args={['#9fb4c4']} />
-          <fog attach="fog" args={['#9fb4c4', 3000, 14_000]} />
-          <Sky distance={45_000} sunPosition={[-0.4, 0.6, -0.5]} turbidity={6} rayleigh={1.2} />
-          <hemisphereLight args={['#dfe9f0', '#3a3a2a', 0.9]} />
-          <directionalLight position={[-3000, 5000, 2000]} intensity={1.6} />
+          <Environment env={runtime.sim.getState().environment} variant="eo" />
           <TerrainMesh world={runtime.world} />
           <BuildingsMesh index={runtime.world.buildings} />
           <Drones />
