@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 
 export function AppHeader() {
   const { status, user, logout } = useAuth();
+  const onLogin = usePathname() === '/login';
   return (
-    <header className="border-b border-line-1 bg-bg-1">
+    <header className="relative z-10 border-b border-line-1 bg-bg-1">
       <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="text-h2 tracking-[0.2em] text-text-1">
           VYUH
@@ -25,9 +27,9 @@ export function AppHeader() {
                 Log out
               </Button>
             </>
-          ) : (
+          ) : onLogin ? null : (
             <Button asChild variant="secondary" size="sm">
-              <Link href="/login">Log in</Link>
+              <Link href="/login">Sign in</Link>
             </Button>
           )}
         </nav>
