@@ -10,7 +10,10 @@ const SUN_DISTANCE = 20_000;
 
 const IR_SKY = SKY.ir;
 
-/** Lights, sky and fog for a view. In IR mode the sky is cold (black) and no sky dome is drawn. */
+/**
+ * Lights, sky and fog for a view. The EO view gets the real sky (stars at night);
+ * the tactical map sits on --bg-0 with no sky. In IR mode the sky is cold (black).
+ */
 export function Environment({
   env,
   variant,
@@ -27,17 +30,12 @@ export function Environment({
     <>
       <color attach="background" args={[background]} />
       <fog attach="fog" args={[background, look.fogNear, look.fogFar]} />
-      {!ir &&
-        (look.showSky ? (
-          <Sky
-            distance={45_000}
-            sunPosition={[x, y, z]}
-            turbidity={look.turbidity}
-            rayleigh={1.2}
-          />
-        ) : (
-          <Stars radius={30_000} depth={5_000} count={2500} factor={400} fade />
-        ))}
+      {!ir && look.showSky && (
+        <Sky distance={45_000} sunPosition={[x, y, z]} turbidity={look.turbidity} rayleigh={1.2} />
+      )}
+      {!ir && look.showStars && (
+        <Stars radius={30_000} depth={5_000} count={2500} factor={400} fade />
+      )}
       <hemisphereLight args={[look.hemiSky, look.hemiGround, look.hemiIntensity]} />
       <directionalLight
         position={[x * SUN_DISTANCE, y * SUN_DISTANCE, z * SUN_DISTANCE]}
