@@ -292,7 +292,7 @@ describe('sim session flow', () => {
     expect(sim.getEvents().find((e) => e.type === 'MARKED_DETECTED')!.tMs).toBe(t0 + TICK_MS);
   });
 
-  it('rejects unknown tracks, EW responses and commands after the end', () => {
+  it('rejects unknown tracks, EW without an EW effector and commands after the end', () => {
     const sim = createSim(testScenario(), flatTerrain);
     expect(sim.dispatch({ type: 'MARKED_DETECTED', trackId: 'T999', payload: {} }).ok).toBe(false);
     while (sim.getState().tracks.length === 0) sim.tick();

@@ -81,6 +81,11 @@ export {
 } from './tracks.ts';
 export type { ScanHistory, ScanUpdate, TrackFilter, TrackState, TrackStatus } from './tracks.ts';
 export {
+  EW_SECTOR_HALF_DEG,
+  JAM_P,
+  SPOOF_P,
+  jamReaction,
+  resolveEw,
   PKILL_MAX,
   PKILL_MIN,
   createEffectorState,
@@ -88,7 +93,7 @@ export {
   resolveIntercept,
   roeAllowsIntercept,
 } from './effectors.ts';
-export type { EffectorState } from './effectors.ts';
+export type { EffectorState, EwOutcome } from './effectors.ts';
 export { commandFromEvent, createSim } from './sim.ts';
 export type { CameraState, DispatchResult, Sim, SimCommand, SimOptions, SimState } from './sim.ts';
 export {

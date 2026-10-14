@@ -2,6 +2,7 @@ import {
   CLASS_PROFILES,
   TraineeEventType,
   type ContactSpec,
+  type EffectorKind,
   type EoIrSensor,
   type EoLevel,
   type RadarSensor,
@@ -16,7 +17,12 @@ import { createFlocks, stepFlock } from './boids.ts';
 import { TICK_MS, TICK_S, advanceClock, ceilToTick, createClock, type SimClock } from './clock.ts';
 import { createContactState, stepContact, type ContactState } from './contacts.ts';
 import { bearingDeg, headingVector, slantRange, type Vec3 } from './coords.ts';
-import { createEffectorState, resolveIntercept, type EffectorState } from './effectors.ts';
+import {
+  createEffectorState,
+  resolveEw,
+  resolveIntercept,
+  type EffectorState,
+} from './effectors.ts';
 import {
   appendEvent,
   createEventLog,
@@ -127,6 +133,12 @@ export function commandFromEvent(ev: SimEvent): SimCommand | null {
 
 const ORIGIN: Readonly<Vec3> = { x: 0, y: 0, z: 0 };
 
+const NO_EFFECTOR: Readonly<Record<EffectorKind, string>> = {
+  INTERCEPT: 'No interceptor available',
+  EW_JAM: 'No jammer available',
+  EW_SPOOF: 'No spoofer available',
+};
+
 const byId = <T extends { id: string }>(a: T, b: T): number =>
   a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 
@@ -208,44 +220,63 @@ export function createSim(
     }
     if (cmd.type === 'RESPONSE_ORDERED') {
       const { response, effectorId } = cmd.payload;
-      if (response === 'EW_JAM' || response === 'EW_SPOOF') {
-        return `${response} is not available yet`;
-      }
-      if (response === 'INTERCEPT') {
-        const eff = effectorId
-          ? state.effectors.find((e) => e.id === effectorId)
-          : state.effectors.find((e) => e.kind === 'INTERCEPT');
-        if (eff?.kind !== 'INTERCEPT') return 'No interceptor available';
+      if (response === 'INTERCEPT' || response === 'EW_JAM' || response === 'EW_SPOOF') {
+        const eff = effectorFor(response, effectorId);
+        if (eff?.kind !== response) return NO_EFFECTOR[response];
       }
     }
     return null;
   }
 
+  function effectorFor(kind: EffectorKind, effectorId?: string): EffectorState | undefined {
+    return effectorId
+      ? state.effectors.find((e) => e.id === effectorId)
+      : state.effectors.find((e) => e.kind === kind);
+  }
+
   function applyResponse(cmd: Extract<SimCommand, { type: 'RESPONSE_ORDERED' }>, tMs: number) {
     const { response, effectorId } = cmd.payload;
-    if (response !== 'INTERCEPT') return; // MONITOR / REPORT: logged only
+    if (response === 'MONITOR' || response === 'REPORT') return; // logged only
     const track = tracksById.get(cmd.trackId);
-    const eff = effectorId
-      ? state.effectors.find((e) => e.id === effectorId)
-      : state.effectors.find((e) => e.kind === 'INTERCEPT');
+    const eff = effectorFor(response, effectorId);
     if (track === undefined || eff === undefined) return;
     const contact = contactsById.get(track.contactId);
     if (contact === undefined) return;
-    const result = resolveIntercept(eff, track, contact, state.roe, tMs, effectorStream);
+    if (response === 'INTERCEPT') {
+      const result = resolveIntercept(eff, track, contact, state.roe, tMs, effectorStream);
+      emit({
+        tMs,
+        type: 'RESPONSE_OUTCOME',
+        trackId: track.id,
+        contactId: contact.id,
+        payload: { response, result },
+      });
+      if (result === 'NEUTRALISED') {
+        emit({
+          tMs,
+          type: 'CONTACT_NEUTRALISED',
+          contactId: contact.id,
+          payload: { by: response },
+        });
+      }
+      return;
+    }
+    // EW is not ROE-gated (decision 54).
+    const { result, affected } = resolveEw(eff, track, state.contacts, specs, tMs, effectorStream);
+    const collateral = affected.filter((id) => id !== contact.id);
     emit({
       tMs,
       type: 'RESPONSE_OUTCOME',
       trackId: track.id,
       contactId: contact.id,
-      payload: { response, result },
+      payload: {
+        response,
+        result,
+        ...(collateral.length > 0 ? { collateral: { contactIds: collateral } } : {}),
+      },
     });
-    if (result === 'NEUTRALISED') {
-      emit({
-        tMs,
-        type: 'CONTACT_NEUTRALISED',
-        contactId: contact.id,
-        payload: { by: 'INTERCEPT' },
-      });
+    for (const id of affected) {
+      emit({ tMs, type: 'CONTACT_NEUTRALISED', contactId: id, payload: { by: response } });
     }
   }
 
@@ -653,8 +684,10 @@ export function createSim(
     } else if (
       threatIds.length > 0 &&
       threatIds.every((id) => {
-        const s = contactsById.get(id)?.status;
-        return s === 'NEUTRALISED' || s === 'REACHED_ASSET' || s === 'DESPAWNED';
+        const c = contactsById.get(id);
+        const s = c?.status;
+        // A contact defeated by EW still flies, but counts as resolved (decision 54).
+        return s === 'NEUTRALISED' || s === 'REACHED_ASSET' || s === 'DESPAWNED' || c?.defeated;
       })
     ) {
       endSession('ALL_RESOLVED');
