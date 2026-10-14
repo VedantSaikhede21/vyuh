@@ -1,0 +1,311 @@
+{
+  "id": "S14",
+  "schemaVersion": 1,
+  "name": "Mixed Sky",
+  "briefing": "## Situation\nTest scenario (Phase 2B). Day on open farmland. A hostile quadcopter is expected from the north-east. Our own patrol drone is up on the same bearing and is NOT broadcasting a friendly ID today. A flock of large birds is working the fields to the north-west.\n## Task\nSort the tracks: birds (radar only, no RF), the hostile and the friendly (both RF-linked). Jamming hits every RF drone in a ±10° sector — check the sector first, or use the interceptor.\n## ROE\nWEAPONS TIGHT — engage only tracks you have identified as HOSTILE.",
+  "seed": 1401,
+  "difficulty": 3,
+  "terrain": {
+    "preset": "PUNJAB_PLAINS",
+    "origin": {
+      "lat": 30.52,
+      "lon": 75.7
+    }
+  },
+  "environment": {
+    "date": "2026-11-20",
+    "time": "10:30",
+    "isNight": false,
+    "weather": {
+      "visibilityM": 10000,
+      "rainMmph": 0,
+      "windMps": 3,
+      "windDirDeg": 300,
+      "cloudPct": 20
+    }
+  },
+  "roe": "WEAPONS_TIGHT",
+  "zones": [],
+  "assets": [
+    {
+      "id": "a1",
+      "name": "Post Alpha",
+      "x": 0,
+      "z": 0,
+      "radiusM": 60
+    }
+  ],
+  "sensors": [
+    {
+      "id": "rad1",
+      "kind": "RADAR",
+      "x": 0,
+      "y": 6,
+      "z": 0,
+      "refRangeM": 3000,
+      "scanPeriodS": 2
+    },
+    {
+      "id": "eo1",
+      "kind": "EO_IR",
+      "x": 0,
+      "y": 8,
+      "z": 0,
+      "fovDegMin": 1.5,
+      "fovDegMax": 30,
+      "resolution": [
+        640,
+        360
+      ],
+      "irResolution": [
+        640,
+        512
+      ]
+    },
+    {
+      "id": "rf1",
+      "kind": "RF",
+      "x": 0,
+      "y": 4,
+      "z": 0,
+      "rangeM": 4000,
+      "bearingErrDeg": 7
+    }
+  ],
+  "effectors": [
+    {
+      "id": "jam1",
+      "kind": "EW_JAM",
+      "x": 0,
+      "z": 0,
+      "rangeM": 2000,
+      "cooldownS": 10
+    },
+    {
+      "id": "spf1",
+      "kind": "EW_SPOOF",
+      "x": 0,
+      "z": 0,
+      "rangeM": 2000,
+      "cooldownS": 15
+    },
+    {
+      "id": "int1",
+      "kind": "INTERCEPT",
+      "x": 0,
+      "z": 0,
+      "rangeM": 1500,
+      "cooldownS": 6,
+      "ammo": 6
+    }
+  ],
+  "contacts": [
+    {
+      "id": "c01",
+      "class": "QUAD_SMALL",
+      "isThreat": true,
+      "affiliation": "HOSTILE",
+      "controlLink": "RF_MANUAL",
+      "behaviour": "ATTACK_RUN",
+      "spawnTMs": 5000,
+      "path": [
+        {
+          "x": 1600,
+          "y": 50,
+          "z": 2460,
+          "speedMps": 15
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "speedMps": 15,
+          "action": "DIVE"
+        }
+      ],
+      "emissions": {
+        "rfActive": true,
+        "rfBand": "2.4GHz"
+      }
+    },
+    {
+      "id": "c02",
+      "class": "FRIENDLY_QUAD",
+      "isThreat": false,
+      "affiliation": "FRIENDLY",
+      "controlLink": "RF_MANUAL",
+      "behaviour": "FRIENDLY_PATROL",
+      "spawnTMs": 0,
+      "path": [
+        {
+          "x": 330,
+          "y": 60,
+          "z": 500,
+          "speedMps": 8
+        },
+        {
+          "x": 820,
+          "y": 60,
+          "z": 1260,
+          "speedMps": 8
+        },
+        {
+          "x": 330,
+          "y": 60,
+          "z": 500,
+          "speedMps": 8
+        },
+        {
+          "x": 820,
+          "y": 60,
+          "z": 1260,
+          "speedMps": 8
+        }
+      ],
+      "emissions": {
+        "rfActive": true,
+        "rfBand": "5.8GHz"
+      }
+    },
+    {
+      "id": "b01",
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "groupId": "g1",
+      "spawnTMs": 0,
+      "path": [
+        {
+          "x": -1300,
+          "y": 70,
+          "z": 2300,
+          "speedMps": 8
+        },
+        {
+          "x": -2300,
+          "y": 70,
+          "z": 1500,
+          "speedMps": 8
+        },
+        {
+          "x": -1500,
+          "y": 80,
+          "z": 2100,
+          "speedMps": 8
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      }
+    },
+    {
+      "id": "b02",
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "groupId": "g1",
+      "spawnTMs": 0,
+      "path": [
+        {
+          "x": -1300,
+          "y": 75,
+          "z": 2290,
+          "speedMps": 8
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      }
+    },
+    {
+      "id": "b03",
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "groupId": "g1",
+      "spawnTMs": 0,
+      "path": [
+        {
+          "x": -1282,
+          "y": 65,
+          "z": 2290,
+          "speedMps": 8
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      }
+    },
+    {
+      "id": "b04",
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "groupId": "g1",
+      "spawnTMs": 0,
+      "path": [
+        {
+          "x": -1318,
+          "y": 75,
+          "z": 2272,
+          "speedMps": 8
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      }
+    },
+    {
+      "id": "b05",
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "groupId": "g1",
+      "spawnTMs": 0,
+      "path": [
+        {
+          "x": -1300,
+          "y": 65,
+          "z": 2272,
+          "speedMps": 8
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      }
+    },
+    {
+      "id": "b06",
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "groupId": "g1",
+      "spawnTMs": 0,
+      "path": [
+        {
+          "x": -1282,
+          "y": 75,
+          "z": 2272,
+          "speedMps": 8
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      }
+    }
+  ],
+  "durationS": 330,
+  "scoringTreeId": "default_v2"
+}

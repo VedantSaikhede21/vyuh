@@ -1,0 +1,283 @@
+{
+  "id": "S13",
+  "schemaVersion": 1,
+  "name": "Silent Ridge",
+  "briefing": "## Situation\nTest scenario (Phase 2B). Night at Post Alpha, a valley floor in high mountains. Patrols report a fibre-optic FPV team to the south; birds are roosting in the north-east valley.\n## Task\nThe FPV is silent to the RF detector and hidden by the ridge until late: watch the radar to the south, use thermal (T) to identify, and do not waste jamming on it. The bird flock will show on radar — classify it, do not engage it.\n## ROE\nWEAPONS TIGHT — engage only tracks you have identified as HOSTILE.",
+  "seed": 1301,
+  "difficulty": 3,
+  "terrain": {
+    "preset": "JK_MOUNTAIN",
+    "origin": {
+      "lat": 33.75,
+      "lon": 75.875
+    }
+  },
+  "environment": {
+    "date": "2026-10-20",
+    "time": "02:00",
+    "isNight": true,
+    "weather": {
+      "visibilityM": 12000,
+      "rainMmph": 0,
+      "windMps": 3,
+      "windDirDeg": 250,
+      "cloudPct": 10
+    }
+  },
+  "roe": "WEAPONS_TIGHT",
+  "zones": [],
+  "assets": [
+    {
+      "id": "a1",
+      "name": "Post Alpha",
+      "x": 0,
+      "z": 0,
+      "radiusM": 60
+    }
+  ],
+  "sensors": [
+    {
+      "id": "rad1",
+      "kind": "RADAR",
+      "x": 0,
+      "y": 6,
+      "z": 0,
+      "refRangeM": 3000,
+      "scanPeriodS": 2
+    },
+    {
+      "id": "eo1",
+      "kind": "EO_IR",
+      "x": 0,
+      "y": 8,
+      "z": 0,
+      "fovDegMin": 1.5,
+      "fovDegMax": 30,
+      "resolution": [
+        640,
+        360
+      ],
+      "irResolution": [
+        640,
+        512
+      ]
+    },
+    {
+      "id": "rf1",
+      "kind": "RF",
+      "x": 0,
+      "y": 4,
+      "z": 0,
+      "rangeM": 4000,
+      "bearingErrDeg": 7
+    }
+  ],
+  "effectors": [
+    {
+      "id": "jam1",
+      "kind": "EW_JAM",
+      "x": 0,
+      "z": 0,
+      "rangeM": 2000,
+      "cooldownS": 10
+    },
+    {
+      "id": "spf1",
+      "kind": "EW_SPOOF",
+      "x": 0,
+      "z": 0,
+      "rangeM": 2000,
+      "cooldownS": 15
+    },
+    {
+      "id": "int1",
+      "kind": "INTERCEPT",
+      "x": 0,
+      "z": 0,
+      "rangeM": 1500,
+      "cooldownS": 6,
+      "ammo": 6
+    }
+  ],
+  "contacts": [
+    {
+      "id": "c01",
+      "class": "FPV",
+      "isThreat": true,
+      "affiliation": "HOSTILE",
+      "controlLink": "FIBRE_OPTIC",
+      "behaviour": "ATTACK_RUN",
+      "spawnTMs": 10000,
+      "path": [
+        {
+          "x": -800,
+          "y": 40,
+          "z": -3600,
+          "speedMps": 15
+        },
+        {
+          "x": -500,
+          "y": 40,
+          "z": -1200,
+          "speedMps": 15
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "speedMps": 15,
+          "action": "DIVE"
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      }
+    },
+    {
+      "id": "b01",
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "groupId": "g1",
+      "spawnTMs": 0,
+      "path": [
+        {
+          "x": 1100,
+          "y": 70,
+          "z": 3900,
+          "speedMps": 8
+        },
+        {
+          "x": 650,
+          "y": 70,
+          "z": 2700,
+          "speedMps": 8
+        },
+        {
+          "x": 1000,
+          "y": 80,
+          "z": 3300,
+          "speedMps": 8
+        },
+        {
+          "x": 700,
+          "y": 70,
+          "z": 2800,
+          "speedMps": 8
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      }
+    },
+    {
+      "id": "b02",
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "groupId": "g1",
+      "spawnTMs": 0,
+      "path": [
+        {
+          "x": 1100,
+          "y": 75,
+          "z": 3890,
+          "speedMps": 8
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      }
+    },
+    {
+      "id": "b03",
+      "class": "BIRD_SMALL",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "groupId": "g1",
+      "spawnTMs": 0,
+      "path": [
+        {
+          "x": 1118,
+          "y": 65,
+          "z": 3890,
+          "speedMps": 8
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      }
+    },
+    {
+      "id": "b04",
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "groupId": "g1",
+      "spawnTMs": 0,
+      "path": [
+        {
+          "x": 1082,
+          "y": 75,
+          "z": 3872,
+          "speedMps": 8
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      }
+    },
+    {
+      "id": "b05",
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "groupId": "g1",
+      "spawnTMs": 0,
+      "path": [
+        {
+          "x": 1100,
+          "y": 65,
+          "z": 3872,
+          "speedMps": 8
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      }
+    },
+    {
+      "id": "b06",
+      "class": "BIRD_SMALL",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "groupId": "g1",
+      "spawnTMs": 0,
+      "path": [
+        {
+          "x": 1118,
+          "y": 75,
+          "z": 3872,
+          "speedMps": 8
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      }
+    }
+  ],
+  "durationS": 360,
+  "scoringTreeId": "default_v2"
+}

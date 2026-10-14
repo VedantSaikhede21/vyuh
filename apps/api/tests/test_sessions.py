@@ -336,3 +336,37 @@ def test_complete_ownership_and_state(
     assert_error(_complete(client, sid, auth_header(other), 0), 403, "FORBIDDEN")
     # CREATED (no events yet) cannot be completed.
     assert_error(_complete(client, sid, auth_header(owner), 0), 409, "SESSION_NOT_ACTIVE")
+
+
+# ---- Phase 2B: S14 Mixed Sky real logs, scored with default_v2 -------------------------
+
+
+@pytest.mark.parametrize(
+    ("log_name", "penalty"),
+    [("s14_jam", ("FRIENDLY_JAMMED", -15)), ("s14_scripted", ("FRATRICIDE", -40))],
+)
+def test_s14_engaging_the_friendly_is_penalised(
+    client: TestClient,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    auth_header: Headers,
+    start_session: Callable[..., str],
+    log_name: str,
+    penalty: tuple[str, int],
+) -> None:
+    user = make_user()
+    headers = auth_header(user)
+    sid = start_session(user, scenarios["S14"])
+    log = _play(client, sid, headers, log_name)
+    response = _complete(client, sid, headers, log[-1]["tMs"])
+    assert response.status_code == 200, response.text
+    score = response.json()
+    assert score["treeVersion"] == "default_v2"
+    friendly = [p for p in score["penalties"] if p["contactId"] == "c02"]
+    assert [(p["code"], p["points"]) for p in friendly] == [penalty]
+    c02 = next(c for c in score["perContact"] if c["contactId"] == "c02")
+    assert c02["outcome"] == penalty[0]
+    hostile = next(c for c in score["perContact"] if c["contactId"] == "c01")
+    assert hostile["outcome"] == "NEUTRALISED"
+    # Birds were tracked but never engaged: no penalty for them.
+    assert all(not p["contactId"].startswith("b") for p in score["penalties"])

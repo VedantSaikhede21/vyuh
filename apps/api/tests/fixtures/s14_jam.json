@@ -1,0 +1,260 @@
+[
+ {
+  "tMs": 0,
+  "type": "SESSION_STARTED",
+  "payload": {
+   "mode": "PRACTICE",
+   "scenarioId": "S14",
+   "seed": 1401
+  },
+  "seq": 0
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "b01",
+  "payload": {},
+  "seq": 1
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "b02",
+  "payload": {},
+  "seq": 2
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "b03",
+  "payload": {},
+  "seq": 3
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "b04",
+  "payload": {},
+  "seq": 4
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "b05",
+  "payload": {},
+  "seq": 5
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "b06",
+  "payload": {},
+  "seq": 6
+ },
+ {
+  "tMs": 50,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "c02",
+  "payload": {},
+  "seq": 7
+ },
+ {
+  "tMs": 5000,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "c01",
+  "payload": {},
+  "seq": 8
+ },
+ {
+  "tMs": 6000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "b01",
+  "trackId": "T001",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2640.5514429857953,
+   "bearingDeg": 330.28300154016813
+  },
+  "seq": 9
+ },
+ {
+  "tMs": 6000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "b03",
+  "trackId": "T002",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2620.2544757492615,
+   "bearingDeg": 329.6967904306045
+  },
+  "seq": 10
+ },
+ {
+  "tMs": 6000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "b06",
+  "trackId": "T003",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2616.089191958791,
+   "bearingDeg": 330.3307057899655
+  },
+  "seq": 11
+ },
+ {
+  "tMs": 6000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "c02",
+  "trackId": "T004",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 652.804482194607,
+   "bearingDeg": 32.151345203919384
+  },
+  "seq": 12
+ },
+ {
+  "tMs": 8000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "b02",
+  "trackId": "T005",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2631.3505396512383,
+   "bearingDeg": 328.99056964986204
+  },
+  "seq": 13
+ },
+ {
+  "tMs": 8000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "b04",
+  "trackId": "T006",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2617.565203799439,
+   "bearingDeg": 328.44028731367763
+  },
+  "seq": 14
+ },
+ {
+  "tMs": 10000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "b05",
+  "trackId": "T007",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2628.9105219141197,
+   "bearingDeg": 329.4356146905244
+  },
+  "seq": 15
+ },
+ {
+  "tMs": 12000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "c01",
+  "trackId": "T008",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2824.421450998937,
+   "bearingDeg": 33.75540196904037
+  },
+  "seq": 16
+ },
+ {
+  "tMs": 20000,
+  "type": "SENSOR_TRACK_LOST",
+  "trackId": "T008",
+  "contactId": "c01",
+  "payload": {
+   "reason": "MISSES"
+  },
+  "seq": 17
+ },
+ {
+  "tMs": 26000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "c01",
+  "trackId": "T009",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 2624.0659179465497,
+   "bearingDeg": 32.192971753039394
+  },
+  "seq": 18
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T009",
+  "payload": {},
+  "tMs": 108100,
+  "seq": 19
+ },
+ {
+  "type": "MARKED_DETECTED",
+  "trackId": "T009",
+  "payload": {},
+  "tMs": 108100,
+  "seq": 20
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T009",
+  "payload": {
+   "response": "EW_JAM"
+  },
+  "tMs": 108100,
+  "seq": 21
+ },
+ {
+  "tMs": 108100,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T009",
+  "contactId": "c01",
+  "payload": {
+   "response": "EW_JAM",
+   "result": "NEUTRALISED",
+   "collateral": {
+    "contactIds": [
+     "c02"
+    ]
+   }
+  },
+  "seq": 22
+ },
+ {
+  "tMs": 108100,
+  "type": "CONTACT_NEUTRALISED",
+  "contactId": "c01",
+  "payload": {
+   "by": "EW_JAM"
+  },
+  "seq": 23
+ },
+ {
+  "tMs": 108100,
+  "type": "CONTACT_NEUTRALISED",
+  "contactId": "c02",
+  "payload": {
+   "by": "EW_JAM"
+  },
+  "seq": 24
+ },
+ {
+  "tMs": 108100,
+  "type": "SESSION_ENDED",
+  "payload": {
+   "reason": "ALL_RESOLVED"
+  },
+  "seq": 25
+ }
+]
