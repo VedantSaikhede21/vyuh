@@ -182,17 +182,16 @@ export const SessionEndReason = named(
 );
 export type SessionEndReason = z.infer<typeof SessionEndReason>;
 
-/** Provisional until Phase 1 scoring. */
 export const ClassificationResult = named(
   'ClassificationResult',
   z.enum(['EXACT', 'CATEGORY', 'WRONG']),
 );
 export type ClassificationResult = z.infer<typeof ClassificationResult>;
 
-/** Provisional until Phase 1 scoring. */
+/** UNRESOLVED: a threat neither neutralised nor at the asset when the session ended. */
 export const ContactOutcome = named(
   'ContactOutcome',
-  z.enum(['NEUTRALISED', 'LEAKED', 'IGNORED_OK', 'WRONGLY_ENGAGED', 'FRATRICIDE']),
+  z.enum(['NEUTRALISED', 'LEAKED', 'UNRESOLVED', 'IGNORED_OK', 'WRONGLY_ENGAGED', 'FRATRICIDE']),
 );
 export type ContactOutcome = z.infer<typeof ContactOutcome>;
 

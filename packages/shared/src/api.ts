@@ -1,8 +1,17 @@
 import { z } from 'zod';
-import { ErrorCode, SessionMode, UserRole } from './enums.ts';
+import {
+  Difficulty,
+  ErrorCode,
+  Roe,
+  ScenarioKind,
+  SessionMode,
+  SessionStatus,
+  UserRole,
+} from './enums.ts';
 import { SimEvent } from './events.ts';
 import { named } from './registry.ts';
 import { Scenario } from './scenario.ts';
+import { Score } from './score.ts';
 
 // Request/response shapes for /api/v1 (SPEC §11, §11.1, §11.2).
 
@@ -118,7 +127,58 @@ export const CompleteSessionRequest = named(
 );
 export type CompleteSessionRequest = z.infer<typeof CompleteSessionRequest>;
 
+/** GET /sessions/{id}. `score` is null until the session is COMPLETED. */
+export const SessionDetailResponse = named(
+  'SessionDetailResponse',
+  z.object({
+    id: z.uuid(),
+    scenarioId: z.uuid(),
+    scenarioName: z.string(),
+    mode: SessionMode,
+    status: SessionStatus,
+    startedAt: z.iso.datetime({ offset: true }),
+    endedAt: z.iso.datetime({ offset: true }).nullable(),
+    score: Score.nullable(),
+  }),
+);
+export type SessionDetailResponse = z.infer<typeof SessionDetailResponse>;
+
 // ---- Scenarios (§11.1) --------------------------------------------------------
+
+/** One row of GET /scenarios (no contacts — ground truth stays out of lists). */
+export const ScenarioListItem = named(
+  'ScenarioListItem',
+  z.object({
+    id: z.uuid(),
+    code: z.string().nullable(),
+    name: z.string(),
+    kind: ScenarioKind,
+    difficulty: Difficulty,
+    durationS: z.int().positive(),
+    roe: Roe,
+    isNight: z.boolean(),
+    tags: z.array(z.string()),
+  }),
+);
+export type ScenarioListItem = z.infer<typeof ScenarioListItem>;
+
+export const ScenarioListResponse = named(
+  'ScenarioListResponse',
+  z.object({ items: z.array(ScenarioListItem) }),
+);
+export type ScenarioListResponse = z.infer<typeof ScenarioListResponse>;
+
+/** GET /scenarios/{id} */
+export const ScenarioDetailResponse = named(
+  'ScenarioDetailResponse',
+  z.object({
+    scenarioId: z.uuid(),
+    code: z.string().nullable(),
+    kind: ScenarioKind,
+    scenario: Scenario,
+  }),
+);
+export type ScenarioDetailResponse = z.infer<typeof ScenarioDetailResponse>;
 
 /** POST /scenarios/generate — request body is a ScenarioRequest. */
 export const GenerateScenarioResponse = named(

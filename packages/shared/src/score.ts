@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { ClassificationResult, ContactClass, ContactOutcome, ResponseKind } from './enums.ts';
 import { named } from './registry.ts';
 
-// SPEC §4 Score + §9. Penalty and PerContactMetrics are PROVISIONAL until the
-// Phase 1 scoring engine exists; expect fields to be added.
+// SPEC §4 Score + §9. Component points are raw (e.g. detection out of 25);
+// `componentMax` says what each component is out of for the scoring tree used.
 
 export const ScoreComponents = named(
   'ScoreComponents',
@@ -36,6 +36,8 @@ export const PerContactMetrics = named(
   z.object({
     contactId: z.string().min(1),
     isThreat: z.boolean(),
+    /** Sensor tracks that were mapped to this contact (via SENSOR_TRACK_CREATED). */
+    trackIds: z.array(z.string().min(1)),
     firstDetectableTMs: z.int().min(0).optional(),
     traineeDetectedTMs: z.int().min(0).optional(),
     detectionLatencyS: z.number().min(0).optional(),
@@ -49,6 +51,8 @@ export const PerContactMetrics = named(
     aiSuggestionAccepted: z.boolean().optional(),
     aiSuggestionCorrect: z.boolean().optional(),
     points: z.number().optional(),
+    /** Decision-tree leaf ids reached for this contact, in evaluation order. */
+    leaves: z.array(z.string().min(1)),
     feedback: z.array(z.string()),
   }),
 );
@@ -59,6 +63,8 @@ export const Score = named(
   z.object({
     total: z.number().min(0).max(100),
     components: ScoreComponents,
+    /** Maximum points per component in this tree; 0 = not scored by this tree. */
+    componentMax: ScoreComponents,
     penalties: z.array(Penalty),
     perContact: z.array(PerContactMetrics),
     metrics: z.record(z.string(), z.unknown()),

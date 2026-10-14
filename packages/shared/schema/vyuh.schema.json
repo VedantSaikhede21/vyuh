@@ -563,6 +563,7 @@
       "enum": [
         "NEUTRALISED",
         "LEAKED",
+        "UNRESOLVED",
         "IGNORED_OK",
         "WRONGLY_ENGAGED",
         "FRATRICIDE"
@@ -1372,6 +1373,13 @@
         "isThreat": {
           "type": "boolean"
         },
+        "trackIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
         "firstDetectableTMs": {
           "type": "integer",
           "minimum": 0,
@@ -1419,6 +1427,13 @@
         "points": {
           "type": "number"
         },
+        "leaves": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
         "feedback": {
           "type": "array",
           "items": {
@@ -1429,7 +1444,9 @@
       "required": [
         "contactId",
         "isThreat",
+        "trackIds",
         "responses",
+        "leaves",
         "feedback"
       ]
     },
@@ -1828,12 +1845,105 @@
         "scoringTreeId"
       ]
     },
+    "ScenarioDetailResponse": {
+      "type": "object",
+      "properties": {
+        "scenarioId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/ScenarioKind"
+        },
+        "scenario": {
+          "$ref": "#/$defs/Scenario"
+        }
+      },
+      "required": [
+        "scenarioId",
+        "code",
+        "kind",
+        "scenario"
+      ]
+    },
     "ScenarioKind": {
       "type": "string",
       "enum": [
         "SCRIPTED",
         "GENERATED",
         "AUTHORED"
+      ]
+    },
+    "ScenarioListItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/ScenarioKind"
+        },
+        "difficulty": {
+          "$ref": "#/$defs/Difficulty"
+        },
+        "durationS": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "roe": {
+          "$ref": "#/$defs/Roe"
+        },
+        "isNight": {
+          "type": "boolean"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "code",
+        "name",
+        "kind",
+        "difficulty",
+        "durationS",
+        "roe",
+        "isNight",
+        "tags"
+      ]
+    },
+    "ScenarioListResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScenarioListItem"
+          }
+        }
+      },
+      "required": [
+        "items"
       ]
     },
     "ScenarioRequest": {
@@ -1913,6 +2023,9 @@
         "components": {
           "$ref": "#/$defs/ScoreComponents"
         },
+        "componentMax": {
+          "$ref": "#/$defs/ScoreComponents"
+        },
         "penalties": {
           "type": "array",
           "items": {
@@ -1940,6 +2053,7 @@
       "required": [
         "total",
         "components",
+        "componentMax",
         "penalties",
         "perContact",
         "metrics",
@@ -2122,6 +2236,63 @@
       },
       "required": [
         "reason"
+      ]
+    },
+    "SessionDetailResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "scenarioId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "scenarioName": {
+          "type": "string"
+        },
+        "mode": {
+          "$ref": "#/$defs/SessionMode"
+        },
+        "status": {
+          "$ref": "#/$defs/SessionStatus"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "score": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Score"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "scenarioId",
+        "scenarioName",
+        "mode",
+        "status",
+        "startedAt",
+        "endedAt",
+        "score"
       ]
     },
     "SessionEndReason": {

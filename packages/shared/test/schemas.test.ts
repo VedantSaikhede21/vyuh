@@ -10,7 +10,9 @@ import {
   ErrorCode,
   NonThreatClass,
   Scenario,
+  ScenarioListResponse,
   ScenarioRequest,
+  SessionDetailResponse,
   SimEvent,
   ThreatClass,
   type Scenario as ScenarioT,
@@ -199,5 +201,77 @@ describe('ErrorEnvelope (SPEC §11.2)', () => {
       ErrorEnvelope.safeParse({ error: { code: 'TEAPOT', message: 'x', details: {} } }).success,
     ).toBe(false);
     expect(ErrorEnvelope.safeParse({ code: 'NOT_FOUND', message: 'x' }).success).toBe(false);
+  });
+});
+
+describe('Session detail / Score', () => {
+  const score = {
+    total: 72.5,
+    components: { detection: 18, classification: 25, decision: 15, report: 0, efficiency: 0 },
+    componentMax: { detection: 25, classification: 25, decision: 30, report: 0, efficiency: 0 },
+    penalties: [],
+    perContact: [
+      {
+        contactId: 'c01',
+        isThreat: true,
+        trackIds: ['T001'],
+        responses: ['INTERCEPT'],
+        outcome: 'NEUTRALISED',
+        leaves: ['LATENCY_2', 'CLASS_EXACT', 'DECISION_EFFECTIVE'],
+        feedback: ['Detected in 8.2 s.'],
+      },
+    ],
+    metrics: {},
+    treeVersion: 'default_v1',
+  };
+  const detail = {
+    id: '6f1c2b8e-2f4a-4c1e-9a7b-1d2e3f4a5b6c',
+    scenarioId: '0b8e6a3c-5d7f-4a1b-8c2d-3e4f5a6b7c8d',
+    scenarioName: 'First Contact',
+    mode: 'PRACTICE',
+    status: 'COMPLETED',
+    startedAt: '2026-10-14T10:00:00+00:00',
+    endedAt: '2026-10-14T10:03:00+00:00',
+    score,
+  };
+
+  it('accepts a completed session with a score, and an active one without', () => {
+    expect(SessionDetailResponse.safeParse(detail).error?.issues).toBeUndefined();
+    expect(
+      SessionDetailResponse.safeParse({ ...detail, status: 'ACTIVE', endedAt: null, score: null })
+        .success,
+    ).toBe(true);
+  });
+
+  it('rejects a score without componentMax or a contact without leaves', () => {
+    const noMax: Record<string, unknown> = { ...score };
+    delete noMax.componentMax;
+    expect(SessionDetailResponse.safeParse({ ...detail, score: noMax }).success).toBe(false);
+    const noLeaves: Record<string, unknown> = { ...score.perContact[0]! };
+    delete noLeaves.leaves;
+    expect(
+      SessionDetailResponse.safeParse({ ...detail, score: { ...score, perContact: [noLeaves] } })
+        .success,
+    ).toBe(false);
+  });
+});
+
+describe('ScenarioListResponse', () => {
+  it('accepts a list item and rejects a bad difficulty', () => {
+    const item = {
+      id: '0b8e6a3c-5d7f-4a1b-8c2d-3e4f5a6b7c8d',
+      code: 'S01',
+      name: 'First Contact',
+      kind: 'SCRIPTED',
+      difficulty: 1,
+      durationS: 180,
+      roe: 'WEAPONS_FREE',
+      isNight: false,
+      tags: ['tutorial'],
+    };
+    expect(ScenarioListResponse.safeParse({ items: [item] }).success).toBe(true);
+    expect(ScenarioListResponse.safeParse({ items: [{ ...item, difficulty: 0 }] }).success).toBe(
+      false,
+    );
   });
 });
