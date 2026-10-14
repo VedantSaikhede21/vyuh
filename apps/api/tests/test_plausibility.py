@@ -77,6 +77,19 @@ def test_limit_mirrors_shared_ts() -> None:
         (
             [
                 started(),
+                ev(
+                    1,
+                    20_000,
+                    "CAMERA_SLEWED",
+                    trackId="T009",
+                    payload={"azDeg": 0, "elDeg": 0, "zoom": 1},
+                ),
+            ],
+            "UNKNOWN_TRACK",
+        ),
+        (
+            [
+                started(),
                 ev(1, 1000, "SESSION_ENDED", payload={"reason": "ABORTED"}),
                 ev(2, 1000, "TRACK_SELECTED", trackId="T001"),
             ],

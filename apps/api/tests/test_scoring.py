@@ -207,7 +207,8 @@ def test_metrics_from_real_defended_log() -> None:
     assert m["traineeDetectedTMs"] == 20_050
     assert m["detectionLatencyS"] == pytest.approx(0.05)
     assert (m["classifiedAs"], m["classificationCorrect"]) == ("QUAD_SMALL", "EXACT")
-    assert m["identifiableWhenClassified"] is None  # EO not modelled in Phase 1
+    # S01 has an EO sensor; the trainee classified from radar before EO could identify.
+    assert m["identifiableWhenClassified"] is False
     assert (m["interceptsOrdered"], m["interceptsFired"], m["outcome"]) == (1, 1, "NEUTRALISED")
 
 
@@ -262,6 +263,20 @@ def test_identifiable_flag_when_eo_is_modelled() -> None:
     events[2]["tMs"] = 31_000
     [m] = contact_metrics(S01, events)
     assert m["identifiableWhenClassified"] is True
+
+
+def test_identifiable_flag_keys_off_the_eo_sensor() -> None:
+    events = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c01", trackId="T001"),
+        ev(2, 25_000, "CLASSIFIED", trackId="T001", payload={"class": "QUAD_SMALL"}),
+    ]
+    # No EO_IDENTIFIABLE at all (camera never pointed) still counts as "not identifiable".
+    [m] = contact_metrics(S01, events)
+    assert m["identifiableWhenClassified"] is False
+    raw = json.loads(json.dumps(S01_RAW))
+    raw["sensors"] = [s for s in raw["sensors"] if s["kind"] != "EO_IR"]
+    [m] = contact_metrics(Scenario.model_validate(raw), events)
+    assert m["identifiableWhenClassified"] is None  # no EO sensor: fairness flag not applicable
 
 
 def test_non_threat_outcomes() -> None:
