@@ -7,7 +7,7 @@ import { useEffect, useMemo } from 'react';
 import { RequireAuth } from '@/components/require-auth';
 import { ResultScreen } from '@/components/sim/result-screen';
 import { Button } from '@/components/ui/button';
-import { Panel, PanelBody, PanelHeader } from '@/components/hud/primitives';
+import { Panel, PanelBody, PanelHeader, Skeleton } from '@/components/hud/primitives';
 import { useCommands } from '@/lib/sim/commands';
 import { useSimLoop } from '@/lib/sim/use-sim-loop';
 import { useTrainingSession } from '@/lib/sim/use-training-session';
@@ -17,7 +17,7 @@ import { ROE_LABEL } from '@/lib/strings';
 // WebGL only exists in the browser.
 const SimPlayer = dynamic(() => import('@/components/sim/player').then((m) => m.SimPlayer), {
   ssr: false,
-  loading: () => <p className="text-label p-6">Loading 3D view…</p>,
+  loading: () => <Skeleton label="Loading 3D view" className="p-6" />,
 });
 
 function Briefing({
@@ -92,7 +92,7 @@ function Session({ sessionId }: { sessionId: string }) {
 
   switch (phase.kind) {
     case 'loading':
-      return <p className="text-label p-6">Loading session…</p>;
+      return <Skeleton label="Loading session" className="p-6" />;
     case 'briefing':
       return (
         <Briefing
@@ -104,20 +104,17 @@ function Session({ sessionId }: { sessionId: string }) {
         />
       );
     case 'preparing':
-      return (
-        <p className="text-label p-6" role="status">
-          Loading terrain…
-        </p>
-      );
+      return <Skeleton label="Loading terrain and sensors" className="p-6" />;
     case 'running':
       return commands ? (
         <SimPlayer runtime={phase.runtime} commands={commands} upload={upload} />
       ) : null;
     case 'submitting':
       return (
-        <p className="text-label p-6" role="status">
-          Session over. Uploading events and scoring on the server…
-        </p>
+        <Skeleton
+          label="Session over · uploading events and scoring on the server"
+          className="p-6"
+        />
       );
     case 'result':
       return <ResultScreen score={phase.score} scenarioName={phase.scenarioName} />;

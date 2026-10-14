@@ -1,9 +1,13 @@
 'use client';
 
 import type { Affiliation, ContactClass } from '@vyuh/shared';
+import type { CommsStatus } from '@/components/hud/primitives/comms-log';
+import { CLASS_LABEL, EFFECTOR_LABEL } from '@/lib/strings';
 import type { SimCommand } from '@vyuh/sim-core';
 import { useMemo } from 'react';
 import type { SimRuntime } from './runtime';
+import { effectorSites } from '@/components/hud/use-hud-derived';
+import { actionStates, type ActionId } from '@/lib/hud/derive';
 import { snapshot, useHudStore } from './store';
 import { useUiStore } from './ui-store';
 
@@ -32,19 +36,59 @@ export function useCommands(rt: SimRuntime | null) {
     let lastSlewLog = -Infinity;
     let trailing: ReturnType<typeof setTimeout> | null = null;
 
-    const say = (text: string, tone: 'info' | 'warn' | 'bad' = 'info') =>
-      ui().set({ message: { text, tone } });
+    const now = () => rt.sim.getState().clock.tMs;
+    const say = (text: string, status: CommsStatus = 'warn') => ui().say(now(), text, status);
+
+    /** Comms echo for an accepted command (DESIGN §9: acknowledged within 100 ms). */
+    const echoText = (cmd: SimCommand): string | null => {
+      switch (cmd.type) {
+        case 'MARKED_DETECTED':
+          return `${cmd.trackId} MARKED DETECTED`;
+        case 'CLASSIFIED':
+          return `${cmd.trackId} CLASSIFIED  ${CLASS_LABEL[cmd.payload.class].toUpperCase()}`;
+        case 'AFFILIATION_SET':
+          return `${cmd.trackId} AFFILIATION  ${cmd.payload.affiliation}`;
+        case 'RESPONSE_ORDERED': {
+          const r = cmd.payload.response;
+          const name =
+            r === 'EW_JAM' || r === 'EW_SPOOF' || r === 'INTERCEPT' ? EFFECTOR_LABEL[r] : r;
+          return `${name} ORDERED  ${cmd.trackId}`;
+        }
+        default:
+          return null; // selection and camera moves are acknowledged visually
+      }
+    };
 
     const send = (cmd: SimCommand): boolean => {
       const res = rt.dispatch(cmd);
-      if (!res.ok) say(res.reason, 'warn');
-      return res.ok;
+      if (!res.ok) {
+        say(res.reason);
+        return false;
+      }
+      const text = echoText(cmd);
+      if (text) ui().echo(now(), text);
+      return true;
     };
 
+    // A selection is applied on the sim's next tick; until then commands must
+    // still act on it, or a key pressed right after a click is rejected.
+    let pendingSelect: string | null = null;
     const selected = (): string | null => {
-      const id = rt.sim.getState().selectedTrackId;
-      if (!id) say('Select a track first (Tab or click).', 'warn');
+      const id = pendingSelect ?? rt.sim.getState().selectedTrackId;
+      if (!id) say('Select a track first (Tab or click).');
       return id;
+    };
+
+    /**
+     * A shortcut for a disabled control answers with the same reason the
+     * button's tooltip gives, instead of sending an order (DESIGN §9).
+     */
+    const allowed = (action: ActionId): boolean => {
+      const hud = snapshot(rt);
+      if (pendingSelect) hud.selectedTrackId = pendingSelect;
+      const state = actionStates(hud, effectorSites(rt, hud))[action];
+      if (!state.enabled && state.reason) say(state.reason);
+      return state.enabled;
     };
 
     const activeTracks = () => rt.sim.getState().tracks.filter((t) => t.status === 'ACTIVE');
@@ -74,7 +118,16 @@ export function useCommands(rt: SimRuntime | null) {
 
     const select = (trackId: string) => {
       ui().set({ classifyMenu: false, interceptArmed: false });
-      send({ type: 'TRACK_SELECTED', trackId, payload: {} });
+      if (send({ type: 'TRACK_SELECTED', trackId, payload: {} })) {
+        pendingSelect = trackId;
+        // Cleared once the sim has applied it (next tick).
+        const at = now();
+        const clear = () => {
+          if (now() > at || rt.ended) pendingSelect = null;
+          else setTimeout(clear, 25);
+        };
+        setTimeout(clear, 25);
+      }
     };
 
     return {
@@ -82,13 +135,15 @@ export function useCommands(rt: SimRuntime | null) {
       cycle(dir: 1 | -1) {
         const tracks = activeTracks();
         if (tracks.length === 0) return say('No active tracks.', 'info');
-        const cur = tracks.findIndex((t) => t.id === rt.sim.getState().selectedTrackId);
+        const cur = tracks.findIndex(
+          (t) => t.id === (pendingSelect ?? rt.sim.getState().selectedTrackId),
+        );
         const next = tracks[(cur + dir + tracks.length) % tracks.length]!;
         select(next.id);
       },
       markDetected() {
         const id = selected();
-        if (id) send({ type: 'MARKED_DETECTED', trackId: id, payload: {} });
+        if (id && allowed('MARK')) send({ type: 'MARKED_DETECTED', trackId: id, payload: {} });
       },
       classify(cls: ContactClass) {
         const id = selected();
@@ -101,31 +156,42 @@ export function useCommands(rt: SimRuntime | null) {
       },
       monitor() {
         const id = selected();
-        if (id) send({ type: 'RESPONSE_ORDERED', trackId: id, payload: { response: 'MONITOR' } });
+        if (id && allowed('MONITOR'))
+          send({ type: 'RESPONSE_ORDERED', trackId: id, payload: { response: 'MONITOR' } });
       },
       /** EW is non-kinetic and not ROE-gated, so it needs no confirm step (decision 54). */
       jam() {
         const id = selected();
-        if (id) send({ type: 'RESPONSE_ORDERED', trackId: id, payload: { response: 'EW_JAM' } });
+        if (id && allowed('EW_JAM'))
+          send({ type: 'RESPONSE_ORDERED', trackId: id, payload: { response: 'EW_JAM' } });
       },
       spoof() {
         const id = selected();
-        if (id) send({ type: 'RESPONSE_ORDERED', trackId: id, payload: { response: 'EW_SPOOF' } });
+        if (id && allowed('EW_SPOOF'))
+          send({ type: 'RESPONSE_ORDERED', trackId: id, payload: { response: 'EW_SPOOF' } });
       },
       armIntercept() {
-        if (selected()) ui().set({ interceptArmed: true, classifyMenu: false });
+        if (selected() && allowed('INTERCEPT'))
+          ui().set({ interceptArmed: true, classifyMenu: false });
       },
       confirmIntercept() {
         const id = selected();
         ui().set({ interceptArmed: false });
-        if (id) send({ type: 'RESPONSE_ORDERED', trackId: id, payload: { response: 'INTERCEPT' } });
+        if (id && allowed('INTERCEPT'))
+          send({ type: 'RESPONSE_ORDERED', trackId: id, payload: { response: 'INTERCEPT' } });
       },
       cancel() {
-        ui().set({ classifyMenu: false, interceptArmed: false, cheatSheet: false, message: null });
+        ui().set({
+          classifyMenu: false,
+          interceptArmed: false,
+          endArmed: false,
+          cheatSheet: false,
+        });
       },
       togglePause() {
-        if (rt.mode !== 'PRACTICE') return say('Pause is only available in practice mode.', 'warn');
+        if (rt.mode !== 'PRACTICE') return say('Pause is only available in practice mode.');
         rt.setPaused(!rt.paused);
+        say(rt.paused ? 'PAUSED' : 'RESUMED', 'info');
         useHudStore.getState().publish(snapshot(rt));
       },
       /** Lock the camera on the selected track; sim-core slews and follows it. */
@@ -147,7 +213,7 @@ export function useCommands(rt: SimRuntime | null) {
       toggleEoMode() {
         const mode = ui().eo.mode === 'DAY' ? 'IR' : 'DAY';
         ui().setEo({ mode });
-        say(mode === 'IR' ? 'EO/IR: thermal (white-hot)' : 'EO/IR: day camera');
+        say(mode === 'IR' ? 'EO THERMAL (WHITE-HOT)' : 'EO DAY CAMERA', 'info');
         logSlew();
       },
       endSlew: logSlew,
@@ -164,7 +230,12 @@ export function useCommands(rt: SimRuntime | null) {
         ui().setEo({ hfovDeg: next });
         logSlew();
       },
+      /** End session is irreversible: first press arms, second (or Enter) confirms (DESIGN §9). */
+      armEnd() {
+        ui().set({ endArmed: true, interceptArmed: false, classifyMenu: false });
+      },
       abort() {
+        ui().set({ endArmed: false });
         rt.sim.end('ABORTED');
       },
     };

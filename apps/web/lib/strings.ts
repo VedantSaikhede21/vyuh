@@ -45,9 +45,9 @@ export const RESULT_LABEL: Record<string, string> = {
   NO_AMMO: 'no rounds left',
 };
 
-export const SHORTCUTS: { keys: string; action: string; later?: boolean }[] = [
+export const SHORTCUTS: { keys: string; action: string }[] = [
   { keys: 'Tab / Shift+Tab', action: 'Next / previous track' },
-  { keys: 'Space', action: 'Lock EO camera on selected track' },
+  { keys: 'Space', action: 'Cue EO camera to the selected track' },
   { keys: '+ / -', action: 'Zoom EO camera' },
   { keys: 'T', action: 'Toggle day / thermal (IR)' },
   { keys: 'D', action: 'Mark detected' },
@@ -56,8 +56,7 @@ export const SHORTCUTS: { keys: string; action: string; later?: boolean }[] = [
   { keys: 'M', action: 'Monitor' },
   { keys: 'J / S', action: 'EW jam / spoof (sector toward the track; hits everything in it)' },
   { keys: 'I then Enter', action: 'Intercept (confirm)' },
-  { keys: 'R', action: 'Contact report', later: true },
-  { keys: 'Y / X', action: 'Accept / reject AI suggestion', later: true },
+  { keys: 'Enter', action: 'Confirm End session once armed' },
   { keys: 'Esc', action: 'Cancel current action' },
   { keys: 'P', action: 'Pause (practice only)' },
   { keys: '?', action: 'Show / hide this list' },

@@ -41,11 +41,26 @@ export function CommsLog({
 }) {
   const shown = lines.slice(-max);
   const list = useRef<HTMLOListElement>(null);
+  // Stay on the newest line unless the operator has scrolled up to read.
+  const pinned = useRef(true);
+  /** Height at the last scroll/resize: a scroll caused by a layout change is not the operator's. */
+  const lastH = useRef(0);
   const lastId = shown.at(-1)?.id;
+  const hasLines = shown.length > 0;
   useEffect(() => {
     const el = list.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el && pinned.current) el.scrollTop = el.scrollHeight;
   }, [lastId]);
+  useEffect(() => {
+    const el = list.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      lastH.current = el.clientHeight;
+      if (pinned.current) el.scrollTop = el.scrollHeight;
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [hasLines]);
 
   if (shown.length === 0) {
     return <p className={cn('px-3 py-2 text-small text-text-3', className)}>{empty}</p>;
@@ -55,18 +70,17 @@ export function CommsLog({
       ref={list}
       aria-label="Comms log"
       aria-live="polite"
-      className={cn('min-h-0 overflow-y-auto px-3 py-1', className)}
+      onScroll={(e) => {
+        const el = e.currentTarget;
+        if (el.clientHeight !== lastH.current) return;
+        pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 4;
+      }}
+      className={cn('min-h-0 overflow-y-auto px-3 py-1 [overflow-anchor:none]', className)}
     >
       {shown.map((l) => (
-        <li
-          key={l.id}
-          className={cn(
-            'flex gap-3 whitespace-nowrap text-readout leading-[22px]',
-            l.pending && 'opacity-60',
-          )}
-        >
-          <span className="text-text-3">{formatClock(l.tMs)}</span>
-          <span className={cn('min-w-0 truncate', STATUS_CLASS[l.status ?? 'info'])}>
+        <li key={l.id} className={cn('flex gap-3 py-0.5 text-readout', l.pending && 'opacity-60')}>
+          <span className="shrink-0 text-text-3">{formatClock(l.tMs)}</span>
+          <span className={cn('min-w-0 break-words', STATUS_CLASS[l.status ?? 'info'])}>
             {l.text}
             {l.pending && <span className="text-text-3"> · QUEUED</span>}
           </span>

@@ -4,7 +4,7 @@ import type { Scenario, Score, SessionMode } from '@vyuh/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, api, isRetryable } from '@/lib/api';
 import { loadWorld } from '@/lib/terrain/load-world';
-import { EventBatcher, FatalBatchError } from './event-batcher';
+import { EventBatcher, FatalBatchError, type BatcherStatus } from './event-batcher';
 import { SimRuntime } from './runtime';
 
 // Session lifecycle in the browser (SPEC §4.5 / §11.1): load → briefing → run →
@@ -38,7 +38,7 @@ function message(err: unknown): string {
 
 export function useTrainingSession(sessionId: string) {
   const [phase, setPhase] = useState<Phase>({ kind: 'loading' });
-  const [upload, setUpload] = useState('');
+  const [upload, setUpload] = useState<BatcherStatus | null>(null);
   const batcherRef = useRef<EventBatcher | null>(null);
   const frames = useRef({ count: 0, ms: 0 });
 
@@ -79,14 +79,7 @@ export function useTrainingSession(sessionId: string) {
         },
         getEvents: () => runtime.sim.getEvents(),
         isRetryable,
-        onStatus: (s) =>
-          setUpload(
-            s.error
-              ? `Upload error: ${s.error}`
-              : s.retrying
-                ? 'Upload retrying…'
-                : `Synced ${s.sentEvents}`,
-          ),
+        onStatus: setUpload,
       });
       batcher.start();
       batcherRef.current = batcher;

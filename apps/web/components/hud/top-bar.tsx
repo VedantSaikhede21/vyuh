@@ -1,76 +1,126 @@
 'use client';
 
+import type { Affiliation } from '@vyuh/shared';
+import { Keyboard, Pause, Play } from 'lucide-react';
+import { AffiliationSymbol, Banner, Kbd, StateChip, Tooltip } from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
+import { AFFILIATION_STYLE } from '@/lib/affiliation';
 import type { Commands } from '@/lib/sim/commands';
+import type { BatcherStatus } from '@/lib/sim/event-batcher';
+import type { SimRuntime } from '@/lib/sim/runtime';
 import { useHudStore } from '@/lib/sim/store';
 import { useUiStore } from '@/lib/sim/ui-store';
 import { ROE_LABEL, formatClock } from '@/lib/strings';
-import { cn } from '@/lib/utils';
+import { pickBanner } from './use-hud-derived';
 
-const TONE: Record<string, string> = {
-  info: 'text-text-2',
-  good: 'text-ok',
-  warn: 'text-warn',
-  bad: 'text-crit',
-};
+const AFFILIATIONS: Affiliation[] = ['HOSTILE', 'UNKNOWN', 'FRIENDLY', 'NEUTRAL'];
 
-/** Top bar (SPEC §15): scenario, clock, ROE state, latest alert or message. */
+function Connection({ upload }: { upload: BatcherStatus | null }) {
+  if (!upload) return <StateChip tone="muted">Connecting</StateChip>;
+  if (upload.error) return <StateChip tone="crit">Upload failed</StateChip>;
+  if (upload.retrying) return <StateChip tone="warn">Queued {upload.pendingEvents}</StateChip>;
+  return (
+    <Tooltip content="Events sent to the server for scoring" align="end">
+      <StateChip tone="muted" tabIndex={0}>
+        Synced {upload.sentEvents}
+      </StateChip>
+    </Tooltip>
+  );
+}
+
+/**
+ * Top bar (DESIGN §11.5): scenario, clock, ROE and mode chips, track counts by
+ * the trainee's own affiliation calls, a single alert line, connection state,
+ * pause (practice), shortcuts and End session with an inline confirm.
+ */
 export function TopBar({
-  name,
-  mode,
+  runtime,
   upload,
   commands,
 }: {
-  name: string;
-  mode: string;
-  upload: string;
+  runtime: SimRuntime;
+  upload: BatcherStatus | null;
   commands: Commands;
 }) {
   const hud = useHudStore((s) => s.hud);
-  const message = useUiStore((s) => s.message);
+  const endArmed = useUiStore((s) => s.endArmed);
   const setUi = useUiStore((s) => s.set);
   if (!hud) return null;
-  const alert = hud.alerts[0];
+  const banner = pickBanner(runtime, hud, upload);
+  const active = hud.tracks.filter((t) => t.status === 'ACTIVE');
+  const ended = hud.endReason !== null;
   return (
-    <div className="flex h-10 items-center gap-3 border-b border-line-1 bg-bg-1 px-3 text-readout">
-      <span className="font-semibold uppercase tracking-wider">{name}</span>
-      <span className="text-label">{mode}</span>
-      <span className="tnum" aria-label="Elapsed and remaining time">
-        T+{formatClock(hud.tMs)}{' '}
-        <span className="text-text-2">/ −{formatClock(hud.durationMs - hud.tMs)}</span>
-      </span>
+    <div className="flex h-10 shrink-0 items-center gap-3 border-b border-line-1 bg-bg-1 px-3">
       <span
-        className={cn(
-          'rounded-sm border px-1.5 text-small font-semibold',
-          hud.roe === 'WEAPONS_FREE' ? 'border-ok text-ok' : 'border-warn text-warn',
-        )}
+        className="max-w-40 truncate text-panel-title text-text-1"
+        title={runtime.scenario.name}
       >
-        {ROE_LABEL[hud.roe]}
+        {runtime.scenario.name}
       </span>
-      {hud.paused && <span className="font-semibold text-warn">PAUSED</span>}
-      <span
-        className={cn('min-w-0 flex-1 truncate', TONE[message?.tone ?? alert?.tone ?? 'info'])}
-        role="status"
-      >
-        {message ? message.text : alert ? `T+${formatClock(alert.tMs)} ${alert.text}` : ''}
+      <span className="flex items-baseline gap-2" aria-label="Session clock">
+        <span className="text-readout-lg text-text-1">{formatClock(hud.tMs)}</span>
+        <span className="text-readout text-text-3">−{formatClock(hud.durationMs - hud.tMs)}</span>
       </span>
-      <span className="text-label hidden xl:inline">{upload}</span>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => setUi({ cheatSheet: true })}
-        aria-label="Keyboard shortcuts"
-      >
-        ?
-      </Button>
-      <Button
-        size="sm"
-        variant="secondary"
-        disabled={hud.endReason !== null}
-        onClick={commands.abort}
-      >
-        End session
-      </Button>
+      <StateChip>{ROE_LABEL[hud.roe]}</StateChip>
+      <StateChip tone="muted">{runtime.mode}</StateChip>
+      {hud.paused && <StateChip tone="warn">Paused</StateChip>}
+      <ul className="flex items-center gap-2" aria-label="Active tracks by your affiliation call">
+        {AFFILIATIONS.map((a) => (
+          <li key={a} className="flex items-center gap-1" title={`${AFFILIATION_STYLE[a].label}`}>
+            <AffiliationSymbol affiliation={a} size={14} />
+            <span className="text-readout text-text-1">
+              {active.filter((t) => t.affiliation === a).length}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="min-w-0 flex-1">
+        {banner && <Banner tone={banner.tone}>{banner.text}</Banner>}
+      </div>
+      <Connection upload={upload} />
+      {runtime.mode === 'PRACTICE' && (
+        <Tooltip content={hud.paused ? 'Resume' : 'Pause (practice only)'} shortcut="P" align="end">
+          <Button
+            size="hud"
+            variant="ghost"
+            disabled={ended}
+            onClick={commands.togglePause}
+            aria-label={hud.paused ? 'Resume' : 'Pause'}
+          >
+            {hud.paused ? (
+              <Play size={16} strokeWidth={1.5} />
+            ) : (
+              <Pause size={16} strokeWidth={1.5} />
+            )}
+          </Button>
+        </Tooltip>
+      )}
+      <Tooltip content="Keyboard shortcuts and symbols" shortcut="?" align="end" side="bottom">
+        <Button
+          size="hud"
+          variant="ghost"
+          onClick={() => setUi({ cheatSheet: true })}
+          aria-label="Keyboard shortcuts"
+        >
+          <Keyboard size={16} strokeWidth={1.5} />
+        </Button>
+      </Tooltip>
+      {endArmed ? (
+        <span className="flex items-center gap-1">
+          <Button size="hud" variant="danger" onClick={commands.abort} autoFocus>
+            Confirm end <Kbd>Enter</Kbd>
+          </Button>
+          <Button size="hud" variant="ghost" onClick={() => setUi({ endArmed: false })}>
+            Cancel
+          </Button>
+        </span>
+      ) : (
+        <Tooltip content="Stop now and score what you have done" align="end" side="bottom">
+          <Button size="hud" disabled={ended} onClick={commands.armEnd}>
+            End session
+          </Button>
+        </Tooltip>
+      )}
     </div>
   );
 }
