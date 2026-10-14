@@ -37,3 +37,7 @@ Thumbs.db
 # test artefacts
 playwright-report/
 test-results/
+
+# playwright
+apps/web/test-results/
+apps/web/playwright-report/
