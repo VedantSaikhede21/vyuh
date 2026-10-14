@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "test": "pnpm -r --filter \"./packages/*\" --filter @vyuh/web test",
     "gen:schemas": "pnpm --filter @vyuh/shared export:jsonschema && pnpm --filter @vyuh/api gen:pydantic",
-    "e2e": "pnpm --filter @vyuh/web e2e"
+    "e2e": "pnpm --filter @vyuh/web e2e",
+    "gen:hillshade": "node scripts/hillshade/gen-hillshade.ts --preset JK_MOUNTAIN --out apps/web/public/landing/login-hillshade.png --size 1200 --tone login"
   },
   "devDependencies": {
     "@eslint/js": "~9.39.5",
