@@ -96,7 +96,12 @@ export function SimPlayer({
     >
       <TopBar runtime={runtime} upload={upload} commands={commands} />
       <div className="flex min-h-0 flex-1">
-        <div ref={tactical} className="relative min-w-0 flex-1" aria-label="Tactical view" />
+        {/* overflow-hidden: 3D track labels portal in here and must not spill over the top bar. */}
+        <div
+          ref={tactical}
+          className="relative min-w-0 flex-1 overflow-hidden"
+          aria-label="Tactical view"
+        />
         <aside className="flex w-[320px] shrink-0 flex-col border-l border-line-1 bg-bg-1">
           <Panel className="shrink-0 border-0 border-b">
             <PanelHeader title="Radar PPI">
