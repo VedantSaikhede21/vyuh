@@ -25,7 +25,8 @@ describe('environmentLook', () => {
     expect(eo.showSky).toBe(false);
     expect(eo.sunIntensity).toBe(0);
     expect(eo.hemiIntensity).toBeLessThan(0.1);
-    expect(tac.hemiIntensity).toBeGreaterThanOrEqual(0.35);
+    expect(tac.hemiIntensity).toBeGreaterThanOrEqual(0.7);
+    expect(tac.sunIntensity).toBeGreaterThanOrEqual(1.2); // overhead map light, not a moon
   });
 
   it('fogs the EO view at the true visibility and the tactical map more gently', () => {
