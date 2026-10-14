@@ -4,14 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --port 3000",
-    "build": "next build",
+    "dev": "node scripts/copy-sources.ts && next dev --port 3000",
+    "build": "node scripts/copy-sources.ts && next build",
     "start": "next start --port 3000",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run",
     "e2e": "playwright test",
-    "e2e:update": "playwright test --update-snapshots"
+    "e2e:update": "playwright test --update-snapshots",
+    "record:landing": "node scripts/record-landing.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",

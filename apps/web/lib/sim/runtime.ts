@@ -32,6 +32,12 @@ export class SimRuntime {
   /** Fraction of a tick elapsed since the last one, for interpolation. */
   alpha = 0;
   paused = false;
+  /**
+   * Called before every tick with the sim about to advance — for a scripted
+   * player such as the ground-truth defender on the dev hero route. Unset in
+   * training sessions.
+   */
+  beforeTick: (() => void) | null = null;
   private accumulatorMs = 0;
 
   constructor(scenario: Scenario, world: World | Heightmap, mode: SessionMode) {
@@ -59,6 +65,7 @@ export class SimRuntime {
     let ticks = 0;
     while (this.accumulatorMs >= TICK_MS && !this.ended) {
       this.capturePositions();
+      this.beforeTick?.();
       this.sim.tick();
       this.accumulatorMs -= TICK_MS;
       ticks++;

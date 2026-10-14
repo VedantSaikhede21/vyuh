@@ -15,7 +15,9 @@ import { pickBanner } from './use-hud-derived';
 
 const AFFILIATIONS: Affiliation[] = ['HOSTILE', 'UNKNOWN', 'FRIENDLY', 'NEUTRAL'];
 
-function Connection({ upload }: { upload: BatcherStatus | null }) {
+/** `undefined` = no server session at all (local replay): no chip. */
+function Connection({ upload }: { upload: BatcherStatus | null | undefined }) {
+  if (upload === undefined) return null;
   if (!upload) return <StateChip tone="muted">Connecting</StateChip>;
   if (upload.error) return <StateChip tone="crit">Upload failed</StateChip>;
   if (upload.retrying) return <StateChip tone="warn">Queued {upload.pendingEvents}</StateChip>;
@@ -39,14 +41,14 @@ export function TopBar({
   commands,
 }: {
   runtime: SimRuntime;
-  upload: BatcherStatus | null;
+  upload: BatcherStatus | null | undefined;
   commands: Commands;
 }) {
   const hud = useHudStore((s) => s.hud);
   const endArmed = useUiStore((s) => s.endArmed);
   const setUi = useUiStore((s) => s.set);
   if (!hud) return null;
-  const banner = pickBanner(runtime, hud, upload);
+  const banner = pickBanner(runtime, hud, upload ?? null);
   const active = hud.tracks.filter((t) => t.status === 'ACTIVE');
   const ended = hud.endReason !== null;
   return (
