@@ -8,8 +8,12 @@ import { presetWorld } from './fixtures.ts';
 // fibre-optic FPV is invisible to RF and a bird flock creates radar tracks
 // (S13); jamming toward a hostile also hits a friendly in the sector (S14).
 
-const tracksOf = (ev: readonly SimEvent[], prefix: string) =>
-  ev.filter((e) => e.type === 'SENSOR_TRACK_CREATED' && e.contactId.startsWith(prefix));
+type TrackCreated = Extract<SimEvent, { type: 'SENSOR_TRACK_CREATED' }>;
+
+const tracksOf = (ev: readonly SimEvent[], prefix: string): TrackCreated[] =>
+  ev.filter(
+    (e): e is TrackCreated => e.type === 'SENSOR_TRACK_CREATED' && e.contactId.startsWith(prefix),
+  );
 
 describe('S13 Silent Ridge (JK_MOUNTAIN, night)', () => {
   const s13 = loadScripted('S13');
@@ -48,7 +52,7 @@ describe('S13 Silent Ridge (JK_MOUNTAIN, night)', () => {
     const first = tracksOf(ev, 'c01')[0]!;
     const impact = ev.find((e) => e.type === 'CONTACT_REACHED_ASSET' && e.contactId === 'c01')!;
     expect(first.tMs - spawn.tMs).toBeGreaterThan(120_000); // hidden for most of its flight
-    expect(first.type === 'SENSOR_TRACK_CREATED' && first.payload.rangeM).toBeLessThan(1600);
+    expect(first.payload.rangeM).toBeLessThan(1600);
     expect(impact.tMs - first.tMs).toBeGreaterThanOrEqual(45_000); // still defensible
   });
 });
