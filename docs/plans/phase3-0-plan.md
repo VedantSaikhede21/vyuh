@@ -14,7 +14,7 @@ Inputs: playtest notes = the Step 1 S14 audit (user notes follow after 3.0). Int
 6. **Feedback humanised on the client** (`humaniseFeedback()`: `BIRD_LARGE` → "large bird") because feedback strings live in immutable tree JSON.
 7. **Disabled reasons use operator-known facts only:** selection, session ended, effector missing, cooldown, ammo, ROE vs the trainee's own affiliation call, *estimated* track range vs effector range. Scoring ignores `BLOCKED_BY_ROE` / `OUT_OF_RANGE`, so pre-disabling changes no score.
 8. **No truth leaks in the HUD:** Comms log, banners and the ACQ reason use track/strobe data and trainee calls only — never `contactId` or collateral lists. "Friendly in jam sector" = a trainee-marked FRIENDLY track or a strobe with a friendly ID within ±10° of the jam bearing and inside jammer range.
-9. **Deterministic visual baselines, local-only:** a test hook `window.__vyuhE2E` (only when `NEXT_PUBLIC_E2E=true`) pauses the practice runtime and steps it to an exact `tMs`; WebGL regions are masked. Baselines are Windows-rendered, so CI does not run visual diffs yet (tech debt).
+9. **Deterministic visual baselines, local-only:** a test hook `window.__vyuhE2E` (non-production builds only; amended — a second dev server with a flag would clash with the running one) pauses the practice runtime and steps it to an exact `tMs`; WebGL regions are masked. Baselines are Windows-rendered, so CI does not run visual diffs yet (tech debt).
 10. **Ground-truth defender** promoted to `packages/sim-core/src/defender.ts` (pure, no RNG); used by the landing hero now and the 3a validator later. The test helper `playScripted` is untouched.
 
 ## Steps

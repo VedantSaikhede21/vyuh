@@ -13,7 +13,7 @@
     "format": "prettier --write .",
     "test": "pnpm -r --filter \"./packages/*\" --filter @vyuh/web test",
     "gen:schemas": "pnpm --filter @vyuh/shared export:jsonschema && pnpm --filter @vyuh/api gen:pydantic",
-    "e2e": "echo \"e2e: Playwright suite arrives in Phase 1 (placeholder)\""
+    "e2e": "pnpm --filter @vyuh/web e2e"
   },
   "devDependencies": {
     "@eslint/js": "~9.39.5",
