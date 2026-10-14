@@ -363,6 +363,10 @@ class RadarSensor(BaseModel):
     scan_period_s: Annotated[float, Field(alias="scanPeriodS", gt=0.0)]
 
 
+class RecommendationBasis(StrEnum):
+    RULE_V1 = "RULE_V1"
+
+
 class ReportLocation(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -882,6 +886,7 @@ class PerContactMetrics(BaseModel):
         int | None, Field(alias="traineeDetectedTMs", ge=0, le=9007199254740991)
     ] = None
     detection_latency_s: Annotated[float | None, Field(alias="detectionLatencyS", ge=0.0)] = None
+    true_class: Annotated[ContactClass | None, Field(alias="trueClass")] = None
     classified_as: Annotated[ContactClass | None, Field(alias="classifiedAs")] = None
     classification_correct: Annotated[
         ClassificationResult | None, Field(alias="classificationCorrect")
@@ -990,6 +995,12 @@ class Score(BaseModel):
     per_contact: Annotated[list[PerContactMetrics], Field(alias="perContact")]
     metrics: dict[str, Any]
     tree_version: Annotated[str, Field(alias="treeVersion", min_length=1)]
+    recommended_difficulty: Annotated[
+        int | None, Field(alias="recommendedDifficulty", ge=1, le=5)
+    ] = None
+    recommendation_basis: Annotated[
+        RecommendationBasis | None, Field(alias="recommendationBasis")
+    ] = None
 
 
 class SensorTrackCreatedEvent(BaseModel):

@@ -415,6 +415,16 @@ def test_penalties_are_listed_and_clamped() -> None:
 # ---- default_v1 re-scores identically after the Part B engine changes ------------------
 
 
+def _drop_none(value: Any) -> Any:
+    """Remove None-valued keys recursively: optional fields added to Score later (decision 64)
+    must not count as a re-score difference, while every real value still has to match."""
+    if isinstance(value, dict):
+        return {k: _drop_none(v) for k, v in value.items() if v is not None}
+    if isinstance(value, list):
+        return [_drop_none(v) for v in value]
+    return value
+
+
 def test_v1_golden_cases_rescore_identically() -> None:
     """Golden cases were scored by the pre-Part-B engine (tests/fixtures/v1_golden.json)."""
     golden = json.loads((FIXTURES / "v1_golden.json").read_text(encoding="utf-8"))
@@ -423,7 +433,7 @@ def test_v1_golden_cases_rescore_identically() -> None:
         scenario = Scenario.model_validate(case["scenario"])
         assert scenario.scoring_tree_id == "default_v1"
         score = score_session(scenario, case["events"]).model_dump(mode="json")
-        assert score == case["score"], name
+        assert _drop_none(score) == _drop_none(case["score"]), name
 
 
 # ---- default_v2 (Phase 2B: EW, UNAVOIDABLE, jammed non-threats) ---------------------------

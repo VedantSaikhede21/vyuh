@@ -209,6 +209,10 @@ export const SessionEndReason = named(
 );
 export type SessionEndReason = z.infer<typeof SessionEndReason>;
 
+/** How `Score.recommendedDifficulty` was derived (decision 64; Phase 5 Elo replaces RULE_V1). */
+export const RecommendationBasis = named('RecommendationBasis', z.enum(['RULE_V1']));
+export type RecommendationBasis = z.infer<typeof RecommendationBasis>;
+
 export const ClassificationResult = named(
   'ClassificationResult',
   z.enum(['EXACT', 'CATEGORY', 'WRONG']),

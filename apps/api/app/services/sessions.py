@@ -18,6 +18,7 @@ from app.schemas.generated import (
     ErrorCode,
     EventBatchRequest,
     EventBatchResponse,
+    Scenario,
     Score,
     ScoreComponents,
     SessionDetailResponse,
@@ -25,6 +26,7 @@ from app.schemas.generated import (
     UserRole,
 )
 from app.services.plausibility import LogState, Violation, advance_state, check_batch
+from app.services.recommendation import recommend_difficulty
 from app.services.scenarios import get_scenario_row, load_scenario
 from app.services.scoring.engine import score_session
 from app.services.scoring.tree import load_tree
@@ -212,7 +214,28 @@ def complete_session(
     row.ended_at = datetime.now(UTC)
     row.client_meta = body.client_meta.model_dump(mode="json", by_alias=True, exclude_unset=True)
     db.commit()
-    return score
+    return with_derived_fields(score, scenario)
+
+
+def with_derived_fields(score: Score, scenario: Scenario) -> Score:
+    """Fields shown with a completed session but not produced by the scoring tree (decision 64).
+
+    The stored score stays exactly as the engine produced it (so tree re-scores compare
+    byte-for-byte); `trueClass` per contact and the recommended difficulty are added on
+    every read. Only completed sessions have scores, so truth is never sent mid-session.
+    """
+    true_class = {c.id: c.class_ for c in scenario.contacts}
+    per_contact = [
+        p.model_copy(update={"true_class": true_class.get(p.contact_id)}) for p in score.per_contact
+    ]
+    nxt, basis = recommend_difficulty(score.total, scenario.difficulty)
+    return score.model_copy(
+        update={
+            "per_contact": per_contact,
+            "recommended_difficulty": nxt,
+            "recommendation_basis": basis,
+        }
+    )
 
 
 def latest_score(db: Session, session_id: uuid.UUID) -> Score | None:
@@ -224,7 +247,7 @@ def latest_score(db: Session, session_id: uuid.UUID) -> Score | None:
     )
     if row is None:
         return None
-    return Score.model_validate(
+    score = Score.model_validate(
         {
             "total": row.total,
             "components": ScoreComponents(
@@ -242,6 +265,8 @@ def latest_score(db: Session, session_id: uuid.UUID) -> Score | None:
             "treeVersion": row.tree_version,
         }
     )
+    session = db.get_one(TrainingSession, session_id)
+    return with_derived_fields(score, load_scenario(db.get_one(ScenarioRow, session.scenario_id)))
 
 
 def session_detail(db: Session, row: TrainingSession) -> SessionDetailResponse:
