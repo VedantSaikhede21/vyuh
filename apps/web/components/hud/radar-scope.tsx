@@ -4,6 +4,7 @@ import { TICK_MS } from '@vyuh/sim-core';
 import { useEffect, useRef } from 'react';
 import { AFFILIATION_STYLE, traceAffiliation } from '@/lib/affiliation';
 import { PPI, RF_STROBE, canvasMonoFont, withAlpha } from '@/lib/theme/scene-colours';
+import { placeLabels } from '@/lib/hud/declutter';
 import type { Commands } from '@/lib/sim/commands';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useHudStore } from '@/lib/sim/store';
@@ -95,6 +96,7 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
       ctx.setLineDash([3, 4]);
       ctx.strokeStyle = RF_STROBE;
       ctx.fillStyle = RF_STROBE;
+      const tagged: { x: number; y: number }[] = [];
       for (const s of hud?.rfStrobes ?? []) {
         const sensor = runtime.scenario.sensors.find((x) => x.id === s.sensorId);
         if (!sensor) continue;
@@ -105,16 +107,26 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
         ctx.moveTo(sx, sy);
         ctx.lineTo(sx + Math.sin(a) * r, sy - Math.cos(a) * r);
         ctx.stroke();
-        ctx.fillText(s.id, sx + Math.sin(a) * (r - 18) + 4, sy - Math.cos(a) * (r - 18));
+        // One "RF" tag per bearing cluster: strobes a few degrees apart share it.
+        const tx = sx + Math.sin(a) * (r - 18) + 4;
+        const ty = sy - Math.cos(a) * (r - 18);
+        if (tagged.every((p) => Math.hypot(p.x - tx, p.y - ty) > 16)) {
+          ctx.fillText('RF', tx, ty);
+          tagged.push({ x: tx, y: ty });
+        }
       }
       ctx.setLineDash([]);
 
-      // Blips.
-      for (const tr of hud?.tracks ?? []) {
-        if (tr.status !== 'ACTIVE') continue;
+      // Blips, then decluttered labels (selected track always labelled).
+      const blips = (hud?.tracks ?? [])
+        .filter((tr) => tr.status === 'ACTIVE')
+        .map((tr) => ({
+          tr,
+          x: c + (tr.x - origin.x) * pxPerM,
+          y: c - (tr.z - origin.z) * pxPerM,
+        }));
+      for (const { tr, x, y } of blips) {
         const style = AFFILIATION_STYLE[tr.affiliation];
-        const x = c + (tr.x - origin.x) * pxPerM;
-        const y = c - (tr.z - origin.z) * pxPerM;
         ctx.fillStyle = style.hex;
         ctx.strokeStyle = style.hex;
         traceAffiliation(ctx, tr.affiliation, x, y, 5);
@@ -132,9 +144,25 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
           ctx.strokeStyle = PPI.selected;
           ctx.strokeRect(x - 8, y - 8, 16, 16);
         }
-        ctx.fillStyle = style.hex;
-        ctx.fillText(`${style.letter} ${tr.id}`, x + 9, y + 4);
       }
+      const labels = blips.map(({ tr, x, y }) => ({
+        id: tr.id,
+        x,
+        y,
+        w: ctx.measureText(`${AFFILIATION_STYLE[tr.affiliation].letter} ${tr.id}`).width,
+        h: 11,
+        keep: tr.id === hud?.selectedTrackId,
+      }));
+      const placed = placeLabels(labels, { w: SIZE, h: SIZE }, 8);
+      ctx.textBaseline = 'top';
+      for (const { tr } of blips) {
+        const at = placed.get(tr.id);
+        if (!at) continue;
+        const style = AFFILIATION_STYLE[tr.affiliation];
+        ctx.fillStyle = tr.id === hud?.selectedTrackId ? PPI.selected : style.hex;
+        ctx.fillText(`${style.letter} ${tr.id}`, at.x, at.y);
+      }
+      ctx.textBaseline = 'alphabetic';
       raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw);
@@ -162,14 +190,17 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
   };
 
   return (
-    <div className="flex flex-col items-center gap-1">
-      <canvas
-        ref={canvasRef}
-        onClick={onClick}
-        className="aspect-square w-full max-w-[320px] cursor-crosshair"
-        aria-label={`Radar scope, ${maxRangeM / 1000} km range. Click a track to select it.`}
-      />
-      <p className="text-label">PPI · {maxRangeM / 1000} km · rings 1 km</p>
-    </div>
+    <canvas
+      ref={canvasRef}
+      onClick={onClick}
+      className="aspect-square w-full cursor-crosshair"
+      aria-label={`Radar PPI, ${maxRangeM / 1000} km range, rings every 1 km. Click a track to select it.`}
+    />
   );
+}
+
+/** PPI range in km for the panel header. */
+export function ppiRangeKm(runtime: SimRuntime): number {
+  const radar = runtime.scenario.sensors.find((s) => s.kind === 'RADAR');
+  return Math.ceil(((radar?.kind === 'RADAR' ? radar.refRangeM : 3000) * 1.4) / 1000);
 }

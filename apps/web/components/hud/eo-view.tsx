@@ -13,7 +13,11 @@ import { eoSensor, type Commands } from '@/lib/sim/commands';
 import { swapToIr } from '@/lib/sim/ir-materials';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useUiStore } from '@/lib/sim/ui-store';
-import { TRACK_MODE_LABEL, pad3 } from '@/lib/strings';
+import { ChevronRight } from 'lucide-react';
+import { Panel, PanelHeader, StateChip, StatusNotice, Tooltip } from '@/components/hud/primitives';
+import { ACQ_REASON, eoChip, formatBearing, type EoChip } from '@/lib/hud/derive';
+import { edgePoint, projectToEo } from '@/lib/hud/eo-project';
+import { useHudStore } from '@/lib/sim/store';
 
 // EO/IR view (SPEC §6.2). The camera on the EO mast renders the world into a
 // 640×360 target (the sensor resolution, so what the trainee sees matches the
@@ -25,6 +29,8 @@ import { TRACK_MODE_LABEL, pad3 } from '@/lib/strings';
 const RT_W = 640;
 const RT_H = 360;
 const ASPECT = RT_W / RT_H;
+/** Day-camera exposure into the filmic curve: keeps the ground mid-grey and the sky below white. */
+const EO_DAY_EXPOSURE = 0.6;
 
 export function vfovDeg(hfovDeg: number): number {
   const h = (hfovDeg * Math.PI) / 180;
@@ -43,6 +49,7 @@ uniform sampler2D tDiffuse;
 uniform float uMode;   // 0 = day, 1 = IR
 uniform float uTime;
 uniform float uNoise;
+uniform float uExposure;
 uniform vec2 uTexel;
 varying vec2 vUv;
 float rand(vec2 co) { return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -50,7 +57,13 @@ void main() {
   vec3 c = texture2D(tDiffuse, vUv).rgb;
   float n = rand(floor(vUv / uTexel) + fract(uTime * 7.31)) - 0.5;
   if (uMode < 0.5) {
-    gl_FragColor = vec4(c + n * uNoise, 1.0);
+    // The render target holds unclipped HDR (tone mapping only runs on screen
+    // output), so the day sky blew out to white. A filmic curve (ACES fit,
+    // Narkowicz 2015) with the camera's exposure rolls it off instead
+    // (approved 3.0 exposure fix).
+    vec3 x = c * uExposure;
+    vec3 d = clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
+    gl_FragColor = vec4(d + n * uNoise, 1.0);
   } else {
     vec3 b = c * 4.0
       + texture2D(tDiffuse, vUv + vec2(uTexel.x, 0.0)).rgb
@@ -79,7 +92,12 @@ interface EoFrame {
 function renderEoFrame({ rt, mast, fovMax, eoScene, camera, target, material, state }: EoFrame) {
   const ui = useUiStore.getState();
   const simCam = rt.sim.getState().camera;
-  if (ui.eo.trackMode !== simCam.trackMode) ui.setEo({ trackMode: simCam.trackMode });
+  if (ui.eo.trackMode !== simCam.trackMode) {
+    ui.setEo({
+      trackMode: simCam.trackMode,
+      cueSinceTMs: simCam.trackMode === 'CUE' ? rt.sim.getState().clock.tMs : null,
+    });
+  }
   let { azDeg, elDeg } = ui.eo;
   if (simCam.lockTrackId) {
     // Locked: the sim slews and follows; mirror it so the readout and the next drag agree.
@@ -149,6 +167,7 @@ export function EoScene() {
           uMode: { value: 0 },
           uTime: { value: 0 },
           uNoise: { value: 0.03 },
+          uExposure: { value: EO_DAY_EXPOSURE },
           uTexel: { value: [1 / RT_W, 1 / RT_H] },
         },
       }),
@@ -184,35 +203,184 @@ export function EoScene() {
   );
 }
 
-function EoReadout() {
-  const eo = useUiStore((s) => s.eo);
+const CUE_BOX_PX = 26;
+
+/** The track the EO is cued to (lock), else the selected track — from track estimates only. */
+function useCueTarget() {
+  const lock = useUiStore((st) => st.eo.lockTrackId);
+  const selected = useHudStore((st) => st.hud?.selectedTrackId ?? null);
+  return lock ?? selected;
+}
+
+/**
+ * Cue box in --cue at the projected track estimate (MAN/CUE/ACQ), or an edge
+ * arrow when the track is outside the picture (DESIGN §11.5). In TRK the box is
+ * the tracker gate on the boresight: the radar estimate is coarser than a
+ * zoomed-in picture. Positioned every frame by
+ * writing styles directly, so it costs no React renders.
+ */
+function EoCueOverlay({ rt }: { rt: SimRuntime }) {
+  const box = useRef<HTMLDivElement>(null);
+  const arrow = useRef<HTMLDivElement>(null);
+  const targetId = useCueTarget();
+  useEffect(() => {
+    const eo = eoSensor(rt);
+    if (!eo || !targetId) return;
+    let raf = 0;
+    const frame = () => {
+      raf = requestAnimationFrame(frame);
+      const b = box.current;
+      const a = arrow.current;
+      const host = b?.parentElement;
+      if (!b || !a || !host) return;
+      const track = useHudStore.getState().hud?.tracks.find((t) => t.id === targetId);
+      const mast = rt.sim.getState().sensorPositions[eo.id];
+      if (!track || track.status !== 'ACTIVE' || !mast) {
+        b.style.display = 'none';
+        a.style.display = 'none';
+        return;
+      }
+      const ui = useUiStore.getState().eo;
+      if (ui.trackMode === 'TRACK') {
+        // The EO tracker holds the target on the boresight: the box is its gate.
+        b.style.display = 'block';
+        a.style.display = 'none';
+        b.style.transform = `translate(${host.clientWidth / 2 - CUE_BOX_PX / 2}px, ${host.clientHeight / 2 - CUE_BOX_PX / 2}px)`;
+        return;
+      }
+      const pointing = rt.sim.getState().camera.lockTrackId ? rt.cameraPointing() : ui;
+      const target = {
+        x: track.x,
+        y: rt.groundHeight(track.x, track.z) + track.altitudeAglM,
+        z: track.z,
+      };
+      const p = projectToEo(
+        mast,
+        target,
+        pointing.azDeg,
+        pointing.elDeg,
+        ui.hfovDeg,
+        vfovDeg(ui.hfovDeg),
+      );
+      const w = host.clientWidth;
+      const h = host.clientHeight;
+      if (p.onScreen) {
+        b.style.display = 'block';
+        a.style.display = 'none';
+        const x = ((p.ndcX + 1) / 2) * w - CUE_BOX_PX / 2;
+        const y = ((1 - p.ndcY) / 2) * h - CUE_BOX_PX / 2;
+        b.style.transform = `translate(${x}px, ${y}px)`;
+      } else {
+        b.style.display = 'none';
+        a.style.display = 'block';
+        const e = edgePoint(p.angleRad, w, h, 14);
+        a.style.transform = `translate(${e.left - 8}px, ${e.top - 8}px) rotate(${-p.angleRad}rad)`;
+      }
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, [rt, targetId]);
+
+  if (!targetId) return null;
   return (
-    <div className="pointer-events-none absolute inset-0 z-[10] text-readout text-text-1">
-      <div className="absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2">
+    <>
+      <div
+        ref={box}
+        aria-hidden
+        data-eo-cue-box
+        className="pointer-events-none absolute left-0 top-0 hidden border border-cue"
+        style={{ width: CUE_BOX_PX, height: CUE_BOX_PX }}
+      />
+      <div
+        ref={arrow}
+        aria-hidden
+        data-eo-cue-arrow
+        className="pointer-events-none absolute left-0 top-0 hidden"
+      >
+        <ChevronRight size={16} strokeWidth={2} className="text-cue" />
+      </div>
+    </>
+  );
+}
+
+const CHIP_TONE = { MAN: 'muted', CUE: 'cue', ACQ: 'neutral', TRK: 'active' } as const;
+
+const CHIP_HINT: Record<EoChip, string> = {
+  MAN: 'Manual pointing — drag to slew, Space to cue on the selected track',
+  CUE: 'Cued by radar to the selected track',
+  ACQ: ACQ_REASON,
+  TRK: 'EO tracker holds the target',
+};
+
+function EoStateChip() {
+  const trackMode = useUiStore((s) => s.eo.trackMode);
+  const cueSince = useUiStore((s) => s.eo.cueSinceTMs);
+  const tMs = useHudStore((s) => s.hud?.tMs ?? 0);
+  const chip = eoChip(trackMode, cueSince, tMs);
+  return (
+    <Tooltip content={CHIP_HINT[chip]} align="end" side="bottom">
+      <StateChip tone={CHIP_TONE[chip]} pulse={chip === 'ACQ'} tabIndex={0} data-eo-state={chip}>
+        {chip}
+      </StateChip>
+    </Tooltip>
+  );
+}
+
+function EoReadout({ fovMax }: { fovMax: number }) {
+  const eo = useUiStore((s) => s.eo);
+  const tMs = useHudStore((s) => s.hud?.tMs ?? 0);
+  const acq = eoChip(eo.trackMode, eo.cueSinceTMs, tMs) === 'ACQ';
+  return (
+    <>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 text-text-1"
+      >
         <div className="absolute left-1/2 top-0 h-2 w-px bg-current" />
         <div className="absolute bottom-0 left-1/2 h-2 w-px bg-current" />
         <div className="absolute left-0 top-1/2 h-px w-2 bg-current" />
         <div className="absolute right-0 top-1/2 h-px w-2 bg-current" />
       </div>
-      <div className="absolute left-1.5 top-1 bg-bg-1 px-1">
-        {eo.mode === 'IR' ? 'IR WHT' : 'EO DAY'} · AZ {pad3(eo.azDeg)} · EL {eo.elDeg.toFixed(1)} ·
-        FOV {eo.hfovDeg.toFixed(1)}°
+      {acq && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 truncate bg-bg-1 px-2 py-0.5 text-small text-text-1">
+          {ACQ_REASON}
+        </div>
+      )}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex gap-3 whitespace-nowrap bg-bg-1 px-2 text-readout leading-5">
+        <span>
+          <span className="text-label">Az </span>
+          {formatBearing(eo.azDeg)}
+        </span>
+        <span>
+          <span className="text-label">El </span>
+          {eo.elDeg.toFixed(1)}°
+        </span>
+        <span>
+          <span className="text-label">FOV </span>
+          {eo.hfovDeg.toFixed(1)}°
+        </span>
+        <span>
+          <span className="text-label">Zoom </span>×{(fovMax / eo.hfovDeg).toFixed(1)}
+        </span>
+        <span className="ml-auto text-text-2">{eo.lockTrackId ?? 'Drag to slew'}</span>
       </div>
-      <div className="absolute bottom-1 left-1.5 bg-bg-1 px-1">
-        {TRACK_MODE_LABEL[eo.trackMode]}
-        {eo.lockTrackId ? ` ${eo.lockTrackId}` : ' · drag to slew'} · T day/IR
-      </div>
-    </div>
+    </>
   );
 }
 
-/** DOM part: the panel the EO <View> tracks, with drag-to-slew, wheel zoom and readout. */
+/** DOM part: the panel the EO <View> tracks, with drag-to-slew, wheel zoom and readouts. */
 export const EoPanel = forwardRef<HTMLDivElement, { runtime: SimRuntime; commands: Commands }>(
   function EoPanel({ runtime, commands }, ref) {
     const drag = useRef<{ x: number; y: number } | null>(null);
+    const mode = useUiStore((s) => s.eo.mode);
     const eo = eoSensor(runtime);
     if (!eo || eo.kind !== 'EO_IR') {
-      return <p className="text-label p-4">No EO/IR sensor in this scenario.</p>;
+      return (
+        <Panel className="h-full border-0">
+          <PanelHeader title="EO/IR" />
+          <StatusNotice title="No EO/IR sensor in this scenario." />
+        </Panel>
+      );
     }
 
     const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -226,23 +394,37 @@ export const EoPanel = forwardRef<HTMLDivElement, { runtime: SimRuntime; command
     };
 
     return (
-      <div
-        ref={ref}
-        className="relative aspect-video w-full cursor-grab touch-none select-none overflow-hidden active:cursor-grabbing"
-        onPointerDown={(e) => {
-          e.currentTarget.setPointerCapture(e.pointerId);
-          drag.current = { x: e.clientX, y: e.clientY };
-        }}
-        onPointerMove={onPointerMove}
-        onPointerUp={() => {
-          if (drag.current) commands.endSlew();
-          drag.current = null;
-        }}
-        onWheel={(e) => commands.zoom(e.deltaY < 0 ? 1 : -1)}
-        aria-label="EO/IR camera view. Drag to slew, scroll to zoom, Space to lock on the selected track, T for thermal."
-      >
-        <EoReadout />
-      </div>
+      <Panel className="h-full border-0">
+        <PanelHeader title={`EO/IR · ${eo.id}`}>
+          <Tooltip content="Day camera or thermal (white-hot)" shortcut="T" side="bottom">
+            <StateChip tone="neutral" tabIndex={0}>
+              {mode === 'IR' ? 'IR WHT' : 'DAY'}
+            </StateChip>
+          </Tooltip>
+          <EoStateChip />
+        </PanelHeader>
+        <div
+          ref={ref}
+          className="relative aspect-video w-full cursor-grab touch-none select-none overflow-hidden active:cursor-grabbing"
+          onPointerDown={(e) => {
+            e.currentTarget.setPointerCapture(e.pointerId);
+            drag.current = { x: e.clientX, y: e.clientY };
+          }}
+          onPointerMove={onPointerMove}
+          onPointerUp={() => {
+            if (drag.current) commands.endSlew();
+            drag.current = null;
+          }}
+          onWheel={(e) => commands.zoom(e.deltaY < 0 ? 1 : -1)}
+          aria-label="EO/IR camera view. Drag to slew, scroll to zoom, Space to cue on the selected track, T for thermal."
+        >
+          {/* Above the shared WebGL canvas (z-5, decision 40). */}
+          <div className="pointer-events-none absolute inset-0 z-10">
+            <EoCueOverlay rt={runtime} />
+            <EoReadout fovMax={eo.fovDegMax} />
+          </div>
+        </div>
+      </Panel>
     );
   },
 );

@@ -2,7 +2,9 @@
 
 import type { Affiliation } from '@vyuh/shared';
 import { useEffect } from 'react';
+import { AffiliationSymbol, Kbd, Panel, PanelBody, PanelHeader } from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
+import { AFFILIATION_STYLE } from '@/lib/affiliation';
 import type { Commands } from '@/lib/sim/commands';
 import { useUiStore } from '@/lib/sim/ui-store';
 import { CLASS_MENU, SHORTCUTS } from '@/lib/strings';
@@ -13,7 +15,6 @@ const AFFILIATION_KEYS: Record<string, Affiliation> = {
   n: 'NEUTRAL',
   u: 'UNKNOWN',
 };
-const LATER_KEYS = new Set(['r', 'y', 'x']);
 
 /** SPEC §15.1 keyboard shortcuts. Ignored while typing in a form field. */
 export function useShortcuts(commands: Commands | null): void {
@@ -36,9 +37,10 @@ export function useShortcuts(commands: Commands | null): void {
           return;
         }
       }
-      if (ui.interceptArmed && e.key === 'Enter') {
+      if (e.key === 'Enter' && (ui.interceptArmed || ui.endArmed)) {
         e.preventDefault();
-        commands.confirmIntercept();
+        if (ui.endArmed) commands.abort();
+        else commands.confirmIntercept();
         return;
       }
       if (ui.interceptArmed && k !== 'i') ui.set({ interceptArmed: false });
@@ -59,9 +61,7 @@ export function useShortcuts(commands: Commands | null): void {
       else if (k === 'i') commands.armIntercept();
       else if (k === 'p') commands.togglePause();
       else if (k === 't') commands.toggleEoMode();
-      else if (LATER_KEYS.has(k)) {
-        ui.set({ message: { text: 'That action arrives in a later phase.', tone: 'info' } });
-      } else handled = false;
+      else handled = false;
       if (handled) e.preventDefault();
     };
     window.addEventListener('keydown', onKey);
@@ -69,35 +69,52 @@ export function useShortcuts(commands: Commands | null): void {
   }, [commands]);
 }
 
+const AFFILIATIONS: Affiliation[] = ['HOSTILE', 'FRIENDLY', 'NEUTRAL', 'UNKNOWN'];
+
+/** `?` sheet: every shortcut plus the APP-6 symbol legend (moved out of the player). */
 export function CheatSheet() {
   const open = useUiStore((s) => s.cheatSheet);
   const set = useUiStore((s) => s.set);
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-bg-0/80"
       role="dialog"
-      aria-label="Keyboard shortcuts"
+      aria-modal
+      aria-labelledby="cheat-sheet-title"
     >
-      <div className="w-[520px] max-w-[95vw] border border-line-1 bg-bg-1 p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-panel-title">Shortcuts</h2>
-          <Button size="sm" variant="ghost" onClick={() => set({ cheatSheet: false })}>
-            Close (Esc)
+      <Panel className="w-[560px] max-w-[95vw] rounded-md shadow-overlay">
+        <PanelHeader title="Shortcuts and symbols" titleId="cheat-sheet-title">
+          <Button size="hud" variant="ghost" onClick={() => set({ cheatSheet: false })} autoFocus>
+            Close <Kbd>Esc</Kbd>
           </Button>
-        </div>
-        <dl className="grid grid-cols-[10rem_1fr] gap-y-1 text-body">
-          {SHORTCUTS.map((s) => (
-            <div key={s.keys} className="contents">
-              <dt className="font-mono text-text-1">{s.keys}</dt>
-              <dd className={s.later ? 'text-text-2' : ''}>
-                {s.action}
-                {s.later && ' (later phase)'}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </div>
+        </PanelHeader>
+        <PanelBody className="space-y-4">
+          <dl className="grid grid-cols-[11rem_1fr] gap-x-3 gap-y-1.5 text-body">
+            {SHORTCUTS.map((s) => (
+              <div key={s.keys} className="contents">
+                <dt className="text-readout text-text-1">{s.keys}</dt>
+                <dd className="text-text-2">{s.action}</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="space-y-1.5 border-t border-line-1 pt-3">
+            <p className="text-label">Affiliation (APP-6): shape, letter and colour</p>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-body">
+              {AFFILIATIONS.map((a) => (
+                <li key={a} className="flex items-center gap-1.5">
+                  <AffiliationSymbol affiliation={a} size={16} />
+                  {AFFILIATION_STYLE[a].label}
+                </li>
+              ))}
+              <li className="flex items-center gap-1.5 text-text-2">
+                <AffiliationSymbol affiliation="UNKNOWN" size={16} filled />
+                Filled = marked detected
+              </li>
+            </ul>
+          </div>
+        </PanelBody>
+      </Panel>
     </div>
   );
 }
