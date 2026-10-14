@@ -314,3 +314,4 @@ docker compose up        # offline full stack
 - Tech debt (Phase 1): unsent event batches are kept in memory only (no `sessionStorage` yet); a reloaded mid-run session cannot be resumed; `ABANDONED` (15 min idle) is not automated; no Playwright E2E yet; Elo update deferred to Phase 5 (decision 28).
 - Open decisions:
 - Open ideas (parked, not approved):
+  - Procedural placeholder buildings at OSM village points (OSM building coverage in rural Punjab is sparse); revisit with URBAN_GENERIC in Phase 3.

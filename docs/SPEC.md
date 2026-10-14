@@ -133,6 +133,14 @@ Score { total, components{detection, classification, decision, report, efficienc
 
 **Coordinates in scenario JSON:** `x` = east (m), `z` = **north** (m), `y` = metres **above ground level** (AGL). 2D zone points are `[x, z]`. The flip to Three.js (`z = -north`) happens only in `packages/sim-core/src/coords.ts`.
 
+**Phase 2 additions (all additive, no `schemaVersion` bump):**
+- `Waypoint.altRef?: 'AGL' | 'MSL'` (default `AGL`). An `MSL` waypoint's `y` is metres above sea level; sim-core converts it with the preset's `originElevM`.
+- `EoIrSensor.irResolution?: [w, h]` — thermal detector resolution (defaults to `resolution`).
+- `CAMERA_SLEWED` may carry a top-level `trackId` = "camera locked on this track" (sim-core then follows the track's estimated position every tick), and `payload.mode?: 'DAY' | 'IR'`.
+- `ClassProfile.thermalContrast` (0..1, representative) per contact class.
+- **Preset meta is authoritative:** `terrain.origin` in a scenario is informational; the preset's `meta.json` origin (and `utcOffsetMin`) is used for sun position and geo-referencing.
+- **`environment.isNight` is computed** (sun elevation < −6° from suncalc at the preset origin, scenario date/time and preset `utcOffsetMin`) and overrides any stored value. `sunAzEl` is likewise computed.
+
 **Additional enums** (all in `packages/shared/src/enums.ts`): `Roe`, `UserRole` (TRAINEE / INSTRUCTOR / ADMIN), `ScenarioKind`, `SessionMode`, `SessionStatus`, `EventType`, `ResponseResult`, `TrackLostReason`, `EoLevel`, `AltitudeBand`, `Activity`, `WaypointAction`, `FalseContactDensity`, `SessionEndReason`. `SensorKind.ACOUSTIC` is not added until it is implemented.
 
 ### 4.1 Event types
@@ -148,7 +156,7 @@ Trainee: `TRACK_SELECTED, CAMERA_SLEWED, MARKED_DETECTED, CLASSIFIED, AFFILIATIO
 | `SENSOR_TRACK_LOST` | sim | `{ reason: 'MISSES'\|'LOS'\|'OUT_OF_RANGE' }` |
 | `EO_IDENTIFIABLE` | sim | `{ level: 'DETECT'\|'RECOGNISE'\|'IDENTIFY', rangeM }` |
 | `TRACK_SELECTED` | trainee | `{}` + top-level `trackId` |
-| `CAMERA_SLEWED` | trainee | `{ azDeg, elDeg, zoom }` (throttled: max 2/s) |
+| `CAMERA_SLEWED` | trainee | `{ azDeg, elDeg, zoom, mode? }` + optional top-level `trackId` (lock). Throttled to max 2/s, plus one final event at the end of every drag/slew/zoom/mode gesture so the sim's pointing settles on what the trainee sees |
 | `MARKED_DETECTED` | trainee | `{}` + top-level `trackId` |
 | `CLASSIFIED` | trainee | `{ class: ContactClass }` |
 | `AFFILIATION_SET` | trainee | `{ affiliation }` |
@@ -226,8 +234,10 @@ Modules: `rng.ts`, `clock.ts`, `coords.ts`, `terrain.ts` (heightmap sampling + L
 
 - **Kinematics:** move toward next waypoint at `speedMps` with max turn rate per class; altitude above ground (AGL) uses heightmap.
 - **Boids (swarms, bird flocks):** separation / alignment / cohesion + leader-follow toward group waypoint; fixed weights per behaviour; deterministic iteration order.
-- **LOS:** raycast sensor→contact over heightmap at ~10 m step + building footprints (2D polygon test with height). Cache per sensor per tick.
-- **Tracks:** a radar track is created after **3 hits in 5 scans**, lost after 4 consecutive misses. Tracks get ids `T001…`, distinct from contact ids (trainee sees tracks, not truth).
+- **World:** `createSim(scenario, world)` takes a `World` = heightmap (heights relative to the preset origin elevation) + building footprints (100 m uniform grid index) + LOS helper. Passing a bare `Heightmap` still works (no buildings). `PROCEDURAL_HILLS` is a built-in preset; real presets are decoded from `heightmap.u16` + `meta.json` + `buildings.geojson` by a pure function (no I/O in sim-core).
+- **LOS:** raycast sensor→contact over heightmap at ~10 m step (fixed integer step count, endpoints excluded, 0.5 m tolerance) + building footprints (2D polygon test with height). Cache per sensor per tick.
+- **Tracks:** a radar track is created after **3 hits in 5 scans**, lost after 4 consecutive misses. Tracks get ids `T001…`, distinct from contact ids (trainee sees tracks, not truth). A LOS-masked contact counts as a miss but still consumes its fixed per-contact random draws; a track lost while every losing miss was masked reports reason `LOS`.
+- **Sun:** suncalc at the preset origin; the instant is `Date.UTC(date time) − utcOffsetMin`, never the machine's timezone.
 
 ---
 
@@ -244,6 +254,9 @@ Modules: `rng.ts`, `clock.ts`, `coords.ts`, `terrain.ts` (heightmap sampling + L
 - Pixels on target = targetSizeM / (rangeM × IFOV). **Johnson criteria** (cycles = pixels/2): detect ≥ 1, recognise ≥ 4, identify ≥ 6.4.
 - Visibility caps EO range (fog/haze); at night, EO is useless and IR is used with lower contrast for small electric drones (thermal signature parameter per class).
 - Rendered as a second R3F camera at reduced resolution with a post-process shader: day = slight noise; IR = white-hot palette + noise + blur. Emits `EO_IDENTIFIABLE` when a contact crosses the identify threshold in the current pointing (used for fair scoring).
+- **Model (Phase 2):** IFOV = horizontal FOV (rad) ÷ horizontal pixels (`irResolution` in IR mode). Cycles = (sizeM / (rangeM × IFOV)) / 2, × `thermalContrast` in IR mode. Level: DETECT ≥ 1, RECOGNISE ≥ 4, IDENTIFY ≥ 6.4. A contact counts only if inside the camera frustum and in LOS. Visibility cap: DAY range ≤ `visibilityM`; IR range ≤ 1.5 × `visibilityM` (thermal sees better through haze, not fog). DAY mode gives nothing when `isNight`.
+- **Pointing is sim state**, set only by logged `CAMERA_SLEWED` commands (incl. lock and mode), so EO results replay exactly.
+- **Emission:** `EO_IDENTIFIABLE` is emitted when the highest level reached for a contact in the current pointing episode rises; the episode resets after the contact has had no level for 1 s (hysteresis, no flicker spam). The event carries the matching live track id when one exists.
 
 ### 6.3 RF detector
 - Detects only contacts with `rfActive` within range; gives bearing ± 5–10° and band; no range.
@@ -307,6 +320,12 @@ Modules: `rng.ts`, `clock.ts`, `coords.ts`, `terrain.ts` (heightmap sampling + L
 | S08 | Fog Line | 4 | Coastal fog, EO near-useless, radar-led decisions | Weather-degraded operations |
 | S09 | Dusk Swarm | 4 | 8-drone swarm on 2 axes with sun glare at dusk | Reported swarm attacks |
 | S10 | Saturation | 5 | Night mixed swarm + decoys + birds + friendly helicopter, limited ammo | Reported large-scale drone incursions |
+
+**Test scenarios (tag `test`, not part of the training library):**
+| Id | Name | Preset | Purpose |
+|---|---|---|---|
+| S11 | Ridge Line | JK_MOUNTAIN, day | A quad's path passes behind a ridge: sensors lose it (LOS) and reacquire it |
+| S12 | Night Watch | PUNJAB_PLAINS, night | A quad that can only be identified in IR mode |
 
 ---
 
@@ -533,7 +552,13 @@ All errors: `{ "error": { "code": "...", "message": "...", "details": {} } }`
 
 ## §14. Realism data pipeline
 
-- **Terrain:** download DEM tiles manually (Copernicus GLO-30 or SRTM) into `scripts/terrain/raw/` (git-ignored). `build_preset.py --dem <file> --bbox <minlon,minlat,maxlon,maxlat> --size 512 --name PUNJAB_PLAINS` → `heightmap.png` (16-bit), `meta.json` (origin lat/lon, sizeM, metresPerPx, minElev, maxElev), `buildings.geojson` (osmnx footprints, simplified, height from tags or 3 m/level default), `albedo.jpg` optional. Presets: `PUNJAB_PLAINS`, `JK_MOUNTAIN`, `THAR_DESERT`, `URBAN_GENERIC`, `COASTAL`. Use generic areas — never model a real military installation.
+- **Terrain:** download DEM tiles (Copernicus GLO-30 or SRTM) into `scripts/terrain/raw/` (git-ignored). `scripts/terrain` is its own uv project. `build_preset.py --dem <file>… (--centre lat,lon --size-km 14 | --bbox minlon,minlat,maxlon,maxlat) --px 512 --name PUNJAB_PLAINS --utc-offset-min 330 [--no-buildings]` → in `apps/web/public/terrain/<NAME>/`:
+  - `heightmap.u16` — **the format sim-core and web load**: raw little-endian uint16, `resolution × resolution`, row 0 = south edge, column 0 = west edge; height relative to the origin elevation = `relMinM + v × (relMaxM − relMinM) / 65535`. The DEM is reprojected to a local azimuthal-equidistant grid centred on the origin (bilinear).
+  - `heightmap.png` — 16-bit north-up **preview only**.
+  - `meta.json` — validated by the `TerrainPresetMeta` zod schema: name, origin {lat, lon}, `utcOffsetMin`, `sizeM`, `resolution`, `metresPerPx` (= sizeM / (resolution − 1)), `originElevM`, `relMinM`, `relMaxM`, absolute `minElevM` / `maxElevM`, `buildingsStatus` (`ok` / `empty` / `unavailable`), file names, source + attribution.
+  - `buildings.geojson` — osmnx footprints in **local metres `[x, z]`** (not lon/lat, so the browser needs no projection library), simplified to 1 m, ≥ 10 m², with `heightM` from `height`, else `building:levels` × 3 m, else 2 levels (6 m).
+  - Overpass is retried with exponential backoff (3 attempts); if it stays unavailable the preset is finished without buildings and `buildingsStatus = "unavailable"`. Raw OSM replies are cached in `raw/` so rebuilds are offline. The build fails if a preset exceeds 10 MB.
+  - Presets: `PUNJAB_PLAINS`, `JK_MOUNTAIN`, `THAR_DESERT`, `URBAN_GENERIC`, `COASTAL`. Use generic areas — never model a real military installation (each box ≥ 50 km from the IB/LoC, no cantonments, airfields or known installations inside; vetted against OSM).
 - **Sun:** suncalc with preset lat/lon + scenario date/time → sun azimuth/elevation → directional light, sky, `isNight` (sun elevation < −6°).
 - **Weather:** scenario presets; optional `LIVE` → API calls Open-Meteo for preset location/time, caches result, maps to `{visibility, rain, wind, cloud}`.
 - **Signatures:** `scripts/signatures/gen_spectrograms.py` → PNG templates per class in `apps/web/public/signatures/`.
