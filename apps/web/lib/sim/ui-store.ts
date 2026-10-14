@@ -1,4 +1,5 @@
 import type { EoMode } from '@vyuh/shared';
+import type { EoTrackMode } from '@vyuh/sim-core';
 import { create } from 'zustand';
 
 // Operator UI state that is not sim state: EO pointing, open menus, messages.
@@ -11,6 +12,8 @@ export interface EoPointing {
   /** Track the camera is locked on (sim-core follows it); null = manual. */
   lockTrackId: string | null;
   mode: EoMode;
+  /** Mirror of the sim camera state: MANUAL, CUE (radar-cued) or TRACK (EO tracker holds it). */
+  trackMode: EoTrackMode;
 }
 
 export interface UiMessage {
@@ -30,7 +33,7 @@ interface UiStore {
 }
 
 export const useUiStore = create<UiStore>((set) => ({
-  eo: { azDeg: 0, elDeg: 0, hfovDeg: 30, lockTrackId: null, mode: 'DAY' },
+  eo: { azDeg: 0, elDeg: 0, hfovDeg: 30, lockTrackId: null, mode: 'DAY', trackMode: 'MANUAL' },
   classifyMenu: false,
   interceptArmed: false,
   cheatSheet: false,

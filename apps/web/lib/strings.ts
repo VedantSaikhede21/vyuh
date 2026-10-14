@@ -1,4 +1,5 @@
 import type { ContactClass, Roe } from '@vyuh/shared';
+import type { EoTrackMode } from '@vyuh/sim-core';
 
 // User-facing strings for the sim player, kept in one file so they can be
 // translated later (SPEC §15.2).
@@ -70,3 +71,10 @@ export function formatClock(ms: number): string {
 export function pad3(deg: number): string {
   return String(Math.round(deg) % 360).padStart(3, '0');
 }
+
+/** EO camera state shown on the EO view (decision 52). */
+export const TRACK_MODE_LABEL: Readonly<Record<EoTrackMode, string>> = {
+  MANUAL: 'MAN',
+  CUE: 'CUE',
+  TRACK: 'TRK',
+};

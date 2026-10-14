@@ -103,8 +103,12 @@ export {
 export type { SimEnvironment, SunAzElDeg } from './sun.ts';
 export {
   CAMERA_FOLLOW_RATE,
+  EO_ACQUIRE_FRAME_FRACTION,
+  EO_ACQUIRE_MS,
   EO_EPISODE_RESET_MS,
   EO_LEVEL_RANK,
+  EO_TRACK_DROP_MS,
+  EO_TRACK_JITTER_FOV,
   IR_VISIBILITY_FACTOR,
   JOHNSON_CYCLES,
   eoHfovDeg,
@@ -112,9 +116,10 @@ export {
   eoLevel,
   eoResolution,
   followPointing,
+  frameOffset,
   inEoFrustum,
   johnsonCycles,
   levelForCycles,
   pointingTo,
 } from './sensors/eoir.ts';
-export type { EoCameraState, EoConditions } from './sensors/eoir.ts';
+export type { EoCameraState, EoConditions, EoTrackMode } from './sensors/eoir.ts';

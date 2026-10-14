@@ -23,6 +23,20 @@ export const EO_EPISODE_RESET_MS = 1000;
 /** How fast a locked camera closes the gap to its track, per second. */
 export const CAMERA_FOLLOW_RATE = 4;
 
+// EO video auto-track (decision 52): radar cues the camera (CUE); once the cued
+// contact is seen near the frame centre the EO tracker holds it (TRACK).
+/** CUE → TRACK after the contact has been at ≥ DETECT inside the central half this long. */
+export const EO_ACQUIRE_MS = 500;
+/** TRACK → CUE after the contact has had no EO level for longer than this. */
+export const EO_TRACK_DROP_MS = 1000;
+/** Fraction of the frame half-size that counts as "central" for acquisition. */
+export const EO_ACQUIRE_FRAME_FRACTION = 0.5;
+/** Tracker jitter, 1σ per axis, as a fraction of the horizontal FOV. */
+export const EO_TRACK_JITTER_FOV = 0.02;
+
+/** MANUAL = trainee pointing; CUE = following a radar track; TRACK = EO tracker holds the contact. */
+export type EoTrackMode = 'MANUAL' | 'CUE' | 'TRACK';
+
 export interface EoCameraState {
   azDeg: number;
   elDeg: number;
@@ -31,6 +45,7 @@ export interface EoCameraState {
   mode: EoMode;
   /** Track the camera is locked on; null = manual pointing. */
   lockTrackId: string | null;
+  trackMode: EoTrackMode;
 }
 
 export interface EoConditions {
@@ -99,13 +114,16 @@ export function pointingTo(
   };
 }
 
-/** Whether `to` falls inside the camera's rectangular field of view. */
-export function inEoFrustum(
+/**
+ * Where `to` appears in the frame: [horizontal, vertical] as a fraction of the
+ * half-frame (|value| ≤ 1 is in view), or null when it is behind the camera.
+ */
+export function frameOffset(
   sensor: EoIrSensor,
   camera: Pick<EoCameraState, 'azDeg' | 'elDeg' | 'zoom' | 'mode'>,
   from: Readonly<Vec3>,
   to: Readonly<Vec3>,
-): boolean {
+): readonly [number, number] | null {
   const az = (camera.azDeg * Math.PI) / 180;
   const el = (camera.elDeg * Math.PI) / 180;
   // Camera basis in (east, up, north).
@@ -114,12 +132,23 @@ export function inEoFrustum(
   const u = [-Math.sin(el) * Math.sin(az), Math.cos(el), -Math.sin(el) * Math.cos(az)] as const;
   const d = [to.x - from.x, to.y - from.y, to.z - from.z] as const;
   const fz = d[0] * f[0] + d[1] * f[1] + d[2] * f[2];
-  if (fz <= 0) return false;
+  if (fz <= 0) return null;
   const rx = d[0] * r[0] + d[1] * r[1] + d[2] * r[2];
   const uy = d[0] * u[0] + d[1] * u[1] + d[2] * u[2];
   const [w, h] = eoResolution(sensor, camera.mode);
   const tanH = Math.tan((eoHfovDeg(sensor, camera.zoom) * Math.PI) / 360);
-  return Math.abs(rx / fz) <= tanH && Math.abs(uy / fz) <= (tanH * h) / w;
+  return [rx / fz / tanH, uy / fz / ((tanH * h) / w)];
+}
+
+/** Whether `to` falls inside the camera's rectangular field of view. */
+export function inEoFrustum(
+  sensor: EoIrSensor,
+  camera: Pick<EoCameraState, 'azDeg' | 'elDeg' | 'zoom' | 'mode'>,
+  from: Readonly<Vec3>,
+  to: Readonly<Vec3>,
+): boolean {
+  const o = frameOffset(sensor, camera, from, to);
+  return o !== null && Math.abs(o[0]) <= 1 && Math.abs(o[1]) <= 1;
 }
 
 /** One tick of a locked camera following its target pointing (deterministic smoothing). */
