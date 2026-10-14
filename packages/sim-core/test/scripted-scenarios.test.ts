@@ -3,9 +3,14 @@ import { Scenario } from '@vyuh/shared';
 import { describe, expect, it } from 'vitest';
 import { PROCEDURAL_HILLS, createProceduralTerrain, createSim } from '../src/index.ts';
 import { FIXTURE_DIR, recordFixtureLogs } from './fixture-logs.ts';
+import { playScripted } from './fixtures.ts';
 
 // Guards the hand-written scenarios in apps/api/app/seed/scenarios: valid
 // against the zod schema, a real threat if ignored, and defensible in time.
+// Since Phase 2 radar has LOS masking, so low threats appear later (S03 is the
+// low-level one); 45 s of warning is the floor, and a scripted defence must win.
+
+const MIN_WARNING_MS = 45_000;
 
 const DIR = new URL('../../../apps/api/app/seed/scenarios/', import.meta.url);
 const files = readdirSync(DIR).filter((f) => f.endsWith('.json'));
@@ -29,7 +34,7 @@ describe.each(files)('scripted scenario %s', (file) => {
     expect(sim.getState().endReason).toBe('ALL_RESOLVED');
   });
 
-  it('every threat is tracked with at least 60 s of warning', () => {
+  it('every threat is tracked with at least 45 s of warning', () => {
     const sim = createSim(scenario, terrain);
     while (sim.getState().endReason === null) sim.tick();
     const ev = sim.getEvents();
@@ -37,8 +42,16 @@ describe.each(files)('scripted scenario %s', (file) => {
       const created = ev.find((e) => e.type === 'SENSOR_TRACK_CREATED' && e.contactId === c.id);
       const leaked = ev.find((e) => e.type === 'CONTACT_REACHED_ASSET' && e.contactId === c.id);
       expect(created).toBeDefined();
-      expect(leaked!.tMs - created!.tMs).toBeGreaterThanOrEqual(60_000);
+      expect(leaked!.tMs - created!.tMs).toBeGreaterThanOrEqual(MIN_WARNING_MS);
     }
+  });
+
+  it('a prompt scripted defence neutralises every threat', () => {
+    const ev = playScripted(scenario, terrain).getEvents();
+    const neutralised = ev.filter((e) => e.type === 'CONTACT_NEUTRALISED').map((e) => e.contactId);
+    expect(neutralised.sort()).toEqual(
+      scenario.contacts.filter((c) => c.isThreat).map((c) => c.id),
+    );
   });
 });
 

@@ -7,19 +7,25 @@ import {
   buildingTopAt,
   builtinWorld,
   createContactState,
+  createRng,
+  createScanHistory,
+  createSim,
   createHeightmap,
   createLosCache,
   createWorld,
   decodeHeightmapU16,
   hasLineOfSight,
+  lostReason,
   parseBuildingsGeoJson,
+  radarScan,
+  recordScan,
   sampleHeight,
   stepContact,
   worldFromPreset,
   type BuildingFootprint,
   type Heightmap,
 } from '../src/index.ts';
-import { attackQuad } from './fixtures.ts';
+import { attackQuad, testScenario } from './fixtures.ts';
 
 const flat = (sizeM = 4000): Heightmap => createHeightmap(sizeM, 2, new Float32Array(4));
 
@@ -224,4 +230,78 @@ describe('committed terrain presets', () => {
       expect(meta.originElevM + max).toBeCloseTo(meta.maxElevM, 0);
     });
   }
+});
+
+describe('radar LOS masking (Part A)', () => {
+  const radar = {
+    id: 'rad1',
+    kind: 'RADAR' as const,
+    x: 0,
+    y: 6,
+    z: 0,
+    refRangeM: 3000,
+    scanPeriodS: 2,
+  };
+  const spec = (id: string) => ({ ...attackQuad(id, [0, 1000]) });
+  const contactAt = (id: string, x: number, z: number) => {
+    const c = createContactState(spec(id));
+    c.status = 'ACTIVE';
+    c.pos = { x, y: 40, z };
+    return c;
+  };
+
+  it('treats a masked contact as a miss and still consumes its random draws', () => {
+    const contacts = [contactAt('c01', 0, 500), contactAt('c02', 0, 600)];
+    const specs = new Map(contacts.map((c) => [c.id, spec(c.id)]));
+    const clear = radarScan(radar, { x: 0, y: 6, z: 0 }, contacts, specs, createRng(7).stream('r'));
+    const masked = radarScan(
+      radar,
+      { x: 0, y: 6, z: 0 },
+      contacts,
+      specs,
+      createRng(7).stream('r'),
+      (c) => c.id !== 'c01',
+    );
+    expect(clear[0]).toMatchObject({ hit: true, masked: false });
+    expect(masked[0]).toEqual({ contactId: 'c01', hit: false, masked: true });
+    // c02's draws are unaffected by c01 being masked.
+    expect(masked[1]).toEqual(clear[1]);
+  });
+
+  it('reports LOS only when every losing miss was masked', () => {
+    const h = createScanHistory();
+    h.trackId = 'T001';
+    for (let i = 0; i < 3; i++) expect(recordScan(h, false, true)).toBeNull();
+    expect(recordScan(h, false, true)).toBe('LOST');
+    expect(lostReason(h)).toBe('LOS');
+
+    const g = createScanHistory();
+    g.trackId = 'T002';
+    recordScan(g, false, true);
+    recordScan(g, false, false);
+    recordScan(g, false, true);
+    expect(recordScan(g, false, true)).toBe('LOST');
+    expect(lostReason(g)).toBe('MISSES');
+  });
+
+  it('loses the track with reason LOS when a contact descends behind a ridge', () => {
+    // Radar at the origin; a 150 m ridge at x = 1000. The quad, 1.8 km out
+    // behind the ridge, starts high (visible) and descends below the ridge line.
+    const world = createWorld(ridgeMap(1000, 150, 8000, 401));
+    const quad = attackQuad('c01', [1800, -2000]);
+    quad.path = [
+      { x: 1800, y: 400, z: -2000, speedMps: 15 },
+      { x: 1800, y: 20, z: 1000, speedMps: 15 },
+    ];
+    const sim = createSim(testScenario({ contacts: [quad] }), world);
+    while (sim.getState().endReason === null) sim.tick();
+    const ev = sim.getEvents();
+    const created = ev.find((e) => e.type === 'SENSOR_TRACK_CREATED');
+    const lost = ev.find((e) => e.type === 'SENSOR_TRACK_LOST');
+    expect(created).toBeDefined();
+    expect(lost?.payload).toEqual({ reason: 'LOS' });
+    expect(lost!.tMs).toBeGreaterThan(created!.tMs);
+    // Masked for the rest of the run: no new track.
+    expect(ev.filter((e) => e.type === 'SENSOR_TRACK_CREATED')).toHaveLength(1);
+  });
 });
