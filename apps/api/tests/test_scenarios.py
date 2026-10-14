@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Scenario as ScenarioRow
 from app.models import User
-from app.schemas.generated import Scenario
+from app.schemas.generated import Scenario, UserRole
 from app.seed.scenarios import SCENARIO_DIR, load_scripted, seed_scenarios
 from app.services.scenarios import scenario_rule_violations
 from tests.conftest import assert_error
@@ -154,7 +154,7 @@ def test_list_scenarios(
     make_user: Callable[..., User],
     auth_header: Callable[[User], dict[str, str]],
 ) -> None:
-    headers = auth_header(make_user())
+    headers = auth_header(make_user(UserRole.INSTRUCTOR, "instructor@test"))
     body = client.get("/api/v1/scenarios", headers=headers).json()
     assert [i["code"] for i in body["items"]] == ["S01", "S02", "S03", "S11", "S12", "S13", "S14"]
     first = body["items"][0]
@@ -174,6 +174,30 @@ def test_list_scenarios(
     }
     filtered = client.get("/api/v1/scenarios?difficulty=2", headers=headers).json()
     assert [i["code"] for i in filtered["items"]] == ["S03", "S11", "S12"]
+
+
+@pytest.mark.parametrize(
+    ("role", "expected"),
+    [
+        (UserRole.TRAINEE, ["S01", "S02", "S03"]),
+        (UserRole.INSTRUCTOR, ["S01", "S02", "S03", "S11", "S12", "S13", "S14"]),
+        (UserRole.ADMIN, ["S01", "S02", "S03", "S11", "S12", "S13", "S14"]),
+    ],
+)
+def test_test_scenarios_hidden_from_trainees(
+    client: TestClient,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    auth_header: Callable[[User], dict[str, str]],
+    role: UserRole,
+    expected: list[str],
+) -> None:
+    headers = auth_header(make_user(role, f"{role.value.lower()}@test"))
+    body = client.get("/api/v1/scenarios", headers=headers).json()
+    assert [i["code"] for i in body["items"]] == expected
+    # Still reachable by id: hiding is a library choice, not access control.
+    row = scenarios["S14"]
+    assert client.get(f"/api/v1/scenarios/{row.id}", headers=headers).status_code == 200
 
 
 def test_get_scenario_omits_unset_optionals(

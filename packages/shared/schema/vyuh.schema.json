@@ -1480,6 +1480,9 @@
           "type": "number",
           "minimum": 0
         },
+        "trueClass": {
+          "$ref": "#/$defs/ContactClass"
+        },
         "classifiedAs": {
           "$ref": "#/$defs/ContactClass"
         },
@@ -1588,6 +1591,12 @@
         "kind",
         "refRangeM",
         "scanPeriodS"
+      ]
+    },
+    "RecommendationBasis": {
+      "type": "string",
+      "enum": [
+        "RULE_V1"
       ]
     },
     "ReportLocation": {
@@ -2149,6 +2158,12 @@
         "treeVersion": {
           "type": "string",
           "minLength": 1
+        },
+        "recommendedDifficulty": {
+          "$ref": "#/$defs/Difficulty"
+        },
+        "recommendationBasis": {
+          "$ref": "#/$defs/RecommendationBasis"
         }
       },
       "required": [

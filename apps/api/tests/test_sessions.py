@@ -11,7 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Scenario as ScenarioRow
-from app.models import SessionEvent, TrainingSession, User
+from app.models import ScoreRow, SessionEvent, TrainingSession, User
 from app.schemas.generated import SessionStatus, UserRole
 from tests.conftest import assert_error, fixture_log
 
@@ -269,10 +269,17 @@ def test_complete_scores_on_server(
     assert "unavoidable" not in json.dumps(score)  # unset optionals are omitted, not null
     assert "null" not in json.dumps(score)
 
+    # Derived after the engine (decision 64): truth per contact + next difficulty.
+    assert [c["trueClass"] for c in score["perContact"]] == ["QUAD_SMALL"]
+    assert (score["recommendedDifficulty"], score["recommendationBasis"]) == (2, "RULE_V1")
+
     row = db.get(TrainingSession, uuid.UUID(sid))
     db.refresh(row)
     assert row is not None
     assert row.status is SessionStatus.COMPLETED
+    stored = db.scalar(select(ScoreRow).where(ScoreRow.session_id == row.id))
+    assert stored is not None
+    assert "trueClass" not in json.dumps(stored.per_contact)  # stored = engine output
     assert row.ended_at is not None
     assert row.client_meta == {"avgFps": 55, "browser": "Test"}
 
@@ -300,6 +307,7 @@ def test_complete_ignored_run_scores_zero(
     assert score["total"] == 0
     assert score["perContact"][0]["leaves"] == ["MISSED"]
     assert score["perContact"][0]["outcome"] == "LEAKED"
+    assert score["recommendedDifficulty"] == 1  # 0 at difficulty 1 clamps to 1
 
 
 def test_complete_rejects_unfinished_or_inconsistent_logs(

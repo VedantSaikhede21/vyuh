@@ -83,10 +83,21 @@ def list_item(row: ScenarioRow) -> ScenarioListItem:
     )
 
 
+# Scenarios tagged `test` (S11-S14) verify sim behaviour; they are not part of the
+# training library (SPEC §7.2), so trainees do not see them in the list.
+TEST_TAG = "test"
+
+
 def list_scenarios(
-    db: Session, kind: ScenarioKind | None = None, difficulty: int | None = None
+    db: Session,
+    kind: ScenarioKind | None = None,
+    difficulty: int | None = None,
+    *,
+    include_test: bool = True,
 ) -> list[ScenarioListItem]:
     query = select(ScenarioRow).order_by(ScenarioRow.difficulty, ScenarioRow.code, ScenarioRow.name)
+    if not include_test:
+        query = query.where(~ScenarioRow.tags.contains([TEST_TAG]))
     if kind is not None:
         query = query.where(ScenarioRow.kind == kind)
     if difficulty is not None:

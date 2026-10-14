@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { ClassificationResult, ContactClass, ContactOutcome, ResponseKind } from './enums.ts';
+import {
+  ClassificationResult,
+  ContactClass,
+  ContactOutcome,
+  Difficulty,
+  RecommendationBasis,
+  ResponseKind,
+} from './enums.ts';
 import { named } from './registry.ts';
 
 // SPEC §4 Score + §9. Component points are raw (e.g. detection out of 25);
@@ -41,6 +48,8 @@ export const PerContactMetrics = named(
     firstDetectableTMs: z.int().min(0).optional(),
     traineeDetectedTMs: z.int().min(0).optional(),
     detectionLatencyS: z.number().min(0).optional(),
+    /** Ground-truth class, added by the API to completed sessions only (decision 64). */
+    trueClass: ContactClass.optional(),
     classifiedAs: ContactClass.optional(),
     classificationCorrect: ClassificationResult.optional(),
     identifiableWhenClassified: z.boolean().optional(),
@@ -69,6 +78,9 @@ export const Score = named(
     perContact: z.array(PerContactMetrics),
     metrics: z.record(z.string(), z.unknown()),
     treeVersion: z.string().min(1),
+    /** Next difficulty to train at; added by the API, not the scoring tree (decision 64). */
+    recommendedDifficulty: Difficulty.optional(),
+    recommendationBasis: RecommendationBasis.optional(),
   }),
 );
 export type Score = z.infer<typeof Score>;
