@@ -171,7 +171,6 @@ export type { Defender } from './defender.ts';
 export {
   CRITICAL_RANGE_M,
   DEFENDER_MAX_DIFFICULTY,
-  MIN_WARNING_S,
   OTHER_SPAWN_MIN_M,
   THREAT_SPAWN_MIN_M,
   VALIDATE_EDGE_MARGIN_M,

@@ -1,4 +1,10 @@
-import { Scenario, type ContactSpec } from '@vyuh/shared';
+import {
+  FIRST_TRACK_MAX_DIFFICULTY,
+  FIRST_TRACK_MAX_S,
+  MIN_WARNING_S,
+  Scenario,
+  type ContactSpec,
+} from '@vyuh/shared';
 import { horizontalRange } from './coords.ts';
 import { createDefender } from './defender.ts';
 import { createSim } from './sim.ts';
@@ -19,6 +25,7 @@ export type ValidationCheckName =
   | 'NIGHT_FLAG'
   | 'DETECTABLE'
   | 'WARNING_TIME'
+  | 'FIRST_TRACK'
   | 'DEFENDER_WINS';
 
 export interface ValidationCheck {
@@ -58,17 +65,6 @@ export const OTHER_SPAWN_MIN_M = 800;
 export const CRITICAL_RANGE_M = 1000;
 /** The ground-truth defender must win at these difficulties (requirements 3a.3). */
 export const DEFENDER_MAX_DIFFICULTY = 3;
-/**
- * Minimum warning (s) from a threat's first radar track to its critical point,
- * by difficulty (SPEC §7.1 "warning time"; tuned in the Phase 3a sweep).
- */
-export const MIN_WARNING_S: Readonly<Record<number, number>> = {
-  1: 60,
-  2: 50,
-  3: 45,
-  4: 40,
-  5: 30,
-};
 
 const fail = (name: ValidationCheckName, detail: string): ValidationCheck => ({
   name,
@@ -203,7 +199,7 @@ export function validateScenario(input: unknown, world: World): ValidationResult
       warnings.filter((w) => w.firstTrackTMs === null).map((w) => `${w.contactId} never tracked`),
     ),
   );
-  const minWarning = MIN_WARNING_S[s.difficulty] ?? 30;
+  const minWarning = MIN_WARNING_S[s.difficulty as keyof typeof MIN_WARNING_S];
   checks.push(
     check(
       'WARNING_TIME',
@@ -212,6 +208,20 @@ export function validateScenario(input: unknown, world: World): ValidationResult
         .map((w) => `${w.contactId} ${w.warningS?.toFixed(1)} s < ${minWarning} s`),
     ),
   );
+
+  // Generator pacing target (decision 79); frozen scripted scenarios predate it.
+  if (s.generatorVersion !== undefined && s.difficulty <= FIRST_TRACK_MAX_DIFFICULTY) {
+    const tracked = warnings.flatMap((w) => (w.firstTrackTMs === null ? [] : [w.firstTrackTMs]));
+    const first = tracked.length ? Math.min(...tracked) / 1000 : null;
+    checks.push(
+      first !== null && first <= FIRST_TRACK_MAX_S
+        ? pass('FIRST_TRACK')
+        : fail(
+            'FIRST_TRACK',
+            `first threat track at ${first?.toFixed(1) ?? 'never'} s > ${FIRST_TRACK_MAX_S} s`,
+          ),
+    );
+  }
 
   const leaks = s.difficulty <= DEFENDER_MAX_DIFFICULTY ? defenderLeaks(s, world) : [];
   if (s.difficulty <= DEFENDER_MAX_DIFFICULTY) {

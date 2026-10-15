@@ -7,3 +7,4 @@ export * from './api.ts';
 export * from './threats.ts';
 export { schemaRegistry } from './registry.ts';
 export * from './terrain.ts';
+export * from './difficulty.ts';
