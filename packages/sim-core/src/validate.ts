@@ -7,6 +7,7 @@ import {
 } from '@vyuh/shared';
 import { horizontalRange } from './coords.ts';
 import { createDefender } from './defender.ts';
+import { CLUTTER_AGL_M, CLUTTER_RANGE_M } from './sensors/radar.ts';
 import { createSim } from './sim.ts';
 import { computeEnvironment } from './sun.ts';
 import type { World } from './world.ts';
@@ -45,6 +46,12 @@ export interface ThreatWarning {
   readonly criticalTMs: number | null;
   /** criticalTMs − firstTrackTMs in s (null if either is missing). */
   readonly warningS: number | null;
+  /**
+   * Flew level in radar ground clutter (below CLUTTER_AGL_M, inside CLUTTER_RANGE_M of
+   * a radar; not the terminal dive) before its critical point — e.g. a pop-down
+   * (decision 83). Reported, not checked.
+   */
+  readonly enteredClutter: boolean;
 }
 
 export interface ValidationResult {
@@ -108,6 +115,8 @@ function measureWarnings(s: Scenario, world: World): ThreatWarning[] {
   const firstTrack = new Map<string, number>();
   const leak = new Map<string, number>();
   const close = new Map<string, number>();
+  const cluttered = new Set<string>();
+  const radars = s.sensors.filter((x) => x.kind === 'RADAR');
   const near = (c: { pos: { x: number; y: number; z: number } }) =>
     s.assets.some((a) => horizontalRange(c.pos, { x: a.x, y: 0, z: a.z }) <= CRITICAL_RANGE_M);
   let seen = 0;
@@ -129,9 +138,17 @@ function measureWarnings(s: Scenario, world: World): ThreatWarning[] {
       }
     }
     for (const t of threats) {
-      if (close.has(t.id)) continue;
       const c = st.contacts.find((x) => x.id === t.id);
-      if (c?.status === 'ACTIVE' && near(c)) close.set(t.id, st.clock.tMs);
+      if (c?.status !== 'ACTIVE') continue;
+      if (!close.has(t.id) && near(c)) close.set(t.id, st.clock.tMs);
+      if (
+        !leak.has(t.id) &&
+        !c.diving && // the terminal dive itself always ends at the ground
+        c.agl < CLUTTER_AGL_M &&
+        radars.some((r) => horizontalRange(c.pos, { x: r.x, y: 0, z: r.z }) < CLUTTER_RANGE_M)
+      ) {
+        cluttered.add(t.id);
+      }
     }
   }
   return threats.map((t) => {
@@ -142,6 +159,7 @@ function measureWarnings(s: Scenario, world: World): ThreatWarning[] {
       firstTrackTMs: first,
       criticalTMs: crit,
       warningS: first !== null && crit !== null ? (crit - first) / 1000 : null,
+      enteredClutter: cluttered.has(t.id),
     };
   });
 }

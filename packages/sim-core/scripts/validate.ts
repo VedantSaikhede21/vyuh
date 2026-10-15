@@ -27,12 +27,13 @@ const files = statSync(root).isDirectory()
       .map((f) => join(root, f))
   : [root];
 
-const results: { file: string; result: ValidationResult }[] = [];
+const results: { file: string; difficulty: number; result: ValidationResult }[] = [];
 for (const file of files) {
   const raw: unknown = JSON.parse(readFileSync(file, 'utf8'));
   const preset = (raw as { terrain?: { preset?: string } }).terrain?.preset ?? '';
   const result = validateScenario(raw, presetWorld(preset));
-  results.push({ file: basename(file), result });
+  const difficulty = (raw as { difficulty?: number }).difficulty ?? 0;
+  results.push({ file: basename(file), difficulty, result });
   if (!json) {
     const failed = result.checks.filter((c) => !c.ok);
     const line = failed.length
@@ -43,10 +44,29 @@ for (const file of files) {
 }
 
 const failures = results.filter((r) => !r.result.ok).length;
+// Pop-down metric (decision 83): share of D4/D5 threats that fly into radar clutter
+// on their final approach. Reported only.
+const clutter = [4, 5].map((d) => {
+  const w = results.filter((r) => r.difficulty === d).flatMap((r) => r.result.warnings);
+  const n = w.filter((x) => x.enteredClutter).length;
+  return {
+    difficulty: d,
+    threats: w.length,
+    enteredClutter: n,
+    pct: w.length ? (100 * n) / w.length : 0,
+  };
+});
 const pct = files.length ? (100 * failures) / files.length : 0;
 if (json) {
-  console.log(JSON.stringify({ total: files.length, failures, failPct: pct, results }, null, 1));
+  console.log(
+    JSON.stringify({ total: files.length, failures, failPct: pct, clutter, results }, null, 1),
+  );
 } else {
+  for (const c of clutter.filter((x) => x.threats > 0)) {
+    console.log(
+      `D${c.difficulty} threats entering clutter on final approach: ${c.enteredClutter}/${c.threats} (${c.pct.toFixed(1)} %)`,
+    );
+  }
   console.log(`${failures}/${files.length} failed (${pct.toFixed(1)} %, limit ${maxFailPct} %)`);
 }
 process.exit(pct > maxFailPct ? 1 : 0);

@@ -777,6 +777,78 @@ def _plan_false(ctx: Ctx, rng: random.Random) -> list[Slot]:
     return slots
 
 
+#: D4-D5 pop-down (user, decision 83): this share of all threats (by seed) flies its
+#: outer approach at cruise height — in view long enough to be tracked — then drops
+#: below the 15 m clutter height for the final POPDOWN_RANGE_M, down to the floor.
+POPDOWN_SHARE = {4: 0.15, 5: 0.30}
+POPDOWN_FLOOR_M = {4: 10.0, 5: 5.0}
+POPDOWN_CEILING_M = 14.0
+POPDOWN_RANGE_M = (1500.0, 2000.0)
+#: The descent takes this much ground distance after the pop-down point.
+POPDOWN_DESCENT_M = 150.0
+#: Seconds of cruise-height flight in view just before the pop-down point.
+POPDOWN_VIEW_S = 30.0
+POPDOWN_BEHAVIOURS = frozenset({"ATTACK_RUN", "SWARM_SATURATION"})
+
+
+def _point_back(path: list[dict], d: float) -> tuple[int, Point] | None:
+    """The point `d` metres back along the path from its last waypoint, as
+    (index of the waypoint after it, (x, z)); None if the path is shorter."""
+    for i in range(len(path) - 1, 0, -1):
+        a, b = (path[i - 1]["x"], path[i - 1]["z"]), (path[i]["x"], path[i]["z"])
+        seg = math.dist(a, b)
+        if d <= seg:
+            f = d / seg if seg else 0.0
+            return i, (b[0] + (a[0] - b[0]) * f, b[1] + (a[1] - b[1]) * f)
+        d -= seg
+    return None
+
+
+def _popdown_plan(ctx: Ctx, c: dict) -> float | None:
+    """Pop-down distance from the dive point if this run can pop down fairly, else None."""
+    path = c["path"]
+    if c["behaviour"] not in POPDOWN_BEHAVIOURS or len(path) < 2:
+        return None
+    if path[-1].get("action") != "DIVE":
+        return None
+    speed = path[-2]["speedMps"]
+    cruise = path[-2]["y"]
+    lo, hi = POPDOWN_RANGE_M
+    d_pop = min(max((ctx.level.min_warning_s + 15) * speed, lo), hi)
+    window = POPDOWN_VIEW_S * speed
+    # The cruise-height stretch just before the pop-down point must be in view.
+    samples = [_point_back(path, d_pop + window * k / 8) for k in range(9)]
+    if any(p is None for p in samples):
+        return None
+    radar, ry = ctx.site.radar_xz, ctx.site.radar_y
+    seen = sum(visible(ctx.terrain, radar, ry, p[1], cruise, FINE_STEP_M) for p in samples if p)
+    return d_pop if seen / len(samples) >= MIN_LEG_EXPOSURE else None
+
+
+def _apply_popdown(ctx: Ctx, threats: list[Group], rng: random.Random) -> None:
+    share = POPDOWN_SHARE.get(ctx.req.difficulty, 0.0)
+    if share <= 0:
+        return
+    members = [c for g in threats for c in g.contacts]
+    eligible = [(c, d) for c in members if (d := _popdown_plan(ctx, c)) is not None]
+    k = min(len(eligible), round(share * len(members)))
+    floor = POPDOWN_FLOOR_M[ctx.req.difficulty]
+    for c, d_pop in rng.sample(eligible, k):
+        path = c["path"]
+        cruise, speed = path[-2]["y"], path[-2]["speedMps"]
+        low = round(uniform(rng, floor, POPDOWN_CEILING_M), 1)
+        top = _point_back(path, d_pop)
+        bottom = _point_back(path, d_pop - POPDOWN_DESCENT_M)
+        if top is None or bottom is None:
+            continue
+        # Everything after the descent point flies low (the DIVE end point keeps y 0).
+        for w in path[bottom[0] : -1]:
+            w["y"] = low
+        # Insert the later point first, so on a shared leg "top" ends up before "bottom".
+        path.insert(bottom[0], {"x": bottom[1][0], "y": low, "z": bottom[1][1], "speedMps": speed})
+        path.insert(top[0], {"x": top[1][0], "y": cruise, "z": top[1][1], "speedMps": speed})
+
+
 def _trim(threats: list[Group], false: list[Group], level: Level) -> None:
     """Clamp to ENTITY_CAP: false contacts, then flock members, then swarm followers."""
 
@@ -884,6 +956,7 @@ def generate(req: GenerateRequest) -> dict:
     )
     false = [_with_retries(ctx, s, _build_false) for s in _plan_false(ctx, stream(seed, "false"))]
     _trim(threats, false, level)
+    _apply_popdown(ctx, threats, stream(seed, "popdown"))
 
     # Ids in a stable order: threats, then false contacts; group ids per swarm / flock.
     contacts: list[dict] = []
