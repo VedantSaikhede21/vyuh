@@ -48,6 +48,32 @@ test('no horizontal scroll at 1366×768', async ({ page }) => {
   await noHorizontalScroll(page, 'result');
 });
 
+for (const vp of [
+  { width: 1366, height: 768 },
+  { width: 1920, height: 1080 },
+]) {
+  test(`action bar shows every effector without scrolling at ${vp.width}×${vp.height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(vp);
+    // S14 has all three effectors (interceptor, jammer, spoofer).
+    await login(page, 'instructor@demo');
+    await openBriefing(page, 'S14');
+    await beginSession(page);
+    const strip = page.getByLabel('Effectors', { exact: true });
+    await expect(strip.getByRole('group')).toHaveCount(3);
+    const { overflow, bottom } = await strip.evaluate((el) => {
+      const body = el.parentElement!;
+      return {
+        overflow: body.scrollHeight - body.clientHeight,
+        bottom: el.getBoundingClientRect().bottom,
+      };
+    });
+    expect(overflow, 'action bar content overflows').toBeLessThanOrEqual(0);
+    expect(bottom).toBeLessThanOrEqual(vp.height);
+  });
+}
+
 test('core actions by keyboard alone', async ({ page }) => {
   await login(page, 'trainee1@demo');
   // Open the briefing and begin without the mouse.
