@@ -22,6 +22,9 @@ class Level:
     roe: str
     #: Approach axes for single threats (1-3, SPEC §7.1 / requirements 3a.1).
     axes: tuple[int, int]
+    #: Generator target: seconds of final approach left in radar view (proxy); above
+    #: the validator's minimum warning so detection latency still fits (decision 76).
+    reveal_s: float
 
 
 LEVELS: dict[int, Level] = {
@@ -37,6 +40,7 @@ LEVELS: dict[int, Level] = {
         ammo_per_threat=3,
         roe="WEAPONS_FREE",
         axes=(1, 1),
+        reveal_s=90,
     ),
     2: Level(
         threats=(1, 2),
@@ -50,6 +54,7 @@ LEVELS: dict[int, Level] = {
         ammo_per_threat=2,
         roe="WEAPONS_FREE",
         axes=(1, 1),
+        reveal_s=80,
     ),
     3: Level(
         threats=(2, 4),
@@ -63,6 +68,7 @@ LEVELS: dict[int, Level] = {
         ammo_per_threat=1.5,
         roe="WEAPONS_TIGHT",
         axes=(1, 2),
+        reveal_s=70,
     ),
     4: Level(
         threats=(4, 8),
@@ -76,6 +82,7 @@ LEVELS: dict[int, Level] = {
         ammo_per_threat=1.2,
         roe="WEAPONS_TIGHT",
         axes=(2, 3),
+        reveal_s=60,
     ),
     5: Level(
         threats=(8, 20),
@@ -89,6 +96,7 @@ LEVELS: dict[int, Level] = {
         ammo_per_threat=1.0,
         roe="WEAPONS_TIGHT",
         axes=(2, 3),
+        reveal_s=45,
     ),
 }
 

@@ -1,9 +1,8 @@
 """Approach axes and low, terrain-masked routes (requirements 3a.1).
 
-The masking heuristic is a cheap visibility proxy on the coarse height grid
-(a ray from the radar sampled once per cell), used only to bias routes into
-valleys. It is not a line-of-sight model: sim-core decides what is detected,
-and the validator checks the warning time.
+Routes avoid cells the radar can see according to visibility.py, a heuristic
+used only to bias routes into valleys. It is not a line-of-sight model:
+sim-core decides what is detected, and the validator checks the warning time.
 """
 
 import heapq
@@ -59,34 +58,17 @@ def pick_axes(rng: random.Random, n: int) -> list[float]:
     return axes
 
 
-def exposure_grid(grid: CoarseGrid, radar: Point, radar_y: float, agl: float) -> list[list[bool]]:
-    """True where a contact at `agl` over a cell centre is visible from the radar (proxy)."""
-    rr, rc = grid.cell_of(*radar)
-    out: list[list[bool]] = []
-    for r in range(grid.n):
-        row: list[bool] = []
-        for c in range(grid.n):
-            target_y = grid.heights[r][c] + agl
-            steps = max(abs(r - rr), abs(c - rc))
-            visible = True
-            for k in range(1, steps):
-                f = k / steps
-                sr = round(rr + (r - rr) * f)
-                sc = round(rc + (c - rc) * f)
-                if grid.heights[sr][sc] > radar_y + (target_y - radar_y) * f:
-                    visible = False
-                    break
-            row.append(visible)
-        out.append(row)
-    return out
-
-
 def masked_route(
-    grid: CoarseGrid, exposed: list[list[bool]], start: Point, goal: Point, radius: float
+    grid: CoarseGrid,
+    exposed: list[list[bool]],
+    start: Point,
+    goal: Point,
+    centre: Point,
+    radius: float,
 ) -> list[Point]:
-    """Least-exposure 8-connected grid path from start to goal; interior waypoints only."""
+    """Least-exposure 8-connected grid path from start to goal, staying within `radius`
+    of `centre`; interior waypoints only."""
     s, g = grid.cell_of(*start), grid.cell_of(*goal)
-    centre = goal
 
     def ok(cell: tuple[int, int]) -> bool:
         return math.dist(grid.centre(*cell), centre) <= radius
