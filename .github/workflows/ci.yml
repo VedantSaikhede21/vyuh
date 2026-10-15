@@ -71,6 +71,25 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run pytest
 
+  generator-sweep:
+    name: generator sweep (20 per difficulty, ≤ 2 % fail)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: pnpm install --frozen-lockfile
+      - run: uv python install 3.12
+      - run: uv sync --locked
+        working-directory: apps/api
+      - run: node scripts/generator/sweep.ts --per-difficulty 20 --max-fail-pct 2
+
   schemas:
     name: gen:schemas produces no diff
     runs-on: ubuntu-latest
