@@ -27,7 +27,8 @@ def test_presets_and_buildings() -> None:
     punjab = load_terrain("PUNJAB_PLAINS")
     assert len(punjab.buildings) == punjab.meta.building_count == 41
     assert all(b.height_m > 0 and len(b.ring) >= 4 for b in punjab.buildings)
-    assert load_terrain("JK_MOUNTAIN").buildings == ()
+    jk = load_terrain("JK_MOUNTAIN")
+    assert len(jk.buildings) == jk.meta.building_count == 36
 
 
 def test_coarse_grid_samples_cell_centres() -> None:
