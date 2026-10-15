@@ -12,8 +12,19 @@ import pytest
 from app.schemas.generated import GenerateRequest, Scenario
 from app.services.generator import GENERATOR_VERSION, GenerationError, canonical_json, generate
 from app.services.generator import core as gen_core
-from app.services.generator.core import AGL_RAISE_MAX_M, FAST_CLASSES, FAST_MIN_AGL_M
-from app.services.generator.difficulty import ENTITY_CAP, LEVELS
+from app.services.generator.core import (
+    AGL_RAISE_MAX_M,
+    FAST_CLASSES,
+    FAST_MIN_AGL_M,
+    FIRST_SPAWN_RADAR_M,
+)
+from app.services.generator.difficulty import (
+    BIRD_BUDGET,
+    ENTITY_CAP,
+    FIRST_TRACK_MAX_DIFFICULTY,
+    LEVELS,
+    MIN_WARNING_S,
+)
 from app.services.generator.environment import (
     DAY_MIN_EL_DEG,
     DUSK_EL_DEG,
@@ -233,10 +244,18 @@ def test_difficulty_table(many: list[dict]) -> None:
         assert level.threats[0] <= len(threats) <= level.threats[1]
         assert s["roe"] == level.roe
         assert len(s["contacts"]) <= ENTITY_CAP
-        for c in threats:
+        radar = next(x for x in s["sensors"] if x["kind"] == "RADAR")
+        for i, c in enumerate(threats):
             if c["behaviour"] in ("ATTACK_RUN", "RECON_LOITER", "SMUGGLING_DROP"):
-                d = math.dist((c["path"][0]["x"], c["path"][0]["z"]), asset_xz(s))
-                assert d == pytest.approx(level.spawn_m, abs=1)
+                spawn = (c["path"][0]["x"], c["path"][0]["z"])
+                if s["difficulty"] <= FIRST_TRACK_MAX_DIFFICULTY and i == 0:
+                    # Pacing threat: an attack run spawning 2.6 km from the radar.
+                    assert c["behaviour"] == "ATTACK_RUN"
+                    d = math.dist(spawn, (radar["x"], radar["z"]))
+                    assert d == pytest.approx(FIRST_SPAWN_RADAR_M, abs=1)
+                    assert c["spawnTMs"] <= 3000
+                else:
+                    assert math.dist(spawn, asset_xz(s)) == pytest.approx(level.spawn_m, abs=1)
                 assert min(w["y"] for w in c["path"][:-1] or c["path"]) >= level.lowest_agl_m - 1
 
 
@@ -270,6 +289,22 @@ def test_conditions_follow_the_table(many: list[dict]) -> None:
             assert "NIGHT" in bands
         if s["difficulty"] == 5:
             assert night
+
+
+def test_bird_budget(many: list[dict], wide: list[dict]) -> None:
+    assert BIRD_BUDGET == ENTITY_CAP // 4 == 15
+    for s in many + wide:
+        flocks = Counter(c["groupId"] for c in s["contacts"] if c["behaviour"] == "BIRD_FLOCK")
+        assert sum(flocks.values()) <= BIRD_BUDGET
+        assert all(3 <= n <= 5 for n in flocks.values())
+
+
+def test_shared_difficulty_constants() -> None:
+    # Written by `pnpm gen:schemas` from packages/shared/src/difficulty.ts.
+    assert MIN_WARNING_S == {1: 60, 2: 50, 3: 45, 4: 40, 5: 30}
+    for d, level in LEVELS.items():
+        assert level.min_warning_s == MIN_WARNING_S[d]
+        assert level.reveal_s > level.min_warning_s
 
 
 def test_ai_accuracy_drops_at_night_and_in_fog() -> None:

@@ -19,7 +19,14 @@ from app.schemas.generated import ErrorCode, GenerateRequest, Scenario
 from app.services.generator import behaviours as bh
 from app.services.generator import contacts as cs
 from app.services.generator.briefing import briefing, effector_line
-from app.services.generator.difficulty import ENTITY_CAP, LEVELS, Level, ammo_for
+from app.services.generator.difficulty import (
+    BIRD_BUDGET,
+    ENTITY_CAP,
+    FIRST_TRACK_MAX_DIFFICULTY,
+    LEVELS,
+    Level,
+    ammo_for,
+)
 from app.services.generator.environment import (
     NIGHT_SUN_EL_DEG,
     pick_date,
@@ -50,6 +57,8 @@ SCHEMA_VERSION = 1
 MAX_ATTEMPTS = 8
 #: First-spawn window per difficulty (s): later threats arrive while earlier ones are live.
 SPAWN_WINDOW_S = {1: (5, 15), 2: (5, 60), 3: (5, 90), 4: (5, 120), 5: (5, 90)}
+#: D1-D2: the first single threat spawns in this window (first track within ~30 s).
+FIRST_SPAWN_S = (0.0, 3.0)
 #: Auto duration: last threat's critical point + this, rounded up to 30 s, clamped.
 DURATION_TAIL_S = 60
 DURATION_RANGE_S = (180, 900)
@@ -72,7 +81,7 @@ FALSE_WEIGHTS = {
     5: (("BIRD_FLOCK", 0.4), ("TRANSIT", 0.25), ("FRIENDLY_PATROL", 0.25), ("HELICOPTER", 0.1)),
 }
 MAX_FRIENDLY_PATROLS = 2
-FLOCK_SIZE = (3, 7)
+FLOCK_SIZE = (3, 5)
 FLOCK_MIN = 3
 DENSITY_POINT = {"LOW": 0.0, "MED": 0.5, "HIGH": 1.0}
 NAME_ADJ = ("Grey", "Silent", "Low", "Long", "Cold", "Broken", "Quiet", "High", "Red", "Narrow")
@@ -209,6 +218,8 @@ def _best_axis(ctx: Ctx, axis: float) -> float:
     level = ctx.level
     agl = level.lowest_agl_m + 20
     far = min(level.spawn_m - 300, CRITICAL_RANGE_M + level.reveal_s * REVEAL_REF_SPEED_MPS)
+    if level.difficulty <= FIRST_TRACK_MAX_DIFFICULTY:
+        far = level.spawn_m - 300  # D1-D2 pacing: the whole approach in view
     best: tuple[float, int, float] | None = None
     for k in range(-AXIS_SEARCH_DEG // AXIS_STEP_DEG, AXIS_SEARCH_DEG // AXIS_STEP_DEG + 1):
         b = (axis + k * AXIS_STEP_DEG) % 360
@@ -269,7 +280,8 @@ def _plan_threats(ctx: Ctx, rng: random.Random) -> list[Slot]:
         axis = fit_bearing(ctx.asset, (axes[0] + off) % 360, level.spawn_m, ctx.half)
         slots.append(Slot(f"decoy:{i}", "DECOY", "DECOY", cls, axis=axis, link="RF_MANUAL"))
     for i in range(singles):
-        if d == 1:
+        if d == 1 or (d <= FIRST_TRACK_MAX_DIFFICULTY and i == 0):
+            # D1, and the D2 pacing threat: a plain attack run (decision 79).
             behaviour = "ATTACK_RUN"
         elif d == 2:
             behaviour = _weighted(rng, (("ATTACK_RUN", 0.65), ("RECON_LOITER", 0.35)))
@@ -366,7 +378,13 @@ def _lift(ctx: Ctx, agl: float, a: Point, b: Point, from_b: float, length: float
 
 
 def _lift_scored(
-    ctx: Ctx, agl: float, a: Point, b: Point, from_b: float, length: float
+    ctx: Ctx,
+    agl: float,
+    a: Point,
+    b: Point,
+    from_b: float,
+    length: float,
+    need: float = MIN_LEG_EXPOSURE,
 ) -> tuple[float, float]:
     """(exposure, agl): the first lift reaching MIN_LEG_EXPOSURE, else the best one."""
     best = (-1.0, agl)
@@ -374,7 +392,7 @@ def _lift_scored(
     while k * AGL_RAISE_STEP_M <= AGL_RAISE_MAX_M:
         trial = agl + k * AGL_RAISE_STEP_M
         exposure = _segment_exposure(ctx, a, b, trial, from_b, length)
-        if exposure >= MIN_LEG_EXPOSURE:
+        if exposure >= need:
             return exposure, trial
         if exposure > best[0]:
             best = (exposure, trial)
@@ -382,26 +400,54 @@ def _lift_scored(
     return best
 
 
+#: D1-D2 pacing: the first threat spawns this far from the radar (small-quad Pd ≈ 0.75),
+#: so it is tracked within FIRST_TRACK_MAX_S (decision 79).
+FIRST_SPAWN_RADAR_M = 2600.0
+#: ...and the first FIRST_VIEW_M after its spawn point must be fully in view.
+FIRST_VIEW_M = 800.0
+
+
+def _spawn_dist(ctx: Ctx, bearing: float, first: bool) -> float:
+    """Spawn distance from the asset on a bearing: the table's, or for the D1-D2 first
+    threat the point FIRST_SPAWN_RADAR_M from the radar."""
+    if not first:
+        return ctx.level.spawn_m
+    ux, uz = math.sin(math.radians(bearing)), math.cos(math.radians(bearing))
+    wx = ctx.asset[0] - ctx.site.radar_xz[0]
+    wz = ctx.asset[1] - ctx.site.radar_xz[1]
+    wu = wx * ux + wz * uz
+    return -wu + math.sqrt(max(wu * wu - (wx * wx + wz * wz) + FIRST_SPAWN_RADAR_M**2, 0.0))
+
+
 def _fit_approach(
     ctx: Ctx,
     bearing: float,
     agl: float,
     from_asset: float,
-    length: float,
+    length: float | None,
     max_deg: int = BEARING_MAX_DEG,
+    first: bool = False,
 ) -> tuple[float, float]:
     """(bearing, agl) near the planned bearing whose straight approach to the asset is in
-    view from `from_asset` to `from_asset + length` metres out (decision 76)."""
-    asset, spawn_m, half = ctx.asset, ctx.level.spawn_m, ctx.half
+    view from `from_asset` to `from_asset + length` metres out (decision 76); with
+    `length` None, all the way to 200 m short of the spawn point (D1-D2 pacing)."""
+    asset, half = ctx.asset, ctx.half
     best = (-1.0, bearing, agl)
     for k in range(2 * max_deg // BEARING_STEP_DEG + 1):
         off = (k + 1) // 2 * BEARING_STEP_DEG * (1 if k % 2 else -1)
         b = (bearing + off) % 360
-        spawn = bearing_point(asset, b, spawn_m)
+        dist = _spawn_dist(ctx, b, first)
+        spawn = bearing_point(asset, b, dist)
         if not inside(spawn, half):
             continue
-        exposure, lifted = _lift_scored(ctx, agl, spawn, asset, from_asset, length)
-        if exposure >= MIN_LEG_EXPOSURE:
+        if length is None:
+            # D1-D2 pacing: the stretch just after spawn must be fully in view.
+            exposure, lifted = _lift_scored(
+                ctx, agl, spawn, asset, dist - FIRST_VIEW_M - 200, FIRST_VIEW_M, 1.0
+            )
+        else:
+            exposure, lifted = _lift_scored(ctx, agl, spawn, asset, from_asset, length)
+        if exposure >= (1.0 if length is None else MIN_LEG_EXPOSURE):
             return b, lifted
         if exposure > best[0]:
             best = (exposure, b, lifted)
@@ -457,7 +503,8 @@ def _contact(
 
 def _build_threat(ctx: Ctx, slot: Slot, rng: random.Random) -> Group:
     level, asset = ctx.level, ctx.asset
-    spawn_s = uniform(rng, *SPAWN_WINDOW_S[ctx.req.difficulty])
+    first = ctx.req.difficulty <= FIRST_TRACK_MAX_DIFFICULTY and slot.key == "threat:0"
+    spawn_s = uniform(rng, *(FIRST_SPAWN_S if first else SPAWN_WINDOW_S[ctx.req.difficulty]))
     speed = cs.speed_for(rng, slot.cls)
     if slot.role == "DECOY":
         p = None
@@ -514,14 +561,17 @@ def _build_threat(ctx: Ctx, slot: Slot, rng: random.Random) -> Group:
     jitter = rng.uniform(-10, 10)
     bearing = fit_bearing(asset, (slot.axis + jitter) % 360, level.spawn_m, ctx.half)
     reveal_m = level.reveal_s * speed
+    # D1-D2 pacing: the first threat spawns near the radar and is in view all the way.
     if slot.behaviour == "RECON_LOITER":
-        bearing, agl = _fit_approach(ctx, bearing, agl, CRITICAL_RANGE_M, reveal_m)
+        view_m = None if first else reveal_m
+        bearing, agl = _fit_approach(ctx, bearing, agl, CRITICAL_RANGE_M, view_m, first=first)
     else:
         # Swarm followers fly a little higher than the leader; check with a margin.
         margin = SWARM_AGL_JITTER_M if slot.role == "SWARM" else 0.0
-        bearing, agl = _fit_approach(ctx, bearing, agl - margin, 200, reveal_m - 200)
+        view_m = None if first else reveal_m - 200
+        bearing, agl = _fit_approach(ctx, bearing, agl - margin, 200, view_m, first=first)
         agl += margin
-    spawn = bearing_point(asset, bearing, level.spawn_m)
+    spawn = bearing_point(asset, bearing, _spawn_dist(ctx, bearing, first))
     if slot.behaviour == "RECON_LOITER":
         p = bh.recon_loiter(rng, spawn, asset, agl, speed, ctx.half)
         ring0 = (p.waypoints[1]["x"], p.waypoints[1]["z"])
@@ -670,6 +720,7 @@ def _plan_false(ctx: Ctx, rng: random.Random) -> list[Slot]:
         n = rng.randint(lo, hi)
     slots: list[Slot] = []
     patrols = helis = 0
+    birds_left = BIRD_BUDGET
     for i in range(n):
         role = _weighted(rng, FALSE_WEIGHTS[d])
         if (role == "FRIENDLY_PATROL" and patrols >= MAX_FRIENDLY_PATROLS) or (
@@ -678,7 +729,12 @@ def _plan_false(ctx: Ctx, rng: random.Random) -> list[Slot]:
             role = "BIRD_FLOCK"
         patrols += role == "FRIENDLY_PATROL"
         helis += role == "HELICOPTER"
-        size = rng.randint(*FLOCK_SIZE) if role == "BIRD_FLOCK" else 1
+        size = 1
+        if role == "BIRD_FLOCK":
+            size = min(rng.randint(*FLOCK_SIZE), birds_left)
+            if size < FLOCK_MIN:  # bird budget spent: a civilian transit instead
+                role, size = "TRANSIT", 1
+            birds_left -= size if role == "BIRD_FLOCK" else 0
         slots.append(Slot(f"false:{i}", role, role, "", size, is_threat=False))
     return slots
 
