@@ -141,10 +141,11 @@ Score { total, components{detection, classification, decision, report, efficienc
 - **Preset meta is authoritative:** `terrain.origin` in a scenario is informational; the preset's `meta.json` origin (and `utcOffsetMin`) is used for sun position and geo-referencing.
 - **`environment.isNight` is computed** (sun elevation < −6° from suncalc at the preset origin, scenario date/time and preset `utcOffsetMin`) and overrides any stored value. `sunAzEl` is likewise computed.
 
-**Additional enums** (all in `packages/shared/src/enums.ts`): `Roe`, `UserRole` (TRAINEE / INSTRUCTOR / ADMIN), `ScenarioKind`, `SessionMode`, `SessionStatus`, `EventType`, `ResponseResult`, `TrackLostReason`, `EoLevel`, `AltitudeBand`, `Activity`, `WaypointAction`, `FalseContactDensity`, `SessionEndReason`. `SensorKind.ACOUSTIC` is not added until it is implemented.
+**Additional enums** (all in `packages/shared/src/enums.ts`): `Roe`, `UserRole` (TRAINEE / INSTRUCTOR / ADMIN), `ScenarioKind`, `SessionMode`, `SessionStatus`, `EventType`, `ResponseResult`, `TrackLostReason`, `EoLevel`, `AltitudeBand`, `Activity`, `WaypointAction`, `FalseContactDensity`, `SessionEndReason`, `TimeBand` (DAY / DUSK / NIGHT) and `WeatherPreset` (CLEAR / HAZE / FOG / RAIN / DUST) for the generator (§7.1).
+- **Zones** may carry an optional `name` (e.g. "village", "border"); the HUD labels zones with their id and name and names the zone in disabled reasons ("No kinetic response over the village — zone Z3"). `SensorKind.ACOUSTIC` is not added until it is implemented.
 
 ### 4.1 Event types
-System: `SESSION_STARTED, CONTACT_SPAWNED, CONTACT_DESPAWNED, CONTACT_REACHED_ASSET, CONTACT_NEUTRALISED, SENSOR_TRACK_CREATED, SENSOR_TRACK_LOST, EO_IDENTIFIABLE (contact became identifiable in current EO pointing), RESPONSE_OUTCOME, SESSION_ENDED`
+System: `SESSION_STARTED, CONTACT_SPAWNED, CONTACT_DESPAWNED, CONTACT_REACHED_ASSET, CONTACT_NEUTRALISED, CONTACT_DROPPED, SENSOR_TRACK_CREATED, SENSOR_TRACK_LOST, EO_IDENTIFIABLE (contact became identifiable in current EO pointing), RESPONSE_OUTCOME, SESSION_ENDED`
 Trainee: `TRACK_SELECTED, CAMERA_SLEWED, MARKED_DETECTED, CLASSIFIED, AFFILIATION_SET, RESPONSE_ORDERED, REPORT_SUBMITTED, AI_SUGGESTION_SHOWN, AI_SUGGESTION_ACCEPTED, AI_SUGGESTION_REJECTED`
 
 ### 4.2 Event payloads
@@ -161,11 +162,12 @@ Trainee: `TRACK_SELECTED, CAMERA_SLEWED, MARKED_DETECTED, CLASSIFIED, AFFILIATIO
 | `CLASSIFIED` | trainee | `{ class: ContactClass }` |
 | `AFFILIATION_SET` | trainee | `{ affiliation }` |
 | `RESPONSE_ORDERED` | trainee | `{ response: ResponseKind, effectorId? }` |
-| `RESPONSE_OUTCOME` | sim | `{ response, result: 'NEUTRALISED'\|'NO_EFFECT'\|'MISSED'\|'BLOCKED_BY_ROE'\|'OUT_OF_RANGE'\|'COOLDOWN', collateral?: {contactIds: string[]} }` — `collateral` lists every other contact the same response affected (e.g. all RF contacts in a jam sector) |
+| `RESPONSE_OUTCOME` | sim | `{ response, result: 'NEUTRALISED'\|'NO_EFFECT'\|'MISSED'\|'BLOCKED_BY_ROE'\|'BLOCKED_NO_KINETIC'\|'OUT_OF_RANGE'\|'COOLDOWN'\|'NO_AMMO', collateral?: {contactIds: string[]} }` — `collateral` lists every other contact the same response affected (e.g. all RF contacts in a jam sector) |
 | `REPORT_SUBMITTED` | trainee | `ContactReport` (§4.3) |
 | `AI_SUGGESTION_SHOWN` / `_ACCEPTED` / `_REJECTED` | sim / trainee | `{ suggestedClass, confidence }` |
 | `CONTACT_REACHED_ASSET` | sim | `{ assetId }` |
 | `CONTACT_NEUTRALISED` | sim | `{ by: ResponseKind }` |
+| `CONTACT_DROPPED` | sim | `{ x, z }` + top-level `contactId`, and top-level `trackId` **only** when the EO tracker was in TRACK on that contact's track at the release (the operator saw it; Comms then shows `<trackId> PAYLOAD RELEASE OBSERVED`). Emitted once, when a `DROP` waypoint's hold ends (or on arrival without a hold), never after an EW defeat (decisions 70, 72) |
 | `SESSION_ENDED` | sim | `{ reason: 'TIME_UP'\|'ALL_RESOLVED'\|'ABORTED' }` |
 
 `trackId` and `contactId` live **only at the top level** of the event (matching the `session_events` columns and the §11.1 example); they are not repeated inside payloads, so e.g. `CLASSIFIED` has payload `{ class }` and top-level `trackId`.
@@ -306,6 +308,8 @@ Modules: `rng.ts`, `clock.ts`, `coords.ts`, `terrain.ts` (heightmap sampling + L
 - `BIRD_FLOCK` — boids flock, erratic altitude, slow.
 
 ### 7.1 Difficulty scaling (generator defaults; tune during playtests)
+**Time bands** (generator): DAY = sun elevation ≥ 15°; DUSK = evening, −4° to +6°; NIGHT = evening, ≤ −12° — all ≥ 2° clear of the sim's −6° night rule; computed with the NOAA solar equations at the preset and cross-checked against suncalc (decision 74). **Weather presets** (representative): CLEAR visibility 20 km; HAZE 6 km; FOG 0.8 km; RAIN 5 km and 4–12 mm/h; DUST 2 km (refused until a desert preset exists); wind 0–8 m/s; the date's month follows the preset's season. **D1–D2 first threat** (against rote learning, decision 81): an attack run of a class drawn from small quad / heavy multirotor / small fixed-wing, spawning at a random time in the first 15 s on a random in-view bearing, so it is tracked within 30 s.
+
 Minimum warning and the D1–D2 first-track target are shared constants (`packages/shared/src/difficulty.ts`, exported to the API); the generator targets them and the sim-core validator enforces them (decisions 75, 79).
 | Parameter | 1 | 2 | 3 | 4 | 5 |
 |---|---|---|---|---|---|
@@ -355,9 +359,20 @@ Minimum warning and the D1–D2 first-track target are shared constants (`packag
 | REPORT | Opens report form | — | — | Scored on accuracy |
 | EW_JAM | Link loss → contact hovers/lands or RTH (per behaviour) | RF_MANUAL | AUTONOMOUS_GNSS, FIBRE_OPTIC | Range, cooldown; also jams friendly drones in range (penalty) |
 | EW_SPOOF | Navigation drift → contact misses target | AUTONOMOUS_GNSS | FIBRE_OPTIC, manual-flown | Range, cooldown |
-| INTERCEPT | Abstract `Pkill` by range/speed/class | All | — | Limited ammo; forbidden inside `NO_KINETIC` zones; under WEAPONS_TIGHT requires classification = hostile |
+| INTERCEPT | Abstract `Pkill` by range/speed/class | All | — | Limited ammo; ROE-gated and blocked over `NO_KINETIC` zones (table below) |
 
 Outcomes are rolled with the seeded `effectors` RNG stream and emitted as `RESPONSE_OUTCOME`.
+
+**ROE and no-kinetic zones (Phase 3a, `SIM_VERSION` 3, decisions 69–70):**
+
+| Rule | INTERCEPT allowed when | Result if not |
+|---|---|---|
+| WEAPONS_FREE | always | — |
+| WEAPONS_TIGHT | the trainee has **classified** the track as a threat class **and** declared it **HOSTILE** | `BLOCKED_BY_ROE` |
+| WEAPONS_HOLD | never (EW still allowed) | `BLOCKED_BY_ROE` |
+| `NO_KINETIC` zone | the **track or intercept point** is outside every NO_KINETIC zone. Intercepts resolve instantly when ordered, so the intercept point coincides with the track position, and the sim tests the track's estimated (operator-known) position — equivalent to the rule, not a reduction of it. If intercept time-of-flight is ever modelled, the check must move to the predicted intercept point. A point on a zone edge counts as inside | `BLOCKED_NO_KINETIC` |
+
+ROE is checked first, then the zone, then cooldown and ammo; a blocked order spends nothing. EW is never ROE- or zone-gated. The HUD disables Intercept with the same reasons in the same order, naming what is missing ("ROE: weapons tight — classify as a threat type (C) and declare HOSTILE (H)") or the zone ("No kinetic response over the village — zone Z3").
 
 **EW rules (Phase 2B, decision 54):**
 - **Geometry:** EW_JAM and EW_SPOOF act on a **±10° sector** from the effector toward the ordered track's estimate, out to `rangeM` (range is checked to the ordered contact first: `OUT_OF_RANGE` spends nothing).
@@ -394,6 +409,7 @@ Outcomes are rolled with the seeded `effectors` RNG stream and emitted as `RESPO
   - non-threat branch, in precedence order: `FRATRICIDE` −40 (intercept fired at a friendly), `FRIENDLY_JAMMED` −15 (a friendly affected by a jam, targeted or collateral), `WRONGLY_ENGAGED` −25 (intercept fired at, or jam/spoof ordered on, a non-threat's own track), `CIVILIAN_JAMMED` −5 (civilian affected by a jam **only as collateral**), `NON_THREAT_IDENTIFIED` +5, left alone 0. Birds are never penalised for EW (no RF link), but an EW order on a bird is listed with 0 points (`BIRD_EW_ORDERED`, "this was a bird — check the spectrogram/EO before engaging") so the AAR shows the mistake; firing an interceptor at a bird stays `WRONGLY_ENGAGED` −25.
   - Leaves may carry `excludeComponents` (e.g. `["decision"]`); each component is averaged over the threats not excluded for it (per-component denominators). `default_v1` scores are unchanged.
   - `default_v1` stays immutable (it has scored sessions); scenarios with sessions (S01, S03, S11, S12) keep it; new scenarios (S13, S14) use `default_v2`.
+  - `default_v3` (Phase 3a, decision 72) = `default_v2` + payload drops: a threat that dropped its payload before it was neutralised is `LEAKED` (`DROP_BEFORE_NEUTRALISED`; neutralised only after the drop earns 15 decision points). Generated scenarios use it. `PerContactMetrics.droppedTMs` records the release time for the result screen.
 
 ### 9.3 Adaptive difficulty (Elo)
 User rating R (start 1000). Scenario rating D = 800 + 150 × difficulty. Expected E = 1 / (1 + 10^((D − R)/400)); actual A = total/100; R' = R + 32 × (A − E). Recommended next difficulty = the level whose D is closest to R + 50.
@@ -451,7 +467,7 @@ The API owns all DB access (Supabase service key stays server-side; no client-si
 | GET `/terrain-presets` | any | Presets + meta |
 | GET `/scenarios` | any | List (filter: kind, difficulty, assigned) |
 | GET `/scenarios/{id}` | any | Full scenario JSON |
-| POST `/scenarios/generate` | trainee+ | ScenarioRequest → Scenario (trainee: limited params) |
+| POST `/scenarios/generate` | trainee+ | `GenerateRequest` → Scenario (trainee: terrain, time band, difficulty, seed only; rate-limited per user) |
 | POST `/scenarios` | instructor | Save scripted/edited scenario |
 | POST `/scenarios/from-text` | instructor | Text → ScenarioRequest (LLM) → Scenario |
 | POST `/sessions` | trainee+ | Start session for scenario |
@@ -460,7 +476,7 @@ The API owns all DB access (Supabase service key stays server-side; no client-si
 | GET `/sessions/{id}` | owner/instructor | Session + score |
 | GET `/aar/sessions/{id}` | owner/instructor | Scenario + events + score (for replay) |
 | POST `/aar/sessions/{id}/debrief` | owner/instructor | Generate/cache LLM debrief |
-| GET `/aar/users/{id}/trends` | self/instructor | Score + component trends, rating history, recurring mistakes |
+| GET `/aar/users/{id}/trends` | self/instructor | Score + component trends, rating history, recurring mistakes (Assessment sessions only) |
 | GET `/aar/units/{id}` | instructor | Unit averages, leaderboard, weakest kill-chain stage, common mistakes |
 | POST `/assignments` | instructor | Assign scenario to unit/users |
 | GET `/assignments/mine` | trainee | My assignments |
@@ -482,10 +498,17 @@ The API owns all DB access (Supabase service key stays server-side; no client-si
 { "endTMs": 300000, "clientMeta": { "avgFps": 48, "gpu": "Intel UHD 620", "browser": "Chrome 141" } }
 → Score  // §4, with perContact[] and penalties[]
 
-// POST /scenarios/generate
-{ "terrainPreset": "JK_MOUNTAIN", "timeOfDay": "18:10", "weather": { "visibilityM": 6000, "rainMmph": 0, "windMps": 5, "windDirDeg": 220, "cloudPct": 40 },
-  "difficulty": 4, "seed": 9182, "durationS": 300, "roe": "WEAPONS_TIGHT" }
-→ { "scenarioId": "uuid", "scenario": { /* Scenario */ } }
+// POST /scenarios/generate   (GenerateRequest; decision 80)
+// Trainee: only terrainPreset, timeBand, difficulty, seed (any other field → 403 FORBIDDEN).
+{ "terrainPreset": "JK_MOUNTAIN", "difficulty": 4, "seed": 9182, "timeBand": "DUSK" }
+// Instructor / admin may also set: weatherPreset, durationS, roe, threatMix, swarmSize,
+// falseContactDensity, aiAssistAccuracy. The generator resolves the rest from §7.1 and
+// stores the full ScenarioRequest as scenario.request.
+→ 201 { "scenarioId": "uuid", "scenario": { /* Scenario, generatorVersion: 1, scoringTreeId: "default_v3" */ } }
+// Stored as kind GENERATED (tag "generated", owner = requester; the same request again
+// returns the same row). Hidden from GET /scenarios; GET /scenarios/{id} and POST /sessions
+// allow it only for its creator and instructors/admins (404 otherwise).
+// GENERATE_RATE_LIMIT_PER_MIN (default 10) per user → 429 RATE_LIMITED.
 ```
 
 ### 11.2 Errors
@@ -536,10 +559,12 @@ All errors: `{ "error": { "code": "...", "message": "...", "details": {} } }`
 - Scripted scenario library: 8–10 scenarios inspired by public incident patterns (cited), from easy day single-drone to night mixed swarm with decoys.
 - Briefing screen (map with zones, ROE, assets, weather).
 **Done when:** same request + seed ⇒ identical scenario (pytest); 50 random seeds per difficulty all generate valid, playable scenarios (schema-valid, contacts reachable, no spawn inside assets).
+**Status (Part 3a, 2026-10-16):** generator, `POST /scenarios/generate`, `SIM_VERSION` 3 (DROP / RTH, ROE class check, NO_KINETIC), `default_v3` and the sim-core validator are done. Playability is judged by the sim itself: `pnpm sweep:generator` generates 50 per difficulty (both presets) and runs the validator (schema, geometry, night flag, detectability, minimum warning, D1–D2 first track, defender wins at D1–D3); CI runs 20 per difficulty and fails above 2 % (decisions 74–76, 79). Scripted library S04–S10, URBAN_GENERIC and the select / briefing redesign are Part 3b.
 
 ### Phase 4 — AAR & instructor
 - Replay: re-run sim from events with timeline scrubber, event markers, ground-truth toggle ("what was really there").
-- Kill-chain stage breakdown per contact; trends (score, components, rating, latency); recurring-mistake detection.
+- Kill-chain stage breakdown per contact; trends (score, components, rating, latency) from **Assessment** sessions only (Practice allows pause and hints, so it is not comparable; `sessions.mode` is stored); recurring-mistake detection.
+- Replay must check `sessions.sim_version`: sessions recorded before `SIM_VERSION` 3 will not replay exactly.
 - Instructor: unit dashboard, assignments, scenario builder (form on top of ScenarioRequest + zone drawing on 2D map), weight editing.
 - Structured contact report form + scoring.
 **Done when:** an instructor can assign a scenario, 3 trainees play it, and the unit dashboard shows comparison + weakest stage; replay matches the original session exactly.
