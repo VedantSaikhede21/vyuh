@@ -16,7 +16,11 @@ from app.services.generator.core import (
     AGL_RAISE_MAX_M,
     FAST_CLASSES,
     FAST_MIN_AGL_M,
+    FIRST_CLASSES,
+    FIRST_SPAWN_PULL_M_PER_S,
     FIRST_SPAWN_RADAR_M,
+    FIRST_SPAWN_S,
+    FIRST_WARNING_MARGIN_S,
 )
 from app.services.generator.difficulty import (
     BIRD_BUDGET,
@@ -249,11 +253,19 @@ def test_difficulty_table(many: list[dict]) -> None:
             if c["behaviour"] in ("ATTACK_RUN", "RECON_LOITER", "SMUGGLING_DROP"):
                 spawn = (c["path"][0]["x"], c["path"][0]["z"])
                 if s["difficulty"] <= FIRST_TRACK_MAX_DIFFICULTY and i == 0:
-                    # Pacing threat: an attack run spawning 2.6 km from the radar.
+                    # Pacing threat: an attack run of a varied class, spawning within 15 s,
+                    # closer to the radar the later it spawns, never too close to the asset.
                     assert c["behaviour"] == "ATTACK_RUN"
+                    assert c["class"] in FIRST_CLASSES
+                    t = c["spawnTMs"] / 1000
+                    assert 0 <= t <= FIRST_SPAWN_S[1]
                     d = math.dist(spawn, (radar["x"], radar["z"]))
-                    assert d == pytest.approx(FIRST_SPAWN_RADAR_M, abs=1)
-                    assert c["spawnTMs"] <= 3000
+                    expected = FIRST_SPAWN_RADAR_M - FIRST_SPAWN_PULL_M_PER_S * t
+                    speed = c["path"][0]["speedMps"]
+                    floor = (level.min_warning_s + FIRST_WARNING_MARGIN_S) * speed
+                    assert d == pytest.approx(expected, abs=5) or math.dist(
+                        spawn, asset_xz(s)
+                    ) == pytest.approx(floor, abs=5)
                 else:
                     assert math.dist(spawn, asset_xz(s)) == pytest.approx(level.spawn_m, abs=1)
                 assert min(w["y"] for w in c["path"][:-1] or c["path"]) >= level.lowest_agl_m - 1
@@ -297,6 +309,22 @@ def test_bird_budget(many: list[dict], wide: list[dict]) -> None:
         flocks = Counter(c["groupId"] for c in s["contacts"] if c["behaviour"] == "BIRD_FLOCK")
         assert sum(flocks.values()) <= BIRD_BUDGET
         assert all(3 <= n <= 5 for n in flocks.values())
+
+
+def test_first_threat_varies_at_d1_d2() -> None:
+    # Against rote learning (decision 81): axis, class and spawn time all vary.
+    firsts = [
+        generate(req(terrainPreset=p, difficulty=d, seed=300 + i))["contacts"][0]
+        for d in (1, 2)
+        for i, p in enumerate(PRESETS * 6)
+    ]
+    assert {c["class"] for c in firsts} == set(FIRST_CLASSES)
+    assert len({round(c["spawnTMs"] / 1000) for c in firsts}) >= 6
+    sectors = {
+        round(math.degrees(math.atan2(c["path"][0]["x"], c["path"][0]["z"])) % 360 / 90) % 4
+        for c in firsts
+    }
+    assert len(sectors) == 4
 
 
 def test_shared_difficulty_constants() -> None:

@@ -16,6 +16,10 @@ Point = tuple[float, float]
 
 RAY_STEP_M = 100.0
 FINE_STEP_M = 30.0
+#: Near the radar every ray is sampled at sim-core's 10 m LOS step: the radar sits on a
+#: grid point, and terrain a few tens of metres away can still rise above the mast.
+NEAR_STEP_M = 10.0
+NEAR_RANGE_M = 150.0
 #: Exposure grid resolution (cells per side) for masked routing.
 GRID_N = 96
 _CACHE_MAX = 64
@@ -33,9 +37,11 @@ def visible(
     """True when no terrain sample rises above the straight line src → dst (dst at `agl`)."""
     dst_y = terrain.height_at(*dst) + agl
     dist = math.dist(src, dst)
-    steps = int(dist // step)
-    if steps < 2:
+    if dist < 2 * NEAR_STEP_M:
         return True
+    near = [d for d in range(int(NEAR_STEP_M), int(min(NEAR_RANGE_M, dist)), int(NEAR_STEP_M))]
+    start = max(NEAR_RANGE_M, step)
+    far = [start + k * step for k in range(int(max(dist - start, 0.0) // step))]
     # Inlined Terrain.height_at (same bilinear maths) — this loop dominates generation time.
     h = terrain.heights
     r = terrain.meta.resolution
@@ -45,8 +51,8 @@ def visible(
     off = size / 2
     sx, sz = src
     dx, dz, dy = dst[0] - sx, dst[1] - sz, dst_y - src_y
-    for k in range(1, steps):
-        f = k * step / dist
+    for d in near + far:
+        f = d / dist
         gx = min(max((sx + dx * f + off) * scale, 0.0), n)
         gz = min(max((sz + dz * f + off) * scale, 0.0), n)
         x0 = min(int(gx), n - 1)

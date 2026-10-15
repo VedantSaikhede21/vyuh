@@ -14,7 +14,7 @@ RF_BANDS = ("2.4GHz", "5.8GHz")
 
 #: Threat classes per single-threat behaviour, unlocked by difficulty.
 ATTACK_CLASSES = {1: ("QUAD_SMALL",), 2: ("QUAD_SMALL", "QUAD_HEAVY"), 3: ("QUAD_SMALL", "FPV")}
-ATTACK_CLASSES_HIGH = ("QUAD_SMALL", "FPV", "LOITERING_GENERIC")
+ATTACK_CLASSES_HIGH = ("QUAD_SMALL", "QUAD_HEAVY", "FPV", "LOITERING_GENERIC")
 RECON_CLASSES = {1: ("QUAD_SMALL",), 2: ("QUAD_SMALL", "QUAD_HEAVY")}
 RECON_CLASSES_HIGH = ("QUAD_SMALL", "QUAD_HEAVY", "FIXED_WING_SMALL")
 #: Which behaviours a requested class (threatMix) can fly.
