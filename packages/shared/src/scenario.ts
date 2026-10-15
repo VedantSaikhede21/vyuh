@@ -12,7 +12,9 @@ import {
   NonThreatClass,
   Roe,
   ThreatClass,
+  TimeBand,
   WaypointAction,
+  WeatherPreset,
 } from './enums.ts';
 import { named } from './registry.ts';
 
@@ -67,6 +69,29 @@ export const ScenarioRequest = named(
   }),
 );
 export type ScenarioRequest = z.infer<typeof ScenarioRequest>;
+
+/**
+ * POST /scenarios/generate body. The generator resolves omitted fields from the
+ * difficulty table (SPEC §7.1) into a full ScenarioRequest, stored as `scenario.request`.
+ * Trainees may set only terrainPreset, difficulty, seed and timeBand.
+ */
+export const GenerateRequest = named(
+  'GenerateRequest',
+  z.object({
+    terrainPreset: z.string().min(1),
+    difficulty: Difficulty,
+    seed: Seed,
+    timeBand: TimeBand.optional(),
+    weatherPreset: WeatherPreset.optional(),
+    durationS: z.int().min(30).max(3600).optional(),
+    roe: Roe.optional(),
+    threatMix: ThreatMix.optional(),
+    swarmSize: z.int().min(1).max(50).optional(),
+    falseContactDensity: FalseContactDensity.optional(),
+    aiAssistAccuracy: z.number().min(0).max(1).optional(),
+  }),
+);
+export type GenerateRequest = z.infer<typeof GenerateRequest>;
 
 export const LatLon = named(
   'LatLon',
@@ -276,6 +301,8 @@ export const Scenario = named(
       seed: Seed,
       difficulty: Difficulty,
       request: ScenarioRequest.optional(),
+      /** Set by the procedural generator only; scripted scenarios omit it. */
+      generatorVersion: z.int().min(1).optional(),
       terrain: TerrainRef,
       environment: Environment,
       roe: Roe,

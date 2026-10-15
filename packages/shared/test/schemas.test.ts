@@ -8,6 +8,7 @@ import {
   ErrorEnvelope,
   ERROR_HTTP_STATUS,
   ErrorCode,
+  GenerateRequest,
   NonThreatClass,
   Scenario,
   ScenarioListResponse,
@@ -324,6 +325,38 @@ describe('Phase 2 additive fields', () => {
       expect(t).toBeGreaterThan(0);
       expect(t).toBeLessThanOrEqual(1);
     }
+  });
+});
+
+describe('Phase 3a additive fields', () => {
+  it('accepts CONTACT_DROPPED with and without an observing track', () => {
+    const drop = { seq: 9, tMs: 161000, type: 'CONTACT_DROPPED', contactId: 'c01' };
+    expect(SimEvent.safeParse({ ...drop, payload: { x: 10, z: -20 } }).success).toBe(true);
+    expect(
+      SimEvent.safeParse({ ...drop, trackId: 'T004', payload: { x: 10, z: -20 } }).success,
+    ).toBe(true);
+    expect(SimEvent.safeParse({ ...drop, payload: {} }).success).toBe(false);
+  });
+
+  it('accepts a minimal and a full GenerateRequest, and generatorVersion', () => {
+    const minimal = { terrainPreset: 'JK_MOUNTAIN', difficulty: 3, seed: 42 };
+    expect(GenerateRequest.safeParse(minimal).success).toBe(true);
+    const full = {
+      ...minimal,
+      timeBand: 'DUSK',
+      weatherPreset: 'FOG',
+      durationS: 300,
+      roe: 'WEAPONS_TIGHT',
+      threatMix: { QUAD_SMALL: 2 },
+      swarmSize: 6,
+      falseContactDensity: 'HIGH',
+      aiAssistAccuracy: 0.7,
+    };
+    expect(GenerateRequest.safeParse(full).success).toBe(true);
+    expect(GenerateRequest.safeParse({ ...minimal, timeBand: 'NOON' }).success).toBe(false);
+    expect(GenerateRequest.safeParse({ ...minimal, difficulty: 0 }).success).toBe(false);
+    expect(Scenario.safeParse({ ...clone(), generatorVersion: 1 }).success).toBe(true);
+    expect(Scenario.safeParse({ ...clone(), generatorVersion: 0 }).success).toBe(false);
   });
 });
 

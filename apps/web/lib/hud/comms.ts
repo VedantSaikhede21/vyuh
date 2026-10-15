@@ -20,6 +20,7 @@ const RESULT: Record<string, { text: string; status: CommsStatus }> = {
   MISSED: { text: 'MISSED', status: 'warn' },
   NO_EFFECT: { text: 'NO EFFECT', status: 'warn' },
   BLOCKED_BY_ROE: { text: 'BLOCKED — ROE', status: 'warn' },
+  BLOCKED_NO_KINETIC: { text: 'BLOCKED — NO-KINETIC ZONE', status: 'warn' },
   OUT_OF_RANGE: { text: 'OUT OF RANGE', status: 'warn' },
   COOLDOWN: { text: 'RELOADING', status: 'warn' },
   NO_AMMO: { text: 'NO ROUNDS LEFT', status: 'warn' },

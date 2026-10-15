@@ -122,6 +122,7 @@ export const SystemEventType = named(
     'CONTACT_DESPAWNED',
     'CONTACT_REACHED_ASSET',
     'CONTACT_NEUTRALISED',
+    'CONTACT_DROPPED',
     'SENSOR_TRACK_CREATED',
     'SENSOR_TRACK_LOST',
     'EO_IDENTIFIABLE',
@@ -161,6 +162,7 @@ export const ResponseResult = named(
     'NO_EFFECT',
     'MISSED',
     'BLOCKED_BY_ROE',
+    'BLOCKED_NO_KINETIC',
     'OUT_OF_RANGE',
     'COOLDOWN',
     'NO_AMMO',
@@ -199,6 +201,17 @@ export type EoMode = z.infer<typeof EoMode>;
 /** Whether a terrain preset's OSM building footprints were fetched (SPEC §14). */
 export const BuildingsStatus = named('BuildingsStatus', z.enum(['OK', 'EMPTY', 'UNAVAILABLE']));
 export type BuildingsStatus = z.infer<typeof BuildingsStatus>;
+
+/** Generator time-of-day band; resolved to `HH:mm` from the sun at the preset (SPEC §7.1). */
+export const TimeBand = named('TimeBand', z.enum(['DAY', 'DUSK', 'NIGHT']));
+export type TimeBand = z.infer<typeof TimeBand>;
+
+/** Generator weather preset, mapped to a `Weather` object. DUST waits for a desert preset. */
+export const WeatherPreset = named(
+  'WeatherPreset',
+  z.enum(['CLEAR', 'HAZE', 'FOG', 'RAIN', 'DUST']),
+);
+export type WeatherPreset = z.infer<typeof WeatherPreset>;
 
 export const FalseContactDensity = named('FalseContactDensity', z.enum(['LOW', 'MED', 'HIGH']));
 export type FalseContactDensity = z.infer<typeof FalseContactDensity>;

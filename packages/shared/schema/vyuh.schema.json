@@ -560,6 +560,60 @@
         "payload"
       ]
     },
+    "ContactDroppedEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "CONTACT_DROPPED"
+        },
+        "contactId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "payload": {
+          "$ref": "#/$defs/ContactDroppedPayload"
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "contactId",
+        "payload"
+      ]
+    },
+    "ContactDroppedPayload": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "z"
+      ]
+    },
     "ContactNeutralisedEvent": {
       "type": "object",
       "properties": {
@@ -1235,6 +1289,7 @@
         "CONTACT_DESPAWNED",
         "CONTACT_REACHED_ASSET",
         "CONTACT_NEUTRALISED",
+        "CONTACT_DROPPED",
         "SENSOR_TRACK_CREATED",
         "SENSOR_TRACK_LOST",
         "EO_IDENTIFIABLE",
@@ -1258,6 +1313,56 @@
         "LOW",
         "MED",
         "HIGH"
+      ]
+    },
+    "GenerateRequest": {
+      "type": "object",
+      "properties": {
+        "terrainPreset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "difficulty": {
+          "$ref": "#/$defs/Difficulty"
+        },
+        "seed": {
+          "$ref": "#/$defs/Seed"
+        },
+        "timeBand": {
+          "$ref": "#/$defs/TimeBand"
+        },
+        "weatherPreset": {
+          "$ref": "#/$defs/WeatherPreset"
+        },
+        "durationS": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 3600
+        },
+        "roe": {
+          "$ref": "#/$defs/Roe"
+        },
+        "threatMix": {
+          "$ref": "#/$defs/ThreatMix"
+        },
+        "swarmSize": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "falseContactDensity": {
+          "$ref": "#/$defs/FalseContactDensity"
+        },
+        "aiAssistAccuracy": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "terrainPreset",
+        "difficulty",
+        "seed"
       ]
     },
     "GenerateScenarioResponse": {
@@ -1791,6 +1896,7 @@
         "NO_EFFECT",
         "MISSED",
         "BLOCKED_BY_ROE",
+        "BLOCKED_NO_KINETIC",
         "OUT_OF_RANGE",
         "COOLDOWN",
         "NO_AMMO"
@@ -1870,6 +1976,11 @@
         },
         "request": {
           "$ref": "#/$defs/ScenarioRequest"
+        },
+        "generatorVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
         },
         "terrain": {
           "$ref": "#/$defs/TerrainRef"
@@ -2554,6 +2665,9 @@
           "$ref": "#/$defs/ContactNeutralisedEvent"
         },
         {
+          "$ref": "#/$defs/ContactDroppedEvent"
+        },
+        {
           "$ref": "#/$defs/SensorTrackCreatedEvent"
         },
         {
@@ -2607,6 +2721,7 @@
           "CONTACT_DESPAWNED": "#/$defs/ContactDespawnedEvent",
           "CONTACT_REACHED_ASSET": "#/$defs/ContactReachedAssetEvent",
           "CONTACT_NEUTRALISED": "#/$defs/ContactNeutralisedEvent",
+          "CONTACT_DROPPED": "#/$defs/ContactDroppedEvent",
           "SENSOR_TRACK_CREATED": "#/$defs/SensorTrackCreatedEvent",
           "SENSOR_TRACK_LOST": "#/$defs/SensorTrackLostEvent",
           "EO_IDENTIFIABLE": "#/$defs/EoIdentifiableEvent",
@@ -2648,6 +2763,7 @@
         "CONTACT_DESPAWNED",
         "CONTACT_REACHED_ASSET",
         "CONTACT_NEUTRALISED",
+        "CONTACT_DROPPED",
         "SENSOR_TRACK_CREATED",
         "SENSOR_TRACK_LOST",
         "EO_IDENTIFIABLE",
@@ -2799,6 +2915,14 @@
         "minimum": 0,
         "maximum": 50
       }
+    },
+    "TimeBand": {
+      "type": "string",
+      "enum": [
+        "DAY",
+        "DUSK",
+        "NIGHT"
+      ]
     },
     "TimeOfDay": {
       "type": "string",
@@ -2981,6 +3105,16 @@
         "windMps",
         "windDirDeg",
         "cloudPct"
+      ]
+    },
+    "WeatherPreset": {
+      "type": "string",
+      "enum": [
+        "CLEAR",
+        "HAZE",
+        "FOG",
+        "RAIN",
+        "DUST"
       ]
     },
     "Zone": {

@@ -35,7 +35,7 @@ scenario's entity count and draw calls so the Intel headroom can be judged.
 1. **Settlement data for `NO_KINETIC` siting:** the API image also copies `buildings.geojson` (≤ 30 KB per preset) next to `meta.json` + `heightmap.u16`; read with the stdlib `json`. No pipeline change.
 2. **Intercept blocked by a `NO_KINETIC` zone:** new additive `ResponseResult` value `BLOCKED_NO_KINETIC`, distinct from `BLOCKED_BY_ROE`.
 3. **Which point the gate tests:** the track's filtered position estimate (operator-known, decision 66). Decision to record: intercepts resolve instantly when ordered, so the intercept point coincides with the track position; checking the estimated track position is equivalent to requirement §5 ("track or intercept point"), not a reduction of it. SPEC §8 wording is updated to match. If intercept time-of-flight is ever modelled, the check must move to the predicted intercept point.
-4. **Is a `DROP` visible live:** no, with one rule. `CONTACT_DROPPED` is a system event used for scoring and shown on the result screen ("Payload dropped at 02:41"). If the EO camera is in TRACK (`TRK`) on the dropping contact's track at the moment of the drop, the Comms log appends `<trackId> PAYLOAD RELEASE OBSERVED`. This is sim-derived and deterministic (no new event type): the `CONTACT_DROPPED` payload carries the observing track id, which sim-core fills only when the EO tracker is in TRACK on that contact's track. Vitest covers both cases.
+4. **Is a `DROP` visible live:** no, with one rule. `CONTACT_DROPPED` is a system event used for scoring and shown on the result screen ("Payload dropped at 02:41"). If the EO camera is in TRACK (`TRK`) on the dropping contact's track at the moment of the drop, the Comms log appends `<trackId> PAYLOAD RELEASE OBSERVED`. This is sim-derived and deterministic (no new event type): `CONTACT_DROPPED` carries the observing track as an optional top-level `trackId` (event convention: ids never inside `payload`), which sim-core fills only when the EO tracker is in TRACK on that contact's track. Vitest covers both cases.
 5. **Time bands and sun in Python:** a small NOAA sunrise/sunset function (stdlib `math`), cross-checked in CI against suncalc values exported by a sim-core test; the validator asserts `isNight` matches suncalc.
 6. **Generated scenario visibility:** `kind = GENERATED`, tag `generated`, `created_by` = requester; hidden from the library list; visible by id to its creator and to instructors/admins. The 3b list redesign decides how generated runs are listed.
 7. **Trainee "Generate" UI:** 3b. 3a delivers the API and tests; the D5 FPS check drives the API directly.
@@ -56,17 +56,17 @@ scenario's entity count and draw calls so the Intel headroom can be judged.
    - enums: `TimeBand` (DAY, DUSK, NIGHT); `WeatherPreset` (CLEAR, HAZE, FOG, RAIN, DUST); `SystemEventType` + `CONTACT_DROPPED`; `ResponseResult` + `BLOCKED_NO_KINETIC` (if Q2 approved).
    - `GenerateRequest`: `{ terrainPreset, difficulty, seed, timeBand?, weatherPreset?, durationS?, roe?, threatMix?, swarmSize?, falseContactDensity?, aiAssistAccuracy? }`. The generator resolves it into a full `ScenarioRequest`, which is what `scenario.request` stores.
    - `Scenario.generatorVersion?: int` (additive, optional; scripted scenarios omit it). No `schemaVersion` bump: all changes are additive.
-   - `GenerateResponse = { scenarioId, scenario }`.
+   - Response: the existing `GenerateScenarioResponse = { scenarioId, scenario }` (already in `api.ts`).
    - Python: re-check any new cross-field rules in `services/scenarios.py`.
 
 2. **`feat(sim): drop, RTH waypoint, ROE class check, no-kinetic gate (SIM_VERSION 3)`** — sim-core:
-   - `DROP`: on arriving at a `DROP` waypoint, a contact that is ACTIVE and not defeated emits `CONTACT_DROPPED {x, z, observedTrackId?}` (once per contact), then continues its path. `observedTrackId` is set only when the EO tracker is in TRACK on that contact's track at that tick (Q4).
+   - `DROP`: on arriving at a `DROP` waypoint, a contact that is ACTIVE and not defeated emits `CONTACT_DROPPED {x, z}` with an optional top-level `trackId` (once per contact), then continues its path. `trackId` is set only when the EO tracker is in TRACK on that contact's track at that tick (Q4).
    - `RTH` waypoint action: on arrival, switch to the existing RTH control (return to the first waypoint and despawn).
    - `roeAllowsIntercept`: WEAPONS_TIGHT needs `classifiedAs` ∈ ThreatClass **and** affiliation HOSTILE; WEAPONS_HOLD never; WEAPONS_FREE always.
    - `NO_KINETIC`: intercept blocked when the track estimate is inside a `NO_KINETIC` polygon (point-in-polygon in a new `zones.ts`); result per Q2; checked after ROE, before cooldown/ammo, so it spends nothing.
    - `createDefender`: still sets the true class; never orders an intercept that the new gates would block; uses jam/spoof on susceptible threats inside `NO_KINETIC`, otherwise holds.
    - `SIM_VERSION = 3`; decision entry.
-   - Tests: `behaviours.test.ts` (drop emitted once, not after EW defeat, RTH waypoint despawns at the start, `observedTrackId` set under EO TRACK and absent otherwise), `roe.test.ts` (FREE / TIGHT class + affiliation / HOLD / NO_KINETIC inside-outside-edge, nothing spent when blocked), determinism and exact replay, S01–S14 guard tests still pass.
+   - Tests: `behaviours.test.ts` (drop emitted once, not after EW defeat, RTH waypoint despawns at the start, `trackId` set under EO TRACK and absent otherwise), `roe.test.ts` (FREE / TIGHT class + affiliation / HOLD / NO_KINETIC inside-outside-edge, nothing spent when blocked), determinism and exact replay, S01–S14 guard tests still pass.
 
 3. **`feat(api): default_v3 scoring tree`**:
    - `default_v3.json` = `default_v2` + a drop rule: a threat with `CONTACT_DROPPED` before it was neutralised is `LEAKED`, with the feedback "Payload dropped before neutralisation." A drop after EW defeat cannot happen (the sim stops it). `default_v1`/`v2` unchanged.
@@ -107,7 +107,7 @@ scenario's entity count and draw calls so the Intel headroom can be judged.
 8. **Checkpoint** (Q10): show the per-difficulty table and the sweep result; wait for the user's OK.
 
 9. **`feat(api): POST /scenarios/generate`**:
-   - Router thin, logic in `services/generator`. Trainee: only `terrainPreset`, `timeBand`, `difficulty`, `seed` (anything else → 403 `FORBIDDEN`); instructor/admin: every field. Stored per Q6. Response `GenerateResponse`.
+   - Router thin, logic in `services/generator`. Trainee: only `terrainPreset`, `timeBand`, `difficulty`, `seed` (anything else → 403 `FORBIDDEN`); instructor/admin: every field. Stored per Q6. Response `GenerateScenarioResponse`.
    - Rate limit per user (`GENERATE_RATE_LIMIT_PER_MIN`, default 10, in-memory) → 429 `RATE_LIMITED`.
    - Tests: RBAC per role, determinism through the API, 429, stored kind/tag/owner, library list unchanged.
 
@@ -116,7 +116,7 @@ scenario's entity count and draw calls so the Intel headroom can be judged.
     - Draw `NO_KINETIC` polygons and the `BORDER_LINE` in the tactical view and on the PPI if they are not drawn already (neutral chrome per DESIGN, labelled).
     - Practice hints per Q9; none in Assessment.
     - Result screen: "Payload dropped at mm:ss" on the contact row.
-    - Comms: `<trackId> PAYLOAD RELEASE OBSERVED` when `CONTACT_DROPPED` carries `observedTrackId` (Q4), with a unit test for both cases.
+    - Comms: `<trackId> PAYLOAD RELEASE OBSERVED` when `CONTACT_DROPPED` carries a `trackId` (Q4), with a unit test for both cases.
     - Visual baselines and a11y specs updated; screenshots at both sizes, DESIGN §13.
 
 11. **`docs: ROE semantics and generator in SPEC`**: SPEC §8 ROE table (FREE / TIGHT with class check / HOLD / NO_KINETIC, with the "track or intercept point" wording per Q3), §7.1 time bands and weather presets, §11 generate payload (`GenerateRequest`), §12 Phase 3 status; note in §9 / §12 Phase 4 that trends use Assessment sessions only. Decisions for every non-obvious choice.
