@@ -9,7 +9,8 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p . && tsc --noEmit -p tsconfig.test.json",
-    "bench": "node scripts/bench.ts"
+    "bench": "node scripts/bench.ts",
+    "validate": "node scripts/validate.ts"
   },
   "dependencies": {
     "@vyuh/shared": "workspace:*",

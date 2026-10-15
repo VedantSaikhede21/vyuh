@@ -162,3 +162,20 @@ export type { EoCameraState, EoConditions, EoTrackMode } from './sensors/eoir.ts
 export { DEFENDER_RANGE_FRACTION, createDefender, trueAffiliation } from './defender.ts';
 export { inNoKinetic, noKineticPolygons, pointInPolygon } from './zones.ts';
 export type { Defender } from './defender.ts';
+export {
+  CRITICAL_RANGE_M,
+  DEFENDER_MAX_DIFFICULTY,
+  MIN_WARNING_S,
+  OTHER_SPAWN_MIN_M,
+  THREAT_SPAWN_MIN_M,
+  VALIDATE_EDGE_MARGIN_M,
+  VALIDATE_MIN_AGL_M,
+  defenderLeaks,
+  validateScenario,
+} from './validate.ts';
+export type {
+  ThreatWarning,
+  ValidationCheck,
+  ValidationCheckName,
+  ValidationResult,
+} from './validate.ts';
