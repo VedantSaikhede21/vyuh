@@ -130,6 +130,27 @@ describe('FIRST_TRACK (D1-D2 pacing, generated scenarios only)', () => {
   });
 });
 
+describe('enteredClutter (pop-down metric, decision 83)', () => {
+  it('is false for a normal attack run: the terminal dive does not count', () => {
+    const r = validateScenario(s01(), presetWorld('PROCEDURAL_HILLS'));
+    expect(r.warnings.map((w) => w.enteredClutter)).toEqual([false]);
+  });
+
+  it('is true when the threat flies level below 15 m inside 2 km of the radar', () => {
+    const s = s01();
+    const c = s.contacts[0]!;
+    const [first, dive] = [c.path[0]!, c.path.at(-1)!];
+    c.path = [
+      first,
+      { x: first.x * 0.6, y: first.y, z: first.z * 0.6, speedMps: first.speedMps },
+      { x: first.x * 0.5, y: 8, z: first.z * 0.5, speedMps: first.speedMps },
+      dive,
+    ];
+    const r = validateScenario(s, presetWorld('PROCEDURAL_HILLS'));
+    expect(r.warnings[0]!.enteredClutter).toBe(true);
+  });
+});
+
 describe('result details', () => {
   it('reports per-threat warning and defender leaks', () => {
     const r = validateScenario({ ...s01(), effectors: [] }, presetWorld('PROCEDURAL_HILLS'));

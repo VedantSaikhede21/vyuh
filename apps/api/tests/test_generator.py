@@ -21,6 +21,9 @@ from app.services.generator.core import (
     FIRST_SPAWN_RADAR_M,
     FIRST_SPAWN_S,
     FIRST_WARNING_MARGIN_S,
+    POPDOWN_CEILING_M,
+    POPDOWN_FLOOR_M,
+    POPDOWN_SHARE,
 )
 from app.services.generator.difficulty import (
     BIRD_BUDGET,
@@ -180,10 +183,58 @@ def test_swarms_share_a_group_and_stagger(many: list[dict]) -> None:
             assert len({m["controlLink"] for m in members}) == 1
 
 
-def test_fast_classes_stay_above_clutter(many: list[dict]) -> None:
-    for _, c in contacts_by(many, "ATTACK_RUN") + contacts_by(many, "SWARM_SATURATION"):
-        if c["class"] in FAST_CLASSES:
+def popped(c: dict) -> bool:
+    """Starts at or above the clutter height and later drops below it (a pop-down)."""
+    path = c["path"][:-1]
+    return (
+        bool(path) and path[0]["y"] >= FAST_MIN_AGL_M and any(w["y"] < FAST_MIN_AGL_M for w in path)
+    )
+
+
+def test_fast_classes_stay_above_clutter_unless_popping_down(many: list[dict]) -> None:
+    for s, c in contacts_by(many, "ATTACK_RUN") + contacts_by(many, "SWARM_SATURATION"):
+        if c["class"] in FAST_CLASSES and not popped(c):
             assert min(w["y"] for w in c["path"][:-1]) >= FAST_MIN_AGL_M
+        if popped(c):
+            assert s["difficulty"] >= 4
+
+
+def test_popdown_share_floor_and_shape() -> None:
+    # Decision 83: ~15 % (D4) / ~30 % (D5) of threats fly the outer approach at cruise
+    # height, then drop below 15 m for the last 1.5-2 km, down to the floor.
+    for d in (4, 5):
+        runs = [
+            generate(req(terrainPreset=p, difficulty=d, seed=40 + i))
+            for i, p in enumerate(PRESETS * 8)
+        ]
+        threats = [c for r in runs for c in r["contacts"] if c["isThreat"]]
+        low = [c for c in threats if popped(c)]
+        assert len(low) / len(threats) == pytest.approx(POPDOWN_SHARE[d], abs=0.06)
+        for r in runs:
+            a = asset_xz(r)
+            for c in (c for c in r["contacts"] if c["isThreat"] and popped(c)):
+                assert c["behaviour"] in ("ATTACK_RUN", "SWARM_SATURATION")
+                path = c["path"]
+                assert path[-1]["action"] == "DIVE"
+                first_low = next(i for i, w in enumerate(path) if w["y"] < FAST_MIN_AGL_M)
+                # Cruise height until the pop-down point, 1.5-2 km out (plus the descent leg).
+                assert all(w["y"] >= FAST_MIN_AGL_M for w in path[:first_low])
+
+                # The pop-down point (a cruise-height waypoint) is 1.5-2 km before the dive
+                # point, measured along the path; the descent takes 150 m after it.
+                def along(i: int, path: list = path) -> float:
+                    return sum(
+                        math.dist((p["x"], p["z"]), (q["x"], q["z"]))
+                        for p, q in itertools.pairwise(path[i:])
+                    )
+
+                assert any(1500 - 1 <= along(i) <= 2000 + 1 for i in range(first_low))
+                assert math.dist((path[-1]["x"], path[-1]["z"]), a) <= 60
+                for w in path[first_low:-1]:
+                    assert POPDOWN_FLOOR_M[d] <= w["y"] <= POPDOWN_CEILING_M
+    assert all(
+        not popped(c) for d in (1, 2, 3) for c in generate(req(difficulty=d, seed=41))["contacts"]
+    )
 
 
 def test_border_line_crosses_every_smuggling_route(wide: list[dict]) -> None:
@@ -268,7 +319,8 @@ def test_difficulty_table(many: list[dict]) -> None:
                     ) == pytest.approx(floor, abs=5)
                 else:
                     assert math.dist(spawn, asset_xz(s)) == pytest.approx(level.spawn_m, abs=1)
-                assert min(w["y"] for w in c["path"][:-1] or c["path"]) >= level.lowest_agl_m - 1
+                floor = min(level.lowest_agl_m, POPDOWN_FLOOR_M.get(s["difficulty"], 1e9))
+                assert min(w["y"] for w in c["path"][:-1] or c["path"]) >= floor - 1
 
 
 def test_difficulty_scales_monotonically() -> None:
