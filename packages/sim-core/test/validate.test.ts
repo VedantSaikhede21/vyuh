@@ -114,6 +114,22 @@ describe('each criterion fails alone', () => {
   });
 });
 
+describe('FIRST_TRACK (D1-D2 pacing, generated scenarios only)', () => {
+  const late = (): Scenario => {
+    const s = s01();
+    s.contacts[0]!.spawnTMs = 60_000;
+    return s;
+  };
+
+  it('fails alone on a generated D1 whose first track is after 30 s', () => {
+    expect(failed({ ...late(), generatorVersion: 1 })).toEqual(['FIRST_TRACK']);
+  });
+
+  it('is not applied to scripted scenarios', () => {
+    expect(failed(late())).toEqual([]);
+  });
+});
+
 describe('result details', () => {
   it('reports per-threat warning and defender leaks', () => {
     const r = validateScenario({ ...s01(), effectors: [] }, presetWorld('PROCEDURAL_HILLS'));

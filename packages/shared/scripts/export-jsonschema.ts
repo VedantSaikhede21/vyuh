@@ -4,13 +4,21 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
-import { CLASS_PROFILES, ThreatClass, schemaRegistry } from '../src/index.ts';
+import {
+  CLASS_PROFILES,
+  FIRST_TRACK_MAX_DIFFICULTY,
+  FIRST_TRACK_MAX_S,
+  MIN_WARNING_S,
+  ThreatClass,
+  schemaRegistry,
+} from '../src/index.ts';
 
 type Json = Record<string, unknown>;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outFile = resolve(here, '../schema/vyuh.schema.json');
 const profilesFile = resolve(here, '../../../apps/api/app/seed/generated/class_profiles.json');
+const difficultyFile = resolve(here, '../../../apps/api/app/seed/generated/difficulty.json');
 const REF_PREFIX = '#/$defs/';
 const DISCRIMINATOR_KEYS = ['type', 'kind'];
 
@@ -104,3 +112,19 @@ const profiles = {
 mkdirSync(dirname(profilesFile), { recursive: true });
 writeFileSync(profilesFile, `${JSON.stringify(profiles, null, 2)}\n`, 'utf8');
 console.log(`Wrote ${Object.keys(CLASS_PROFILES).length} class profiles → ${profilesFile}`);
+
+// Difficulty constants for the generator (SPEC §7.1), same pattern as the profiles.
+const difficulty = {
+  _generated:
+    'GENERATED FILE — DO NOT EDIT. Source: packages/shared/src/difficulty.ts; run `pnpm gen:schemas`.',
+  minWarningS: MIN_WARNING_S,
+  firstTrackMaxS: FIRST_TRACK_MAX_S,
+  firstTrackMaxDifficulty: FIRST_TRACK_MAX_DIFFICULTY,
+};
+writeFileSync(
+  difficultyFile,
+  `${JSON.stringify(difficulty, null, 2)}
+`,
+  'utf8',
+);
+console.log(`Wrote difficulty constants → ${difficultyFile}`);

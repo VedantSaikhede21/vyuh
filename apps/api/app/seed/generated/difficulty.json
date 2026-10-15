@@ -1,0 +1,12 @@
+{
+  "_generated": "GENERATED FILE — DO NOT EDIT. Source: packages/shared/src/difficulty.ts; run `pnpm gen:schemas`.",
+  "minWarningS": {
+    "1": 60,
+    "2": 50,
+    "3": 45,
+    "4": 40,
+    "5": 30
+  },
+  "firstTrackMaxS": 30,
+  "firstTrackMaxDifficulty": 2
+}
