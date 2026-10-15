@@ -1,18 +1,22 @@
-import type {
-  Behaviour,
-  ContactSpec,
-  EffectorConfig,
-  EffectorKind,
-  ResponseResult,
-  Roe,
+import {
+  ThreatClass,
+  type Behaviour,
+  type ContactSpec,
+  type EffectorConfig,
+  type EffectorKind,
+  type Point2,
+  type ResponseResult,
+  type Roe,
 } from '@vyuh/shared';
 import { startDrift } from './behaviours/link-loss.ts';
 import type { ContactControl, ContactState } from './contacts.ts';
 import { angleDiffDeg, bearingDeg, slantRange, type Vec3 } from './coords.ts';
 import type { RandomStream } from './rng.ts';
 import type { TrackState } from './tracks.ts';
+import { inNoKinetic } from './zones.ts';
 
-// Abstract effectors (SPEC §8): INTERCEPT (range-based Pkill, ROE-gated) and
+// Abstract effectors (SPEC §8): INTERCEPT (range-based Pkill, ROE- and
+// NO_KINETIC-gated) and
 // EW_JAM / EW_SPOOF (a ±10° sector, not ROE-gated; decision 54). All rolls use
 // the `effectors` stream and are drawn only when the effector actually fires.
 
@@ -49,16 +53,29 @@ export function interceptPkill(rangeM: number, maxRangeM: number): number {
   return PKILL_MAX - (PKILL_MAX - PKILL_MIN) * f * f;
 }
 
-/** ROE gate for kinetic responses. WEAPONS_TIGHT needs a trainee HOSTILE call. */
+const THREAT_CLASSES: ReadonlySet<string> = new Set(ThreatClass.options);
+
+/**
+ * ROE gate for kinetic responses (SPEC §8). WEAPONS_TIGHT needs the trainee to
+ * have classified the track as a threat class and declared it HOSTILE.
+ */
 export function roeAllowsIntercept(roe: Roe, track: Readonly<TrackState>): boolean {
   if (roe === 'WEAPONS_FREE') return true;
-  if (roe === 'WEAPONS_TIGHT') return track.affiliation === 'HOSTILE';
+  if (roe === 'WEAPONS_TIGHT') {
+    return (
+      track.affiliation === 'HOSTILE' &&
+      track.classifiedAs !== null &&
+      THREAT_CLASSES.has(track.classifiedAs)
+    );
+  }
   return false;
 }
 
 /**
  * Resolve an INTERCEPT order against the contact behind a track. Mutates the
  * effector (ammo, cooldown) and the contact (status) and returns the result.
+ * Gates in order: ROE, then NO_KINETIC (the track's estimated position, which
+ * the operator knows), then cooldown and ammo; a blocked order spends nothing.
  * The Pkill roll is drawn only when a round is actually fired.
  */
 export function resolveIntercept(
@@ -68,8 +85,12 @@ export function resolveIntercept(
   roe: Roe,
   tMs: number,
   stream: RandomStream,
+  noKinetic: readonly (readonly Point2[])[] = [],
 ): ResponseResult {
   if (!roeAllowsIntercept(roe, track)) return 'BLOCKED_BY_ROE';
+  if (noKinetic.length > 0 && inNoKinetic(noKinetic, track.pos.x, track.pos.z)) {
+    return 'BLOCKED_NO_KINETIC';
+  }
   if (tMs < eff.readyAtMs) return 'COOLDOWN';
   if (eff.ammo !== null && eff.ammo <= 0) return 'NO_AMMO';
   // A contact already defeated by EW is not worth a round (decision 54).
@@ -150,6 +171,7 @@ export function resolveEw(
     affected.push(c.id);
     c.defeated = true;
     c.holdUntilMs = null;
+    c.pendingAction = null;
     c.diving = false;
     if (eff.kind === 'EW_JAM') {
       c.control = jamReaction(spec.behaviour);

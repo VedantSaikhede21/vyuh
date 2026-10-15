@@ -14,7 +14,9 @@ import { sampleHeight, type Heightmap } from './terrain.ts';
 
 // Waypoint kinematics (SPEC §5): fly toward the next waypoint at its speed with
 // a per-class turn-rate and climb-rate limit; altitude is held AGL over the
-// heightmap. A DIVE waypoint ends the path with a straight terminal dive.
+// heightmap. A DIVE waypoint ends the path with a straight terminal dive. A DROP
+// waypoint releases the payload (CONTACT_DROPPED) when its hold ends; an RTH
+// waypoint switches to the return-home control when its hold ends.
 
 export type ContactStatus = 'PENDING' | 'ACTIVE' | 'NEUTRALISED' | 'REACHED_ASSET' | 'DESPAWNED';
 
@@ -51,6 +53,10 @@ export interface ContactState {
   /** Defeated by EW: still flying, but can never reach an asset; counts as resolved. */
   defeated: boolean;
   drift: DriftState | null;
+  /** DROP / RTH of the waypoint being held at, performed when the hold ends. */
+  pendingAction: 'DROP' | 'RTH' | null;
+  /** The payload was released (at most once per contact). */
+  dropped: boolean;
 }
 
 /** Terminal dive starts when horizontal distance ≤ AGL × this (≈ 34° dive). */
@@ -80,6 +86,8 @@ export function createContactState(spec: ContactSpec): ContactState {
     control: 'PATH',
     defeated: false,
     drift: null,
+    pendingAction: null,
+    dropped: false,
   };
 }
 
@@ -152,6 +160,33 @@ function finishPath(
   c.speedMps = 0;
 }
 
+/**
+ * DROP: release the payload once, unless defeated by EW (a spoofed contact still
+ * flies its drifted route but cannot complete its task). RTH: head home.
+ * Returns true when the contact switched to RTH.
+ */
+function performAction(
+  c: ContactState,
+  action: 'DROP' | 'RTH',
+  ctx: ContactStepContext,
+  out: EventDraft[],
+): boolean {
+  if (c.status !== 'ACTIVE' || c.defeated) return false;
+  if (action === 'RTH') {
+    c.control = 'RTH';
+    return true;
+  }
+  if (c.dropped) return false;
+  c.dropped = true;
+  out.push({
+    tMs: ctx.tMs,
+    type: 'CONTACT_DROPPED',
+    contactId: c.id,
+    payload: { x: c.pos.x, z: c.pos.z },
+  });
+  return false;
+}
+
 function arrive(
   c: ContactState,
   spec: ContactSpec,
@@ -161,9 +196,13 @@ function arrive(
 ): void {
   c.wpIndex += 1;
   c.diving = false;
+  const action = wp.action === 'DROP' || wp.action === 'RTH' ? wp.action : null;
   if (wp.holdS !== undefined && wp.holdS > 0) {
     c.holdUntilMs = ctx.tMs + Math.round(wp.holdS * 1000);
     c.speedMps = 0;
+    c.pendingAction = action;
+  } else if (action !== null && performAction(c, action, ctx, out)) {
+    return;
   }
   if (c.wpIndex >= spec.path.length) finishPath(c, spec, ctx, out);
 }
@@ -207,6 +246,9 @@ export function stepContact(
   if (c.holdUntilMs !== null) {
     if (ctx.tMs < c.holdUntilMs) return out;
     c.holdUntilMs = null;
+    const action = c.pendingAction;
+    c.pendingAction = null;
+    if (action !== null && performAction(c, action, ctx, out)) return out;
   }
   const wp = spec.path[c.wpIndex];
   if (wp === undefined) {
