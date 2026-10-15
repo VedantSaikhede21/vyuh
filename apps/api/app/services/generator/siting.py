@@ -7,6 +7,7 @@ import math
 import random
 from dataclasses import dataclass
 
+from app.services.generator.visibility import coverage
 from app.services.terrain import Building, Terrain
 
 Point = tuple[float, float]
@@ -15,9 +16,16 @@ Point = tuple[float, float]
 ASSET_RADIUS_M = 500.0
 FLAT_PROBE_M = 60.0
 FLAT_MAX_DH_M = 6.0
-#: Radar on the highest point within this radius of the asset (SPEC §6.1 siting).
+#: Radar on high ground within this radius of the asset (SPEC §6.1 siting).
 RADAR_SEARCH_M = 800.0
 RADAR_GRID_M = 50.0
+#: Of the highest RADAR_CANDIDATES points (≥ RADAR_SPACING_M apart), the radar takes the
+#: one that sees most of the approaches (low contacts on rings around it).
+RADAR_CANDIDATES = 10
+RADAR_SPACING_M = 150.0
+RADAR_MAST_M = 6.0
+COVERAGE_RINGS_M = (1500.0, 2500.0, 3500.0)
+COVERAGE_AGL_M = 30.0
 #: Settlement clusters: buildings linked within this distance; zone = box + buffer.
 CLUSTER_LINK_M = 300.0
 CLUSTER_MIN_BUILDINGS = 2
@@ -101,23 +109,47 @@ def pick_asset_xz(rng: random.Random, terrain: Terrain, boxes: list[list[Point]]
     return rng.choice(candidates) if candidates else (0.0, 0.0)
 
 
+_radar_sites: dict[tuple[str, Point], Point] = {}
+
+
 def radar_site(terrain: Terrain, asset: Point) -> Point:
-    """Highest grid point within RADAR_SEARCH_M of the asset (ties: nearest, then x, z)."""
+    """High ground near the asset with the best view of the approaches (decision 76).
+
+    Cached per (preset, asset): asset sites come from a small candidate grid.
+    """
+    key = (terrain.meta.name, asset)
+    if key not in _radar_sites:
+        _radar_sites[key] = _radar_site(terrain, asset)
+    return _radar_sites[key]
+
+
+def _radar_site(terrain: Terrain, asset: Point) -> Point:
     n = int(RADAR_SEARCH_M // RADAR_GRID_M)
-    best: tuple[float, float, float, float] | None = None
-    for i in range(-n, n + 1):
-        for j in range(-n, n + 1):
-            dx, dz = i * RADAR_GRID_M, j * RADAR_GRID_M
-            dist = math.hypot(dx, dz)
-            if dist > RADAR_SEARCH_M:
-                continue
-            x, z = asset[0] + dx, asset[1] + dz
-            key = (-terrain.height_at(x, z), dist, x, z)
-            if best is None or key < best:
-                best = key
-    if best is None:
+    points = sorted(
+        (
+            -terrain.height_at(asset[0] + i * RADAR_GRID_M, asset[1] + j * RADAR_GRID_M),
+            math.hypot(i, j) * RADAR_GRID_M,
+            asset[0] + i * RADAR_GRID_M,
+            asset[1] + j * RADAR_GRID_M,
+        )
+        for i in range(-n, n + 1)
+        for j in range(-n, n + 1)
+        if math.hypot(i, j) * RADAR_GRID_M <= RADAR_SEARCH_M
+    )
+    candidates: list[Point] = []
+    for _, _, x, z in points:
+        if all(math.dist((x, z), c) >= RADAR_SPACING_M for c in candidates):
+            candidates.append((x, z))
+        if len(candidates) == RADAR_CANDIDATES:
+            break
+    if not candidates:
         return asset
-    return best[2], best[3]
+
+    def score(p: Point) -> tuple[float, float]:
+        y = terrain.height_at(*p) + RADAR_MAST_M
+        return (coverage(terrain, p, y, COVERAGE_RINGS_M, COVERAGE_AGL_M), terrain.height_at(*p))
+
+    return max(candidates, key=score)
 
 
 def site(rng: random.Random, terrain: Terrain, difficulty: int) -> Site:
@@ -152,7 +184,7 @@ def site(rng: random.Random, terrain: Terrain, difficulty: int) -> Site:
         asset=asset,
         sensors=sensors,
         radar_xz=(rx, rz),
-        radar_y=terrain.height_at(rx, rz) + 6,
+        radar_y=terrain.height_at(rx, rz) + RADAR_MAST_M,
         no_kinetic=boxes,
     )
 

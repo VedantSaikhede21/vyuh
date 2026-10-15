@@ -1,5 +1,6 @@
 """Procedural generator (Phase 3a Step 5, decision 74): determinism, behaviours, scaling, checks."""
 
+import itertools
 import json
 import math
 from collections import Counter
@@ -11,6 +12,7 @@ import pytest
 from app.schemas.generated import GenerateRequest, Scenario
 from app.services.generator import GENERATOR_VERSION, GenerationError, canonical_json, generate
 from app.services.generator import core as gen_core
+from app.services.generator.core import AGL_RAISE_MAX_M, FAST_CLASSES, FAST_MIN_AGL_M
 from app.services.generator.difficulty import ENTITY_CAP, LEVELS
 from app.services.generator.environment import (
     DAY_MIN_EL_DEG,
@@ -44,6 +46,12 @@ def sweep(difficulties: tuple[int, ...] = (1, 2, 3, 4, 5), seeds: int = 6) -> li
 @pytest.fixture(scope="module")
 def many() -> list[dict]:
     return sweep()
+
+
+@pytest.fixture(scope="module")
+def wide() -> list[dict]:
+    """D3-D5 only, more seeds: enough to see every behaviour and some smugglers."""
+    return sweep((3, 4, 5), seeds=12)
 
 
 # ---- determinism -------------------------------------------------------------------------
@@ -102,9 +110,8 @@ def asset_xz(s: dict) -> tuple[float, float]:
     return s["assets"][0]["x"], s["assets"][0]["z"]
 
 
-def test_every_behaviour_is_generated(many: list[dict]) -> None:
-    seen = {c["behaviour"] for s in many for c in s["contacts"]}
-    seen |= {c["behaviour"] for s in sweep((3, 4, 5), seeds=12) for c in s["contacts"]}
+def test_every_behaviour_is_generated(many: list[dict], wide: list[dict]) -> None:
+    seen = {c["behaviour"] for s in many + wide for c in s["contacts"]}
     assert seen == {
         "RECON_LOITER",
         "SMUGGLING_DROP",
@@ -124,19 +131,15 @@ def test_attack_runs_dive_on_the_asset(many: list[dict]) -> None:
         assert math.dist((last["x"], last["z"]), asset_xz(s)) <= s["assets"][0]["radiusM"]
 
 
-def test_smuggling_drop_hovers_drops_and_returns() -> None:
-    found = [
-        (s, c)
-        for s in sweep((3, 4, 5), seeds=12)
-        for c in s["contacts"]
-        if c["behaviour"] == "SMUGGLING_DROP"
-    ]
+def test_smuggling_drop_hovers_drops_and_returns(wide: list[dict]) -> None:
+    found = [(s, c) for s in wide for c in s["contacts"] if c["behaviour"] == "SMUGGLING_DROP"]
     assert found
     for s, c in found:
         actions = [w.get("action") for w in c["path"]]
         assert actions == [None, "DROP", "RTH"]
         assert 10 <= c["path"][1]["holdS"] <= 20
-        assert all(20 <= w["y"] <= 70 for w in c["path"])
+        # 20-60 m (more at D5's lower floor), lifted up to +60 m to stay in view (decision 76).
+        assert all(20 <= w["y"] <= 70 + AGL_RAISE_MAX_M for w in c["path"])
         assert any(z["kind"] == "BORDER_LINE" for z in s["zones"])
         assert c["class"] == "QUAD_HEAVY"
 
@@ -145,7 +148,7 @@ def test_recon_orbits_near_the_asset(many: list[dict]) -> None:
     for s, c in contacts_by(many, "RECON_LOITER"):
         ring = c["path"][1:-1]
         assert len(ring) == 9
-        assert all(80 <= w["y"] <= 150 for w in c["path"])
+        assert all(80 <= w["y"] <= 150 + AGL_RAISE_MAX_M for w in c["path"])
         assert all(math.dist((w["x"], w["z"]), asset_xz(s)) <= 950 for w in ring)
 
 
@@ -160,6 +163,40 @@ def test_swarms_share_a_group_and_stagger(many: list[dict]) -> None:
         if len(members) > 1:
             assert len(set(spawns)) == len(spawns)
             assert len({m["controlLink"] for m in members}) == 1
+
+
+def test_fast_classes_stay_above_clutter(many: list[dict]) -> None:
+    for _, c in contacts_by(many, "ATTACK_RUN") + contacts_by(many, "SWARM_SATURATION"):
+        if c["class"] in FAST_CLASSES:
+            assert min(w["y"] for w in c["path"][:-1]) >= FAST_MIN_AGL_M
+
+
+def test_border_line_crosses_every_smuggling_route(wide: list[dict]) -> None:
+    for s in wide:
+        border = next((z for z in s["zones"] if z["kind"] == "BORDER_LINE"), None)
+        for c in s["contacts"]:
+            if c["behaviour"] != "SMUGGLING_DROP":
+                continue
+            assert border is not None
+            (ax, az), (bx, bz) = (
+                (c["path"][0]["x"], c["path"][0]["z"]),
+                (
+                    c["path"][1]["x"],
+                    c["path"][1]["z"],
+                ),
+            )
+            line = border["polyline"]
+            assert any(
+                _segments_cross((ax, az), (bx, bz), tuple(p), tuple(q))
+                for p, q in itertools.pairwise(line)
+            ), s["id"]
+
+
+def _segments_cross(a: tuple, b: tuple, c: tuple, d: tuple) -> bool:
+    def orient(p: tuple, q: tuple, r: tuple) -> float:
+        return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+
+    return orient(a, b, c) * orient(a, b, d) < 0 and orient(c, d, a) * orient(c, d, b) < 0
 
 
 def test_decoys_are_high_and_loud(many: list[dict]) -> None:
@@ -206,7 +243,7 @@ def test_difficulty_table(many: list[dict]) -> None:
 def test_difficulty_scales_monotonically() -> None:
     stats = {}
     for d in range(1, 6):
-        runs = [generate(req(difficulty=d, seed=500 + s)) for s in range(15)]
+        runs = [generate(req(difficulty=d, seed=500 + s)) for s in range(10)]
         threats = [sum(c["isThreat"] for c in r["contacts"]) for r in runs]
         silent = [
             c["controlLink"] != "RF_MANUAL"

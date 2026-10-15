@@ -16,6 +16,9 @@ from app.services.generator.streams import uniform
 
 #: SPEC §7: SMUGGLING_DROP hovers 10-20 s at the drop point.
 DROP_HOLD_S = (10.0, 20.0)
+#: Drop point distance from the asset, and its bearing offset from the approach axis.
+DROP_RANGE_M = (300.0, 900.0)
+DROP_BEARING_DEG = 15.0
 #: RECON_LOITER orbit (representative).
 ORBIT_RADIUS_M = (300.0, 600.0)
 ORBIT_POINTS = 8
@@ -86,7 +89,11 @@ def smuggling_drop(
 ) -> Path:
     """Low, across the border, hover 10-20 s with DROP, then RTH (back to spawn, despawn)."""
     axis = bearing_of(asset, spawn)
-    drop_p = bearing_point(asset, (axis + rng.uniform(-40, 40)) % 360, uniform(rng, 300, 900))
+    drop_p = bearing_point(
+        asset,
+        (axis + rng.uniform(-DROP_BEARING_DEG, DROP_BEARING_DEG)) % 360,
+        uniform(rng, *DROP_RANGE_M),
+    )
     hold = round(uniform(rng, *DROP_HOLD_S), 1)
     back = bearing_point(drop_p, bearing_of(drop_p, spawn), 80)
     pts = [spawn, drop_p]

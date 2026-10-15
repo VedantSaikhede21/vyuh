@@ -31,7 +31,6 @@ from app.services.generator.routes import (
     Point,
     bearing_of,
     bearing_point,
-    exposure_grid,
     fit_bearing,
     inside,
     masked_route,
@@ -40,6 +39,7 @@ from app.services.generator.routes import (
 from app.services.generator.siting import Site, effectors, site
 from app.services.generator.static_checks import contact_problems
 from app.services.generator.streams import stream, uniform
+from app.services.generator.visibility import FINE_STEP_M, GRID_N, exposure_grid, visible
 from app.services.scenarios import scenario_rule_violations
 from app.services.terrain import Terrain, load_terrain
 
@@ -55,6 +55,11 @@ DURATION_TAIL_S = 60
 DURATION_RANGE_S = (180, 900)
 #: Low threats (AGL ≤ this) from D3 take a terrain-masked route.
 MASK_AGL_M = 40.0
+#: Swarm followers: lateral spacing per rank (m) and height above the leader (m).
+SWARM_SPACING_M = (20.0, 40.0)
+SWARM_AGL_JITTER_M = 5.0
+#: A decoy orbit must be in view; its axis turns in DECOY_STEP_DEG steps until it is.
+DECOY_STEP_DEG = 20
 #: Behaviour weights for single threats at D3+ by time band.
 SINGLE_WEIGHTS = {
     "NIGHT": (("ATTACK_RUN", 0.4), ("SMUGGLING_DROP", 0.35), ("RECON_LOITER", 0.25)),
@@ -122,13 +127,36 @@ class Ctx:
     _exposure: dict[int, list[list[bool]]] = field(default_factory=dict)
     _grid: Any = None
 
+    def leg_exposure(self, bearing: float, agl: float, near_m: float, far_m: float) -> float:
+        """Share of points (every 100 m) on the axis between near_m and far_m from the asset
+        in view of the radar at `agl` (visibility heuristic)."""
+        steps = max(1, int((far_m - near_m) // 100))
+        seen = sum(
+            visible(
+                self.terrain,
+                self.site.radar_xz,
+                self.site.radar_y,
+                bearing_point(self.asset, bearing, near_m + (far_m - near_m) * k / steps),
+                agl,
+                FINE_STEP_M,
+            )
+            for k in range(steps + 1)
+        )
+        return seen / (steps + 1)
+
     def exposure(self, agl: float) -> list[list[bool]]:
         bucket = int(agl // 10) * 10
         if self._grid is None:
-            self._grid = self.terrain.coarse_grid(64)
+            self._grid = self.terrain.coarse_grid(GRID_N)
         if bucket not in self._exposure:
+            radius = self.level.spawn_m * ROUTE_RADIUS_FACTOR
             self._exposure[bucket] = exposure_grid(
-                self._grid, self.site.radar_xz, self.site.radar_y, float(bucket)
+                self.terrain,
+                self.site.radar_xz,
+                self.site.radar_y,
+                float(bucket),
+                self.asset,
+                radius,
             )
         return self._exposure[bucket]
 
@@ -165,10 +193,40 @@ def _conditions(req: GenerateRequest, level: Level, rng: random.Random) -> tuple
     return band, preset or weather
 
 
+#: Axis refinement: search ±AXIS_SEARCH_DEG in AXIS_STEP_DEG steps for an exposed final leg.
+AXIS_SEARCH_DEG = 60
+AXIS_STEP_DEG = 5
+#: Typical threat speed used to turn reveal seconds into metres for axis choice.
+REVEAL_REF_SPEED_MPS = 16.0
+#: A recon threat's critical point is this close (validator CRITICAL_RANGE_M), so the
+#: axis must be in view out to here plus the reveal distance.
+CRITICAL_RANGE_M = 1000.0
+
+
+def _best_axis(ctx: Ctx, axis: float) -> float:
+    """The bearing near `axis` whose final approach the radar sees best (proxy), so terrain
+    masking hides the outer route but not the last REVEAL seconds (decision 76)."""
+    level = ctx.level
+    agl = level.lowest_agl_m + 20
+    far = min(level.spawn_m - 300, CRITICAL_RANGE_M + level.reveal_s * REVEAL_REF_SPEED_MPS)
+    best: tuple[float, int, float] | None = None
+    for k in range(-AXIS_SEARCH_DEG // AXIS_STEP_DEG, AXIS_SEARCH_DEG // AXIS_STEP_DEG + 1):
+        b = (axis + k * AXIS_STEP_DEG) % 360
+        if not inside(bearing_point(ctx.asset, b, level.spawn_m), ctx.half):
+            continue
+        score = (ctx.leg_exposure(b, agl, 300, far), -abs(k), b)
+        if best is None or score > best:
+            best = score
+    return best[2] if best is not None else axis
+
+
 def _plan_threats(ctx: Ctx, rng: random.Random) -> list[Slot]:
     req, level, d = ctx.req, ctx.level, ctx.req.difficulty
     n_axes = rng.randint(*level.axes)
-    axes = [fit_bearing(ctx.asset, b, level.spawn_m, ctx.half) for b in pick_axes(rng, n_axes)]
+    axes = [
+        _best_axis(ctx, fit_bearing(ctx.asset, b, level.spawn_m, ctx.half))
+        for b in pick_axes(rng, n_axes)
+    ]
     slots: list[Slot] = []
 
     if req.threat_mix:
@@ -248,21 +306,129 @@ def _assign_links(slots: list[Slot], level: Level, rng: random.Random) -> None:
 # ---- building -----------------------------------------------------------------
 
 
-def _threat_agl(rng: random.Random, level: Level, behaviour: str) -> float:
+#: Fast classes stay above radar ground clutter (sim-core CLUTTER_AGL_M, 15 m): their
+#: short flight would otherwise leave too little warning (decision 76).
+FAST_CLASSES = frozenset({"FPV", "LOITERING_GENERIC"})
+FAST_MIN_AGL_M = 15.0
+
+
+def _threat_agl(rng: random.Random, level: Level, behaviour: str, cls: str) -> float:
     low = level.lowest_agl_m
     if behaviour == "RECON_LOITER":
         return round(uniform(rng, max(80.0, low), 150.0))
     if behaviour == "SMUGGLING_DROP":
         return round(uniform(rng, max(20.0, low), max(60.0, low + 10)))
-    return round(uniform(rng, low, low + 40))
+    agl = round(uniform(rng, low, low + 40))
+    return max(agl, FAST_MIN_AGL_M) if cls in FAST_CLASSES else agl
 
 
-def _approach(ctx: Ctx, rng: random.Random, spawn: Point, agl: float) -> list[Point]:
+#: A threat's final approach must be at least this share in view (heuristic), else it
+#: is flown higher in AGL_RAISE_STEP_M steps, up to AGL_RAISE_MAX_M (decision 76).
+MIN_LEG_EXPOSURE = 0.85
+AGL_RAISE_STEP_M = 10.0
+AGL_RAISE_MAX_M = 60.0
+
+
+def _segment_exposure(
+    ctx: Ctx, a: Point, b: Point, agl: float, from_b: float, length: float
+) -> float:
+    """Share in view of the points (every 100 m) on segment a→b lying `from_b` to
+    `from_b + length` metres before b."""
+    seg = math.dist(a, b)
+    lo, hi = min(from_b, seg), min(from_b + length, seg)
+    if hi - lo < 1 or seg < 1:
+        return 1.0
+    n = max(1, int((hi - lo) // 100))
+    pts = [
+        (b[0] + (a[0] - b[0]) * d / seg, b[1] + (a[1] - b[1]) * d / seg)
+        for d in (lo + (hi - lo) * k / n for k in range(n + 1))
+    ]
+    seen = sum(
+        visible(ctx.terrain, ctx.site.radar_xz, ctx.site.radar_y, p, agl, FINE_STEP_M) for p in pts
+    )
+    return seen / len(pts)
+
+
+#: If no lift keeps the approach in view, the bearing turns in BEARING_STEP_DEG steps
+#: (alternating sides) up to BEARING_MAX_DEG from the planned axis.
+BEARING_STEP_DEG = 10
+BEARING_MAX_DEG = 60
+#: Smugglers: bearing search around the border axis, and reference height / speed used to
+#: place the border on a well-exposed axis.
+SMUGGLER_MAX_DEG = 30
+SMUGGLER_REF_AGL_M = 40.0
+SMUGGLER_REF_SPEED_MPS = 12.5
+
+
+def _lift(ctx: Ctx, agl: float, a: Point, b: Point, from_b: float, length: float) -> float:
+    """The lowest AGL (from `agl` up) that keeps the final approach in view."""
+    return _lift_scored(ctx, agl, a, b, from_b, length)[1]
+
+
+def _lift_scored(
+    ctx: Ctx, agl: float, a: Point, b: Point, from_b: float, length: float
+) -> tuple[float, float]:
+    """(exposure, agl): the first lift reaching MIN_LEG_EXPOSURE, else the best one."""
+    best = (-1.0, agl)
+    k = 0
+    while k * AGL_RAISE_STEP_M <= AGL_RAISE_MAX_M:
+        trial = agl + k * AGL_RAISE_STEP_M
+        exposure = _segment_exposure(ctx, a, b, trial, from_b, length)
+        if exposure >= MIN_LEG_EXPOSURE:
+            return exposure, trial
+        if exposure > best[0]:
+            best = (exposure, trial)
+        k += 1
+    return best
+
+
+def _fit_approach(
+    ctx: Ctx,
+    bearing: float,
+    agl: float,
+    from_asset: float,
+    length: float,
+    max_deg: int = BEARING_MAX_DEG,
+) -> tuple[float, float]:
+    """(bearing, agl) near the planned bearing whose straight approach to the asset is in
+    view from `from_asset` to `from_asset + length` metres out (decision 76)."""
+    asset, spawn_m, half = ctx.asset, ctx.level.spawn_m, ctx.half
+    best = (-1.0, bearing, agl)
+    for k in range(2 * max_deg // BEARING_STEP_DEG + 1):
+        off = (k + 1) // 2 * BEARING_STEP_DEG * (1 if k % 2 else -1)
+        b = (bearing + off) % 360
+        spawn = bearing_point(asset, b, spawn_m)
+        if not inside(spawn, half):
+            continue
+        exposure, lifted = _lift_scored(ctx, agl, spawn, asset, from_asset, length)
+        if exposure >= MIN_LEG_EXPOSURE:
+            return b, lifted
+        if exposure > best[0]:
+            best = (exposure, b, lifted)
+    return best[1], best[2]
+
+
+def _set_agl(waypoints: list[dict], agl: float) -> None:
+    for w in waypoints:
+        if w.get("action") != "DIVE":
+            w["y"] = agl
+
+
+def _approach(ctx: Ctx, spawn: Point, agl: float, speed: float) -> list[Point]:
+    """Interior waypoints: a least-exposure route to a reveal point, then straight in.
+
+    Only low threats from D3 are masked, and only beyond the reveal point, which
+    leaves `reveal_s` of straight final approach (decision 76).
+    """
     if agl > MASK_AGL_M or ctx.req.difficulty < 3:
         return []
+    reveal_m = ctx.level.reveal_s * speed
+    if reveal_m >= ctx.level.spawn_m - 300:
+        return []
+    reveal = bearing_point(ctx.asset, bearing_of(ctx.asset, spawn), reveal_m)
     radius = ctx.level.spawn_m * ROUTE_RADIUS_FACTOR
     exposed = ctx.exposure(agl)
-    return masked_route(ctx._grid, exposed, spawn, ctx.asset, radius)
+    return [*masked_route(ctx._grid, exposed, spawn, reveal, ctx.asset, radius), reveal]
 
 
 def _contact(
@@ -294,8 +460,30 @@ def _build_threat(ctx: Ctx, slot: Slot, rng: random.Random) -> Group:
     spawn_s = uniform(rng, *SPAWN_WINDOW_S[ctx.req.difficulty])
     speed = cs.speed_for(rng, slot.cls)
     if slot.role == "DECOY":
-        spawn = bearing_point(asset, slot.axis, level.spawn_m)
-        p = bh.decoy(rng, spawn, asset, speed, laps=3)
+        p = None
+        for k in range(360 // DECOY_STEP_DEG):
+            axis = (slot.axis + k * DECOY_STEP_DEG) % 360
+            if not inside(bearing_point(asset, axis, level.spawn_m), ctx.half):
+                continue
+            spawn = bearing_point(asset, axis, level.spawn_m)
+            p = bh.decoy(rng, spawn, asset, speed, laps=3)
+            orbit = p.waypoints[1:]
+            agl = orbit[0]["y"]
+            seen = sum(
+                visible(
+                    ctx.terrain,
+                    ctx.site.radar_xz,
+                    ctx.site.radar_y,
+                    (w["x"], w["z"]),
+                    agl,
+                    FINE_STEP_M,
+                )
+                for w in orbit
+            )
+            if seen / len(orbit) >= MIN_LEG_EXPOSURE:
+                break
+        if p is None:
+            raise GenerationError("No decoy axis fits inside the map")
         return Group(
             slot,
             [_contact(slot, slot.cls, "DECOY", p.waypoints, uniform(rng, 5, 30), rng)],
@@ -303,14 +491,18 @@ def _build_threat(ctx: Ctx, slot: Slot, rng: random.Random) -> Group:
             p.end_s,
         )
 
-    agl = _threat_agl(rng, level, slot.behaviour)
+    agl = _threat_agl(rng, level, slot.behaviour, slot.cls)
     if slot.behaviour == "SMUGGLING_DROP":
-        axis = (ctx.border_axis if ctx.border_axis is not None else slot.axis) + rng.uniform(
-            -20, 20
+        base = ctx.border_axis if ctx.border_axis is not None else slot.axis
+        axis = fit_bearing(asset, (base + rng.uniform(-10, 10)) % 360, level.spawn_m, ctx.half)
+        # Stay within ±40° of the border axis so the route still crosses the border line.
+        axis, agl = _fit_approach(
+            ctx, axis, agl, bh.DROP_RANGE_M[0], level.reveal_s * speed, SMUGGLER_MAX_DEG
         )
-        axis = fit_bearing(asset, axis % 360, level.spawn_m, ctx.half)
         spawn = bearing_point(asset, axis, level.spawn_m)
         p = bh.smuggling_drop(rng, spawn, asset, agl, speed)
+        drop = p.extra["drop"]
+        _set_agl(p.waypoints, _lift(ctx, agl, spawn, drop, 0, level.reveal_s * speed))
         return Group(
             slot,
             [_contact(slot, slot.cls, slot.behaviour, p.waypoints, spawn_s, rng)],
@@ -320,13 +512,21 @@ def _build_threat(ctx: Ctx, slot: Slot, rng: random.Random) -> Group:
         )
 
     jitter = rng.uniform(-10, 10)
-    spawn = bearing_point(
-        asset,
-        fit_bearing(asset, (slot.axis + jitter) % 360, level.spawn_m, ctx.half),
-        level.spawn_m,
-    )
+    bearing = fit_bearing(asset, (slot.axis + jitter) % 360, level.spawn_m, ctx.half)
+    reveal_m = level.reveal_s * speed
+    if slot.behaviour == "RECON_LOITER":
+        bearing, agl = _fit_approach(ctx, bearing, agl, CRITICAL_RANGE_M, reveal_m)
+    else:
+        # Swarm followers fly a little higher than the leader; check with a margin.
+        margin = SWARM_AGL_JITTER_M if slot.role == "SWARM" else 0.0
+        bearing, agl = _fit_approach(ctx, bearing, agl - margin, 200, reveal_m - 200)
+        agl += margin
+    spawn = bearing_point(asset, bearing, level.spawn_m)
     if slot.behaviour == "RECON_LOITER":
         p = bh.recon_loiter(rng, spawn, asset, agl, speed, ctx.half)
+        ring0 = (p.waypoints[1]["x"], p.waypoints[1]["z"])
+        from_b = max(0.0, CRITICAL_RANGE_M - math.dist(ring0, asset))
+        _set_agl(p.waypoints, _lift(ctx, agl, spawn, ring0, from_b, level.reveal_s * speed))
         return Group(
             slot,
             [_contact(slot, slot.cls, slot.behaviour, p.waypoints, spawn_s, rng)],
@@ -334,7 +534,7 @@ def _build_threat(ctx: Ctx, slot: Slot, rng: random.Random) -> Group:
             spawn_s + p.end_s,
         )
 
-    route = _approach(ctx, rng, spawn, agl)
+    route = _approach(ctx, spawn, agl, speed)
     lead = bh.attack_run(spawn, route, asset, agl, speed)
     if slot.role != "SWARM":
         return Group(
@@ -350,7 +550,7 @@ def _build_threat(ctx: Ctx, slot: Slot, rng: random.Random) -> Group:
     t, last = spawn_s, spawn_s + lead.critical_s
     for k in range(1, slot.size):
         side = (k + 1) // 2 * (1 if k % 2 else -1)
-        off = side * uniform(rng, 30, 60)
+        off = side * uniform(rng, *SWARM_SPACING_M)
         dx, dz = off * math.sin(perp), off * math.cos(perp)
         path = []
         for w in lead.waypoints:
@@ -360,7 +560,9 @@ def _build_threat(ctx: Ctx, slot: Slot, rng: random.Random) -> Group:
                 | {
                     "x": w["x"] + dx * scale,
                     "z": w["z"] + dz * scale,
-                    "y": max(5.0, w["y"] + rng.uniform(-5, 5)) if w.get("action") != "DIVE" else 0,
+                    "y": w["y"] + rng.uniform(0, SWARM_AGL_JITTER_M)
+                    if w.get("action") != "DIVE"
+                    else 0,
                 }
             )
         t += uniform(rng, 3, 8)
@@ -561,7 +763,14 @@ def generate(req: GenerateRequest) -> dict:
     _assign_links(threat_slots, level, plan_rng)
     smugglers = [s for s in threat_slots if s.behaviour == "SMUGGLING_DROP"]
     if smugglers:
-        ctx.border_axis = smugglers[0].axis
+        # The border crosses the best-exposed smuggling axis (decision 76).
+        ctx.border_axis, _ = _fit_approach(
+            ctx,
+            smugglers[0].axis,
+            SMUGGLER_REF_AGL_M,
+            bh.DROP_RANGE_M[0],
+            level.reveal_s * SMUGGLER_REF_SPEED_MPS,
+        )
 
     threats = [_with_retries(ctx, s, _build_threat) for s in threat_slots]
     last_critical = max(g.critical_s for g in threats)
