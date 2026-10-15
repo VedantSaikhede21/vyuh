@@ -28,6 +28,9 @@ TRACK_COMMAND_TYPES = frozenset(
     }
 )
 
+# Events whose trackId is optional; when present, the track must already exist.
+OPTIONAL_TRACK_TYPES = frozenset({"CAMERA_SLEWED", "CONTACT_DROPPED"})
+
 
 @dataclass
 class LogState:
@@ -93,12 +96,14 @@ def check_batch(
             bad("UNKNOWN_CONTACT", f"Contact {contact!r} is not in the scenario")
         elif contact is not None and kind in DETECTION_TYPES and t < spawn[contact]:
             bad("DETECTION_BEFORE_SPAWN", f"{kind} for {contact} before it spawned")
+        elif contact is not None and kind == "CONTACT_DROPPED" and t < spawn[contact]:
+            bad("DROP_BEFORE_SPAWN", f"CONTACT_DROPPED for {contact} before it spawned")
         if kind == "SENSOR_TRACK_CREATED" and track is not None:
             if track in tracks:
                 bad("DUPLICATE_TRACK", f"Track {track} created twice")
             tracks.add(track)
         elif (
-            kind in TRACK_COMMAND_TYPES or (kind == "CAMERA_SLEWED" and track is not None)
+            kind in TRACK_COMMAND_TYPES or (kind in OPTIONAL_TRACK_TYPES and track is not None)
         ) and track not in tracks:
             # Covers "no classification before detection".
             bad("UNKNOWN_TRACK", f"{kind} for track {track!r} before the track existed")

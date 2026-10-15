@@ -90,6 +90,25 @@ def test_limit_mirrors_shared_ts() -> None:
         (
             [
                 started(),
+                track(1, 20_000),
+                ev(
+                    2,
+                    30_000,
+                    "CONTACT_DROPPED",
+                    contactId="c01",
+                    trackId="T009",
+                    payload={"x": 0, "z": 0},
+                ),
+            ],
+            "UNKNOWN_TRACK",
+        ),
+        (
+            [started(), ev(1, 1000, "CONTACT_DROPPED", contactId="c01", payload={"x": 0, "z": 0})],
+            "DROP_BEFORE_SPAWN",
+        ),
+        (
+            [
+                started(),
                 ev(1, 1000, "SESSION_ENDED", payload={"reason": "ABORTED"}),
                 ev(2, 1000, "TRACK_SELECTED", trackId="T001"),
             ],
@@ -99,6 +118,17 @@ def test_limit_mirrors_shared_ts() -> None:
 )
 def test_rule(events: list[dict[str, Any]], rule: str) -> None:
     assert rule in rules(events)
+
+
+def test_observed_and_unobserved_drops_are_fine() -> None:
+    drop = {"x": 10, "z": 600}
+    events = [
+        started(),
+        track(1, 20_000),
+        ev(2, 30_000, "CONTACT_DROPPED", contactId="c01", trackId="T001", payload=drop),
+    ]
+    assert rules(events) == []
+    assert rules([started(), ev(1, 30_000, "CONTACT_DROPPED", contactId="c01", payload=drop)]) == []
 
 
 def test_classification_after_detection_is_fine() -> None:
