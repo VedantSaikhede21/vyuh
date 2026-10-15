@@ -814,3 +814,122 @@ def test_unavoidable_excludes_only_the_decision_component() -> None:
     assert score.components.decision == 30
     assert score.metrics["scoredThreats"] == 2
     assert score.penalties == []  # no separate leak penalty
+
+
+# ---- default_v3 (Phase 3a: payload drops, decision 72) ------------------------------------
+
+TREE_V3 = load_tree("default_v3")
+
+LEAF_CASES_V3: list[tuple[str, dict[str, Any], str | None, float]] = [
+    *LEAF_CASES_V2,
+    (
+        "DROP_BEFORE_NEUTRALISED",
+        threat(outcome="LEAKED", droppedBeforeNeutralised=True, droppedS=171.0),
+        None,
+        0,
+    ),
+    (
+        "DECISION_NEUTRALISED_AFTER_DROP",
+        threat(
+            outcome="LEAKED",
+            droppedBeforeNeutralised=True,
+            droppedS=171.0,
+            neutralisedBy="INTERCEPT",
+            neutralisedMethod="1 round(s)",
+        ),
+        "decision",
+        15,
+    ),
+]
+
+
+@pytest.mark.parametrize(("leaf_id", "metrics", "component", "points"), LEAF_CASES_V3)
+def test_leaf_v3(
+    leaf_id: str, metrics: dict[str, Any], component: str | None, points: float
+) -> None:
+    reached = {leaf.leaf: leaf for leaf in evaluate(TREE_V3, metrics)}
+    assert leaf_id in reached, list(reached)
+    leaf = reached[leaf_id]
+    assert leaf.component == component
+    assert (leaf.adjust if leaf.adjust is not None else leaf.points) == points
+    text = render_feedback(leaf.feedback, metrics)
+    assert "{" not in text and "?" not in text
+    assert text.strip()
+
+
+def test_every_v3_leaf_has_a_case() -> None:
+    assert {leaf.leaf for leaf in TREE_V3.all_leaves()} == {case[0] for case in LEAF_CASES_V3}
+
+
+def test_v3_extends_v2_only_with_drop_leaves() -> None:
+    assert TREE_V3.component_max == TREE_V2.component_max
+    v2 = {leaf.leaf: leaf for leaf in TREE_V2.all_leaves()}
+    v3 = {leaf.leaf: leaf for leaf in TREE_V3.all_leaves()}
+    assert set(v3) - set(v2) == {"DROP_BEFORE_NEUTRALISED", "DECISION_NEUTRALISED_AFTER_DROP"}
+    for leaf_id, leaf in v2.items():
+        assert v3[leaf_id] == leaf, leaf_id
+
+
+def _drop_scenario() -> Scenario:
+    raw = json.loads(json.dumps(S01_RAW))
+    raw["scoringTreeId"] = "default_v3"
+    return Scenario.model_validate(raw)
+
+
+DROP = {"x": 0, "z": 600}
+
+
+def test_drop_before_neutralisation_is_a_leak() -> None:
+    sc = _drop_scenario()
+    events = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c01", trackId="T001"),
+        ev(2, 21_000, "CLASSIFIED", trackId="T001", payload={"class": "QUAD_SMALL"}),
+        ev(3, 171_000, "CONTACT_DROPPED", contactId="c01", payload=DROP),
+    ]
+    m = by_id(sc, events)["c01"]
+    assert (m["outcome"], m["droppedBeforeNeutralised"], m["warningS"]) == ("LEAKED", True, 151.0)
+    score = score_session(sc, events)
+    c01 = score.per_contact[0]
+    assert [leaf.root for leaf in c01.leaves][-2:] == ["DROP_BEFORE_NEUTRALISED", "DECISION_NONE"]
+    assert "Payload dropped before neutralisation (at 171 s)." in c01.feedback
+    assert score.components.decision == 0
+    assert score.metrics["leaked"] == 1
+
+
+def test_neutralised_after_the_drop_earns_half_the_decision() -> None:
+    sc = _drop_scenario()
+    events = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c01", trackId="T001"),
+        ev(4, 21_000, "MARKED_DETECTED", trackId="T001"),
+        ev(2, 171_000, "CONTACT_DROPPED", contactId="c01", trackId="T001", payload=DROP),
+        ev(3, 175_000, "CONTACT_NEUTRALISED", contactId="c01", payload={"by": "INTERCEPT"}),
+    ]
+    m = by_id(sc, events)["c01"]
+    assert m["outcome"] == "LEAKED"
+    score = score_session(sc, events)
+    assert "DECISION_NEUTRALISED_AFTER_DROP" in [leaf.root for leaf in score.per_contact[0].leaves]
+    assert score.components.decision == 15
+
+
+def test_drop_after_neutralisation_does_not_count() -> None:
+    # The sim never emits it (a neutralised contact is not ACTIVE); the metric still guards it.
+    sc = _drop_scenario()
+    events = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c01", trackId="T001"),
+        ev(2, 100_000, "CONTACT_NEUTRALISED", contactId="c01", payload={"by": "INTERCEPT"}),
+        ev(3, 171_000, "CONTACT_DROPPED", contactId="c01", payload=DROP),
+    ]
+    m = by_id(sc, events)["c01"]
+    assert (m["outcome"], m["droppedBeforeNeutralised"]) == ("NEUTRALISED", False)
+
+
+def test_a_drop_seconds_after_detection_is_unavoidable() -> None:
+    sc = _drop_scenario()
+    events = [
+        ev(1, 20_000, "SENSOR_TRACK_CREATED", contactId="c01", trackId="T001"),
+        ev(3, 21_000, "MARKED_DETECTED", trackId="T001"),
+        ev(2, 24_000, "CONTACT_DROPPED", contactId="c01", payload=DROP),
+    ]
+    score = score_session(sc, events)
+    roots = [leaf.root for leaf in score.per_contact[0].leaves]
+    assert roots[-2:] == ["DROP_BEFORE_NEUTRALISED", "DECISION_UNAVOIDABLE"]

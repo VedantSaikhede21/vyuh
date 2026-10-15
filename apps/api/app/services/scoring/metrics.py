@@ -150,12 +150,29 @@ def contact_metrics(scenario: Scenario, events: list[dict[str, Any]]) -> list[di
             for e in collateral_outcomes
         )
         reached = first(frozenset({"CONTACT_REACHED_ASSET"}))
+        # A payload drop before neutralisation is a leak (default_v3, decision 72). Only
+        # SIM_VERSION >= 3 logs contain CONTACT_DROPPED, so v1/v2 re-scores are unchanged.
+        dropped = first(frozenset({"CONTACT_DROPPED"}))
+        neutralised_t = neutralised[0]["tMs"] if neutralised else None
+        dropped_before_neutralised = dropped is not None and (
+            neutralised_t is None or dropped < neutralised_t
+        )
+        leak_t = min(
+            (
+                t
+                for t in (reached, dropped if dropped_before_neutralised else None)
+                if t is not None
+            ),
+            default=None,
+        )
         affiliation_calls = [e for e in evs if e["type"] == "AFFILIATION_SET"]
         cooldown_min = able_cooldown_min_s(scenario, link)
 
         types = {e["type"] for e in evs}
         if is_threat:
-            if "CONTACT_NEUTRALISED" in types:
+            if dropped_before_neutralised:
+                outcome = "LEAKED"
+            elif "CONTACT_NEUTRALISED" in types:
                 outcome = "NEUTRALISED"
             elif "CONTACT_REACHED_ASSET" in types:
                 outcome = "LEAKED"
@@ -179,8 +196,8 @@ def contact_metrics(scenario: Scenario, events: list[dict[str, Any]]) -> list[di
         if is_threat:
             ew_on_bird = False
         warning_s = (
-            (reached - first_detectable) / 1000
-            if reached is not None and first_detectable is not None
+            (leak_t - first_detectable) / 1000
+            if leak_t is not None and first_detectable is not None
             else None
         )
         unavoidable = (
@@ -236,6 +253,9 @@ def contact_metrics(scenario: Scenario, events: list[dict[str, Any]]) -> list[di
                 "jammedAsCollateral": collateral and jammed,
                 "ewOnBird": ew_on_bird,
                 "reachedAssetTMs": reached,
+                "droppedTMs": dropped,
+                "droppedS": None if dropped is None else dropped / 1000,
+                "droppedBeforeNeutralised": dropped_before_neutralised,
                 "warningS": warning_s,
                 "respondingEffectorCooldownMinS": cooldown_min,
                 "unavoidableDecision": unavoidable,

@@ -1,0 +1,355 @@
+{
+  "id": "default_v3",
+  "description": "Phase 3a tree: v2 plus payload drops. A threat that dropped its payload before it was neutralised is LEAKED (metrics, decision 72): DROP_BEFORE_NEUTRALISED explains it, and a threat neutralised only after the drop earns 15 decision points.",
+  "componentMax": {
+    "detection": 25,
+    "classification": 25,
+    "decision": 30,
+    "report": 0,
+    "efficiency": 0
+  },
+  "root": "isThreat",
+  "nodes": {
+    "isThreat": {
+      "if": {
+        "metric": "isThreat",
+        "op": "==",
+        "value": true
+      },
+      "then": "detectable",
+      "else": "nonThreatFratricide"
+    },
+    "detectable": {
+      "if": {
+        "metric": "firstDetectableTMs",
+        "op": "exists"
+      },
+      "then": "detected",
+      "else": {
+        "leaf": "NOT_DETECTABLE",
+        "excluded": true,
+        "feedback": "This threat was never detectable by your sensors, so it is not scored."
+      }
+    },
+    "detected": {
+      "if": {
+        "metric": "traineeDetectedTMs",
+        "op": "exists"
+      },
+      "then": "latency",
+      "else": {
+        "leaf": "MISSED",
+        "component": "detection",
+        "points": 0,
+        "feedback": "Threat was on radar from {firstDetectableS:.0f} s but you never acted on its track."
+      }
+    },
+    "latency": {
+      "bands": {
+        "metric": "detectionLatencyS",
+        "edges": [
+          5,
+          15,
+          30
+        ]
+      },
+      "leaves": [
+        {
+          "leaf": "LATENCY_UNDER_5S",
+          "component": "detection",
+          "points": 25,
+          "feedback": "Fast detection: acted {detectionLatencyS:.1f} s after the track appeared."
+        },
+        {
+          "leaf": "LATENCY_5_TO_15S",
+          "component": "detection",
+          "points": 18,
+          "feedback": "Detected {detectionLatencyS:.1f} s after the track appeared; aim for under 5 s."
+        },
+        {
+          "leaf": "LATENCY_15_TO_30S",
+          "component": "detection",
+          "points": 10,
+          "feedback": "Slow detection: {detectionLatencyS:.1f} s after the track appeared. Scan the radar continuously."
+        },
+        {
+          "leaf": "LATENCY_OVER_30S",
+          "component": "detection",
+          "points": 4,
+          "feedback": "Very slow detection: {detectionLatencyS:.1f} s after the track appeared."
+        }
+      ],
+      "next": "classified"
+    },
+    "classified": {
+      "if": {
+        "metric": "classifiedAs",
+        "op": "exists"
+      },
+      "then": "classExact",
+      "else": {
+        "leaf": "NOT_CLASSIFIED",
+        "component": "classification",
+        "points": 0,
+        "feedback": "Never classified. Identify every track you act on.",
+        "next": "decisionNeutralised"
+      }
+    },
+    "classExact": {
+      "if": {
+        "metric": "classificationCorrect",
+        "op": "==",
+        "value": "EXACT"
+      },
+      "then": {
+        "leaf": "CLASS_EXACT",
+        "component": "classification",
+        "points": 25,
+        "feedback": "Correctly classified as {classifiedAs}.",
+        "next": "decisionNeutralised"
+      },
+      "else": "classCategory"
+    },
+    "classCategory": {
+      "if": {
+        "metric": "classificationCorrect",
+        "op": "==",
+        "value": "CATEGORY"
+      },
+      "then": {
+        "leaf": "CLASS_CATEGORY",
+        "component": "classification",
+        "points": 12,
+        "feedback": "Classified as {classifiedAs}: right category, but it was a {trueClass}.",
+        "next": "decisionNeutralised"
+      },
+      "else": "classWrongWhy"
+    },
+    "classWrongWhy": {
+      "if": {
+        "metric": "identifiableWhenClassified",
+        "op": "==",
+        "value": false
+      },
+      "then": {
+        "leaf": "CLASS_WRONG_BEFORE_IDENTIFIABLE",
+        "component": "classification",
+        "points": 0,
+        "feedback": "Classified as {classifiedAs} before it was identifiable; it was a {trueClass}. Wait for a clear EO/IR view.",
+        "next": "decisionNeutralised"
+      },
+      "else": {
+        "leaf": "CLASS_WRONG",
+        "component": "classification",
+        "points": 0,
+        "feedback": "Misclassified as {classifiedAs}; it was a {trueClass}.",
+        "next": "decisionNeutralised"
+      }
+    },
+    "decisionNeutralised": {
+      "if": {
+        "metric": "outcome",
+        "op": "==",
+        "value": "NEUTRALISED"
+      },
+      "then": "ewLesson",
+      "else": "decisionDropped"
+    },
+    "ewLesson": {
+      "if": {
+        "metric": "ineffectiveEw",
+        "op": ">",
+        "value": 0
+      },
+      "then": {
+        "leaf": "DECISION_EW_LESSON",
+        "feedback": "Your earlier order had no effect: {ineffectiveEwVerb} does nothing against a {controlLinkLabel} drone.",
+        "next": "neutralisedAward"
+      },
+      "else": "neutralisedAward"
+    },
+    "neutralisedAward": {
+      "if": {
+        "metric": "outcome",
+        "op": "==",
+        "value": "NEUTRALISED"
+      },
+      "then": {
+        "leaf": "DECISION_NEUTRALISED",
+        "component": "decision",
+        "points": 30,
+        "feedback": "Neutralised before it reached the asset ({neutralisedMethod})."
+      },
+      "else": "decisionUnavoidable"
+    },
+    "decisionDropped": {
+      "if": {
+        "metric": "droppedBeforeNeutralised",
+        "op": "==",
+        "value": true
+      },
+      "then": {
+        "leaf": "DROP_BEFORE_NEUTRALISED",
+        "feedback": "Payload dropped before neutralisation (at {droppedS:.0f} s).",
+        "next": "dropNeutralisedLate"
+      },
+      "else": "decisionUnavoidable"
+    },
+    "dropNeutralisedLate": {
+      "if": {
+        "metric": "neutralisedBy",
+        "op": "exists"
+      },
+      "then": {
+        "leaf": "DECISION_NEUTRALISED_AFTER_DROP",
+        "component": "decision",
+        "points": 15,
+        "feedback": "Neutralised ({neutralisedMethod}) only after the payload was dropped. Engage during the approach or the hover."
+      },
+      "else": "decisionUnavoidable"
+    },
+    "decisionUnavoidable": {
+      "if": {
+        "metric": "unavoidableDecision",
+        "op": "==",
+        "value": true
+      },
+      "then": {
+        "leaf": "DECISION_UNAVOIDABLE",
+        "excludeComponents": [
+          "decision"
+        ],
+        "feedback": "It reached the asset {warningS:.0f} s after it became detectable, less than one effector cycle; your decision is not scored for this threat."
+      },
+      "else": "decisionFired"
+    },
+    "decisionFired": {
+      "if": {
+        "metric": "responsesFired",
+        "op": ">",
+        "value": 0
+      },
+      "then": {
+        "leaf": "DECISION_ENGAGED_NOT_NEUTRALISED",
+        "component": "decision",
+        "points": 15,
+        "feedback": "Engaged ({engagements}) but did not neutralise. Engage earlier to leave time to re-attack."
+      },
+      "else": "decisionIneffectiveEw"
+    },
+    "decisionIneffectiveEw": {
+      "if": {
+        "metric": "ineffectiveEw",
+        "op": ">",
+        "value": 0
+      },
+      "then": {
+        "leaf": "DECISION_INEFFECTIVE_EW",
+        "component": "decision",
+        "points": 5,
+        "feedback": "{ineffectiveEwVerb} has no effect on a {controlLinkLabel} drone. Match the response to the link."
+      },
+      "else": "decisionOrdered"
+    },
+    "decisionOrdered": {
+      "if": {
+        "metric": "responsesOrdered",
+        "op": ">",
+        "value": 0
+      },
+      "then": {
+        "leaf": "DECISION_INEFFECTIVE",
+        "component": "decision",
+        "points": 5,
+        "feedback": "Response ordered but it never took effect (last result: {lastResult}). Check range, cooldown and ROE."
+      },
+      "else": {
+        "leaf": "DECISION_NONE",
+        "component": "decision",
+        "points": 0,
+        "feedback": "No response ordered against a confirmed threat."
+      }
+    },
+    "nonThreatFratricide": {
+      "if": {
+        "metric": "outcome",
+        "op": "==",
+        "value": "FRATRICIDE"
+      },
+      "then": {
+        "leaf": "FRATRICIDE",
+        "adjust": -40,
+        "feedback": "Fired on a friendly {trueClass}. Confirm affiliation before engaging."
+      },
+      "else": "nonThreatFriendlyJammed"
+    },
+    "nonThreatFriendlyJammed": {
+      "if": {
+        "metric": "outcome",
+        "op": "==",
+        "value": "FRIENDLY_JAMMED"
+      },
+      "then": {
+        "leaf": "FRIENDLY_JAMMED",
+        "adjust": -15,
+        "feedback": "Your jam cut the link of a friendly {trueClass}. Check the sector for own drones before jamming."
+      },
+      "else": "nonThreatEngaged"
+    },
+    "nonThreatEngaged": {
+      "if": {
+        "metric": "outcome",
+        "op": "==",
+        "value": "WRONGLY_ENGAGED"
+      },
+      "then": {
+        "leaf": "WRONGLY_ENGAGED",
+        "adjust": -25,
+        "feedback": "Engaged a non-threat ({trueClass}). Identify before you engage."
+      },
+      "else": "nonThreatCivilianJammed"
+    },
+    "nonThreatCivilianJammed": {
+      "if": {
+        "metric": "outcome",
+        "op": "==",
+        "value": "CIVILIAN_JAMMED"
+      },
+      "then": {
+        "leaf": "CIVILIAN_JAMMED",
+        "adjust": -5,
+        "feedback": "A civilian drone in the jam sector lost its link — check the sector before jamming."
+      },
+      "else": "nonThreatBirdEw"
+    },
+    "nonThreatBirdEw": {
+      "if": {
+        "metric": "ewOnBird",
+        "op": "==",
+        "value": true
+      },
+      "then": {
+        "leaf": "BIRD_EW_ORDERED",
+        "adjust": 0,
+        "feedback": "You ordered EW on a {trueClass}: this was a bird — check the spectrogram/EO before engaging."
+      },
+      "else": "nonThreatIdentified"
+    },
+    "nonThreatIdentified": {
+      "if": {
+        "metric": "classificationCorrect",
+        "op": "==",
+        "value": "EXACT"
+      },
+      "then": {
+        "leaf": "NON_THREAT_IDENTIFIED",
+        "adjust": 5,
+        "feedback": "Correctly identified a non-threat ({trueClass}) and held fire."
+      },
+      "else": {
+        "leaf": "NON_THREAT_LEFT_ALONE",
+        "feedback": "Non-threat ({trueClass}) was left alone."
+      }
+    }
+  }
+}
