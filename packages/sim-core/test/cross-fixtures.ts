@@ -1,4 +1,4 @@
-import { sampleHeight } from '../src/index.ts';
+import { localInstantMs, sampleHeight, sunPosition } from '../src/index.ts';
 import { presetWorld } from './fixtures.ts';
 
 // Values the API's Python copies of simple maths must match (decision 73):
@@ -25,8 +25,37 @@ function terrainHeights(preset: string): [number, number, number][] {
   return points.map(([x, z]) => [x, z, sampleHeight(world.heightmap, x, z)]);
 }
 
+const SUN_DATES = ['2026-01-15', '2026-04-01', '2026-07-20', '2026-11-20'];
+const SUN_TIMES = [
+  '05:30',
+  '07:00',
+  '09:10',
+  '12:00',
+  '15:40',
+  '17:20',
+  '18:00',
+  '18:40',
+  '19:30',
+  '22:50',
+];
+
+/** [date, time, sun elevation °] at each file preset's origin and UTC offset. */
+function sunElevations(preset: string): [string, string, number][] {
+  const meta = presetWorld(preset).meta;
+  if (meta === null) throw new Error(`${preset} has no meta`);
+  return SUN_DATES.flatMap((date) =>
+    SUN_TIMES.map((time): [string, string, number] => [
+      date,
+      time,
+      sunPosition(meta.origin.lat, meta.origin.lon, localInstantMs(date, time, meta.utcOffsetMin))
+        .elDeg,
+    ]),
+  );
+}
+
 export function recordCrossChecks(): Record<string, unknown> {
   return {
     terrain_heights: Object.fromEntries(FILE_PRESETS.map((p) => [p, terrainHeights(p)])),
+    sun_elevations: Object.fromEntries(FILE_PRESETS.map((p) => [p, sunElevations(p)])),
   };
 }
