@@ -75,24 +75,37 @@ function Action({
   );
 }
 
-function EffectorLine({ e, tMs }: { e: EffectorView; tMs: number }) {
+/**
+ * Effector status as one compact cell (three fit side by side, so the action bar
+ * needs no scroll at 1366×768): class and readiness, then rounds and range.
+ */
+function EffectorCell({ e, tMs }: { e: EffectorView; tMs: number }) {
   const left = Math.max(0, e.readyAtMs - tMs);
+  const ready = left > 0 ? `${(left / 1000).toFixed(1)} s` : 'Ready';
+  const rounds = e.ammo === null ? 'unlimited' : `${e.ammo}`;
   return (
-    <div className="flex items-center gap-2 whitespace-nowrap">
-      <CooldownRing remaining={e.cooldownMs ? left / e.cooldownMs : 0} size={14} />
-      <span className="w-20 truncate text-label text-text-1" title={e.id}>
-        {EFFECTOR_LABEL[e.kind]} <span className="text-text-3">{e.id}</span>
-      </span>
-      <span className="text-label">Ammo</span>
-      <span className="w-6 text-readout">{e.ammo === null ? '∞' : e.ammo}</span>
-      <span className="text-label">Rng</span>
-      <span className="text-readout">
-        {formatKm(e.rangeM)}
-        <span className="ml-1 text-text-3">km</span>
-      </span>
-      <span className={cn('ml-auto text-label', left > 0 ? 'text-warn' : 'text-text-1')}>
-        {left > 0 ? `${(left / 1000).toFixed(1)} s` : 'Ready'}
-      </span>
+    <div
+      role="group"
+      aria-label={`${e.id}: ${ready}, rounds ${rounds}, range ${formatKm(e.rangeM)} km`}
+      className="min-w-0 space-y-0.5"
+    >
+      <div className="flex items-center gap-1.5 whitespace-nowrap">
+        <CooldownRing remaining={e.cooldownMs ? left / e.cooldownMs : 0} size={12} />
+        <span className="text-label text-text-1">{EFFECTOR_LABEL[e.kind]}</span>
+        <span className={cn('ml-auto text-label', left > 0 ? 'text-warn' : 'text-text-2')}>
+          {ready}
+        </span>
+      </div>
+      <div className="flex items-baseline justify-between whitespace-nowrap text-readout">
+        <span>
+          <span className="text-text-3">×</span>
+          {e.ammo === null ? '∞' : e.ammo}
+        </span>
+        <span>
+          {formatKm(e.rangeM)}
+          <span className="ml-0.5 text-text-3">km</span>
+        </span>
+      </div>
     </div>
   );
 }
@@ -255,9 +268,12 @@ export function ActionBar({ runtime, commands }: { runtime: SimRuntime; commands
             )}
           </div>
         </Group>
-        <div className="mt-auto space-y-0.5 border-t border-line-1 pt-1.5">
+        <div
+          aria-label="Effectors"
+          className="mt-auto grid grid-cols-3 gap-x-3 border-t border-line-1 pt-1.5"
+        >
           {hud.effectors.map((e) => (
-            <EffectorLine key={e.id} e={e} tMs={hud.tMs} />
+            <EffectorCell key={e.id} e={e} tMs={hud.tMs} />
           ))}
         </div>
       </div>

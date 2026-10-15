@@ -8,7 +8,7 @@ browser download.
 | Spec | What it checks |
 |---|---|
 | `visual.spec.ts` | Screenshot baselines at 1366×768 and 1920×1080: landing, login, training list, briefing, result; console with a selected track, EO CUE / ACQ / TRK, RF tab, leak banner |
-| `a11y.spec.ts` | No horizontal scroll at 1366×768; core actions by keyboard alone; every order echoed in Comms within 100 ms; deuteranopia / protanopia captures (attached to the report, for the DESIGN §13 review) |
+| `a11y.spec.ts` | No horizontal scroll at 1366×768; all effectors visible in the action bar without scrolling (1366×768, 1920×1080); core actions by keyboard alone; every order echoed in Comms within 100 ms; deuteranopia / protanopia captures (attached to the report, for the DESIGN §13 review) |
 | `fps.spec.ts` | Frame rate in S13, S14 and a 60-bird stress case (tag `@fps`, not part of `pnpm e2e`) |
 | `smoke.spec.ts` | The landing page renders |
 
