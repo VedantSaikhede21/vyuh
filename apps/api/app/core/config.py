@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     guest_ttl_hours: int = 24
     log_level: str = "INFO"
 
+    #: POST /scenarios/generate calls per user per minute (in memory).
+    generate_rate_limit_per_min: int = 10
+
     #: Terrain presets (<dir>/<PRESET>/meta.json, heightmap.u16, buildings.geojson).
     terrain_dir: Path = DEFAULT_TERRAIN_DIR
 

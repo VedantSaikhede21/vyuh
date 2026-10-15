@@ -254,6 +254,7 @@ docker compose up        # offline full stack
 | `OPEN_METEO_ENABLED` | Live weather toggle (cached; off in offline) |
 | `GUEST_MODE_ENABLED`, `GUEST_TTL_HOURS` | Demo guests and cleanup window |
 | `LOG_LEVEL` | `INFO` default |
+| `GENERATE_RATE_LIMIT_PER_MIN` | `POST /scenarios/generate` calls per user per minute (default 10) |
 | `TERRAIN_DIR` | Terrain presets for the generator (default: repo `apps/web/public/terrain`; Docker image `/app/terrain`) |
 
 ---
