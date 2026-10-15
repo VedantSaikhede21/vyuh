@@ -1,5 +1,7 @@
-# Local development: Postgres only (Phase 0).
-# The full offline stack (postgres + api + web) is added in Phase 6.
+# Local development: `docker compose up -d` starts Postgres only.
+# `docker compose --profile api up -d --build` also runs the API image on :8000
+# (stop `pnpm dev`'s API first). The web service is added in Phase 6.
+# Known issue: an older container holding :5432 (CLAUDE.md §14) blocks `up`.
 services:
   postgres:
     image: postgres:17-alpine
@@ -18,6 +20,25 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+
+  api:
+    profiles: ['api']
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ENV: offline
+      DATABASE_URL: postgresql+psycopg://vyuh:vyuh@postgres:5432/vyuh
+      AUTH_MODE: local
+      LOCAL_JWT_SECRET: ${LOCAL_JWT_SECRET:?set LOCAL_JWT_SECRET (>= 32 bytes) in the shell or a root .env}
+      CORS_ORIGINS: http://localhost:3000
+      LLM_ENABLED: 'false'
+      OPEN_METEO_ENABLED: 'false'
+    ports:
+      - '8000:8000'
 
 volumes:
   pgdata:

@@ -1,0 +1,13 @@
+# Build context for apps/api/Dockerfile (repo root). Everything is excluded
+# except the API source and the terrain files the generator reads.
+**
+!apps/api/
+apps/api/.venv
+apps/api/.env
+apps/api/.pytest_cache
+apps/api/.ruff_cache
+apps/api/tests
+apps/api/**/__pycache__
+!apps/web/public/terrain/*/meta.json
+!apps/web/public/terrain/*/heightmap.u16
+!apps/web/public/terrain/*/buildings.geojson

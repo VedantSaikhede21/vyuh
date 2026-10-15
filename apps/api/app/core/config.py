@@ -2,12 +2,17 @@
 
 from enum import StrEnum
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated, Self
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 MIN_LOCAL_SECRET_BYTES = 32
+#: apps/api in the repo (/app in the Docker image, where TERRAIN_DIR is set explicitly).
+API_ROOT = Path(__file__).resolve().parents[2]
+#: Dev/test default for TERRAIN_DIR: the web app's committed presets (one source of truth).
+DEFAULT_TERRAIN_DIR = API_ROOT.parent / "web" / "public" / "terrain"
 
 
 class Env(StrEnum):
@@ -49,12 +54,20 @@ class Settings(BaseSettings):
     guest_ttl_hours: int = 24
     log_level: str = "INFO"
 
+    #: Terrain presets (<dir>/<PRESET>/meta.json, heightmap.u16, buildings.geojson).
+    terrain_dir: Path = DEFAULT_TERRAIN_DIR
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _split_origins(cls, value: object) -> object:
         if isinstance(value, str):
             return [o.strip().rstrip("/") for o in value.split(",") if o.strip()]
         return value
+
+    @field_validator("terrain_dir", mode="before")
+    @classmethod
+    def _default_terrain_dir(cls, value: object) -> object:
+        return DEFAULT_TERRAIN_DIR if value in (None, "") else value
 
     @field_validator("database_url")
     @classmethod
