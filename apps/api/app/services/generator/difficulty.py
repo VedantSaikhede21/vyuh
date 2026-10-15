@@ -22,8 +22,6 @@ class Level:
     roe: str
     #: Approach axes for single threats (1-3, SPEC §7.1 / requirements 3a.1).
     axes: tuple[int, int]
-    #: Minimum warning (s) between first track and the threat's critical point (validator).
-    min_warning_s: float
 
 
 LEVELS: dict[int, Level] = {
@@ -39,7 +37,6 @@ LEVELS: dict[int, Level] = {
         ammo_per_threat=3,
         roe="WEAPONS_FREE",
         axes=(1, 1),
-        min_warning_s=60,
     ),
     2: Level(
         threats=(1, 2),
@@ -53,7 +50,6 @@ LEVELS: dict[int, Level] = {
         ammo_per_threat=2,
         roe="WEAPONS_FREE",
         axes=(1, 1),
-        min_warning_s=55,
     ),
     3: Level(
         threats=(2, 4),
@@ -67,7 +63,6 @@ LEVELS: dict[int, Level] = {
         ammo_per_threat=1.5,
         roe="WEAPONS_TIGHT",
         axes=(1, 2),
-        min_warning_s=50,
     ),
     4: Level(
         threats=(4, 8),
@@ -81,7 +76,6 @@ LEVELS: dict[int, Level] = {
         ammo_per_threat=1.2,
         roe="WEAPONS_TIGHT",
         axes=(2, 3),
-        min_warning_s=45,
     ),
     5: Level(
         threats=(8, 20),
@@ -95,7 +89,6 @@ LEVELS: dict[int, Level] = {
         ammo_per_threat=1.0,
         roe="WEAPONS_TIGHT",
         axes=(2, 3),
-        min_warning_s=30,
     ),
 }
 
