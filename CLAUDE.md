@@ -252,6 +252,7 @@ docker compose up        # offline full stack
 | `OPEN_METEO_ENABLED` | Live weather toggle (cached; off in offline) |
 | `GUEST_MODE_ENABLED`, `GUEST_TTL_HOURS` | Demo guests and cleanup window |
 | `LOG_LEVEL` | `INFO` default |
+| `TERRAIN_DIR` | Terrain presets for the generator (default: repo `apps/web/public/terrain`; Docker image `/app/terrain`) |
 
 ---
 

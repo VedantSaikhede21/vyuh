@@ -32,6 +32,15 @@ pnpm dev           # web on http://localhost:3000, API on http://localhost:8000/
 
 Open http://localhost:3000/login, pick a demo account (e.g. `trainee1@demo`) and sign in — `/train` shows your user and role.
 
+## API in Docker (optional)
+
+```bash
+docker build -f apps/api/Dockerfile -t vyuh-api .        # build from the repo root
+LOCAL_JWT_SECRET=<≥ 32 bytes> docker compose --profile api up -d --build
+```
+
+The `api` profile runs migrations, seeds demo data and serves on :8000 (stop `pnpm dev`'s API first). Plain `docker compose up -d` still starts Postgres only. Known issue: an older container holding port 5432 (`sih-2026-postgres-1`) makes `up` fail until it is stopped.
+
 ## Checks
 
 ```bash
