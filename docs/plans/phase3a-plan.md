@@ -121,9 +121,9 @@ scenario's entity count and draw calls so the Intel headroom can be judged.
 
 11. **`docs: ROE semantics and generator in SPEC`**: SPEC §8 ROE table (FREE / TIGHT with class check / HOLD / NO_KINETIC, with the "track or intercept point" wording per Q3), §7.1 time bands and weather presets, §11 generate payload (`GenerateRequest`), §12 Phase 3 status; note in §9 / §12 Phase 4 that trends use Assessment sessions only. Decisions for every non-obvious choice.
 
-12. **FPS and tick at the cap**: generate the worst-case D5 scenario (60 entities); `fps.spec.ts` gets a case that creates it through the API and plays it as a real session (works on a production build); sim tick bench at 60 entities on PUNJAB_PLAINS (budget 2 ms). Report the scenario's entity count and draw calls as well as FPS, to judge Intel headroom.
+12. **FPS and tick at the cap**: generate the worst-case D5 scenario (60 entities); `fps.spec.ts` gets a case that creates it through the API and plays it as a real session (works on a production build); sim tick bench at 60 entities on PUNJAB_PLAINS (budget 2 ms). Report the scenario's entity count and draw calls as well as FPS, to judge Intel headroom (after the bird cap, decision 79). Also re-measure S13 on JK_MOUNTAIN with its new buildings (decision 78) and include generated JK D4/D5 scenarios.
 
-13. **Optional** (only if 0–12 are done): live weather via Open-Meteo behind `OPEN_METEO_ENABLED`, cached, preset fallback; `LIVE` in the request.
+13. ~~Optional live weather~~ — **skipped** by the user (2026-10-15); parked under Open ideas for Phase 6 (no `httpx` runtime dependency).
 
 14. **Close-out**: done-criteria with evidence, lint/tests/pytest/gen:schemas/build, `pnpm e2e`, FPS, CLAUDE.md §14, then STOP.
 

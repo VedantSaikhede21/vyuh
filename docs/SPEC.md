@@ -306,13 +306,16 @@ Modules: `rng.ts`, `clock.ts`, `coords.ts`, `terrain.ts` (heightmap sampling + L
 - `BIRD_FLOCK` — boids flock, erratic altitude, slow.
 
 ### 7.1 Difficulty scaling (generator defaults; tune during playtests)
+Minimum warning and the D1–D2 first-track target are shared constants (`packages/shared/src/difficulty.ts`, exported to the API); the generator targets them and the sim-core validator enforces them (decisions 75, 79).
 | Parameter | 1 | 2 | 3 | 4 | 5 |
 |---|---|---|---|---|---|
 | Threat contacts | 1 | 1–2 | 2–4 | 4–8 | 8–20 |
 | False contacts | 0 | 1–2 | 2–4 | 4–8 | 8–12 |
+| Bird flock members (total) | ≤ 15 (25 % of the 60-entity cap; flocks of 3–5; threats have budget priority) | ≤ 15 | ≤ 15 | ≤ 15 | ≤ 15 |
 | Lowest threat altitude AGL | 100 m | 60 m | 30 m | 15 m | 5 m |
 | Share of silent links | 0% | 0% | 25% | 50% | 70% |
-| Spawn distance (warning time) | 6 km | 5 km | 4 km | 3 km | 2.5 km |
+| Spawn distance | first threat 2.6 km from the radar, spawning in the first 3 s (first radar track ≤ 30 s); others 3.5 km | as D1 | 4 km | 3 km | 2.5 km |
+| Minimum warning (first radar track → reaching the asset / dropping; recon: → within 1 km) | 60 s | 50 s | 45 s | 40 s | 30 s |
 | Conditions | clear day | day / haze | any day or dusk | dusk / night / fog | night + fog or rain |
 | Swarms / decoys | no | no | small group | 1 swarm + decoy | multi-axis swarm + decoys |
 | AI-assist accuracy | 0.95 | 0.90 | 0.85 | 0.75 | 0.65 |
