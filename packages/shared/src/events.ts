@@ -71,6 +71,22 @@ export const ContactNeutralisedEvent = named(
   }),
 );
 
+/**
+ * A payload release at a DROP waypoint (scoring and result screen only). `trackId`
+ * is set only when the EO tracker was in TRACK on the contact's track at that tick,
+ * i.e. the operator could see the release live.
+ */
+export const ContactDroppedEvent = named(
+  'ContactDroppedEvent',
+  z.object({
+    ...base,
+    type: z.literal('CONTACT_DROPPED'),
+    contactId: ID,
+    trackId: ID.optional(),
+    payload: named('ContactDroppedPayload', z.object({ x: z.number(), z: z.number() })),
+  }),
+);
+
 export const SensorTrackCreatedEvent = named(
   'SensorTrackCreatedEvent',
   z.object({
@@ -220,6 +236,7 @@ export const SimEvent = named(
     ContactDespawnedEvent,
     ContactReachedAssetEvent,
     ContactNeutralisedEvent,
+    ContactDroppedEvent,
     SensorTrackCreatedEvent,
     SensorTrackLostEvent,
     EoIdentifiableEvent,

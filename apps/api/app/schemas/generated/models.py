@@ -146,6 +146,14 @@ class ContactClass(StrEnum):
     HELICOPTER_FRIENDLY = "HELICOPTER_FRIENDLY"
 
 
+class ContactDroppedPayload(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    x: float
+    z: float
+
+
 class ContactOutcome(StrEnum):
     NEUTRALISED = "NEUTRALISED"
     LEAKED = "LEAKED"
@@ -266,6 +274,7 @@ class EventType(StrEnum):
     CONTACT_DESPAWNED = "CONTACT_DESPAWNED"
     CONTACT_REACHED_ASSET = "CONTACT_REACHED_ASSET"
     CONTACT_NEUTRALISED = "CONTACT_NEUTRALISED"
+    CONTACT_DROPPED = "CONTACT_DROPPED"
     SENSOR_TRACK_CREATED = "SENSOR_TRACK_CREATED"
     SENSOR_TRACK_LOST = "SENSOR_TRACK_LOST"
     EO_IDENTIFIABLE = "EO_IDENTIFIABLE"
@@ -413,6 +422,7 @@ class ResponseResult(StrEnum):
     NO_EFFECT = "NO_EFFECT"
     MISSED = "MISSED"
     BLOCKED_BY_ROE = "BLOCKED_BY_ROE"
+    BLOCKED_NO_KINETIC = "BLOCKED_NO_KINETIC"
     OUT_OF_RANGE = "OUT_OF_RANGE"
     COOLDOWN = "COOLDOWN"
     NO_AMMO = "NO_AMMO"
@@ -522,6 +532,7 @@ class SystemEventType(StrEnum):
     CONTACT_DESPAWNED = "CONTACT_DESPAWNED"
     CONTACT_REACHED_ASSET = "CONTACT_REACHED_ASSET"
     CONTACT_NEUTRALISED = "CONTACT_NEUTRALISED"
+    CONTACT_DROPPED = "CONTACT_DROPPED"
     SENSOR_TRACK_CREATED = "SENSOR_TRACK_CREATED"
     SENSOR_TRACK_LOST = "SENSOR_TRACK_LOST"
     EO_IDENTIFIABLE = "EO_IDENTIFIABLE"
@@ -584,6 +595,12 @@ class ThreatClass(StrEnum):
 ThreatMixAdditionalProperty = TypeAliasType(
     "ThreatMixAdditionalProperty", Annotated[int, Field(ge=0, le=50)]
 )
+
+
+class TimeBand(StrEnum):
+    DAY = "DAY"
+    DUSK = "DUSK"
+    NIGHT = "NIGHT"
 
 
 class TokenResponse(BaseModel):
@@ -653,6 +670,14 @@ class Weather(BaseModel):
     wind_mps: Annotated[float, Field(alias="windMps", ge=0.0)]
     wind_dir_deg: Annotated[float, Field(alias="windDirDeg", ge=0.0, lt=360.0)]
     cloud_pct: Annotated[float, Field(alias="cloudPct", ge=0.0, le=100.0)]
+
+
+class WeatherPreset(StrEnum):
+    CLEAR = "CLEAR"
+    HAZE = "HAZE"
+    FOG = "FOG"
+    RAIN = "RAIN"
+    DUST = "DUST"
 
 
 class ZoneKind(StrEnum):
@@ -757,6 +782,18 @@ class ContactDespawnedEvent(BaseModel):
     payload: EmptyPayload
 
 
+class ContactDroppedEvent(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    seq: Annotated[int, Field(ge=0, le=9007199254740991)]
+    t_ms: Annotated[int, Field(alias="tMs", ge=0, le=9007199254740991)]
+    type: Literal["CONTACT_DROPPED"]
+    contact_id: Annotated[str, Field(alias="contactId", max_length=64, min_length=1)]
+    track_id: Annotated[str | None, Field(alias="trackId", max_length=64, min_length=1)] = None
+    payload: ContactDroppedPayload
+
+
 class ContactNeutralisedPayload(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -857,6 +894,29 @@ class ErrorEnvelope(BaseModel):
         populate_by_name=True,
     )
     error: ErrorBody
+
+
+class GenerateRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    terrain_preset: Annotated[str, Field(alias="terrainPreset", min_length=1)]
+    difficulty: Annotated[int, Field(ge=1, le=5)]
+    seed: Annotated[int, Field(ge=0, le=4294967295)]
+    time_band: Annotated[TimeBand | None, Field(alias="timeBand")] = None
+    weather_preset: Annotated[WeatherPreset | None, Field(alias="weatherPreset")] = None
+    duration_s: Annotated[int | None, Field(alias="durationS", ge=30, le=3600)] = None
+    roe: Roe | None = None
+    threat_mix: Annotated[
+        dict[ThreatClass, ThreatMixAdditionalProperty] | None, Field(alias="threatMix")
+    ] = None
+    swarm_size: Annotated[int | None, Field(alias="swarmSize", ge=1, le=50)] = None
+    false_contact_density: Annotated[
+        FalseContactDensity | None, Field(alias="falseContactDensity")
+    ] = None
+    ai_assist_accuracy: Annotated[float | None, Field(alias="aiAssistAccuracy", ge=0.0, le=1.0)] = (
+        None
+    )
 
 
 class MeResponse(BaseModel):
@@ -1167,6 +1227,9 @@ class Scenario(BaseModel):
     seed: Annotated[int, Field(ge=0, le=4294967295)]
     difficulty: Annotated[int, Field(ge=1, le=5)]
     request: ScenarioRequest | None = None
+    generator_version: Annotated[
+        int | None, Field(alias="generatorVersion", ge=1, le=9007199254740991)
+    ] = None
     terrain: TerrainRef
     environment: Environment
     roe: Roe
@@ -1227,6 +1290,7 @@ class EventBatchRequest(BaseModel):
                 | ContactDespawnedEvent
                 | ContactReachedAssetEvent
                 | ContactNeutralisedEvent
+                | ContactDroppedEvent
                 | SensorTrackCreatedEvent
                 | SensorTrackLostEvent
                 | EoIdentifiableEvent

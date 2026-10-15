@@ -40,6 +40,7 @@ export const RESULT_LABEL: Record<string, string> = {
   MISSED: 'missed',
   NO_EFFECT: 'no effect',
   BLOCKED_BY_ROE: 'blocked by ROE',
+  BLOCKED_NO_KINETIC: 'blocked: no-kinetic zone',
   OUT_OF_RANGE: 'out of range',
   COOLDOWN: 'interceptor reloading',
   NO_AMMO: 'no rounds left',

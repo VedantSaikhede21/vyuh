@@ -192,7 +192,7 @@ export const ScenarioDetailResponse = named(
 );
 export type ScenarioDetailResponse = z.infer<typeof ScenarioDetailResponse>;
 
-/** POST /scenarios/generate — request body is a ScenarioRequest. */
+/** POST /scenarios/generate — request body is a GenerateRequest. */
 export const GenerateScenarioResponse = named(
   'GenerateScenarioResponse',
   z.object({ scenarioId: z.uuid(), scenario: Scenario }),
