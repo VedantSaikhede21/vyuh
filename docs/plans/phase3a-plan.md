@@ -1,17 +1,17 @@
-# Phase 3 · Part 3a — Scenario generator, behaviours, swarms, ROE, weather (DRAFT plan)
+# Phase 3 · Part 3a — Scenario generator, behaviours, swarms, ROE, weather
 
-> **Status: DRAFT — not yet approved.** Written 2026-10-15 so a new session can
-> pick it up. The next session must show this plan (with answers to the open
-> questions) to the user and wait for explicit approval before building. When it
-> is approved, remove this banner, record the answers below, commit, then build.
+> **Status: APPROVED 2026-10-15** with the refinements recorded under
+> "Approved answers". Build on `feat/phase3a`; stop at the Step 8 checkpoint.
 
 Inputs: `docs/plans/phase3-requirements.md` (full 3a requirements, approved
 decisions, tech debt), SPEC §7, §7.1, §8, §11, §12 Phase 3, §16, CLAUDE.md.
 Part 3.0 is complete on `feat/phase3`.
 
 **Intel integrated-GPU FPS:** deferred by the user on 2026-10-15 (no Intel
-machine available). It is not waived: measure it before the demo and before
-Phase 6. All FPS evidence so far is from an AMD Radeon integrated GPU.
+machine available); still pending at approval (no result supplied). It is not
+waived: measure it before the demo and before Phase 6. All FPS evidence so far
+is from an AMD Radeon integrated GPU. Step 12 also reports the worst-case D5
+scenario's entity count and draw calls so the Intel headroom can be judged.
 
 ---
 
@@ -30,28 +30,21 @@ Phase 6. All FPS evidence so far is from an AMD Radeon integrated GPU.
 
 ---
 
-## Open questions for approval (recommendation first)
+## Approved answers (2026-10-15)
 
-1. **Settlement data for `NO_KINETIC` siting.** The approved `TERRAIN_DIR` copies only `meta.json` + `heightmap.u16`, but settlements come from `buildings.geojson`.
-   - **(Recommended)** Also copy `buildings.geojson` (≤ 30 KB per preset) into the API image and read it with the stdlib `json`. No pipeline change.
-   - Alternative: `build_preset.py` writes settlement cluster polygons into `meta.json` (additive `TerrainPresetMeta` field; presets rebuilt).
-2. **Intercept blocked by a `NO_KINETIC` zone — result value.**
-   - **(Recommended)** New additive `ResponseResult` value `BLOCKED_NO_KINETIC`, so scoring, Comms and the AAR can tell it apart from an ROE block.
-   - Alternative: reuse `BLOCKED_BY_ROE`.
-3. **Which point the `NO_KINETIC` gate tests.** **(Recommended)** The track's filtered position estimate (operator-known, decision 66), not the true contact position. Blocked if the estimate is inside any `NO_KINETIC` polygon.
-4. **Is a `DROP` visible to the trainee live?** **(Recommended)** No: a payload release is not observable on these sensors. `CONTACT_DROPPED` is a system event used for scoring and shown on the result screen ("Payload dropped at 02:41") only.
-5. **Time bands and sun in Python.** The generator must pick `HH:mm` for DAY / DUSK / NIGHT at the preset's latitude and date, and fill `environment.isNight`.
-   - **(Recommended)** A small NOAA sunrise/sunset function in Python (stdlib `math`), cross-checked in CI against suncalc values that a sim-core test exports as a fixture. The validator also asserts `isNight` matches sim-core's suncalc.
-   - Alternative: a fixed per-preset table of band times by month.
-6. **Generated scenario visibility.** **(Recommended)** Stored as `kind = GENERATED`, tag `generated`, `created_by` = requester. Hidden from the library list; visible to its creator and to instructors/admins by id. The 3b list redesign decides how generated runs are listed.
-7. **Trainee "Generate" UI.** **(Recommended)** 3a delivers the API and tests only; the "Generate scenario" panel with preview is 3b (requirements §3b.4). The D5 FPS check drives the API directly.
-8. **`DUST` weather preset.** **(Recommended)** Add the enum value now, but the generator never picks it until a desert preset exists (3b or later).
-9. **Practice hints.** **(Recommended)** Three hint rules in Practice only, shown as Comms lines with a muted "HINT" tag, built only from operator-known facts:
+1. **Settlement data for `NO_KINETIC` siting:** the API image also copies `buildings.geojson` (≤ 30 KB per preset) next to `meta.json` + `heightmap.u16`; read with the stdlib `json`. No pipeline change.
+2. **Intercept blocked by a `NO_KINETIC` zone:** new additive `ResponseResult` value `BLOCKED_NO_KINETIC`, distinct from `BLOCKED_BY_ROE`.
+3. **Which point the gate tests:** the track's filtered position estimate (operator-known, decision 66). Decision to record: intercepts resolve instantly when ordered, so the intercept point coincides with the track position; checking the estimated track position is equivalent to requirement §5 ("track or intercept point"), not a reduction of it. SPEC §8 wording is updated to match. If intercept time-of-flight is ever modelled, the check must move to the predicted intercept point.
+4. **Is a `DROP` visible live:** no, with one rule. `CONTACT_DROPPED` is a system event used for scoring and shown on the result screen ("Payload dropped at 02:41"). If the EO camera is in TRACK (`TRK`) on the dropping contact's track at the moment of the drop, the Comms log appends `<trackId> PAYLOAD RELEASE OBSERVED`. This is sim-derived and deterministic (no new event type): the `CONTACT_DROPPED` payload carries the observing track id, which sim-core fills only when the EO tracker is in TRACK on that contact's track. Vitest covers both cases.
+5. **Time bands and sun in Python:** a small NOAA sunrise/sunset function (stdlib `math`), cross-checked in CI against suncalc values exported by a sim-core test; the validator asserts `isNight` matches suncalc.
+6. **Generated scenario visibility:** `kind = GENERATED`, tag `generated`, `created_by` = requester; hidden from the library list; visible by id to its creator and to instructors/admins. The 3b list redesign decides how generated runs are listed.
+7. **Trainee "Generate" UI:** 3b. 3a delivers the API and tests; the D5 FPS check drives the API directly.
+8. **`DUST`:** enum value added now; the generator never picks it until a desert preset exists.
+9. **Practice hints:** the three rules below, Practice only, Comms lines with a muted "HINT" tag, at most once per track. Hint text uses only operator-known facts (same rule as the ACQ reason, decision 66) — never true class, true range, contact id or truth-only state.
    - a track ACTIVE > 20 s and never selected → "Hint: T004 has not been looked at. Tab selects it.";
    - CUE for > 10 s with no lock → "Hint: zoom in (+) or wait for the range to close.";
    - Intercept disabled by WEAPONS_TIGHT → "Hint: classify (C) and declare hostile (H) first."
-   Each fires at most once per track. Assessment shows none.
-10. **Checkpoint.** **(Recommended)** Stop after Step 8 (sweep green) and show the user a table of one generated scenario per difficulty (contacts, behaviours, axes, time band, weather, ROE, warning time, defender result), before building the API endpoint and HUD work.
+10. **Checkpoint:** stop after Step 8 (sweep green) and show a table of one generated scenario per difficulty (contacts, behaviours, axes, time band, weather, ROE, warning time, defender result), plus the sweep result, before the API endpoint and HUD work.
 
 ---
 
@@ -67,13 +60,13 @@ Phase 6. All FPS evidence so far is from an AMD Radeon integrated GPU.
    - Python: re-check any new cross-field rules in `services/scenarios.py`.
 
 2. **`feat(sim): drop, RTH waypoint, ROE class check, no-kinetic gate (SIM_VERSION 3)`** — sim-core:
-   - `DROP`: on arriving at a `DROP` waypoint, a contact that is ACTIVE and not defeated emits `CONTACT_DROPPED {x, z}` (once per contact), then continues its path.
+   - `DROP`: on arriving at a `DROP` waypoint, a contact that is ACTIVE and not defeated emits `CONTACT_DROPPED {x, z, observedTrackId?}` (once per contact), then continues its path. `observedTrackId` is set only when the EO tracker is in TRACK on that contact's track at that tick (Q4).
    - `RTH` waypoint action: on arrival, switch to the existing RTH control (return to the first waypoint and despawn).
    - `roeAllowsIntercept`: WEAPONS_TIGHT needs `classifiedAs` ∈ ThreatClass **and** affiliation HOSTILE; WEAPONS_HOLD never; WEAPONS_FREE always.
    - `NO_KINETIC`: intercept blocked when the track estimate is inside a `NO_KINETIC` polygon (point-in-polygon in a new `zones.ts`); result per Q2; checked after ROE, before cooldown/ammo, so it spends nothing.
    - `createDefender`: still sets the true class; never orders an intercept that the new gates would block; uses jam/spoof on susceptible threats inside `NO_KINETIC`, otherwise holds.
    - `SIM_VERSION = 3`; decision entry.
-   - Tests: `behaviours.test.ts` (drop emitted once, not after EW defeat, RTH waypoint despawns at the start), `roe.test.ts` (FREE / TIGHT class + affiliation / HOLD / NO_KINETIC inside-outside-edge, nothing spent when blocked), determinism and exact replay, S01–S14 guard tests still pass.
+   - Tests: `behaviours.test.ts` (drop emitted once, not after EW defeat, RTH waypoint despawns at the start, `observedTrackId` set under EO TRACK and absent otherwise), `roe.test.ts` (FREE / TIGHT class + affiliation / HOLD / NO_KINETIC inside-outside-edge, nothing spent when blocked), determinism and exact replay, S01–S14 guard tests still pass.
 
 3. **`feat(api): default_v3 scoring tree`**:
    - `default_v3.json` = `default_v2` + a drop rule: a threat with `CONTACT_DROPPED` before it was neutralised is `LEAKED`, with the feedback "Payload dropped before neutralisation." A drop after EW defeat cannot happen (the sim stops it). `default_v1`/`v2` unchanged.
@@ -123,11 +116,12 @@ Phase 6. All FPS evidence so far is from an AMD Radeon integrated GPU.
     - Draw `NO_KINETIC` polygons and the `BORDER_LINE` in the tactical view and on the PPI if they are not drawn already (neutral chrome per DESIGN, labelled).
     - Practice hints per Q9; none in Assessment.
     - Result screen: "Payload dropped at mm:ss" on the contact row.
+    - Comms: `<trackId> PAYLOAD RELEASE OBSERVED` when `CONTACT_DROPPED` carries `observedTrackId` (Q4), with a unit test for both cases.
     - Visual baselines and a11y specs updated; screenshots at both sizes, DESIGN §13.
 
-11. **`docs: ROE semantics and generator in SPEC`**: SPEC §8 ROE table (FREE / TIGHT with class check / HOLD / NO_KINETIC), §7.1 time bands and weather presets, §11 generate payload (`GenerateRequest`), §12 Phase 3 status; note in §9 / §12 Phase 4 that trends use Assessment sessions only. Decisions for every non-obvious choice.
+11. **`docs: ROE semantics and generator in SPEC`**: SPEC §8 ROE table (FREE / TIGHT with class check / HOLD / NO_KINETIC, with the "track or intercept point" wording per Q3), §7.1 time bands and weather presets, §11 generate payload (`GenerateRequest`), §12 Phase 3 status; note in §9 / §12 Phase 4 that trends use Assessment sessions only. Decisions for every non-obvious choice.
 
-12. **FPS and tick at the cap**: generate the worst-case D5 scenario (60 entities); `fps.spec.ts` gets a case that creates it through the API and plays it as a real session (works on a production build); sim tick bench at 60 entities on PUNJAB_PLAINS (budget 2 ms).
+12. **FPS and tick at the cap**: generate the worst-case D5 scenario (60 entities); `fps.spec.ts` gets a case that creates it through the API and plays it as a real session (works on a production build); sim tick bench at 60 entities on PUNJAB_PLAINS (budget 2 ms). Report the scenario's entity count and draw calls as well as FPS, to judge Intel headroom.
 
 13. **Optional** (only if 0–12 are done): live weather via Open-Meteo behind `OPEN_METEO_ENABLED`, cached, preset fallback; `LIVE` in the request.
 

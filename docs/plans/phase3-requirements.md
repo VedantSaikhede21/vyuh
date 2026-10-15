@@ -16,7 +16,7 @@ running) was **deferred by the user on 2026-10-15** because no Intel machine is
 available. It is still required before the demo and before Phase 6; do not
 invent numbers for it. The user may add their own S13/S14 playtest notes later.
 
-**3a plan:** drafted in `docs/plans/phase3a-plan.md` (DRAFT, awaiting approval).
+**3a plan:** approved 2026-10-15, `docs/plans/phase3a-plan.md`.
 
 ---
 
