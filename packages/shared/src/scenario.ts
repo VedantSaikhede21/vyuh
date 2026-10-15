@@ -130,6 +130,8 @@ export const BorderLineZone = named(
     id: z.string().min(1),
     kind: z.literal('BORDER_LINE'),
     polyline: z.array(Point2).min(2),
+    /** Display name, e.g. "border" (the HUD labels the line with it). */
+    name: z.string().min(1).max(40).optional(),
   }),
 );
 export type BorderLineZone = z.infer<typeof BorderLineZone>;
@@ -140,6 +142,8 @@ export const AreaZone = named(
     id: z.string().min(1),
     kind: AreaZoneKind,
     polygon: z.array(Point2).min(3),
+    /** What the zone covers, e.g. "village" — used in labels and disabled reasons. */
+    name: z.string().min(1).max(40).optional(),
   }),
 );
 export type AreaZone = z.infer<typeof AreaZone>;

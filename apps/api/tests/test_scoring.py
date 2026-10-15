@@ -417,7 +417,9 @@ def test_penalties_are_listed_and_clamped() -> None:
 
 # Optional fields added to Score after the goldens were generated (decision 64). Only these
 # are ignored, and only when unset, so any other field turning None still fails the test.
-_ADDED_OPTIONALS = frozenset({"true_class", "recommended_difficulty", "recommendation_basis"})
+_ADDED_OPTIONALS = frozenset(
+    {"true_class", "recommended_difficulty", "recommendation_basis", "dropped_t_ms"}
+)
 
 
 def _drop_added_optionals(value: Any) -> Any:
@@ -890,6 +892,7 @@ def test_drop_before_neutralisation_is_a_leak() -> None:
     assert (m["outcome"], m["droppedBeforeNeutralised"], m["warningS"]) == ("LEAKED", True, 151.0)
     score = score_session(sc, events)
     c01 = score.per_contact[0]
+    assert c01.dropped_t_ms == 171_000
     assert [leaf.root for leaf in c01.leaves][-2:] == ["DROP_BEFORE_NEUTRALISED", "DECISION_NONE"]
     assert "Payload dropped before neutralisation (at 171 s)." in c01.feedback
     assert score.components.decision == 0

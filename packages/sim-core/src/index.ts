@@ -166,7 +166,7 @@ export {
   createDefender,
   trueAffiliation,
 } from './defender.ts';
-export { inNoKinetic, noKineticPolygons, pointInPolygon } from './zones.ts';
+export { inNoKinetic, noKineticPolygons, noKineticZoneAt, pointInPolygon } from './zones.ts';
 export type { Defender } from './defender.ts';
 export {
   CRITICAL_RANGE_M,

@@ -146,10 +146,20 @@ describe('actionStates', () => {
       x: 0,
       z: 0,
     };
-    expect(actionStates(hud(), { INTERCEPT: int }).INTERCEPT.reason).toBe(
+    // WEAPONS_TIGHT (SIM_VERSION 3): a threat class and a HOSTILE call, each named if missing.
+    const tight = (over: Partial<TrackView>) =>
+      actionStates(hud({ tracks: [track(over)] }), { INTERCEPT: int }).INTERCEPT;
+    expect(tight({}).reason).toBe(
+      'ROE: weapons tight — classify as a threat type (C) and declare HOSTILE (H)',
+    );
+    expect(tight({ affiliation: 'HOSTILE' }).reason).toBe(
+      'ROE: weapons tight — classify the track as a threat type first (C)',
+    );
+    expect(tight({ classifiedAs: 'QUAD_SMALL' }).reason).toBe(
       'ROE: weapons tight — declare the track HOSTILE first (H)',
     );
-    const hostile = hud({ tracks: [track({ affiliation: 'HOSTILE' })] });
+    expect(tight({ affiliation: 'HOSTILE', classifiedAs: 'BIRD_LARGE' }).enabled).toBe(false);
+    const hostile = hud({ tracks: [track({ affiliation: 'HOSTILE', classifiedAs: 'FPV' })] });
     expect(actionStates(hostile, { INTERCEPT: int }).INTERCEPT.enabled).toBe(true);
     expect(actionStates(hud({ roe: 'WEAPONS_HOLD' }), { INTERCEPT: int }).INTERCEPT.reason).toBe(
       'ROE: weapons hold — no intercept',

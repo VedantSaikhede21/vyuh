@@ -93,6 +93,19 @@ export const SITES = {
 } as const;
 
 /**
+ * Zones (NO_KINETIC, BORDER_LINE) in the tactical view and on the PPI: neutral
+ * chrome with hatching / dashes, never affiliation or status colours (Step 10).
+ */
+export const ZONES = {
+  outline: UI.text2,
+  hatch: UI.line2,
+  /** Hatching on terrain needs more contrast than on the dark PPI. */
+  hatchTerrain: UI.text3,
+  label: UI.text2,
+  border: UI.text3,
+} as const;
+
+/**
  * CSS font shorthand for canvas text in IBM Plex Mono. next/font generates the
  * family name at build time, so it is read from the `--font-plex-mono` variable.
  */

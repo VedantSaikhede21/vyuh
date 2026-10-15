@@ -40,6 +40,7 @@ def _per_contact(
         "classification_correct": m["classificationCorrect"]
         and ClassificationResult(m["classificationCorrect"]),
         "identifiable_when_classified": m["identifiableWhenClassified"],
+        "dropped_t_ms": m.get("droppedTMs"),
         # Threat: an effector actually fired. Non-threat: left alone (EW on a bird is not).
         "response_appropriate": (
             fired if m["isThreat"] else m["outcome"] == "IGNORED_OK" and not m.get("ewOnBird")

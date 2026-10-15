@@ -1,4 +1,4 @@
-import type { Point2, Zone } from '@vyuh/shared';
+import type { AreaZone, Point2, Zone } from '@vyuh/shared';
 
 // Zone geometry (SPEC §8). NO_KINETIC polygons block INTERCEPT orders on a
 // track whose estimated position is inside (decision 69): intercepts resolve
@@ -38,6 +38,18 @@ export function pointInPolygon(x: number, z: number, polygon: readonly Point2[])
 /** NO_KINETIC polygons of a scenario, in zone order. */
 export function noKineticPolygons(zones: readonly Zone[]): Point2[][] {
   return zones.flatMap((z) => (z.kind === 'NO_KINETIC' ? [z.polygon] : []));
+}
+
+/** The first NO_KINETIC zone (scenario order) containing (x, z), for naming it in the HUD. */
+export function noKineticZoneAt(
+  zones: readonly Zone[],
+  x: number,
+  z: number,
+): AreaZone | undefined {
+  for (const zone of zones) {
+    if (zone.kind === 'NO_KINETIC' && pointInPolygon(x, z, zone.polygon)) return zone;
+  }
+  return undefined;
 }
 
 /** True when (x, z) is inside any of the given NO_KINETIC polygons. */

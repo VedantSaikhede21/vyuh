@@ -59,6 +59,8 @@ export const PerContactMetrics = named(
     aiSuggestionShown: z.boolean().optional(),
     aiSuggestionAccepted: z.boolean().optional(),
     aiSuggestionCorrect: z.boolean().optional(),
+    /** When the contact released its payload (CONTACT_DROPPED, default_v3), if it did. */
+    droppedTMs: z.int().min(0).optional(),
     points: z.number().optional(),
     /** Decision-tree leaf ids reached for this contact, in evaluation order. */
     leaves: z.array(z.string().min(1)),

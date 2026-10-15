@@ -3,7 +3,8 @@
 import { TICK_MS } from '@vyuh/sim-core';
 import { useEffect, useRef } from 'react';
 import { AFFILIATION_STYLE, traceAffiliation } from '@/lib/affiliation';
-import { PPI, RF_STROBE, canvasMonoFont, withAlpha } from '@/lib/theme/scene-colours';
+import { PPI, RF_STROBE, ZONES, canvasMonoFont, withAlpha } from '@/lib/theme/scene-colours';
+import { centroid } from '@/lib/hud/zones';
 import { placeLabels } from '@/lib/hud/declutter';
 import type { Commands } from '@/lib/sim/commands';
 import type { SimRuntime } from '@/lib/sim/runtime';
@@ -33,6 +34,22 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
     const r = c - 14;
     const pxPerM = r / maxRangeM;
     let raf = 0;
+    const px = (x: number) => c + (x - origin.x) * pxPerM;
+    const py = (z: number) => c - (z - origin.z) * pxPerM;
+    // Diagonal hatch for NO_KINETIC zones (neutral chrome, Step 10).
+    const tile = document.createElement('canvas');
+    tile.width = tile.height = 6 * dpr;
+    const tctx = tile.getContext('2d');
+    if (tctx) {
+      tctx.strokeStyle = ZONES.hatch;
+      tctx.lineWidth = dpr;
+      tctx.beginPath();
+      tctx.moveTo(0, tile.height);
+      tctx.lineTo(tile.width, 0);
+      tctx.stroke();
+    }
+    const hatch = ctx.createPattern(tile, 'repeat');
+    hatch?.setTransform(new DOMMatrix().scale(1 / dpr));
 
     const draw = () => {
       const hud = useHudStore.getState().hud;
@@ -78,6 +95,47 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
         ctx.stroke();
       }
       ctx.setLineDash([]);
+
+      // Zones: NO_KINETIC hatched + outlined with its id, border lines dashed.
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(c, c, r, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.font = canvasMonoFont(11);
+      for (const z of runtime.scenario.zones) {
+        if (z.kind === 'NO_KINETIC') {
+          ctx.beginPath();
+          z.polygon.forEach(([x, zz], i) =>
+            i === 0 ? ctx.moveTo(px(x), py(zz)) : ctx.lineTo(px(x), py(zz)),
+          );
+          ctx.closePath();
+          if (hatch) {
+            ctx.fillStyle = hatch;
+            ctx.fill();
+          }
+          ctx.strokeStyle = ZONES.outline;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          const [cx, cz] = centroid(z.polygon);
+          ctx.fillStyle = ZONES.label;
+          ctx.fillText(z.id, px(cx) + 6, py(cz) - 4);
+        } else if (z.kind === 'BORDER_LINE') {
+          ctx.setLineDash([6, 4]);
+          ctx.strokeStyle = ZONES.border;
+          ctx.beginPath();
+          z.polyline.forEach(([x, zz], i) =>
+            i === 0 ? ctx.moveTo(px(x), py(zz)) : ctx.lineTo(px(x), py(zz)),
+          );
+          ctx.stroke();
+          ctx.setLineDash([]);
+          const mid = z.polyline[Math.floor(z.polyline.length / 2)];
+          if (mid) {
+            ctx.fillStyle = ZONES.label;
+            ctx.fillText('BORDER', px(mid[0]) + 4, py(mid[1]) - 4);
+          }
+        }
+      }
+      ctx.restore();
 
       // Sweep.
       const t = (hud?.tMs ?? 0) + runtime.alpha * TICK_MS;

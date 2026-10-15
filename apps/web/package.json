@@ -10,10 +10,11 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run",
-    "e2e": "playwright test --grep-invert @fps",
-    "e2e:update": "playwright test --grep-invert @fps --update-snapshots",
+    "e2e": "playwright test --grep-invert \"@fps|@checkpoint\"",
+    "e2e:update": "playwright test --grep-invert \"@fps|@checkpoint\" --update-snapshots",
     "e2e:fps": "playwright test --grep @fps",
-    "record:landing": "node scripts/record-landing.ts"
+    "record:landing": "node scripts/record-landing.ts",
+    "e2e:checkpoint": "playwright test --grep @checkpoint"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",

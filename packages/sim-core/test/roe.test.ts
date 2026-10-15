@@ -5,6 +5,7 @@ import {
   createSim,
   inNoKinetic,
   noKineticPolygons,
+  noKineticZoneAt,
   pointInPolygon,
   roeAllowsIntercept,
   type Sim,
@@ -43,6 +44,15 @@ describe('pointInPolygon', () => {
     ];
     expect(pointInPolygon(50, 150, l)).toBe(true);
     expect(pointInPolygon(150, 150, l)).toBe(false);
+  });
+
+  it('names the zone a point is in', () => {
+    const zones = [
+      { id: 'Z1', kind: 'PROTECTED_ASSET' as const, polygon: square },
+      { id: 'Z2', kind: 'NO_KINETIC' as const, name: 'village', polygon: square },
+    ];
+    expect(noKineticZoneAt(zones, 0, 1000)?.id).toBe('Z2');
+    expect(noKineticZoneAt(zones, 0, 0)).toBeUndefined();
   });
 
   it('collects only NO_KINETIC zones', () => {

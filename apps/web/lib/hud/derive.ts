@@ -1,5 +1,5 @@
-import type { AltitudeBand, Asset, Roe } from '@vyuh/shared';
-import type { EoTrackMode } from '@vyuh/sim-core';
+import { ThreatClass, type AltitudeBand, type Asset, type Roe, type Zone } from '@vyuh/shared';
+import { noKineticZoneAt, type EoTrackMode } from '@vyuh/sim-core';
 import type { EffectorView, HudSnapshot, RfStrobeView, TrackView } from '@/lib/sim/store';
 
 // Pure HUD derivations for the sim player (decision 66). Everything here uses
@@ -162,18 +162,37 @@ function capitalise(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+const THREAT_CLASSES: ReadonlySet<string> = new Set(ThreatClass.options);
+
+/** ROE gate as in sim-core (SIM_VERSION 3): TIGHT needs a threat class and a HOSTILE call. */
 export function roeBlocksIntercept(roe: Roe, track: TrackView): string | null {
   if (roe === 'WEAPONS_HOLD') return 'ROE: weapons hold — no intercept';
-  if (roe === 'WEAPONS_TIGHT' && track.affiliation !== 'HOSTILE') {
-    return 'ROE: weapons tight — declare the track HOSTILE first (H)';
+  if (roe !== 'WEAPONS_TIGHT') return null;
+  const classified = track.classifiedAs !== null && THREAT_CLASSES.has(track.classifiedAs);
+  if (classified && track.affiliation === 'HOSTILE') return null;
+  if (classified) return 'ROE: weapons tight — declare the track HOSTILE first (H)';
+  if (track.affiliation === 'HOSTILE') {
+    return 'ROE: weapons tight — classify the track as a threat type first (C)';
   }
-  return null;
+  return 'ROE: weapons tight — classify as a threat type (C) and declare HOSTILE (H)';
+}
+
+/**
+ * NO_KINETIC zone over the track's estimated position (operator-known, decision
+ * 69), named for the trainee: "No kinetic response over the village — zone Z2".
+ */
+export function zoneBlocksIntercept(zones: readonly Zone[], track: TrackView): string | null {
+  const zone = noKineticZoneAt(zones, track.x, track.z);
+  if (!zone) return null;
+  const over = zone.name ? `the ${zone.name}` : 'this area';
+  return `No kinetic response over ${over} — zone ${zone.id}`;
 }
 
 /** Enabled state + disabled reason for every action on the selected track. */
 export function actionStates(
   hud: HudSnapshot,
   sites: Partial<Record<'EW_JAM' | 'EW_SPOOF' | 'INTERCEPT', EffectorSite>>,
+  zones: readonly Zone[] = [],
 ): Record<ActionId, ActionState> {
   const track = hud.tracks.find((t) => t.id === hud.selectedTrackId) ?? null;
   let common: ActionState = ok;
@@ -191,7 +210,8 @@ export function actionStates(
       INTERCEPT: common,
     };
   }
-  const roe = roeBlocksIntercept(hud.roe, track);
+  // Same order as the sim: ROE first, then the NO_KINETIC zone (decision 69).
+  const roe = roeBlocksIntercept(hud.roe, track) ?? zoneBlocksIntercept(zones, track);
   return {
     MARK: track.markedDetected ? no(`${track.id} already marked detected`) : ok,
     CLASSIFY: ok,

@@ -38,12 +38,16 @@ interface UiStore {
   endArmed: boolean;
   cheatSheet: boolean;
   local: LocalLine[];
+  /** Keys of practice hints already shown (each at most once, decision 82). */
+  hinted: string[];
   setEo: (eo: Partial<EoPointing>) => void;
-  set: (s: Partial<Omit<UiStore, 'set' | 'setEo' | 'reset' | 'say' | 'echo'>>) => void;
+  set: (s: Partial<Omit<UiStore, 'set' | 'setEo' | 'reset' | 'say' | 'echo' | 'hint'>>) => void;
   /** Add a local Comms line (rejection or notice). */
   say: (tMs: number, text: string, status?: CommsStatus) => void;
   /** Echo a dispatched command until the sim's event for it exists. */
   echo: (tMs: number, text: string) => void;
+  /** Add a HINT line unless this key was already shown. */
+  hint: (tMs: number, key: string, text: string) => void;
   reset: (eo: Omit<EoPointing, 'cueSinceTMs'>) => void;
 }
 
@@ -64,6 +68,7 @@ export const useUiStore = create<UiStore>((set) => ({
   endArmed: false,
   cheatSheet: false,
   local: [],
+  hinted: [],
   setEo: (eo) => set((s) => ({ eo: { ...s.eo, ...eo } })),
   set: (s) => set(s),
   say: (tMs, text, status = 'warn') =>
@@ -77,6 +82,18 @@ export const useUiStore = create<UiStore>((set) => ({
         { id: `ui-${nextLocal++}`, tMs, text, pending: true, untilTMs: tMs },
       ].slice(-MAX_LOCAL),
     })),
+  hint: (tMs, key, text) =>
+    set((s) =>
+      s.hinted.includes(key)
+        ? s
+        : {
+            hinted: [...s.hinted, key],
+            local: [
+              ...s.local,
+              { id: `ui-${nextLocal++}`, tMs, text, tag: 'HINT', status: 'info' as const },
+            ].slice(-MAX_LOCAL),
+          },
+    ),
   reset: (eo) =>
     set({
       eo: { ...eo, cueSinceTMs: null },
@@ -85,5 +102,6 @@ export const useUiStore = create<UiStore>((set) => ({
       endArmed: false,
       cheatSheet: false,
       local: [],
+      hinted: [],
     }),
 }));

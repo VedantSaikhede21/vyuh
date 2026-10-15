@@ -10,10 +10,11 @@ browser download.
 | `visual.spec.ts` | Screenshot baselines at 1366×768 and 1920×1080: landing, login, training list, briefing, result; console with a selected track, EO CUE / ACQ / TRK, RF tab, leak banner |
 | `a11y.spec.ts` | No horizontal scroll at 1366×768; all effectors visible in the action bar without scrolling (1366×768, 1920×1080); core actions by keyboard alone; every order echoed in Comms within 100 ms; deuteranopia / protanopia captures (attached to the report, for the DESIGN §13 review) |
 | `fps.spec.ts` | Frame rate in S13, S14 and a 60-bird stress case (tag `@fps`, not part of `pnpm e2e`) |
+| `checkpoint-3a.spec.ts` | Phase 3a review captures written to `e2e/checkpoint/` (git-ignored): a generated D3 scenario with no-kinetic zones, the zone-naming intercept tooltip, a practice HINT line, the result screen with payload drops (tag `@checkpoint`, run with `pnpm --filter @vyuh/web e2e:checkpoint`) |
 | `smoke.spec.ts` | The landing page renders |
 
 ```
-pnpm e2e                               # from the repo root: everything except @fps
+pnpm e2e                               # from the repo root: everything except @fps and @checkpoint
 pnpm --filter @vyuh/web e2e:fps        # FPS on this machine's GPU
 pnpm --filter @vyuh/web e2e:update     # regenerate the visual baselines
 ```
