@@ -267,11 +267,17 @@ export function stepContact(
   const step = speed * ctx.dtS;
   c.speedMps = speed;
 
+  // The dive starts no later than the arrival radius: a fast, slow-turning class
+  // (turn radius > AGL × ratio) would otherwise "arrive" without diving.
+  const arrivalM = arrivalRadius(speed, profile.maxTurnRateDegS, ctx.dtS);
   if (
     wp.action === 'DIVE' &&
     !c.diving &&
     horizontalRange(c.pos, target) <=
-      Math.max(wp.altRef === 'MSL' ? c.pos.y - target.y : c.agl - wp.y, 10) * DIVE_START_RATIO
+      Math.max(
+        Math.max(wp.altRef === 'MSL' ? c.pos.y - target.y : c.agl - wp.y, 10) * DIVE_START_RATIO,
+        arrivalM,
+      )
   ) {
     c.diving = true;
   }
@@ -308,7 +314,8 @@ export function stepContact(
   c.agl += Math.max(-maxClimb, Math.min(maxClimb, targetAgl - c.agl));
   c.pos = { x, y: sampleHeight(ctx.terrain, x, z) + c.agl, z };
 
-  if (horizontalRange(c.pos, target) <= arrivalRadius(speed, profile.maxTurnRateDegS, ctx.dtS)) {
+  // A DIVE waypoint completes only through the dive itself.
+  if (wp.action !== 'DIVE' && horizontalRange(c.pos, target) <= arrivalM) {
     arrive(c, spec, wp, ctx, out);
   }
   return out;
