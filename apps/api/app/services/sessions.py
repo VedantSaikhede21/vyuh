@@ -36,7 +36,7 @@ VIEWER_ROLES = frozenset({UserRole.INSTRUCTOR, UserRole.ADMIN})
 
 
 def create_session(db: Session, user: User, body: CreateSessionRequest) -> CreateSessionResponse:
-    scenario_row = get_scenario_row(db, body.scenario_id)
+    scenario_row = get_scenario_row(db, body.scenario_id, user)
     row = TrainingSession(
         user_id=user.id,
         scenario_id=scenario_row.id,

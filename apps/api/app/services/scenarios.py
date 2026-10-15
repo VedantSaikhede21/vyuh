@@ -8,15 +8,19 @@ from sqlalchemy.orm import Session
 
 from app.core.errors import ApiError
 from app.models import Scenario as ScenarioRow
+from app.models import User
 from app.schemas.generated import (
     EoIrSensor,
     ErrorCode,
+    GenerateRequest,
+    GenerateScenarioResponse,
     NonThreatClass,
     Scenario,
     ScenarioDetailResponse,
     ScenarioKind,
     ScenarioListItem,
     ThreatClass,
+    UserRole,
 )
 
 _THREAT = {c.value for c in ThreatClass}
@@ -86,6 +90,12 @@ def list_item(row: ScenarioRow) -> ScenarioListItem:
 # Scenarios tagged `test` (S11-S14) verify sim behaviour; they are not part of the
 # training library (SPEC §7.2), so trainees do not see them in the list.
 TEST_TAG = "test"
+# Generated scenarios (Phase 3a, plan Q6) are not part of the library list; the
+# 3b list redesign decides how a trainee's generated runs are shown.
+GENERATED_TAG = "generated"
+STAFF_ROLES = frozenset({UserRole.INSTRUCTOR, UserRole.ADMIN})
+#: Fields a trainee may set on POST /scenarios/generate (requirements 3a.6).
+TRAINEE_GENERATE_FIELDS = frozenset({"terrain_preset", "time_band", "difficulty", "seed"})
 
 
 def list_scenarios(
@@ -95,9 +105,12 @@ def list_scenarios(
     *,
     include_test: bool = True,
 ) -> list[ScenarioListItem]:
+    """Library list. Generated scenarios appear only when asked for by kind."""
     query = select(ScenarioRow).order_by(ScenarioRow.difficulty, ScenarioRow.code, ScenarioRow.name)
     if not include_test:
         query = query.where(~ScenarioRow.tags.contains([TEST_TAG]))
+    if kind is not ScenarioKind.GENERATED:
+        query = query.where(ScenarioRow.kind != ScenarioKind.GENERATED)
     if kind is not None:
         query = query.where(ScenarioRow.kind == kind)
     if difficulty is not None:
@@ -105,11 +118,61 @@ def list_scenarios(
     return [list_item(row) for row in db.scalars(query)]
 
 
-def get_scenario_row(db: Session, scenario_id: uuid.UUID) -> ScenarioRow:
+def get_scenario_row(db: Session, scenario_id: uuid.UUID, user: User) -> ScenarioRow:
+    """A scenario the user may open: a generated one only by its creator or staff
+    (others get NOT_FOUND, so ids of other people's runs are not confirmed)."""
     row = db.get(ScenarioRow, scenario_id)
-    if row is None:
+    if row is None or (
+        row.kind is ScenarioKind.GENERATED
+        and row.created_by != user.id
+        and user.role not in STAFF_ROLES
+    ):
         raise ApiError(ErrorCode.NOT_FOUND, "Scenario not found")
     return row
+
+
+def generate_scenario(db: Session, user: User, body: GenerateRequest) -> GenerateScenarioResponse:
+    """Generate a scenario, or return the user's existing copy of the same request."""
+    # Imported here: the generator loads terrain, which most routes never need.
+    from app.services.generator import generate
+
+    if user.role not in STAFF_ROLES:
+        extra = sorted(
+            body.model_fields[f].alias or f
+            for f in body.model_fields_set - TRAINEE_GENERATE_FIELDS
+            if getattr(body, f) is not None
+        )
+        if extra:
+            raise ApiError(
+                ErrorCode.FORBIDDEN,
+                "Trainees may choose only terrain, time band, difficulty and seed",
+                {"fields": extra},
+            )
+    content = generate(body)
+    row = db.scalar(
+        select(ScenarioRow).where(
+            ScenarioRow.kind == ScenarioKind.GENERATED,
+            ScenarioRow.created_by == user.id,
+            ScenarioRow.content["id"].astext == content["id"],
+        )
+    )
+    if row is None:
+        row = ScenarioRow(
+            code=None,
+            name=content["name"],
+            kind=ScenarioKind.GENERATED,
+            seed=content["seed"],
+            difficulty=content["difficulty"],
+            tags=[GENERATED_TAG],
+            request=content["request"],
+            content=content,
+            schema_version=content["schemaVersion"],
+            created_by=user.id,
+        )
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+    return GenerateScenarioResponse(scenario_id=row.id, scenario=load_scenario(row))
 
 
 def scenario_detail(row: ScenarioRow) -> ScenarioDetailResponse:
