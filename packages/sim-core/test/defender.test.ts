@@ -46,3 +46,34 @@ describe.each(['S01', 'S02', 'S03'])('defender defends %s', (code) => {
     expect(JSON.stringify(run(code).sim.getEvents())).toBe(JSON.stringify(a.getEvents()));
   });
 });
+
+describe('defender EW policy (decision 77)', () => {
+  it('never jams when a friendly shares the sector (S14), and still defends', () => {
+    const { sim } = run('S14');
+    const orders = sim
+      .getEvents()
+      .flatMap((e) => (e.type === 'RESPONSE_ORDERED' ? [e.payload.response] : []));
+    expect(orders).not.toContain('EW_JAM');
+    expect(orders).toContain('INTERCEPT');
+    expect(sim.getEvents().some((e) => e.type === 'CONTACT_REACHED_ASSET')).toBe(false);
+  });
+
+  it('jams an RF threat first when the sector is clear, saving rounds', () => {
+    const base = load('S01');
+    const scenario = {
+      ...base,
+      effectors: [
+        ...base.effectors,
+        { id: 'jam1', kind: 'EW_JAM' as const, x: 0, z: 0, rangeM: 2000, cooldownS: 10 },
+      ],
+    };
+    const sim = createSim(scenario, presetWorld(scenario.terrain.preset));
+    const defender = createDefender(scenario);
+    while (sim.getState().endReason === null) {
+      for (const cmd of defender.step(sim.getState())) sim.dispatch(cmd);
+      sim.tick();
+    }
+    const first = sim.getEvents().find((e) => e.type === 'RESPONSE_ORDERED');
+    expect(first?.type === 'RESPONSE_ORDERED' && first.payload.response).toBe('EW_JAM');
+  });
+});
