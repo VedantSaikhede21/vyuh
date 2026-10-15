@@ -3,9 +3,10 @@ import type { SimRuntime } from '@/lib/sim/runtime';
 import { snapshot, useHudStore } from '@/lib/sim/store';
 import { useUiStore } from '@/lib/sim/ui-store';
 
-// Playwright test hook (decision 67). Loaded only in non-production builds (the
-// session page imports it behind a NODE_ENV check, so the production bundle
-// never contains it). It holds the practice runtime off the wall clock and
+// Playwright test hook (decision 67). Loaded only in non-production builds and
+// only under automation (the session page imports it behind NODE_ENV and
+// navigator.webdriver checks, so the production bundle never contains it and a
+// person using the dev server gets a normal running sim). It holds the practice runtime off the wall clock and
 // steps it to an exact sim time, so screenshots are deterministic. The hold is
 // on from install (t = 0); live tests call release().
 

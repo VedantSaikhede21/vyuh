@@ -119,9 +119,11 @@ function Session({ sessionId }: { sessionId: string }) {
         trackMode: 'MANUAL',
       });
   }, [runtime, eoFov]);
-  // Playwright hook (decision 67): never part of a production build.
+  // Playwright hook (decision 67): never part of a production build, and only
+  // under automation (navigator.webdriver), because it holds the sim at t = 0
+  // until a test steps it.
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production' || !runtime) return;
+    if (process.env.NODE_ENV === 'production' || !runtime || !navigator.webdriver) return;
     let uninstall: (() => void) | undefined;
     let live = true;
     void import('@/lib/e2e/hook').then((m) => {
