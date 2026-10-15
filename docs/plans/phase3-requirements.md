@@ -141,7 +141,7 @@ From CLAUDE.md §14 and the 3.0 close-out, as of 2026-10-15:
 - Open idea, parked for Phase 4: ROE interlocks — whether Assessment mode allows attempting ROE-violating responses (and scores them) instead of pre-disabling. The 3a ROE work pre-disables with a reason; do not build interlock scoring in 3a.
 
 **Terrain and presets (3b)**
-- `JK_MOUNTAIN` has no OSM buildings: Overpass was unreachable on 2026-10-14. Rebuild when it is back (the rebuilt heightmap is byte-identical).
+- ~~`JK_MOUNTAIN` has no OSM buildings~~ — closed 2026-10-15: rebuilt with 36 OSM footprints, heightmap byte-identical (decision 78).
 - The S12 close-range IR view was not re-checked in the browser after the night-map change (Phase 2A).
 
 **Testing, FPS and tooling**
