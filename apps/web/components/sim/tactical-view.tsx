@@ -38,7 +38,7 @@ export function TacticalScene({
       <TerrainMesh world={runtime.world} edgeFade />
       <BuildingsMesh index={runtime.world.buildings} />
       <SiteMarkers />
-      <ZoneMarkers labelPortal={element} />
+      <ZoneMarkers />
       <Drones />
       <TrackMarkers onSelect={onSelectTrack} labelPortal={element} />
       {element.current && (

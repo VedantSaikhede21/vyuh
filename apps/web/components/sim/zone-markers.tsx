@@ -1,12 +1,15 @@
 'use client';
 
-import { Html, Line } from '@react-three/drei';
+import { Line } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import type { Point2, Zone } from '@vyuh/shared';
 import { toThree } from '@vyuh/sim-core';
-import { useMemo, type RefObject } from 'react';
-import { centroid, densify, hatchSegments, nearestPoint, zoneLabel } from '@/lib/hud/zones';
+import { useEffect, useMemo } from 'react';
+import { Vector3 } from 'three';
+import { centroid, densify, hatchSegments, nearestPoint } from '@/lib/hud/zones';
 import { ZONES } from '@/lib/theme/scene-colours';
 import { useSimRuntime } from './sim-context';
+import { zoneLabelNdc } from './zone-labels';
 
 /** Ground-following lines are split every this many metres. */
 const STEP_M = 25;
@@ -24,37 +27,22 @@ function useGround() {
   };
 }
 
-function Label({
-  at,
-  text,
-  portal,
-}: {
-  at: V3;
-  text: string;
-  portal?: RefObject<HTMLElement | null>;
-}) {
-  return (
-    <Html
-      position={at}
-      center
-      // Above the WebGL canvas (z-index 5), below near track labels (up to 10).
-      zIndexRange={[7, 6]}
-      {...(portal ? { portal: portal as RefObject<HTMLElement> } : {})}
-    >
-      <div className="pointer-events-none whitespace-nowrap border border-line-2 bg-bg-1 px-1 text-label leading-4 text-text-2">
-        {text}
-      </div>
-    </Html>
-  );
+const ndc = new Vector3();
+
+/** Projects a label anchor every frame for the DOM zone labels (zone-labels.tsx). */
+function LabelAnchor({ id, at }: { id: string; at: V3 }) {
+  useFrame(({ camera }) => {
+    ndc.set(at[0], at[1], at[2]).project(camera);
+    zoneLabelNdc.set(id, {
+      x: ndc.x,
+      y: ndc.y,
+      on: ndc.z > -1 && ndc.z < 1 && Math.abs(ndc.x) <= 1.2 && Math.abs(ndc.y) <= 1.2,
+    });
+  });
+  return null;
 }
 
-function NoKineticZone({
-  zone,
-  portal,
-}: {
-  zone: Extract<Zone, { polygon: Point2[] }>;
-  portal?: RefObject<HTMLElement | null>;
-}) {
+function NoKineticZone({ zone }: { zone: Extract<Zone, { polygon: Point2[] }> }) {
   const ground = useGround();
   const { outline, hatch, label } = useMemo(() => {
     const ring = densify(zone.polygon, STEP_M, true).map((p) => ground(p));
@@ -74,18 +62,12 @@ function NoKineticZone({
       {hatch.length > 0 && (
         <Line points={hatch} segments color={ZONES.hatchTerrain} lineWidth={1} />
       )}
-      <Label at={label} text={zoneLabel(zone)} portal={portal} />
+      <LabelAnchor id={zone.id} at={label} />
     </group>
   );
 }
 
-function BorderLine({
-  zone,
-  portal,
-}: {
-  zone: Extract<Zone, { kind: 'BORDER_LINE' }>;
-  portal?: RefObject<HTMLElement | null>;
-}) {
+function BorderLine({ zone }: { zone: Extract<Zone, { kind: 'BORDER_LINE' }> }) {
   const ground = useGround();
   const rt = useSimRuntime();
   const { line, label } = useMemo(
@@ -103,7 +85,7 @@ function BorderLine({
   return (
     <group>
       <Line points={line} color={ZONES.border} lineWidth={1.5} dashed dashSize={60} gapSize={40} />
-      <Label at={label} text={zoneLabel(zone)} portal={portal} />
+      <LabelAnchor id={zone.id} at={label} />
     </group>
   );
 }
@@ -112,15 +94,17 @@ function BorderLine({
  * NO_KINETIC zones (outlined, hatched) and border lines (dashed) on the terrain,
  * in neutral chrome with a label each (Step 10). Not affiliation colours.
  */
-export function ZoneMarkers({ labelPortal }: { labelPortal?: RefObject<HTMLElement | null> }) {
+export function ZoneMarkers() {
   const rt = useSimRuntime();
+  // Labels of a previous session must not linger in the shared map.
+  useEffect(() => () => zoneLabelNdc.clear(), []);
   return (
     <>
       {rt.scenario.zones.map((z) =>
         z.kind === 'BORDER_LINE' ? (
-          <BorderLine key={z.id} zone={z} portal={labelPortal} />
+          <BorderLine key={z.id} zone={z} />
         ) : z.kind === 'NO_KINETIC' ? (
-          <NoKineticZone key={z.id} zone={z} portal={labelPortal} />
+          <NoKineticZone key={z.id} zone={z} />
         ) : null,
       )}
     </>

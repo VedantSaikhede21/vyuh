@@ -17,6 +17,7 @@ import { useHudStore } from '@/lib/sim/store';
 import { cn } from '@/lib/utils';
 import { SimCanvas } from './sim-canvas';
 import { usePracticeHints } from './use-practice-hints';
+import { ZoneLabels } from './zone-labels';
 
 /** Bottom row height: 28 px header + a 16:9 EO picture 432 px wide (243 px) + border. */
 const BOTTOM_ROW = 'h-[272px]';
@@ -104,7 +105,9 @@ export function SimPlayer({
           ref={tactical}
           className="relative min-w-0 flex-1 overflow-hidden"
           aria-label="Tactical view"
-        />
+        >
+          <ZoneLabels runtime={runtime} />
+        </div>
         <aside className="flex w-[320px] shrink-0 flex-col border-l border-line-1 bg-bg-1">
           <Panel className="shrink-0 border-0 border-b">
             <PanelHeader title="Radar PPI">
