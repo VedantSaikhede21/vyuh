@@ -10,10 +10,13 @@ CLAUDE.md §14.
 3a starts only when the user says "start 3a"; 3b only when the user says
 "start 3b".
 
-**Before 3a starts:** the Intel integrated-GPU FPS result
-(`pnpm --filter @vyuh/web e2e:fps` on the Intel laptop, with `pnpm dev`
-running) must be measured. The user will also add their own S13/S14 playtest
-notes after 3.0 has been reviewed.
+**Before 3a starts:** the Intel integrated-GPU FPS check
+(`pnpm --filter @vyuh/web e2e:fps` on an Intel laptop, with `pnpm dev`
+running) was **deferred by the user on 2026-10-15** because no Intel machine is
+available. It is still required before the demo and before Phase 6; do not
+invent numbers for it. The user may add their own S13/S14 playtest notes later.
+
+**3a plan:** drafted in `docs/plans/phase3a-plan.md` (DRAFT, awaiting approval).
 
 ---
 
