@@ -181,7 +181,13 @@ function interceptSetup(rangeToTarget: number, ammo: number | undefined = 4) {
     status: 'ACTIVE',
     pos: { x: 0, y: 0, z: rangeToTarget },
   };
-  const track = { id: 'T001', contactId: 'c01', affiliation: 'UNKNOWN' } as TrackState;
+  const track = {
+    id: 'T001',
+    contactId: 'c01',
+    affiliation: 'UNKNOWN',
+    classifiedAs: null,
+    pos: { x: 0, y: 0, z: rangeToTarget },
+  } as TrackState;
   return { eff, contact, track, stream: createRng(5).stream('effectors') };
 }
 
@@ -222,13 +228,16 @@ describe('intercept rules (SPEC §8)', () => {
     );
   });
 
-  it('under WEAPONS_TIGHT needs a HOSTILE call; WEAPONS_HOLD always blocks', () => {
+  it('under WEAPONS_TIGHT needs a threat class and a HOSTILE call; WEAPONS_HOLD always blocks', () => {
     const { eff, contact, track, stream } = interceptSetup(500);
-    expect(resolveIntercept(eff, track, contact, 'WEAPONS_TIGHT', 0, stream)).toBe(
-      'BLOCKED_BY_ROE',
-    );
+    const tight = (t: Partial<TrackState>) =>
+      resolveIntercept(eff, { ...track, ...t } as TrackState, contact, 'WEAPONS_TIGHT', 0, stream);
+    expect(tight({})).toBe('BLOCKED_BY_ROE');
+    expect(tight({ affiliation: 'HOSTILE' })).toBe('BLOCKED_BY_ROE');
+    expect(tight({ affiliation: 'HOSTILE', classifiedAs: 'BIRD_LARGE' })).toBe('BLOCKED_BY_ROE');
+    expect(tight({ affiliation: 'NEUTRAL', classifiedAs: 'QUAD_SMALL' })).toBe('BLOCKED_BY_ROE');
     expect(eff.ammo).toBe(4);
-    const hostile = { ...track, affiliation: 'HOSTILE' } as TrackState;
+    const hostile = { ...track, affiliation: 'HOSTILE', classifiedAs: 'QUAD_SMALL' } as TrackState;
     expect(resolveIntercept(eff, hostile, contact, 'WEAPONS_HOLD', 0, stream)).toBe(
       'BLOCKED_BY_ROE',
     );

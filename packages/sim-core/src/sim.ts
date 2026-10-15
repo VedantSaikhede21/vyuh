@@ -60,6 +60,7 @@ import {
 import { computeEnvironment, type SimEnvironment } from './sun.ts';
 import { sampleHeight, type Heightmap } from './terrain.ts';
 import { createWorld, isWorld, type World } from './world.ts';
+import { noKineticPolygons } from './zones.ts';
 import {
   createScanHistory,
   createTrackFilter,
@@ -156,6 +157,7 @@ export function createSim(
   const log = createEventLog();
   const specs = new Map<string, ContactSpec>(scenario.contacts.map((c) => [c.id, c]));
   const assets = [...scenario.assets].sort(byId);
+  const noKinetic = noKineticPolygons(scenario.zones);
   const radars = scenario.sensors
     .filter((s): s is RadarSensor => s.kind === 'RADAR')
     .sort(byId)
@@ -244,7 +246,15 @@ export function createSim(
     const contact = contactsById.get(track.contactId);
     if (contact === undefined) return;
     if (response === 'INTERCEPT') {
-      const result = resolveIntercept(eff, track, contact, state.roe, tMs, effectorStream);
+      const result = resolveIntercept(
+        eff,
+        track,
+        contact,
+        state.roe,
+        tMs,
+        effectorStream,
+        noKinetic,
+      );
       emit({
         tMs,
         type: 'RESPONSE_OUTCOME',
@@ -569,6 +579,15 @@ export function createSim(
     if (state.camera.trackMode === 'CUE') followLock(tMs);
   }
 
+  /**
+   * The track the EO tracker is holding on this contact (TRACK mode), if any —
+   * the operator is watching it, so a payload release is seen live.
+   */
+  function eoObservingTrack(contactId: string): string | undefined {
+    if (state.camera.trackMode !== 'TRACK' || eoTracker.contactId !== contactId) return undefined;
+    return state.camera.lockTrackId ?? undefined;
+  }
+
   function liveTrackFor(contactId: string): string | undefined {
     return state.tracks.find((t) => t.contactId === contactId && t.status === 'ACTIVE')?.id;
   }
@@ -670,7 +689,16 @@ export function createSim(
     const ctx = { terrain, originElevM, assets, tMs, dtS: TICK_S };
     for (const contact of state.contacts) {
       const spec = specs.get(contact.id);
-      if (spec !== undefined) for (const ev of stepContact(contact, spec, ctx)) emit(ev);
+      if (spec === undefined) continue;
+      for (const ev of stepContact(contact, spec, ctx)) {
+        // Camera state is from the end of the previous tick (cameras update after contacts).
+        const observer = ev.type === 'CONTACT_DROPPED' ? eoObservingTrack(contact.id) : undefined;
+        if (ev.type === 'CONTACT_DROPPED' && observer !== undefined) {
+          emit({ ...ev, trackId: observer });
+        } else {
+          emit(ev);
+        }
+      }
     }
     for (const f of flocks) stepFlock(f, contactsById, specs, terrain, TICK_S);
 
