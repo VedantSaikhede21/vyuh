@@ -9,6 +9,7 @@ import { useSimRuntime } from './sim-context';
 import { SiteMarkers } from './site-markers';
 import { TerrainMesh } from './terrain-mesh';
 import { TrackMarkers } from './track-markers';
+import { ZoneMarkers } from './zone-markers';
 
 /** Starting camera offset from the defended position (x east, z north, metres). */
 const CAMERA_START = { x: -1400, z: -1900, height: 1100 };
@@ -37,6 +38,7 @@ export function TacticalScene({
       <TerrainMesh world={runtime.world} edgeFade />
       <BuildingsMesh index={runtime.world.buildings} />
       <SiteMarkers />
+      <ZoneMarkers labelPortal={element} />
       <Drones />
       <TrackMarkers onSelect={onSelectTrack} labelPortal={element} />
       {element.current && (

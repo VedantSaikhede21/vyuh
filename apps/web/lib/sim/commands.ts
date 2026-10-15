@@ -7,7 +7,8 @@ import type { SimCommand } from '@vyuh/sim-core';
 import { useMemo } from 'react';
 import type { SimRuntime } from './runtime';
 import { effectorSites } from '@/components/hud/use-hud-derived';
-import { actionStates, type ActionId } from '@/lib/hud/derive';
+import { actionStates, roeBlocksIntercept, type ActionId } from '@/lib/hud/derive';
+import { weaponsTightHint } from '@/lib/hud/hints';
 import { snapshot, useHudStore } from './store';
 import { useUiStore } from './ui-store';
 
@@ -86,8 +87,21 @@ export function useCommands(rt: SimRuntime | null) {
     const allowed = (action: ActionId): boolean => {
       const hud = snapshot(rt);
       if (pendingSelect) hud.selectedTrackId = pendingSelect;
-      const state = actionStates(hud, effectorSites(rt, hud))[action];
+      const state = actionStates(hud, effectorSites(rt, hud), rt.scenario.zones)[action];
       if (!state.enabled && state.reason) say(state.reason);
+      // Practice: a refused intercept under WEAPONS_TIGHT also gets a hint (decision 82).
+      const track = hud.tracks.find((t) => t.id === hud.selectedTrackId);
+      if (
+        !state.enabled &&
+        action === 'INTERCEPT' &&
+        rt.mode === 'PRACTICE' &&
+        hud.roe === 'WEAPONS_TIGHT' &&
+        track &&
+        roeBlocksIntercept(hud.roe, track)
+      ) {
+        const h = weaponsTightHint(track.id);
+        ui().hint(now(), h.key, h.text);
+      }
       return state.enabled;
     };
 

@@ -360,7 +360,17 @@ export function ResultScreen({
                   </td>
                   <td className={TD}>
                     {c.outcome && (
-                      <Badge tone={OUTCOME_TONE[c.outcome]}>{OUTCOME_LABEL[c.outcome]}</Badge>
+                      <Badge tone={OUTCOME_TONE[c.outcome]}>
+                        {c.outcome === 'LEAKED' && c.droppedTMs !== undefined
+                          ? 'Payload delivered'
+                          : OUTCOME_LABEL[c.outcome]}
+                      </Badge>
+                    )}
+                    {c.droppedTMs !== undefined && (
+                      <p className="mt-1 whitespace-nowrap text-small text-text-2">
+                        Payload dropped at{' '}
+                        <span className="font-mono tnum">{formatClock(c.droppedTMs)}</span>
+                      </p>
                     )}
                   </td>
                   <td className={cn(TD, 'text-right text-readout')}>

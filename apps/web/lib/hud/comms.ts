@@ -85,6 +85,12 @@ export function eventLine(e: SimEvent, ctx: CommsContext): Omit<CommsLine, 'id'>
         status: res.status,
       };
     }
+    case 'CONTACT_DROPPED':
+      // Only when the EO tracker held the track at the release (decision 70); the
+      // event's x/z and contactId are never shown.
+      return e.trackId
+        ? { tMs: t, text: `${e.trackId} PAYLOAD RELEASE OBSERVED`, status: 'crit' }
+        : null;
     case 'CONTACT_REACHED_ASSET':
       return {
         tMs: t,

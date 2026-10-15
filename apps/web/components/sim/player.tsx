@@ -16,6 +16,7 @@ import type { SimRuntime } from '@/lib/sim/runtime';
 import { useHudStore } from '@/lib/sim/store';
 import { cn } from '@/lib/utils';
 import { SimCanvas } from './sim-canvas';
+import { usePracticeHints } from './use-practice-hints';
 
 /** Bottom row height: 28 px header + a 16:9 EO picture 432 px wide (243 px) + border. */
 const BOTTOM_ROW = 'h-[272px]';
@@ -86,6 +87,7 @@ export function SimPlayer({
   upload?: BatcherStatus | null;
 }) {
   useShortcuts(commands);
+  usePracticeHints(runtime);
   const container = useRef<HTMLDivElement>(null);
   const tactical = useRef<HTMLDivElement>(null);
   const eo = useRef<HTMLDivElement>(null);

@@ -15,6 +15,8 @@ export interface CommsLine {
   status?: CommsStatus;
   /** Echoed on dispatch, not yet applied by the sim (e.g. while paused). */
   pending?: boolean;
+  /** Muted prefix tag, e.g. HINT for practice hints. */
+  tag?: string;
 }
 
 const STATUS_CLASS: Record<CommsStatus, string> = {
@@ -81,6 +83,7 @@ export function CommsLog({
         <li key={l.id} className={cn('flex gap-3 py-0.5 text-readout', l.pending && 'opacity-60')}>
           <span className="shrink-0 text-text-3">{formatClock(l.tMs)}</span>
           <span className={cn('min-w-0 break-words', STATUS_CLASS[l.status ?? 'info'])}>
+            {l.tag && <span className="mr-2 text-label text-text-3">{l.tag}</span>}
             {l.text}
             {l.pending && <span className="text-text-3"> · QUEUED</span>}
           </span>

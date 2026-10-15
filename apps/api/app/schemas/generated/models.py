@@ -743,6 +743,7 @@ class AreaZone(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: AreaZoneKind
     polygon: Annotated[list[tuple[float, float]], Field(min_length=3)]
+    name: Annotated[str | None, Field(max_length=40, min_length=1)] = None
 
 
 class BorderLineZone(BaseModel):
@@ -752,6 +753,7 @@ class BorderLineZone(BaseModel):
     id: Annotated[str, Field(min_length=1)]
     kind: Literal["BORDER_LINE"]
     polyline: Annotated[list[tuple[float, float]], Field(min_length=2)]
+    name: Annotated[str | None, Field(max_length=40, min_length=1)] = None
 
 
 class CameraSlewedPayload(BaseModel):
@@ -960,6 +962,7 @@ class PerContactMetrics(BaseModel):
     ai_suggestion_shown: Annotated[bool | None, Field(alias="aiSuggestionShown")] = None
     ai_suggestion_accepted: Annotated[bool | None, Field(alias="aiSuggestionAccepted")] = None
     ai_suggestion_correct: Annotated[bool | None, Field(alias="aiSuggestionCorrect")] = None
+    dropped_t_ms: Annotated[int | None, Field(alias="droppedTMs", ge=0, le=9007199254740991)] = None
     points: float | None = None
     leaves: list[Leaf]
     feedback: list[str]

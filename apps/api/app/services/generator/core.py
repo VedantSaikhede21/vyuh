@@ -918,14 +918,20 @@ def generate(req: GenerateRequest) -> dict:
         c["aiSuggestion"] = cs.ai_suggestion(ai_rng, c["class"], accuracy)
 
     zones: list[dict] = [
-        {"id": f"nk{i + 1}", "kind": "NO_KINETIC", "polygon": [list(p) for p in box]}
+        {
+            "id": f"Z{i + 1}",
+            "kind": "NO_KINETIC",
+            "name": "village",
+            "polygon": [list(p) for p in box],
+        }
         for i, box in enumerate(where.no_kinetic)
     ]
     if ctx.border_axis is not None:
         zones.append(
             {
-                "id": "bl1",
+                "id": "B1",
                 "kind": "BORDER_LINE",
+                "name": "border",
                 "polyline": _border_line(asset, ctx.border_axis, level.spawn_m, half),
             }
         )
