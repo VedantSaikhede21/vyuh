@@ -12,7 +12,8 @@
     "test": "vitest run",
     "e2e": "playwright test --grep-invert \"@fps|@checkpoint\"",
     "e2e:update": "playwright test --grep-invert \"@fps|@checkpoint\" --update-snapshots",
-    "e2e:fps": "playwright test --grep @fps",
+    "e2e:fps": "playwright test --grep @fps --grep-invert @fps150",
+    "e2e:fps:150": "playwright test --grep @fps150",
     "record:landing": "node scripts/record-landing.ts",
     "e2e:checkpoint": "playwright test --grep @checkpoint"
   },
