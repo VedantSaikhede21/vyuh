@@ -1,11 +1,12 @@
-import { buildingTopAt } from './buildings.ts';
+import { buildingTopAt, cellTopAt } from './buildings.ts';
 import type { Vec3 } from './coords.ts';
 import { sampleHeight } from './terrain.ts';
 import type { World } from './world.ts';
 
 // Line of sight (SPEC §5): sample the straight segment sensor → contact at a
 // fixed ~10 m horizontal step (integer step count, endpoints excluded) and test
-// each sample against the terrain and the building footprints in its grid cell.
+// each sample against the terrain and the building footprints in its grid cell
+// (skipped when the sample is above the cell's highest roof).
 
 export const LOS_STEP_M = 10;
 /** A sample this close above an obstacle still counts as clear (DEM noise). */
@@ -26,7 +27,11 @@ export function hasLineOfSight(world: World, from: Readonly<Vec3>, to: Readonly<
     const y = from.y + dy * t;
     const z = from.z + dz * t;
     if (y + LOS_TOLERANCE_M < sampleHeight(world.heightmap, x, z)) return false;
-    if (checkBuildings && horiz * t > LOS_OWN_SITE_M) {
+    if (
+      checkBuildings &&
+      horiz * t > LOS_OWN_SITE_M &&
+      y + LOS_TOLERANCE_M < cellTopAt(world.buildings, x, z)
+    ) {
       const top = buildingTopAt(world.buildings, x, z);
       if (top !== null && y + LOS_TOLERANCE_M < top) return false;
     }
