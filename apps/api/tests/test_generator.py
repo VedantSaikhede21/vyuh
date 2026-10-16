@@ -33,11 +33,14 @@ from app.services.generator.difficulty import (
     MIN_WARNING_S,
 )
 from app.services.generator.environment import (
+    DAY_LABEL_MIN_EL_DEG,
     DAY_MIN_EL_DEG,
     DUSK_EL_DEG,
     NIGHT_MAX_EL_DEG,
+    NIGHT_SUN_EL_DEG,
     band_times,
     sun_elevation_deg,
+    time_band_for_elevation,
 )
 from app.services.generator.static_checks import contact_problems
 from app.services.scenarios import scenario_rule_violations
@@ -445,12 +448,17 @@ def test_noaa_sun_matches_suncalc() -> None:
     fixture = json.loads((CROSSCHECK / "sun_elevations.json").read_text(encoding="utf-8"))
     for preset, rows in fixture.items():
         meta = load_terrain(preset).meta
-        for date, time, expected in rows:
+        for date, time, expected, band in rows:
             h, m = map(int, time.split(":"))
             el = sun_elevation_deg(
                 meta.origin.lat, meta.origin.lon, date, h * 60 + m, meta.utc_offset_min
             )
             assert el == pytest.approx(expected, abs=0.5), (preset, date, time)
+            # The shared band rule on suncalc's elevation is sim-core's answer.
+            assert time_band_for_elevation(expected) == band, (preset, date, time)
+            # NOAA agrees except within the cross-check tolerance of a threshold.
+            if all(abs(el - t) > 0.5 for t in (NIGHT_SUN_EL_DEG, DAY_LABEL_MIN_EL_DEG)):
+                assert time_band_for_elevation(el) == band, (preset, date, time)
 
 
 @pytest.mark.parametrize("date", ["2026-01-10", "2026-06-21", "2026-11-20"])
