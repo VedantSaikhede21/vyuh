@@ -31,6 +31,14 @@ const RT_H = 360;
 const ASPECT = RT_W / RT_H;
 /** Day-camera exposure into the filmic curve: keeps the ground mid-grey and the sky below white. */
 const EO_DAY_EXPOSURE = 0.6;
+/**
+ * The camera picture updates at a video rate of 30 fps (Phase 3b Step 2b);
+ * between updates the display quad shows the last picture. Display only: the
+ * sim's EO sensor and tracker run on the sim tick. The slack lets a 60 Hz
+ * display update every second frame.
+ */
+const EO_FRAME_S = 1 / 30;
+const EO_FRAME_SLACK_S = 0.004;
 
 export function vfovDeg(hfovDeg: number): number {
   const h = (hfovDeg * Math.PI) / 180;
@@ -86,10 +94,25 @@ interface EoFrame {
   target: WebGLRenderTarget;
   material: ShaderMaterial;
   state: RootState;
+  /** Clock time of the last picture update (s); updated here. */
+  last: { s: number };
 }
 
-/** Point the EO camera, render the world into the target (IR materials if thermal), update the shader. */
-function renderEoFrame({ rt, mast, fovMax, eoScene, camera, target, material, state }: EoFrame) {
+/**
+ * Point the EO camera and, at the video rate, render the world into the target
+ * (IR materials if thermal) and update the shader.
+ */
+function renderEoFrame({
+  rt,
+  mast,
+  fovMax,
+  eoScene,
+  camera,
+  target,
+  material,
+  state,
+  last,
+}: EoFrame) {
   const ui = useUiStore.getState();
   const simCam = rt.sim.getState().camera;
   if (ui.eo.trackMode !== simCam.trackMode) {
@@ -125,6 +148,9 @@ function renderEoFrame({ rt, mast, fovMax, eoScene, camera, target, material, st
     camera.updateProjectionMatrix();
   }
 
+  const now = state.clock.elapsedTime;
+  if (now - last.s < EO_FRAME_S - EO_FRAME_SLACK_S) return;
+  last.s = now;
   const gl = state.gl;
   const restore = ui.eo.mode === 'IR' ? swapToIr(eoScene) : null;
   const prev = gl.getRenderTarget();
@@ -181,8 +207,21 @@ export function EoScene() {
     [target, material],
   );
 
+  const last = useRef({ s: -Infinity });
   useFrame((state) => {
-    if (mast) renderEoFrame({ rt, mast, fovMax, eoScene, camera, target, material, state });
+    if (mast) {
+      renderEoFrame({
+        rt,
+        mast,
+        fovMax,
+        eoScene,
+        camera,
+        target,
+        material,
+        state,
+        last: last.current,
+      });
+    }
   });
 
   return (
