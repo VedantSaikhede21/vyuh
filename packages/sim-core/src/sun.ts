@@ -1,12 +1,18 @@
-import type { Scenario, TerrainPresetMeta, Weather } from '@vyuh/shared';
+import type { Scenario, TerrainPresetMeta, TimeBand, Weather } from '@vyuh/shared';
+import {
+  NIGHT_SUN_EL_DEG,
+  timeBandForElevation,
+  timeBandLabel,
+  type TimeBandLabel,
+} from '@vyuh/shared';
 import SunCalc from 'suncalc';
 
 // Sun and night (SPEC §5, §14): suncalc at the preset origin. The instant is
 // built from the scenario's local date/time and the preset's explicit UTC
 // offset — never the machine's timezone — so it is identical everywhere.
 
-/** Civil twilight: night when the sun is more than 6° below the horizon. */
-export const NIGHT_SUN_EL_DEG = -6;
+/** Civil twilight: night when the sun is more than 6° below the horizon (packages/shared). */
+export { NIGHT_SUN_EL_DEG };
 /** Fallback when a bare Heightmap (no preset meta) is used: IST. */
 export const DEFAULT_UTC_OFFSET_MIN = 330;
 
@@ -56,6 +62,31 @@ export function isNightAt(
   return (
     sunPosition(lat, lon, localInstantMs(date, time, meta.utcOffsetMin)).elDeg < NIGHT_SUN_EL_DEG
   );
+}
+
+export interface TimeOfDay {
+  readonly band: TimeBand;
+  /** "Dawn" for the DUSK band while the sun is rising. */
+  readonly label: TimeBandLabel;
+  readonly sunElDeg: number;
+  readonly sunRising: boolean;
+}
+
+/** Look-ahead used to tell a rising sun from a setting one. */
+const RISING_LOOKAHEAD_MS = 10 * 60_000;
+
+/** Time-of-day band and label for a local date/time at a preset (shared rule, decision 74). */
+export function timeOfDayAt(
+  date: string,
+  time: string,
+  meta: Pick<TerrainPresetMeta, 'origin' | 'utcOffsetMin'>,
+): TimeOfDay {
+  const { lat, lon } = meta.origin;
+  const instant = localInstantMs(date, time, meta.utcOffsetMin);
+  const sunElDeg = sunPosition(lat, lon, instant).elDeg;
+  const sunRising = sunPosition(lat, lon, instant + RISING_LOOKAHEAD_MS).elDeg > sunElDeg;
+  const band = timeBandForElevation(sunElDeg);
+  return { band, label: timeBandLabel(band, sunRising), sunElDeg, sunRising };
 }
 
 export function computeEnvironment(

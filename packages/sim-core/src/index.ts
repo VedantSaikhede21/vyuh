@@ -135,8 +135,9 @@ export {
   isNightAt,
   localInstantMs,
   sunPosition,
+  timeOfDayAt,
 } from './sun.ts';
-export type { SimEnvironment, SunAzElDeg } from './sun.ts';
+export type { SimEnvironment, SunAzElDeg, TimeOfDay } from './sun.ts';
 export {
   CAMERA_FOLLOW_RATE,
   EO_ACQUIRE_FRAME_FRACTION,

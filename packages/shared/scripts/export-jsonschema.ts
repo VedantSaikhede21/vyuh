@@ -6,9 +6,12 @@ import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import {
   CLASS_PROFILES,
+  DAY_MIN_EL_DEG,
   FIRST_TRACK_MAX_DIFFICULTY,
   FIRST_TRACK_MAX_S,
+  GENERATOR_BAND_WINDOWS_DEG,
   MIN_WARNING_S,
+  NIGHT_SUN_EL_DEG,
   ThreatClass,
   schemaRegistry,
 } from '../src/index.ts';
@@ -19,6 +22,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const outFile = resolve(here, '../schema/vyuh.schema.json');
 const profilesFile = resolve(here, '../../../apps/api/app/seed/generated/class_profiles.json');
 const difficultyFile = resolve(here, '../../../apps/api/app/seed/generated/difficulty.json');
+const timeBandsFile = resolve(here, '../../../apps/api/app/seed/generated/time_bands.json');
 const REF_PREFIX = '#/$defs/';
 const DISCRIMINATOR_KEYS = ['type', 'kind'];
 
@@ -128,3 +132,19 @@ writeFileSync(
   'utf8',
 );
 console.log(`Wrote difficulty constants → ${difficultyFile}`);
+
+// Time-of-day bands for the generator (decision 74), same pattern.
+const timeBands = {
+  _generated:
+    'GENERATED FILE — DO NOT EDIT. Source: packages/shared/src/time-band.ts; run `pnpm gen:schemas`.',
+  nightSunElDeg: NIGHT_SUN_EL_DEG,
+  dayMinElDeg: DAY_MIN_EL_DEG,
+  generatorWindowsDeg: GENERATOR_BAND_WINDOWS_DEG,
+};
+writeFileSync(
+  timeBandsFile,
+  `${JSON.stringify(timeBands, null, 2)}
+`,
+  'utf8',
+);
+console.log(`Wrote time bands → ${timeBandsFile}`);

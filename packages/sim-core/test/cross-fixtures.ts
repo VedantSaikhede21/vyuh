@@ -1,8 +1,8 @@
-import { localInstantMs, sampleHeight, sunPosition } from '../src/index.ts';
+import { localInstantMs, sampleHeight, sunPosition, timeOfDayAt } from '../src/index.ts';
 import { presetWorld } from './fixtures.ts';
 
 // Values the API's Python copies of simple maths must match (decision 73):
-// terrain heights now, sun times for the generator's time bands later. Written
+// terrain heights, sun elevations and the shared time-of-day band. Written
 // by scripts/export-api-fixtures.ts; a sim-core test fails if they are stale.
 
 export const CROSSCHECK_DIR = new URL(
@@ -39,16 +39,17 @@ const SUN_TIMES = [
   '22:50',
 ];
 
-/** [date, time, sun elevation °] at each file preset's origin and UTC offset. */
-function sunElevations(preset: string): [string, string, number][] {
+/** [date, time, sun elevation °, time band] at each file preset's origin and UTC offset. */
+function sunElevations(preset: string): [string, string, number, string][] {
   const meta = presetWorld(preset).meta;
   if (meta === null) throw new Error(`${preset} has no meta`);
   return SUN_DATES.flatMap((date) =>
-    SUN_TIMES.map((time): [string, string, number] => [
+    SUN_TIMES.map((time): [string, string, number, string] => [
       date,
       time,
       sunPosition(meta.origin.lat, meta.origin.lon, localInstantMs(date, time, meta.utcOffsetMin))
         .elDeg,
+      timeOfDayAt(date, time, meta).band,
     ]),
   );
 }

@@ -7,18 +7,26 @@ only has to pick times that sit clearly inside a band.
 """
 
 import datetime as dt
+import json
 import math
 import random
+from pathlib import Path
 
 from app.services.generator.streams import uniform
 
-#: Sim rule (packages/sim-core/src/sun.ts): night when the sun is below -6 deg.
-NIGHT_SUN_EL_DEG = -6.0
-#: Band windows keep ≥ 2° away from the night threshold, so a small model
+#: Written by `pnpm gen:schemas` from packages/shared/src/time-band.ts.
+TIME_BANDS_FILE = Path(__file__).resolve().parents[2] / "seed" / "generated" / "time_bands.json"
+_BANDS = json.loads(TIME_BANDS_FILE.read_text("utf-8"))
+#: Sim rule (shared): night when the sun is below -6 deg.
+NIGHT_SUN_EL_DEG: float = _BANDS["nightSunElDeg"]
+#: Label bands (shared): DAY at or above this, DUSK between it and the night rule.
+DAY_LABEL_MIN_EL_DEG: float = _BANDS["dayMinElDeg"]
+#: Generator windows keep ≥ 2° away from the night threshold, so a small model
 #: difference between NOAA and suncalc can never flip `isNight`.
-DAY_MIN_EL_DEG = 15.0
-DUSK_EL_DEG = (-4.0, 6.0)
-NIGHT_MAX_EL_DEG = -12.0
+_WINDOWS = _BANDS["generatorWindowsDeg"]
+DAY_MIN_EL_DEG: float = _WINDOWS["DAY"][0]
+DUSK_EL_DEG: tuple[float, float] = (_WINDOWS["DUSK"][0], _WINDOWS["DUSK"][1])
+NIGHT_MAX_EL_DEG: float = _WINDOWS["NIGHT"][1]
 #: Candidate times are on a 10-minute grid, local time.
 STEP_MIN = 10
 #: Fixed scenario year (dates only vary the season).
@@ -75,6 +83,15 @@ def sun_elevation_deg(
         math.radians(hour_angle)
     )
     return 90 - math.degrees(math.acos(max(-1.0, min(1.0, cos_zenith))))
+
+
+def time_band_for_elevation(el_deg: float) -> str:
+    """Shared label band (packages/shared timeBandForElevation): NIGHT / DUSK / DAY."""
+    if el_deg < NIGHT_SUN_EL_DEG:
+        return "NIGHT"
+    if el_deg < DAY_LABEL_MIN_EL_DEG:
+        return "DUSK"
+    return "DAY"
 
 
 def hhmm(minutes: int) -> str:
