@@ -1,14 +1,27 @@
 import { expect, test, type Page } from '@playwright/test';
+import { ADAPTIVE_PIXEL_RATIO_KEY } from '../lib/sim/pixel-ratio';
 import { login, openBriefing } from './helpers';
 
 // FPS check (decision 45 method: headless Chrome, ANGLE D3D11, integrated GPU),
-// tagged @fps so `pnpm e2e` skips it: run `pnpm --filter @vyuh/web e2e:fps`.
+// tagged @fps so `pnpm e2e` skips it: run `pnpm --filter @vyuh/web e2e:fps`
+// (100 % display scaling) and `e2e:fps:150` (150 %: Windows display scaling is
+// emulated as deviceScaleFactor 1.5, so the canvas renders up to 2.25× the pixels).
 // S13 and S14 are real training sessions (instructor list), and the generated
 // cases are created through POST /scenarios/generate as an instructor, so the
 // same spec measures a production build (E2E_BASE_URL). The 60-bird stress case
 // needs the dev hero route and is skipped where it does not exist.
 // Budget: SPEC §16, ≥ 30 fps. Also reported: WebGL draw calls per frame (counted
-// by wrapping the context's draw* calls) and the scenario's entity count.
+// by wrapping the context's draw* calls), the scenario's entity count and the
+// canvas pixel ratio actually used. Each case runs with the pixel ratio fixed
+// (as in every other e2e run) and adaptive (PerformanceMonitor, as for users);
+// FPS_MODES=fixed or FPS_MODES=adaptive runs one of them.
+//
+// Repeatable method (Phase 3b): before each case the browser idles on a blank
+// page for FPS_COOLDOWN_MS (default 30 s) so heat from the previous case does
+// not carry over; at the measuring time a 5 s warm-up window is discarded, then
+// three 10 s windows are sampled and the median window (by mean FPS) is
+// reported, with all three listed. For fully independent runs add
+// `--repeat-each 3`.
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
 
@@ -68,7 +81,25 @@ const VIEWPORTS = [
   { width: 1920, height: 1080 },
   { width: 1366, height: 768 },
 ];
-const SAMPLE_MS = 10_000;
+/** Display scaling: title tag → deviceScaleFactor. */
+const SCALES = [
+  { tag: '@fps', factor: 1 },
+  { tag: '@fps150', factor: 1.5 },
+];
+const WARMUP_MS = 5_000;
+const WINDOW_MS = 10_000;
+const WINDOWS = 3;
+const COOLDOWN_MS = Number(process.env.FPS_COOLDOWN_MS ?? 30_000);
+const MODES = (process.env.FPS_MODES ?? 'fixed,adaptive').split(',') as ('fixed' | 'adaptive')[];
+
+/** Opt this page into the adaptive pixel ratio (fixed under automation by default). */
+const ADAPTIVE = (key: string) => {
+  try {
+    window.localStorage.setItem(key, '1');
+  } catch {
+    // about:blank has no storage
+  }
+};
 
 /** Count WebGL draw calls (all contexts) into window.__vyuhDrawCalls. */
 const COUNT_DRAWS = () => {
@@ -137,76 +168,112 @@ async function runTo(page: Page, atMs: number) {
   }
 }
 
-for (const vp of VIEWPORTS) {
-  for (const c of CASES) {
-    test(`${c.name} at ${vp.width}×${vp.height} @fps`, async ({ page }) => {
-      test.setTimeout(300_000);
-      await page.addInitScript(COUNT_DRAWS);
-      await page.setViewportSize(vp);
-      let entities: number | null = null;
-      if (c.code || c.generate) {
-        await login(page, 'instructor@demo');
-        if (c.generate) {
-          const g = await startGenerated(page, c.generate);
-          entities = g.entities;
-          await page.goto(`/train/session/${g.sessionId}`);
-        } else {
-          await openBriefing(page, c.code!);
-        }
-        await page.getByTestId('start-session').click();
-        await expect(page.getByTestId('sim-player')).toBeVisible();
-        await page.waitForTimeout(1500);
-        await runTo(page, c.atMs);
-      } else {
-        const res = await page.goto(`/dev/hero?${c.hero}`);
-        test.skip(res?.status() === 404, 'dev hero route is not in production builds');
-        await page.waitForFunction(() => window.__vyuhHero?.ready === true, null, {
-          timeout: 120_000,
-        });
-      }
-      await page.waitForTimeout(2000); // shader compile and first frames
-      const sample = await page.evaluate(
-        (ms) =>
-          new Promise<{ frames: number[]; draws: number }>((resolve) => {
-            const w = window as unknown as { __vyuhDrawCalls: number };
-            const out: number[] = [];
-            const d0 = w.__vyuhDrawCalls;
-            let last = performance.now();
-            const t0 = last;
-            const f = (now: number) => {
-              out.push(now - last);
-              last = now;
-              if (now - t0 < ms) requestAnimationFrame(f);
-              else resolve({ frames: out, draws: w.__vyuhDrawCalls - d0 });
+interface FrameWindow {
+  meanFps: number;
+  p95FrameMs: number;
+  drawCallsPerFrame: number;
+}
+
+/** Sample rAF frame times for `ms`; draw calls counted over the same frames. */
+async function sampleWindow(page: Page, ms: number): Promise<FrameWindow> {
+  const { frames, draws } = await page.evaluate(
+    (ms) =>
+      new Promise<{ frames: number[]; draws: number }>((resolve) => {
+        const w = window as unknown as { __vyuhDrawCalls: number };
+        const out: number[] = [];
+        const d0 = w.__vyuhDrawCalls;
+        let last = performance.now();
+        const t0 = last;
+        const f = (now: number) => {
+          out.push(now - last);
+          last = now;
+          if (now - t0 < ms) requestAnimationFrame(f);
+          else resolve({ frames: out, draws: w.__vyuhDrawCalls - d0 });
+        };
+        requestAnimationFrame(f);
+      }),
+    ms,
+  );
+  const sorted = [...frames].sort((a, b) => a - b);
+  const mean = frames.reduce((a, b) => a + b, 0) / frames.length;
+  return {
+    meanFps: Math.round(1000 / mean),
+    p95FrameMs: Math.round(sorted[Math.floor(sorted.length * 0.95)]! * 10) / 10,
+    drawCallsPerFrame: Math.round(draws / frames.length),
+  };
+}
+
+for (const scale of SCALES) {
+  test.describe(`display scaling ${scale.factor * 100} %`, () => {
+    test.use({ deviceScaleFactor: scale.factor });
+    for (const vp of VIEWPORTS) {
+      for (const c of CASES) {
+        for (const mode of MODES) {
+          const title = `${c.name} at ${vp.width}×${vp.height} ×${scale.factor} ${mode} ${scale.tag}`;
+          test(title, async ({ page }) => {
+            test.setTimeout(420_000);
+            await page.goto('about:blank');
+            await page.waitForTimeout(COOLDOWN_MS);
+            await page.addInitScript(COUNT_DRAWS);
+            if (mode === 'adaptive') await page.addInitScript(ADAPTIVE, ADAPTIVE_PIXEL_RATIO_KEY);
+            await page.setViewportSize(vp);
+            let entities: number | null = null;
+            if (c.code || c.generate) {
+              await login(page, 'instructor@demo');
+              if (c.generate) {
+                const g = await startGenerated(page, c.generate);
+                entities = g.entities;
+                await page.goto(`/train/session/${g.sessionId}`);
+              } else {
+                await openBriefing(page, c.code!);
+              }
+              await page.getByTestId('start-session').click();
+              await expect(page.getByTestId('sim-player')).toBeVisible();
+              await page.waitForTimeout(1500);
+              await runTo(page, c.atMs);
+            } else {
+              const res = await page.goto(`/dev/hero?${c.hero}`);
+              test.skip(res?.status() === 404, 'dev hero route is not in production builds');
+              await page.waitForFunction(() => window.__vyuhHero?.ready === true, null, {
+                timeout: 120_000,
+              });
+            }
+            await page.waitForTimeout(2000); // shader compile and first frames
+            await sampleWindow(page, WARMUP_MS);
+            const windows: FrameWindow[] = [];
+            for (let i = 0; i < WINDOWS; i++) windows.push(await sampleWindow(page, WINDOW_MS));
+            const median = [...windows].sort((a, b) => a.meanFps - b.meanFps)[1]!;
+            const tracks = await page
+              .getByRole('tab', { name: /Tracks/ })
+              .textContent()
+              .catch(() => null);
+            const result = {
+              ...median,
+              windows: windows.map((w) => `${w.meanFps} fps / p95 ${w.p95FrameMs} ms`),
+              entities,
+              activeTracks: tracks ? Number(tracks.replace(/\D+/g, '')) : null,
+              ...(await page.evaluate(() => {
+                // The shared 3D canvas is the largest one (the radar PPI is a small 2D canvas).
+                const canvas = [...document.querySelectorAll('canvas')].sort(
+                  (a, b) => b.clientWidth * b.clientHeight - a.clientWidth * a.clientHeight,
+                )[0];
+                const gl = document.createElement('canvas').getContext('webgl');
+                const ext = gl?.getExtension('WEBGL_debug_renderer_info');
+                return {
+                  devicePixelRatio: window.devicePixelRatio,
+                  canvasPixelRatio: canvas
+                    ? Math.round((canvas.width / canvas.clientWidth) * 100) / 100
+                    : null,
+                  gpu: ext && gl ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : 'unknown',
+                };
+              })),
             };
-            requestAnimationFrame(f);
-          }),
-        SAMPLE_MS,
-      );
-      const { frames } = sample;
-      const sorted = [...frames].sort((a, b) => a - b);
-      const mean = frames.reduce((a, b) => a + b, 0) / frames.length;
-      const p95 = sorted[Math.floor(sorted.length * 0.95)]!;
-      const tracks = await page
-        .getByRole('tab', { name: /Tracks/ })
-        .textContent()
-        .catch(() => null);
-      const result = {
-        meanFps: Math.round(1000 / mean),
-        p95FrameMs: Math.round(p95 * 10) / 10,
-        drawCallsPerFrame: Math.round(sample.draws / frames.length),
-        entities,
-        activeTracks: tracks ? Number(tracks.replace(/\D+/g, '')) : null,
-        frames: frames.length,
-        gpu: await page.evaluate(() => {
-          const gl = document.createElement('canvas').getContext('webgl');
-          const ext = gl?.getExtension('WEBGL_debug_renderer_info');
-          return ext && gl ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : 'unknown';
-        }),
-      };
-      console.log(`${c.name} ${vp.width}×${vp.height}: ${JSON.stringify(result)}`);
-      test.info().annotations.push({ type: 'fps', description: JSON.stringify(result) });
-      expect(result.meanFps).toBeGreaterThanOrEqual(30);
-    });
-  }
+            console.log(`${title.replace(/ @fps\d*$/, '')}: ${JSON.stringify(result)}`);
+            test.info().annotations.push({ type: 'fps', description: JSON.stringify(result) });
+            expect(result.meanFps).toBeGreaterThanOrEqual(30);
+          });
+        }
+      }
+    }
+  });
 }
