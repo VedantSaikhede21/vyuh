@@ -2,10 +2,13 @@ import { sampleHeight, type Heightmap } from './terrain.ts';
 
 // Building footprints (SPEC §5): 2D polygons in the scenario frame with a
 // height, indexed in a uniform grid so LOS can test a sample point against only
-// the buildings in its cell.
+// the buildings in its cell. Each cell also keeps its highest roof, so a sample
+// above it skips the footprint tests (Phase 3b: dense towns). The early-out
+// cannot change a result: a covering building's roof is never above its cells'
+// maximum.
 
 /** Grid cell size for the footprint index, metres. */
-export const BUILDING_CELL_M = 100;
+export const BUILDING_CELL_M = 25;
 
 /** A footprint as read from buildings.geojson: exterior ring [x, z] + height. */
 export interface BuildingFootprint {
@@ -31,6 +34,8 @@ export interface BuildingIndex {
   readonly half: number;
   /** cell key → building indices (ascending). */
   readonly cells: ReadonlyMap<number, readonly number[]>;
+  /** cell key → highest roof (scenario-frame y) of the buildings in it; −Infinity if none. */
+  readonly cellTop: Float64Array;
 }
 
 /** Even-odd ray-crossing test; the ring may be open or closed. */
@@ -61,6 +66,7 @@ export function createBuildingIndex(
   const geo = { cellM, cols, half };
   const buildings: Building[] = [];
   const cells = new Map<number, number[]>();
+  const cellTop = new Float64Array(cols * cols).fill(-Infinity);
   for (const fp of footprints) {
     if (fp.ring.length < 3 || !(fp.heightM > 0)) continue;
     let minX = Infinity;
@@ -76,17 +82,25 @@ export function createBuildingIndex(
       baseY = Math.min(baseY, sampleHeight(terrain, x, z));
     }
     const i = buildings.length;
-    buildings.push({ ...fp, baseY, topY: baseY + fp.heightM, minX, maxX, minZ, maxZ });
+    const topY = baseY + fp.heightM;
+    buildings.push({ ...fp, baseY, topY, minX, maxX, minZ, maxZ });
     for (let cz = cellOf(geo, minZ); cz <= cellOf(geo, maxZ); cz++) {
       for (let cx = cellOf(geo, minX); cx <= cellOf(geo, maxX); cx++) {
         const key = cz * cols + cx;
         const list = cells.get(key);
         if (list) list.push(i);
         else cells.set(key, [i]);
+        if (topY > (cellTop[key] ?? -Infinity)) cellTop[key] = topY;
       }
     }
   }
-  return { buildings, cellM, cols, half, cells };
+  return { buildings, cellM, cols, half, cells, cellTop };
+}
+
+/** Highest roof of any building in the cell containing (x, z); −Infinity if none or off the map. */
+export function cellTopAt(index: BuildingIndex, x: number, z: number): number {
+  if (Math.abs(x) > index.half || Math.abs(z) > index.half) return -Infinity;
+  return index.cellTop[cellOf(index, z) * index.cols + cellOf(index, x)] ?? -Infinity;
 }
 
 /** Highest roof (scenario-frame y) of the buildings covering (x, z), or null. */

@@ -106,6 +106,7 @@ export type { CameraState, DispatchResult, Sim, SimCommand, SimOptions, SimState
 export {
   BUILDING_CELL_M,
   buildingTopAt,
+  cellTopAt,
   createBuildingIndex,
   parseBuildingsGeoJson,
   pointInRing,
