@@ -29,6 +29,11 @@ TEST_DATABASE_URL = os.environ.get(
 )
 TEST_SECRET = "test-secret-" + "x" * 40
 
+# Code that calls get_settings() directly (e.g. the generator's TERRAIN_DIR) must not
+# depend on the developer's .env: environment variables take precedence over it.
+os.environ["AUTH_MODE"] = "local"
+os.environ["LOCAL_JWT_SECRET"] = TEST_SECRET
+
 
 def make_settings(**overrides: Any) -> Settings:
     values: dict[str, Any] = {
