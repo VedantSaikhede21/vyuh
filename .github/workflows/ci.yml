@@ -74,6 +74,11 @@ jobs:
   generator-sweep:
     name: generator sweep (20 per difficulty, ≤ 2 % fail)
     runs-on: ubuntu-latest
+    # The generator reads TERRAIN_DIR through the API Settings, which validate auth.
+    # The sweep never signs a token, so a fixed dummy secret is enough (as in conftest).
+    env:
+      AUTH_MODE: local
+      LOCAL_JWT_SECRET: ci-generator-sweep-not-a-secret-xxxxxxxxxx
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
