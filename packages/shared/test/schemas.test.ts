@@ -286,6 +286,7 @@ describe('ScenarioListResponse', () => {
       terrainPreset: 'PROCEDURAL_HILLS',
       date: '2026-11-20',
       time: '10:30',
+      weather: { visibilityM: 10000, rainMmph: 0, windMps: 3, windDirDeg: 300, cloudPct: 20 },
       tags: ['tutorial'],
       bestScore: null,
     };
