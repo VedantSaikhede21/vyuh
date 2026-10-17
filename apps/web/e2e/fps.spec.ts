@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { SIM_VERSION } from '@vyuh/sim-core';
 import { ADAPTIVE_PIXEL_RATIO_KEY } from '../lib/sim/pixel-ratio';
 import { login, openBriefing } from './helpers';
 
@@ -136,7 +137,7 @@ const COUNT_DRAWS = () => {
 
 async function startGenerated(page: Page, body: Record<string, unknown>) {
   return page.evaluate(
-    async ({ api, body }) => {
+    async ({ api, body, simVersion }) => {
       const token = window.localStorage.getItem('vyuh.localToken');
       const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
       const gen = await fetch(`${api}/scenarios/generate`, {
@@ -152,7 +153,7 @@ async function startGenerated(page: Page, body: Record<string, unknown>) {
       const ses = await fetch(`${api}/sessions`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ scenarioId: g.scenarioId, mode: 'PRACTICE', simVersion: 3 }),
+        body: JSON.stringify({ scenarioId: g.scenarioId, mode: 'PRACTICE', simVersion }),
       });
       if (!ses.ok) throw new Error(`session ${ses.status} ${await ses.text()}`);
       return {
@@ -161,7 +162,7 @@ async function startGenerated(page: Page, body: Record<string, unknown>) {
         threats: g.scenario.contacts.filter((c) => c.isThreat).length,
       };
     },
-    { api: API, body },
+    { api: API, body, simVersion: SIM_VERSION },
   );
 }
 

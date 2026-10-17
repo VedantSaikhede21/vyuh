@@ -11,6 +11,7 @@ import {
   eoHfovDeg,
   eoIfovRad,
   eoLevel,
+  irVisibilityFactor,
   followPointing,
   inEoFrustum,
   isNightAt,
@@ -119,6 +120,25 @@ describe('EO/IR Johnson criteria (SPEC §6.2)', () => {
     expect(eoLevel(eo, day, target(3100, heli), hazy)).toBeNull();
     expect(eoLevel(eo, ir, target(3100, heli), hazy)).toBe('IDENTIFY');
     expect(eoLevel(eo, ir, target(4600, heli), hazy)).toBeNull();
+  });
+
+  it('gives IR no range bonus in fog, ramping to 1.5 × through haze (SIM_VERSION 4)', () => {
+    // factor = 1 at ≤ 1 km visibility, linear to 1.5 at ≥ 3 km (decision 94).
+    const cases: [number, number][] = [
+      [800, 1],
+      [1000, 1],
+      [2000, 1.25],
+      [3000, 1.5],
+      [5000, 1.5],
+    ];
+    const heli = CLASS_PROFILES.HELICOPTER_FRIENDLY;
+    for (const [visibilityM, factor] of cases) {
+      expect(irVisibilityFactor(visibilityM)).toBeCloseTo(factor, 9);
+      const cap = visibilityM * factor;
+      const cond = { isNight: false, visibilityM };
+      expect(eoLevel(eo, ir, target(cap - 50, heli), cond), `${visibilityM} m`).not.toBeNull();
+      expect(eoLevel(eo, ir, target(cap + 50, heli), cond), `${visibilityM} m`).toBeNull();
+    }
   });
 
   it('needs IR at night, where thermal contrast reduces the cycles', () => {
