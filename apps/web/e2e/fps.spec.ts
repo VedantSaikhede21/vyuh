@@ -39,6 +39,7 @@ interface Case {
 const CASES: Case[] = [
   { name: 'S13 Silent Ridge (JK, buildings)', code: 'S13', atMs: 30_000 },
   { name: 'S14 Mixed Sky', code: 'S14', atMs: 30_000 },
+  { name: 'S06 Crowded Skies (URBAN, 13.6 k buildings)', code: 'S06', atMs: 70_000 },
   {
     name: 'Generated JK D4 seed 37',
     generate: { terrainPreset: 'JK_MOUNTAIN', difficulty: 4, seed: 37 },
