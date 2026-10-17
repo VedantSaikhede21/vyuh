@@ -12,17 +12,27 @@ import {
 } from '../src/index.ts';
 
 export const flatTerrain: Heightmap = createHeightmap(20_000, 2, new Float32Array(4));
-/** A preset's World: built-in, or decoded from apps/web/public/terrain/<NAME>/. */
+const worlds = new Map<string, World>();
+
+/**
+ * A preset's World: built-in, or decoded from apps/web/public/terrain/<NAME>/.
+ * Cached per test worker: a World is read-only, and indexing a dense preset's
+ * footprints (URBAN_GENERIC, 13.6 k) on every call made tests slow.
+ */
 export function presetWorld(name: string): World {
   const builtin = builtinWorld(name);
   if (builtin) return builtin;
+  const cached = worlds.get(name);
+  if (cached) return cached;
   const dir = new URL(`../../../apps/web/public/terrain/${name}/`, import.meta.url);
   const meta = TerrainPresetMeta.parse(JSON.parse(readFileSync(new URL('meta.json', dir), 'utf8')));
-  return worldFromPreset(
+  const world = worldFromPreset(
     meta,
     readFileSync(new URL(meta.files.heightmap, dir)),
     JSON.parse(readFileSync(new URL(meta.files.buildings, dir), 'utf8')),
   );
+  worlds.set(name, world);
+  return world;
 }
 
 export const hills: Heightmap = createProceduralTerrain({ seed: 1, resolution: 129 });

@@ -10,5 +10,6 @@ describe('API cross-check fixtures (apps/api/tests/fixtures/crosscheck)', () => 
       );
       expect(committed, name).toEqual(JSON.parse(JSON.stringify(value)));
     }
-  });
+    // Loads every file preset, URBAN_GENERIC's 13.6 k footprints included.
+  }, 30_000);
 });

@@ -88,7 +88,7 @@ command for a teammate to run on the Intel laptop; work continues meanwhile.
     no-kinetic zone size, and uses a coarse building-height grid for siting
     only (sim-core stays the only LOS judge); sweeps 0 failures; building LOD /
     culling in the tactical and EO views.
-14. **Procedural Punjab villages:** every changed guard test or zone siting is
+14. **Punjab villages (now real footprints, decision 93):** every changed guard test or zone siting is
     reported with its reason, never silently accepted.
 
 ---
@@ -147,15 +147,16 @@ and vetting results per candidate; wait for the OK. Then build (with
 terrain's 4×4 tiles for frustum culling, plus a distance LOD that drops
 buildings under ~2 px; display only. Bench ≤ 2 ms tick with 60 contacts.
 
-### 6. Procedural Punjab villages (`feat(terrain)`)
-`build_preset.py --procedural-villages`: at OSM `place=village|hamlet` points
-with no OSM building within 300 m, a deterministic cluster (hash of the OSM
-id) of 15–40 rectangles, 6–9 m tall, sized/oriented like the preset's real
-footprints, `procedural: true` in `buildings.geojson`. `meta.json` gains
-`proceduralBuildings {count, rule, seed}` and `revision` (zod additive first).
-Report every S01/S02/S03/S12/S14 guard-test change and the PUNJAB zone-siting
-change (zone count, sizes, asset positions) with reasons. Phase 4 tech debt:
-replay of older PUNJAB sessions must check the preset revision.
+### 6. Real footprints for PUNJAB_PLAINS and JK_MOUNTAIN (`feat(terrain)`)
+**Replaced 2026-10-17 (user, decision 93):** no procedural villages. Both
+presets are rebuilt from OSM + Microsoft Global ML Building Footprints with the
+Step 5 pipeline; `meta.json` gains `revision` (zod additive, absent = 1) and each
+rebuilt preset is revision 2. The generator gets a minimum town size, so a
+villages-only dense preset keeps the asset near the centre. Report every
+S01/S02/S03/S11/S12/S13/S14 guard-test change and the PUNJAB / JK zone-siting
+change (zone count, sizes, asset positions) at Checkpoint B; stop if a guard test
+fails. Phase 4 tech debt: replay of older sessions must check the preset
+revision.
 
 ### 7. Generator support for URBAN_GENERIC (`feat(api)`)
 Asset at the town edge (200–800 m outside the largest cluster); no-kinetic

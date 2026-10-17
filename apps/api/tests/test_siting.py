@@ -7,9 +7,11 @@ import pytest
 from app.schemas.generated import GenerateRequest
 from app.services.generator import generate
 from app.services.generator.siting import (
+    ASSET_RADIUS_M,
     BUILT_UP_CELL_M,
     DENSE_MIN_BUILDINGS,
     TOWN_EDGE_M,
+    TOWN_MIN_CELLS,
     ZONE_ASSET_RANGE_M,
     ZONE_MAX_SIDE_M,
     _box_distance,
@@ -46,10 +48,19 @@ def urban() -> list[dict]:
     ]
 
 
-def test_dense_rule_applies_only_to_urban() -> None:
-    assert len(load_terrain(URBAN).buildings) >= DENSE_MIN_BUILDINGS
-    for preset in ("PUNJAB_PLAINS", "JK_MOUNTAIN"):
-        assert len(load_terrain(preset).buildings) < DENSE_MIN_BUILDINGS
+def test_villages_only_dense_preset_has_no_town() -> None:
+    punjab = load_terrain("PUNJAB_PLAINS")
+    assert len(punjab.buildings) >= DENSE_MIN_BUILDINGS
+    dense = dense_settlements(punjab)
+    # Real villages, none of them a town (TOWN_MIN_CELLS): the asset stays near the centre.
+    assert dense.town_cells == frozenset()
+    assert dense.zones and {name for _, name in dense.zones} == {"village"}
+    for d in (1, 3):
+        a = generate(GenerateRequest(terrainPreset="PUNJAB_PLAINS", difficulty=d, seed=5))[
+            "assets"
+        ][0]
+        assert math.hypot(a["x"], a["z"]) <= ASSET_RADIUS_M
+    assert len(dense_settlements(load_terrain(URBAN)).town_cells) >= TOWN_MIN_CELLS
 
 
 def test_the_town_is_one_built_up_area_with_villages_apart() -> None:

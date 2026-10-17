@@ -283,8 +283,15 @@ def test_footprint_tiles_without_osm(dem: Path, tmp_path: Path) -> None:
     )
     assert meta["buildingsStatus"] == "OK"
     assert meta["buildingCount"] == 1
+    assert "revision" not in meta  # absent = 1
     assert not any("OpenStreetMap" in a for a in meta["attribution"])
     assert any("Microsoft" in a for a in meta["attribution"])
+
+
+def test_revision_is_written_when_bumped(dem: Path, tmp_path: Path) -> None:
+    meta = bp.build_preset([dem], GRID, tmp_path / "out", 330, None, revision=2)
+    written = json.loads((tmp_path / "out" / GRID.name / "meta.json").read_text(encoding="utf-8"))
+    assert meta["revision"] == written["revision"] == 2
 
 
 def test_cli_rejects_bad_name(dem: Path) -> None:

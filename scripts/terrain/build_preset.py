@@ -478,6 +478,7 @@ def build_preset(
     buildings_source: BuildingsSource | None,
     sleep: Callable[[float], None] = time.sleep,
     footprint_paths: Sequence[Path] = (),
+    revision: int = 1,
 ) -> dict[str, Any]:
     """Build and write one preset; returns the meta dict.
 
@@ -532,6 +533,8 @@ def build_preset(
         "source": f"Copernicus DEM GLO-30 ({dem_tiles}); local AEQD grid, bilinear",
         "attribution": attribution,
     }
+    if revision > 1:
+        meta["revision"] = revision
     files = {
         "heightmap.u16": enc.u16.tobytes(),
         "heightmap.png": png_preview_bytes(enc.u16),
@@ -587,6 +590,12 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
         default=[],
         help="offline footprint tiles, GeoJSONL[.gz] (Microsoft Global ML Building Footprints)",
     )
+    p.add_argument(
+        "--revision",
+        type=int,
+        default=1,
+        help="preset content revision; bump when a rebuild changes heights or buildings",
+    )
     return p.parse_args(argv)
 
 
@@ -618,6 +627,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.utc_offset_min,
             source,
             footprint_paths=args.footprints,
+            revision=args.revision,
         )
     except PresetError as exc:
         print(f"error: {exc}", file=sys.stderr)

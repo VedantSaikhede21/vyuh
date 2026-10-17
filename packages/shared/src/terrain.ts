@@ -46,6 +46,11 @@ export const TerrainPresetMeta = named(
       files: TerrainPresetFiles,
       source: z.string().min(1),
       attribution: z.array(z.string().min(1)).min(1),
+      /**
+       * Content revision of the preset (absent = 1). Bumped whenever a rebuild changes
+       * heights or buildings, so a replay can tell which terrain a session ran on.
+       */
+      revision: z.int().min(1).optional(),
     })
     .superRefine((m, ctx) => {
       if (m.relMaxM < m.relMinM) {
