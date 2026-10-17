@@ -1,6 +1,7 @@
-"""Asset, sensor, effector and zone siting (requirements 3a.1).
+"""Asset, sensor, effector and zone siting (requirements 3a.1, Phase 3b towns).
 
-Uses heights only (services/terrain.py); line of sight stays in sim-core.
+Uses heights, footprints and the coarse roof grid (services/terrain.py); line of
+sight stays in sim-core.
 """
 
 import math
@@ -26,11 +27,29 @@ RADAR_SPACING_M = 150.0
 RADAR_MAST_M = 6.0
 COVERAGE_RINGS_M = (1500.0, 2500.0, 3500.0)
 COVERAGE_AGL_M = 30.0
-#: Settlement clusters: buildings linked within this distance; zone = box + buffer.
+#: Sparse presets: buildings linked within this distance form a settlement; zone = box +
+#: buffer, if its centre is within ZONE_MAX_RANGE_M of the map centre.
 CLUSTER_LINK_M = 300.0
 CLUSTER_MIN_BUILDINGS = 2
 ZONE_BUFFER_M = 80.0
 ZONE_MAX_RANGE_M = 4000.0
+#: Dense presets (ML footprints, decision 91): single links would chain farmhouses into one
+#: map-wide cluster, so settlements are 8-connected built-up cells (footprint area at least
+#: BUILT_UP_SHARE of the cell); the largest is the town.
+DENSE_MIN_BUILDINGS = 2000
+BUILT_UP_CELL_M = 100.0
+BUILT_UP_SHARE = 0.2
+SETTLEMENT_MIN_CELLS = 3
+#: Dense presets: zones at most this side (larger settlements are tiled), kept only within
+#: ZONE_ASSET_RANGE_M of the asset (beyond interceptor reach a zone constrains nothing).
+ZONE_MAX_SIDE_M = 1200.0
+ZONE_ASSET_RANGE_M = 2000.0
+#: Dense presets: the asset sits TOWN_EDGE_M from the town's built-up edge, within
+#: TOWN_ASSET_SEARCH_M of the map centre.
+TOWN_EDGE_M = (200.0, 800.0)
+TOWN_ASSET_SEARCH_M = 4000.0
+#: Footprint occupancy cells for keeping the asset clear of buildings.
+OCCUPANCY_CELL_M = 50.0
 #: Never put the asset inside (or this close to) a no-kinetic zone.
 ASSET_ZONE_CLEARANCE_M = 150.0
 
@@ -45,6 +64,8 @@ class Site:
     #: Radar antenna height in the scenario frame (terrain + mast).
     radar_y: float
     no_kinetic: list[list[Point]]
+    #: Zone name per no_kinetic box ("village" or "town").
+    no_kinetic_names: list[str]
 
 
 def _flat(terrain: Terrain, x: float, z: float) -> bool:
@@ -54,7 +75,11 @@ def _flat(terrain: Terrain, x: float, z: float) -> bool:
 
 
 def settlement_boxes(buildings: tuple[Building, ...], centre: Point) -> list[list[Point]]:
-    """Buffered bounding boxes of building clusters near `centre` (single-link clustering)."""
+    """Buffered bounding boxes of building clusters near `centre` (single-link clustering).
+
+    A grid of CLUSTER_LINK_M cells limits the pair tests to neighbouring cells; the
+    clusters are the same as testing every pair.
+    """
     pts = [b.centroid for b in buildings]
     parent = list(range(len(pts)))
 
@@ -64,10 +89,18 @@ def settlement_boxes(buildings: tuple[Building, ...], centre: Point) -> list[lis
             i = parent[i]
         return i
 
-    for i in range(len(pts)):
-        for j in range(i + 1, len(pts)):
-            if math.dist(pts[i], pts[j]) <= CLUSTER_LINK_M:
-                parent[root(i)] = root(j)
+    cells: dict[tuple[int, int], list[int]] = {}
+    for i, (x, z) in enumerate(pts):
+        key = (math.floor(x / CLUSTER_LINK_M), math.floor(z / CLUSTER_LINK_M))
+        cells.setdefault(key, []).append(i)
+    for (cx, cz), members in cells.items():
+        near = [
+            j for dx in (-1, 0, 1) for dz in (-1, 0, 1) for j in cells.get((cx + dx, cz + dz), ())
+        ]
+        for i in members:
+            for j in near:
+                if j > i and math.dist(pts[i], pts[j]) <= CLUSTER_LINK_M:
+                    parent[root(i)] = root(j)
     clusters: dict[int, list[Building]] = {}
     for i, b in enumerate(buildings):
         clusters.setdefault(root(i), []).append(b)
@@ -88,11 +121,160 @@ def settlement_boxes(buildings: tuple[Building, ...], centre: Point) -> list[lis
     return sorted(boxes, key=lambda b: (b[0][1], b[0][0]))
 
 
+def _ring_area(ring: tuple[Point, ...]) -> float:
+    a = 0.0
+    for (x1, z1), (x2, z2) in zip(ring, (*ring[1:], ring[0]), strict=True):
+        a += x1 * z2 - x2 * z1
+    return abs(a) / 2
+
+
+Cell = tuple[int, int]
+
+
+@dataclass(frozen=True)
+class DenseSettlements:
+    #: Built-up cells (BUILT_UP_CELL_M) of the town.
+    town_cells: frozenset[Cell]
+    #: (box, "town" | "village"), boxes at most ZONE_MAX_SIDE_M, by south-west corner.
+    zones: list[tuple[list[Point], str]]
+
+
+_dense: dict[str, DenseSettlements] = {}
+
+
+def dense_settlements(terrain: Terrain) -> DenseSettlements:
+    """Built-up components of a dense preset (cached per preset)."""
+    name = terrain.meta.name
+    if name in _dense:
+        return _dense[name]
+    c = BUILT_UP_CELL_M
+    # Each footprint's area is spread evenly over the cells its bounding box touches.
+    cover: dict[Cell, float] = {}
+    for b in terrain.buildings:
+        xs = [p[0] for p in b.ring]
+        zs = [p[1] for p in b.ring]
+        i0, i1 = math.floor(min(xs) / c), math.floor(max(xs) / c)
+        j0, j1 = math.floor(min(zs) / c), math.floor(max(zs) / c)
+        share = _ring_area(b.ring) / ((i1 - i0 + 1) * (j1 - j0 + 1))
+        for i in range(i0, i1 + 1):
+            for j in range(j0, j1 + 1):
+                cover[(i, j)] = cover.get((i, j), 0.0) + share
+    built = {k for k, a in cover.items() if a >= BUILT_UP_SHARE * c * c}
+    seen: set[Cell] = set()
+    components: list[list[Cell]] = []
+    for start in sorted(built):
+        if start in seen:
+            continue
+        seen.add(start)
+        stack, comp = [start], []
+        while stack:
+            i, j = stack.pop()
+            comp.append((i, j))
+            for di in (-1, 0, 1):
+                for dj in (-1, 0, 1):
+                    n = (i + di, j + dj)
+                    if n in built and n not in seen:
+                        seen.add(n)
+                        stack.append(n)
+        if len(comp) >= SETTLEMENT_MIN_CELLS:
+            components.append(sorted(comp))
+    # Largest first; ties by south-west cell, so the order never depends on set iteration.
+    components.sort(key=lambda comp: (-len(comp), comp[0]))
+    tile = int(ZONE_MAX_SIDE_M // c)
+    zones: list[tuple[list[Point], str]] = []
+    for k, comp in enumerate(components):
+        label = "town" if k == 0 else "village"
+        i0 = min(i for i, _ in comp)
+        j0 = min(j for _, j in comp)
+        tiles: dict[Cell, list[Cell]] = {}
+        for i, j in comp:
+            tiles.setdefault(((i - i0) // tile, (j - j0) // tile), []).append((i, j))
+        for part in tiles.values():
+            if len(part) < SETTLEMENT_MIN_CELLS:
+                continue
+            x0 = min(i for i, _ in part) * c
+            x1 = (max(i for i, _ in part) + 1) * c
+            z0 = min(j for _, j in part) * c
+            z1 = (max(j for _, j in part) + 1) * c
+            zones.append(([(x0, z0), (x1, z0), (x1, z1), (x0, z1)], label))
+    zones.sort(key=lambda zn: (zn[0][0][1], zn[0][0][0]))
+    out = DenseSettlements(frozenset(components[0]) if components else frozenset(), zones)
+    _dense[name] = out
+    return out
+
+
 def _box_distance(box: list[Point], x: float, z: float) -> float:
     (x0, z0), _, (x1, z1), _ = box
     dx = max(x0 - x, 0.0, x - x1)
     dz = max(z0 - z, 0.0, z - z1)
     return math.hypot(dx, dz)
+
+
+def _occupied(buildings: tuple[Building, ...]) -> set[Cell]:
+    """OCCUPANCY_CELL_M cells touched by the footprints' bounding boxes."""
+    c = OCCUPANCY_CELL_M
+    out: set[Cell] = set()
+    for b in buildings:
+        xs = [p[0] for p in b.ring]
+        zs = [p[1] for p in b.ring]
+        for i in range(math.floor(min(xs) / c), math.floor(max(xs) / c) + 1):
+            for j in range(math.floor(min(zs) / c), math.floor(max(zs) / c) + 1):
+                out.add((i, j))
+    return out
+
+
+def _disc(radius_m: float, cell_m: float) -> list[Cell]:
+    n = math.ceil(radius_m / cell_m)
+    return [
+        (i, j)
+        for i in range(-n, n + 1)
+        for j in range(-n, n + 1)
+        if math.hypot(i, j) * cell_m <= radius_m
+    ]
+
+
+_town_sites: dict[tuple[str, bool], list[Point]] = {}
+
+
+def town_asset_candidates(
+    terrain: Terrain, dense: DenseSettlements, boxes: list[list[Point]]
+) -> list[Point]:
+    """Flat 100 m grid points TOWN_EDGE_M from the town, clear of buildings and zones.
+
+    Cached per (preset, zones placed): nothing else changes the result.
+    """
+    key = (terrain.meta.name, bool(boxes))
+    if key in _town_sites:
+        return _town_sites[key]
+    near_m, far_m = TOWN_EDGE_M
+    c = BUILT_UP_CELL_M
+    town = dense.town_cells
+    inner, outer = _disc(near_m, c), _disc(far_m, c)
+    occupied = _occupied(terrain.buildings)
+    clear = _disc(ASSET_ZONE_CLEARANCE_M, OCCUPANCY_CELL_M)
+    step = 100.0
+    n = int(TOWN_ASSET_SEARCH_M // step)
+    out: list[Point] = []
+    for i in range(-n, n + 1):
+        for j in range(-n, n + 1):
+            x, z = i * step, j * step
+            if math.hypot(x, z) > TOWN_ASSET_SEARCH_M:
+                continue
+            ci, cj = math.floor(x / c), math.floor(z / c)
+            if any((ci + di, cj + dj) in town for di, dj in inner):
+                continue
+            if not any((ci + di, cj + dj) in town for di, dj in outer):
+                continue
+            oi, oj = math.floor(x / OCCUPANCY_CELL_M), math.floor(z / OCCUPANCY_CELL_M)
+            if any((oi + di, oj + dj) in occupied for di, dj in clear):
+                continue
+            if not _flat(terrain, x, z):
+                continue
+            if any(_box_distance(b, x, z) <= ASSET_ZONE_CLEARANCE_M for b in boxes):
+                continue
+            out.append((x, z))
+    _town_sites[key] = out
+    return out
 
 
 def pick_asset_xz(rng: random.Random, terrain: Terrain, boxes: list[list[Point]]) -> Point:
@@ -153,8 +335,21 @@ def _radar_site(terrain: Terrain, asset: Point) -> Point:
 
 
 def site(rng: random.Random, terrain: Terrain, difficulty: int) -> Site:
-    boxes = settlement_boxes(terrain.buildings, (0.0, 0.0)) if difficulty >= 2 else []
-    ax, az = pick_asset_xz(rng, terrain, boxes)
+    named: list[tuple[list[Point], str]]
+    if len(terrain.buildings) >= DENSE_MIN_BUILDINGS:
+        dense = dense_settlements(terrain)
+        all_boxes = [b for b, _ in dense.zones] if difficulty >= 2 else []
+        sites = town_asset_candidates(terrain, dense, all_boxes)
+        ax, az = rng.choice(sites) if sites else pick_asset_xz(rng, terrain, all_boxes)
+        named = (
+            [zn for zn in dense.zones if _box_distance(zn[0], ax, az) <= ZONE_ASSET_RANGE_M]
+            if difficulty >= 2
+            else []
+        )
+    else:
+        boxes = settlement_boxes(terrain.buildings, (0.0, 0.0)) if difficulty >= 2 else []
+        ax, az = pick_asset_xz(rng, terrain, boxes)
+        named = [(b, "village") for b in boxes]
     rx, rz = radar_site(terrain, (ax, az))
     asset = {"id": "a1", "name": rng.choice(ASSET_NAMES), "x": ax, "z": az, "radiusM": 60}
     sensors = [
@@ -185,7 +380,8 @@ def site(rng: random.Random, terrain: Terrain, difficulty: int) -> Site:
         sensors=sensors,
         radar_xz=(rx, rz),
         radar_y=terrain.height_at(rx, rz) + RADAR_MAST_M,
-        no_kinetic=boxes,
+        no_kinetic=[b for b, _ in named],
+        no_kinetic_names=[name for _, name in named],
     )
 
 

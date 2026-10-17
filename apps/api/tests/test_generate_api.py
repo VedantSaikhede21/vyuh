@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.models import Scenario as ScenarioRow
 from app.models import User
 from app.schemas.generated import Scenario, ScenarioKind, UserRole
+from app.services.generator import GENERATOR_VERSION
 from app.services.ratelimit import RateLimiter
 from tests.conftest import assert_error, make_settings
 
@@ -42,7 +43,7 @@ def test_trainee_may_set_only_terrain_time_band_difficulty_and_seed(
     body = ok.json()
     assert set(body) == {"scenarioId", "scenario"}
     Scenario.model_validate(body["scenario"])
-    assert body["scenario"]["generatorVersion"] == 1
+    assert body["scenario"]["generatorVersion"] == GENERATOR_VERSION
     assert "null" not in ok.text  # optional fields omitted, never null
 
     err = assert_error(generate(client, headers, FULL_BODY), 403, "FORBIDDEN")
