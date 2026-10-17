@@ -184,16 +184,19 @@ export function drawBuildings(
     for (let y = y0; y <= y1; y++) {
       const yc = y + 0.5;
       const xs: number[] = [];
-      for (let i = 0; i < pts.length; i++) {
-        const [ax, ay] = pts[i]!;
-        const [bx, by] = pts[(i + 1) % pts.length]!;
+      pts.forEach(([ax, ay], i) => {
+        const next = pts[(i + 1) % pts.length];
+        if (next === undefined) return;
+        const [bx, by] = next;
         if (ay > yc !== by > yc) xs.push(ax + ((yc - ay) / (by - ay)) * (bx - ax));
-      }
+      });
       xs.sort((p, q) => p - q);
       for (let k = 0; k + 1 < xs.length; k += 2) {
+        const left = xs[k] ?? 0;
+        const right = xs[k + 1] ?? left;
         // At least one pixel: small footprints still show at map scale.
-        const xa = Math.max(0, Math.floor(xs[k]!));
-        const xb = Math.min(size - 1, Math.max(xa, Math.ceil(xs[k + 1]!) - 1));
+        const xa = Math.max(0, Math.floor(left));
+        const xb = Math.min(size - 1, Math.max(xa, Math.ceil(right) - 1));
         for (let x = xa; x <= xb; x++) {
           const o = (y * size + x) * 3;
           rgb[o] = r;
@@ -228,7 +231,7 @@ export function presetImages(presetDir: string): { map: Buffer; thumb: Buffer } 
         JSON.parse(readFileSync(file, 'utf8')) as {
           features: { geometry: { coordinates: [number, number][][] } }[];
         }
-      ).features.map((f) => f.geometry.coordinates[0]!)
+      ).features.flatMap((f) => f.geometry.coordinates.slice(0, 1))
     : [];
   const image = (size: number) => {
     const rgb = toRgb(shade, meta.resolution, size, tone.dark, tone.light, tone.gamma, tone.levels);
