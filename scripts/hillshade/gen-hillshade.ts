@@ -13,6 +13,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { dirname, join, resolve } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import { UI } from '../../apps/web/lib/theme/scene-colours.ts';
+import { createProceduralTerrain } from '../../packages/sim-core/src/terrain.ts';
 
 interface Meta {
   resolution: number;
@@ -20,7 +21,7 @@ interface Meta {
   relMinM: number;
   relMaxM: number;
   sizeM: number;
-  files: { buildings: string };
+  files?: { buildings: string };
 }
 
 /** Heights in metres, row 0 = south edge (SPEC §14 heightmap.u16 layout). */
@@ -223,9 +224,7 @@ export function crop(rgb: Uint8Array, size: number, width: number, height: numbe
 /** thumb.png and map.png for one preset folder. */
 export function presetImages(presetDir: string): { map: Buffer; thumb: Buffer } {
   const { meta, h } = readHeights(presetDir);
-  const shade = hillshade(meta, h, zFactorFor(meta));
-  const tone = TONES.map;
-  const file = join(presetDir, meta.files.buildings);
+  const file = join(presetDir, meta.files?.buildings ?? 'buildings.geojson');
   const rings = existsSync(file)
     ? (
         JSON.parse(readFileSync(file, 'utf8')) as {
@@ -233,6 +232,35 @@ export function presetImages(presetDir: string): { map: Buffer; thumb: Buffer } 
         }
       ).features.flatMap((f) => f.geometry.coordinates.slice(0, 1))
     : [];
+  return images(meta, h, rings);
+}
+
+/** The built-in PROCEDURAL_HILLS terrain (S01–S03), as sim-core generates it. */
+export function proceduralImages(): { map: Buffer; thumb: Buffer } {
+  const map = createProceduralTerrain();
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const v of map.heights) {
+    lo = Math.min(lo, v);
+    hi = Math.max(hi, v);
+  }
+  const meta: Meta = {
+    resolution: map.resolution,
+    metresPerPx: map.sizeM / (map.resolution - 1),
+    relMinM: lo,
+    relMaxM: hi,
+    sizeM: map.sizeM,
+  };
+  return images(meta, Float32Array.from(map.heights), []);
+}
+
+function images(
+  meta: Meta,
+  h: Float32Array,
+  rings: (readonly (readonly [number, number])[])[],
+): { map: Buffer; thumb: Buffer } {
+  const shade = hillshade(meta, h, zFactorFor(meta));
+  const tone = TONES.map;
   const image = (size: number) => {
     const rgb = toRgb(shade, meta.resolution, size, tone.dark, tone.light, tone.gamma, tone.levels);
     drawBuildings(rgb, size, meta.sizeM, rings, BUILDING_FILL);
@@ -265,6 +293,13 @@ if (import.meta.url === `file:///${resolve(process.argv[1] ?? '').replace(/\\/g,
       const kb = (b: Buffer) => (b.length / 1024).toFixed(1);
       console.log(`wrote ${name}/map.png (${kb(map)} KB), thumb.png (${kb(thumb)} KB)`);
     }
+    // Built-in terrain: images only (no meta.json, so the API does not list it as a file preset).
+    const dir = join(terrain, 'PROCEDURAL_HILLS');
+    mkdirSync(dir, { recursive: true });
+    const { map, thumb } = proceduralImages();
+    writeFileSync(join(dir, 'map.png'), map);
+    writeFileSync(join(dir, 'thumb.png'), thumb);
+    console.log('wrote PROCEDURAL_HILLS/map.png, thumb.png');
   } else {
     writeOne(root);
   }
