@@ -453,6 +453,10 @@ class ScenarioKind(StrEnum):
     AUTHORED = "AUTHORED"
 
 
+class BestScore(RootModel[float]):
+    root: Annotated[float, Field(ge=0.0, le=100.0)]
+
+
 class ScoreComponents(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1015,6 +1019,7 @@ class ScenarioListItem(BaseModel):
     date: date_aliased
     time: Annotated[str, Field(pattern="^([01]\\d|2[0-3]):[0-5]\\d$")]
     tags: list[str]
+    best_score: Annotated[BestScore | None, Field(alias="bestScore")]
 
 
 class ScenarioListResponse(BaseModel):

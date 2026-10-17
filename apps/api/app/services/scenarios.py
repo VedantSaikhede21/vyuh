@@ -3,12 +3,12 @@
 import uuid
 from collections import Counter
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.errors import ApiError
 from app.models import Scenario as ScenarioRow
-from app.models import User
+from app.models import ScoreRow, TrainingSession, User
 from app.schemas.generated import (
     EoIrSensor,
     ErrorCode,
@@ -19,6 +19,7 @@ from app.schemas.generated import (
     ScenarioDetailResponse,
     ScenarioKind,
     ScenarioListItem,
+    SessionStatus,
     ThreatClass,
     UserRole,
 )
@@ -69,7 +70,7 @@ def load_scenario(row: ScenarioRow) -> Scenario:
     return Scenario.model_validate(row.content)
 
 
-def list_item(row: ScenarioRow) -> ScenarioListItem:
+def list_item(row: ScenarioRow, best_score: float | None = None) -> ScenarioListItem:
     content = load_scenario(row)
     return ScenarioListItem(
         id=row.id,
@@ -84,7 +85,22 @@ def list_item(row: ScenarioRow) -> ScenarioListItem:
         date=content.environment.date,
         time=content.environment.time,
         tags=list(row.tags),
+        best_score=best_score,
     )
+
+
+def best_scores(db: Session, user_id: uuid.UUID) -> dict[uuid.UUID, float]:
+    """Scenario id → the user's best score total over their completed sessions."""
+    query = (
+        select(TrainingSession.scenario_id, func.max(ScoreRow.total))
+        .join(ScoreRow, ScoreRow.session_id == TrainingSession.id)
+        .where(
+            TrainingSession.user_id == user_id,
+            TrainingSession.status == SessionStatus.COMPLETED,
+        )
+        .group_by(TrainingSession.scenario_id)
+    )
+    return {scenario_id: float(total) for scenario_id, total in db.execute(query)}
 
 
 # Scenarios tagged `test` (S11-S14) verify sim behaviour; they are not part of the
@@ -104,6 +120,7 @@ def list_scenarios(
     difficulty: int | None = None,
     *,
     include_test: bool = True,
+    user_id: uuid.UUID | None = None,
 ) -> list[ScenarioListItem]:
     """Library list. Generated scenarios appear only when asked for by kind."""
     query = select(ScenarioRow).order_by(ScenarioRow.difficulty, ScenarioRow.code, ScenarioRow.name)
@@ -115,7 +132,8 @@ def list_scenarios(
         query = query.where(ScenarioRow.kind == kind)
     if difficulty is not None:
         query = query.where(ScenarioRow.difficulty == difficulty)
-    return [list_item(row) for row in db.scalars(query)]
+    best = best_scores(db, user_id) if user_id is not None else {}
+    return [list_item(row, best.get(row.id)) for row in db.scalars(query)]
 
 
 def get_scenario_row(db: Session, scenario_id: uuid.UUID, user: User) -> ScenarioRow:

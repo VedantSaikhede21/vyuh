@@ -2151,6 +2151,18 @@
           "items": {
             "type": "string"
           }
+        },
+        "bestScore": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -2165,7 +2177,8 @@
         "terrainPreset",
         "date",
         "time",
-        "tags"
+        "tags",
+        "bestScore"
       ]
     },
     "ScenarioListResponse": {

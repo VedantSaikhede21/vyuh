@@ -170,6 +170,8 @@ export const ScenarioListItem = named(
     date: z.iso.date(),
     time: TimeOfDay,
     tags: z.array(z.string()),
+    /** The requester's best total (0-100) over their completed sessions; null if none. */
+    bestScore: z.number().min(0).max(100).nullable(),
   }),
 );
 export type ScenarioListItem = z.infer<typeof ScenarioListItem>;

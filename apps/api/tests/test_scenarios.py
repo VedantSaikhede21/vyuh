@@ -11,8 +11,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Scenario as ScenarioRow
-from app.models import User
-from app.schemas.generated import Scenario, UserRole
+from app.models import ScoreRow, TrainingSession, User
+from app.schemas.generated import Scenario, SessionStatus, UserRole
 from app.seed.scenarios import SCENARIO_DIR, load_scripted, seed_scenarios
 from app.services.scenarios import scenario_rule_violations
 from tests.conftest import assert_error
@@ -205,9 +205,54 @@ def test_list_scenarios(
         "date": "2026-11-20",
         "time": "10:30",
         "tags": ["tutorial", "demo"],
+        "bestScore": None,
     }
     filtered = client.get("/api/v1/scenarios?difficulty=2", headers=headers).json()
     assert [i["code"] for i in filtered["items"]] == ["S03", "S11", "S12", "S15"]
+
+
+def test_best_score_is_the_requesters_best_completed_total(
+    client: TestClient,
+    db: Session,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    auth_header: Callable[[User], dict[str, str]],
+    start_session: Callable[..., str],
+) -> None:
+    me = make_user(UserRole.TRAINEE, "best@test")
+    other = make_user(UserRole.TRAINEE, "other@test")
+
+    def scored(user: User, code: str, total: float, status: SessionStatus) -> None:
+        session_id = uuid.UUID(start_session(user, scenarios[code]))
+        row = db.get(TrainingSession, session_id)
+        assert row is not None
+        row.status = status
+        db.add(
+            ScoreRow(
+                session_id=session_id,
+                total=total,
+                detection=0,
+                classification=0,
+                decision=0,
+                report=0,
+                efficiency=0,
+                penalties=[],
+                per_contact=[],
+                metrics={},
+                tree_version="default_v3",
+            )
+        )
+        db.commit()
+
+    scored(me, "S01", 62.5, SessionStatus.COMPLETED)
+    scored(me, "S01", 81.0, SessionStatus.COMPLETED)
+    scored(me, "S02", 99.0, SessionStatus.ABANDONED)  # not completed: ignored
+    scored(other, "S01", 95.0, SessionStatus.COMPLETED)  # someone else's
+    items = client.get("/api/v1/scenarios", headers=auth_header(me)).json()["items"]
+    best = {i["code"]: i["bestScore"] for i in items}
+    assert best["S01"] == 81.0
+    assert best["S02"] is None
+    assert best["S03"] is None
 
 
 @pytest.mark.parametrize(
