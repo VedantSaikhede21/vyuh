@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { SIM_VERSION } from '@vyuh/sim-core';
 import { VIEWPORTS, beginSession, login, selectTrack, stepTo, stepUntilTracked } from './helpers';
 
 // Phase 3a Step 10 checkpoint captures (tag @checkpoint, not part of `pnpm e2e`):
@@ -16,7 +17,7 @@ const OUT = 'e2e/checkpoint';
 /** Generate the scenario and create a practice session as the logged-in trainee. */
 async function startGenerated(page: Page): Promise<string> {
   return page.evaluate(
-    async ({ api, body }) => {
+    async ({ api, body, simVersion }) => {
       const token = window.localStorage.getItem('vyuh.localToken');
       const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
       const gen = await fetch(`${api}/scenarios/generate`, {
@@ -29,12 +30,12 @@ async function startGenerated(page: Page): Promise<string> {
       const ses = await fetch(`${api}/sessions`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ scenarioId, mode: 'PRACTICE', simVersion: 3 }),
+        body: JSON.stringify({ scenarioId, mode: 'PRACTICE', simVersion }),
       });
       if (!ses.ok) throw new Error(`session ${ses.status} ${await ses.text()}`);
       return ((await ses.json()) as { sessionId: string }).sessionId;
     },
-    { api: API, body: REQUEST },
+    { api: API, body: REQUEST, simVersion: SIM_VERSION },
   );
 }
 

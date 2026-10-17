@@ -4,7 +4,8 @@ import type { Vec3 } from '../coords.ts';
 // EO/IR camera (SPEC §6.2). Pixels on target = size / (range × IFOV), Johnson
 // cycles = pixels / 2, scaled by the class's thermal contrast in IR mode.
 // DETECT ≥ 1, RECOGNISE ≥ 4, IDENTIFY ≥ 6.4 cycles. The day camera is capped by
-// visibility and useless at night; IR sees 1.5× further through haze.
+// visibility and useless at night; IR sees up to 1.5× further through haze, but
+// no further than the day camera in dense fog (decision 94).
 
 export const JOHNSON_CYCLES: Readonly<Record<EoLevel, number>> = {
   DETECT: 1,
@@ -16,8 +17,18 @@ export const EO_LEVEL_RANK: Readonly<Record<EoLevel, number>> = {
   RECOGNISE: 2,
   IDENTIFY: 3,
 };
-/** IR range cap as a multiple of visibilityM (thermal sees better through haze, not fog). */
+/** Largest IR range cap as a multiple of visibilityM (haze; decision 94). */
 export const IR_VISIBILITY_FACTOR = 1.5;
+/** At or below this visibility (fog) IR is capped like the day camera (factor 1). */
+export const IR_FOG_VISIBILITY_M = 1000;
+/** At or above this visibility (haze, clear) IR gets the full IR_VISIBILITY_FACTOR. */
+export const IR_HAZE_VISIBILITY_M = 3000;
+
+/** IR range cap ÷ visibility: 1 in fog, rising linearly to IR_VISIBILITY_FACTOR through haze. */
+export function irVisibilityFactor(visibilityM: number): number {
+  const t = (visibilityM - IR_FOG_VISIBILITY_M) / (IR_HAZE_VISIBILITY_M - IR_FOG_VISIBILITY_M);
+  return 1 + (IR_VISIBILITY_FACTOR - 1) * Math.min(Math.max(t, 0), 1);
+}
 /** A pointing episode ends after a contact has had no level for this long. */
 export const EO_EPISODE_RESET_MS = 1000;
 /** How fast a locked camera closes the gap to its track, per second. */
@@ -90,7 +101,7 @@ export function eoLevel(
 ): EoLevel | null {
   const ir = camera.mode === 'IR';
   if (!ir && cond.isNight) return null;
-  const cap = ir ? cond.visibilityM * IR_VISIBILITY_FACTOR : cond.visibilityM;
+  const cap = ir ? cond.visibilityM * irVisibilityFactor(cond.visibilityM) : cond.visibilityM;
   if (target.rangeM > cap) return null;
   const cycles = johnsonCycles(
     target.sizeM,
