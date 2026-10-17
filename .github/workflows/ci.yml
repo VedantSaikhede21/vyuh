@@ -118,3 +118,9 @@ jobs:
           git status --porcelain
           git diff --exit-code -- packages/shared/schema apps/api/app/schemas/generated apps/api/app/seed/generated
           test -z "$(git status --porcelain -- packages/shared/schema apps/api/app/schemas/generated apps/api/app/seed/generated)"
+      - name: Preset maps and thumbnails, login hillshade
+        run: |
+          pnpm gen:maps
+          pnpm gen:hillshade
+          git diff --exit-code -- apps/web/public/terrain apps/web/public/landing
+          test -z "$(git status --porcelain -- apps/web/public/terrain apps/web/public/landing)"
