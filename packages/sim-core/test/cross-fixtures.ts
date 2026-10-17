@@ -10,7 +10,7 @@ export const CROSSCHECK_DIR = new URL(
   import.meta.url,
 );
 
-export const FILE_PRESETS = ['PUNJAB_PLAINS', 'JK_MOUNTAIN'] as const;
+export const FILE_PRESETS = ['PUNJAB_PLAINS', 'JK_MOUNTAIN', 'URBAN_GENERIC'] as const;
 
 /** [x, z, height] at a 9 × 9 grid, a few off-grid points and clamped out-of-map points. */
 function terrainHeights(preset: string): [number, number, number][] {
