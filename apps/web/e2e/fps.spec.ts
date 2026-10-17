@@ -75,6 +75,11 @@ const CASES: Case[] = [
     },
     atMs: 70_000,
   },
+  {
+    name: 'Generated URBAN D5 seed 2 (13.6 k buildings)',
+    generate: { terrainPreset: 'URBAN_GENERIC', difficulty: 5, seed: 2 },
+    atMs: 70_000,
+  },
   { name: 'S14 + 60 birds (stress)', hero: 's=S14&t=30&birds=60', atMs: 0 },
 ];
 const VIEWPORTS = [
@@ -103,21 +108,26 @@ const ADAPTIVE = (key: string) => {
 
 /** Count WebGL draw calls (all contexts) into window.__vyuhDrawCalls. */
 const COUNT_DRAWS = () => {
-  const w = window as unknown as { __vyuhDrawCalls: number };
+  const w = window as unknown as { __vyuhDrawCalls: number; __vyuhVertices: number };
   w.__vyuhDrawCalls = 0;
+  w.__vyuhVertices = 0;
+  // Vertices submitted per call (× instances): [count argument index, instances index].
+  const calls: [string, number, number | null][] = [
+    ['drawArrays', 2, null],
+    ['drawElements', 1, null],
+    ['drawArraysInstanced', 2, 3],
+    ['drawElementsInstanced', 1, 4],
+    ['drawRangeElements', 3, null],
+  ];
   for (const proto of [WebGL2RenderingContext.prototype, WebGLRenderingContext.prototype]) {
-    for (const name of [
-      'drawArrays',
-      'drawElements',
-      'drawArraysInstanced',
-      'drawElementsInstanced',
-      'drawRangeElements',
-    ]) {
+    for (const [name, countArg, instArg] of calls) {
       const p = proto as unknown as Record<string, (...a: unknown[]) => unknown>;
       const orig = p[name];
       if (typeof orig !== 'function') continue;
       p[name] = function (this: unknown, ...args: unknown[]) {
         w.__vyuhDrawCalls++;
+        w.__vyuhVertices +=
+          Number(args[countArg] ?? 0) * (instArg === null ? 1 : Number(args[instArg] ?? 1));
         return orig.apply(this, args);
       };
     }
@@ -172,23 +182,31 @@ interface FrameWindow {
   meanFps: number;
   p95FrameMs: number;
   drawCallsPerFrame: number;
+  /** Vertices (index count for indexed draws) submitted per frame, all views. */
+  kVerticesPerFrame: number;
 }
 
 /** Sample rAF frame times for `ms`; draw calls counted over the same frames. */
 async function sampleWindow(page: Page, ms: number): Promise<FrameWindow> {
-  const { frames, draws } = await page.evaluate(
+  const { frames, draws, vertices } = await page.evaluate(
     (ms) =>
-      new Promise<{ frames: number[]; draws: number }>((resolve) => {
-        const w = window as unknown as { __vyuhDrawCalls: number };
+      new Promise<{ frames: number[]; draws: number; vertices: number }>((resolve) => {
+        const w = window as unknown as { __vyuhDrawCalls: number; __vyuhVertices: number };
         const out: number[] = [];
         const d0 = w.__vyuhDrawCalls;
+        const v0 = w.__vyuhVertices;
         let last = performance.now();
         const t0 = last;
         const f = (now: number) => {
           out.push(now - last);
           last = now;
           if (now - t0 < ms) requestAnimationFrame(f);
-          else resolve({ frames: out, draws: w.__vyuhDrawCalls - d0 });
+          else
+            resolve({
+              frames: out,
+              draws: w.__vyuhDrawCalls - d0,
+              vertices: w.__vyuhVertices - v0,
+            });
         };
         requestAnimationFrame(f);
       }),
@@ -200,6 +218,7 @@ async function sampleWindow(page: Page, ms: number): Promise<FrameWindow> {
     meanFps: Math.round(1000 / mean),
     p95FrameMs: Math.round(sorted[Math.floor(sorted.length * 0.95)]! * 10) / 10,
     drawCallsPerFrame: Math.round(draws / frames.length),
+    kVerticesPerFrame: Math.round(vertices / frames.length / 1000),
   };
 }
 
