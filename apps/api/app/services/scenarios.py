@@ -84,6 +84,7 @@ def list_item(row: ScenarioRow, best_score: float | None = None) -> ScenarioList
         terrain_preset=content.terrain.preset,
         date=content.environment.date,
         time=content.environment.time,
+        weather=content.environment.weather,
         tags=list(row.tags),
         best_score=best_score,
     )

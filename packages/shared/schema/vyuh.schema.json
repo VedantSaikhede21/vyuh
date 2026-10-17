@@ -2146,6 +2146,9 @@
         "time": {
           "$ref": "#/$defs/TimeOfDay"
         },
+        "weather": {
+          "$ref": "#/$defs/Weather"
+        },
         "tags": {
           "type": "array",
           "items": {
@@ -2177,6 +2180,7 @@
         "terrainPreset",
         "date",
         "time",
+        "weather",
         "tags",
         "bestScore"
       ]

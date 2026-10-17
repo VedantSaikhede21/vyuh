@@ -1018,6 +1018,7 @@ class ScenarioListItem(BaseModel):
     terrain_preset: Annotated[str, Field(alias="terrainPreset", min_length=1)]
     date: date_aliased
     time: Annotated[str, Field(pattern="^([01]\\d|2[0-3]):[0-5]\\d$")]
+    weather: Weather
     tags: list[str]
     best_score: Annotated[BestScore | None, Field(alias="bestScore")]
 

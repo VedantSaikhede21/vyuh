@@ -204,6 +204,7 @@ def test_list_scenarios(
         "terrainPreset": "PROCEDURAL_HILLS",
         "date": "2026-11-20",
         "time": "10:30",
+        "weather": S01["environment"]["weather"],
         "tags": ["tutorial", "demo"],
         "bestScore": None,
     }

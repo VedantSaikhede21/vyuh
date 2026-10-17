@@ -10,7 +10,7 @@ import {
 } from './enums.ts';
 import { SimEvent } from './events.ts';
 import { named } from './registry.ts';
-import { Scenario, TimeOfDay } from './scenario.ts';
+import { Scenario, TimeOfDay, Weather } from './scenario.ts';
 import { Score } from './score.ts';
 
 // Request/response shapes for /api/v1 (SPEC §11, §11.1, §11.2).
@@ -169,6 +169,8 @@ export const ScenarioListItem = named(
     terrainPreset: z.string().min(1),
     date: z.iso.date(),
     time: TimeOfDay,
+    /** For the list's conditions column (visibility, rain, wind). */
+    weather: Weather,
     tags: z.array(z.string()),
     /** The requester's best total (0-100) over their completed sessions; null if none. */
     bestScore: z.number().min(0).max(100).nullable(),
