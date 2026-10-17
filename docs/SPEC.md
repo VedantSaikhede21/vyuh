@@ -259,7 +259,7 @@ Modules: `rng.ts`, `clock.ts`, `coords.ts`, `terrain.ts` (heightmap sampling + L
 - Pixels on target = targetSizeM / (rangeM × IFOV). **Johnson criteria** (cycles = pixels/2): detect ≥ 1, recognise ≥ 4, identify ≥ 6.4.
 - Visibility caps EO range (fog/haze); at night, EO is useless and IR is used with lower contrast for small electric drones (thermal signature parameter per class).
 - Rendered as a second R3F camera at reduced resolution with a post-process shader: day = slight noise; IR = white-hot palette + noise + blur. Emits `EO_IDENTIFIABLE` when a contact crosses the identify threshold in the current pointing (used for fair scoring).
-- **Model (Phase 2):** IFOV = horizontal FOV (rad) ÷ horizontal pixels (`irResolution` in IR mode). Cycles = (sizeM / (rangeM × IFOV)) / 2, × `thermalContrast` in IR mode. Level: DETECT ≥ 1, RECOGNISE ≥ 4, IDENTIFY ≥ 6.4. A contact counts only if inside the camera frustum and in LOS. Visibility cap: DAY range ≤ `visibilityM`; IR range ≤ 1.5 × `visibilityM` (thermal sees better through haze, not fog). DAY mode gives nothing when `isNight`.
+- **Model (Phase 2):** IFOV = horizontal FOV (rad) ÷ horizontal pixels (`irResolution` in IR mode). Cycles = (sizeM / (rangeM × IFOV)) / 2, × `thermalContrast` in IR mode. Level: DETECT ≥ 1, RECOGNISE ≥ 4, IDENTIFY ≥ 6.4. A contact counts only if inside the camera frustum and in LOS. Visibility cap: DAY range ≤ `visibilityM`; IR range ≤ f × `visibilityM`, where f = 1 at visibility ≤ 1 km (dense fog) rising linearly to 1.5 at ≥ 3 km — thermal sees better through haze, not through fog (`SIM_VERSION` 4, decision 94). DAY mode gives nothing when `isNight`.
 - **Pointing is sim state**, set only by logged `CAMERA_SLEWED` commands (incl. lock and mode), so EO results replay exactly.
 - **EO video auto-track (decision 52).** The camera is in one of three states, all derived deterministically from the logged commands (no new event type):
   - `MANUAL` — trainee pointing (`CAMERA_SLEWED` without `trackId`).
@@ -331,15 +331,18 @@ Minimum warning and the D1–D2 first-track target are shared constants (`packag
 | Id | Name | Diff | What it trains | Inspired by (cite in realism-sources.md) |
 |---|---|---|---|---|
 | S01 | First Contact | 1 | Basic loop: detect, classify, intercept one quad in daylight | — (tutorial) |
-| S02 | Birds or Drone? | 2 | Bird flock vs a single quad on radar; use EO + spectrogram | Common bird false-alarm problem in C-UAS |
-| S03 | Blue in the Sky | 2 | Friendly patrol drone without ID + one hostile; avoid fratricide | Identification/IFF ambiguity |
+| S02 | Two Axes | 1 | Two quads on two axes; prioritise by time to the asset | — (tutorial) |
+| S03 | Low and Fast | 2 | A low, fast quad that appears late on radar | — (tutorial) |
 | S04 | Night Drop | 3 | Night smuggling drop across a border line; IR, RF bearing, report | Reported cross-border drone drops |
 | S05 | Silent Approach | 3 | Fibre-optic FPV through a mountain valley; jamming useless, terrain masking | Reported fibre-optic FPV use in recent conflicts |
 | S06 | Crowded Skies | 3 | Urban area with civilian hobby drones and NO_KINETIC zones; one hostile | Urban drone incidents, collateral constraints |
 | S07 | Look Over There | 4 | Loud high decoy + silent low loitering threat | Reported decoy + strike tactics |
-| S08 | Fog Line | 4 | Coastal fog, EO near-useless, radar-led decisions | Weather-degraded operations |
+| S08 | Fog Line | 4 | Winter fog on the Punjab plains (0.8 km, January): EO identifies only inside 0.8 km, radar-led decisions; friendly patrols and birds | Weather-degraded operations; IMD winter fog |
 | S09 | Dusk Swarm | 4 | 8-drone swarm on 2 axes with sun glare at dusk | Reported swarm attacks |
 | S10 | Saturation | 5 | Night mixed swarm + decoys + birds + friendly helicopter, limited ammo | Reported large-scale drone incursions |
+| S15 | Birds or Drone? | 2 | Two bird flocks tracked first, then a single quad on a nearby bearing; sort by radar behaviour and EO (the spectrogram arrives in Phase 5) | Common bird false-alarm problem in C-UAS |
+
+**Presets and build (Phase 3b):** S04 PUNJAB_PLAINS night; S05 JK_MOUNTAIN day; S06 URBAN_GENERIC day; S07 PUNJAB dusk; S08 PUNJAB January fog; S09 PUNJAB dusk; S10 PUNJAB night + rain; S15 PUNJAB day. Each is a generator request with a fixed seed plus small overrides, built from `apps/api/app/seed/scenarios/src/<id>.json` by `scripts/scenarios/build_scripted.py`; a pytest fails if a committed file drifts from its source (decision 95). Sun glare in EO is not modelled (S09 puts one axis on the sun's bearing; glare is an open idea).
 
 **Test scenarios (tag `test`, not part of the training library):**
 | Id | Name | Preset | Purpose |
@@ -733,7 +736,7 @@ Rules: one branch per feature; **`packages/shared` changes go through one owner 
 A judge should get through this in about 5 minutes without help:
 1. **Landing:** one-screen problem statement, the kill chain diagram, "Try demo" button.
 2. **Guided tour** of the sim player (6–8 steps: tactical view, radar, EO/IR, track list, actions, report, AI assist).
-3. **Play S02 "Birds or Drone?"** in practice mode (≈ 3 min) — shows false contacts, EO identification and the spectrogram.
+3. **Play S15 "Birds or Drone?"** in practice mode (≈ 3 min) — shows false contacts and EO identification (the spectrogram view arrives in Phase 5).
 4. **Result screen:** score breakdown, feedback lines, LLM debrief, recommended next difficulty.
 5. **AAR replay** with the ground-truth toggle — "here is what was really there".
 6. **Trends and unit dashboard** using labelled demo data (§22) to show progress over sessions.

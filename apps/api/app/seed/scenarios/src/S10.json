@@ -1,0 +1,46 @@
+{
+  "id": "S10",
+  "name": "Saturation",
+  "tags": [
+    "library"
+  ],
+  "citation": "large-scale incursions",
+  "request": {
+    "terrainPreset": "PUNJAB_PLAINS",
+    "difficulty": 5,
+    "timeBand": "NIGHT",
+    "weatherPreset": "RAIN",
+    "seed": 10100
+  },
+  "briefing": "## Situation\nNight, heavy rain, visibility about 5 km. A large, mixed incursion is expected: several swarms, decoys and single drones at once, with birds, civilian drones, our own patrol drones and a friendly helicopter in the same airspace. Rain cuts radar range.\n## Mission\nDefeat the drones that threaten Bridge Post. You have fewer interceptor rounds than hostile drones: prioritise, and use the jammer and spoofer on groups. Do not engage the friendly helicopter or our patrols.\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nAxes are uncertain. The high, RF-loud contacts are likely decoys; the low groups are the attack. A smuggler may try to cross during the confusion.",
+  "patch": {
+    "effectors": [
+      {
+        "id": "jam1",
+        "kind": "EW_JAM",
+        "x": -100,
+        "z": -400,
+        "rangeM": 2000,
+        "cooldownS": 10
+      },
+      {
+        "id": "spf1",
+        "kind": "EW_SPOOF",
+        "x": -100,
+        "z": -400,
+        "rangeM": 2000,
+        "cooldownS": 15
+      },
+      {
+        "id": "int1",
+        "kind": "INTERCEPT",
+        "x": -100,
+        "z": -400,
+        "rangeM": 1500,
+        "cooldownS": 6,
+        "ammo": 10
+      }
+    ]
+  },
+  "contacts": {}
+}

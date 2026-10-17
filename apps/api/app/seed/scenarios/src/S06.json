@@ -1,0 +1,63 @@
+{
+  "id": "S06",
+  "name": "Crowded Skies",
+  "tags": [
+    "library"
+  ],
+  "citation": "urban drone incidents",
+  "request": {
+    "terrainPreset": "URBAN_GENERIC",
+    "difficulty": 3,
+    "seed": 61055,
+    "timeBand": "DAY",
+    "threatMix": {
+      "QUAD_SMALL": 1
+    },
+    "falseContactDensity": "HIGH"
+  },
+  "briefing": "## Situation\nDaylight, clear. Post Alpha is on the edge of a busy market town. Several civilian hobby drones are flying over the town today. One hostile quadcopter is expected.\n## Mission\nDetect, identify and defeat the hostile before it reaches Post Alpha. Do not harm civilians: no intercepts over the town, and check the jam sector before jamming.\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nThe hostile is RF-controlled and expected from the north, over the town. Civilian drones are RF-linked too: jamming the hostile's bearing also jams any civilian in the same sector.",
+  "patch": {},
+  "contacts": {
+    "c02": {
+      "spawnTMs": 150000,
+      "path": [
+        {
+          "x": -1100,
+          "y": 35,
+          "z": -1000,
+          "speedMps": 7.8
+        },
+        {
+          "x": -450,
+          "y": 35,
+          "z": -1150,
+          "speedMps": 7.8
+        },
+        {
+          "x": -1100,
+          "y": 35,
+          "z": -1050,
+          "speedMps": 7.8
+        },
+        {
+          "x": -450,
+          "y": 35,
+          "z": -1150,
+          "speedMps": 7.8
+        },
+        {
+          "x": -1100,
+          "y": 35,
+          "z": -1050,
+          "speedMps": 7.8
+        },
+        {
+          "x": -2500,
+          "y": 35,
+          "z": -900,
+          "speedMps": 7.8
+        }
+      ]
+    }
+  }
+}

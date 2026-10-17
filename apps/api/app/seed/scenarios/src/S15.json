@@ -1,0 +1,147 @@
+{
+  "id": "S15",
+  "name": "Birds or Drone?",
+  "tags": [
+    "library"
+  ],
+  "citation": "bird false alarms",
+  "request": {
+    "terrainPreset": "PUNJAB_PLAINS",
+    "difficulty": 2,
+    "timeBand": "DAY",
+    "threatMix": {
+      "QUAD_SMALL": 1
+    },
+    "falseContactDensity": "HIGH",
+    "seed": 15116
+  },
+  "briefing": "## Situation\nDaylight, clear. Depot Bravo is on open farmland. Flocks of birds are working the fields to the west, and the radar will track them. One small hostile quadcopter is expected from the same direction.\n## Mission\nFind the drone among the birds, identify it, and defeat it before it reaches Depot Bravo. Leave the birds alone.\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nBirds wander in height and heading and drift with the flock; a drone holds a steady course and speed toward the post, and is RF-linked. Put the camera on any contact you are unsure of.",
+  "patch": {},
+  "contacts": {
+    "c02": {
+      "path": [
+        {
+          "x": -1547.6,
+          "y": 49,
+          "z": -902.8,
+          "speedMps": 9.1
+        },
+        {
+          "x": -999.7,
+          "y": 49,
+          "z": -874.7,
+          "speedMps": 9.1
+        },
+        {
+          "x": -716.7,
+          "y": 49,
+          "z": 20.5,
+          "speedMps": 9.1
+        },
+        {
+          "x": -793.0,
+          "y": 49,
+          "z": 887.8,
+          "speedMps": 9.1
+        }
+      ],
+      "spawnTMs": 0
+    },
+    "c03": {
+      "path": [
+        {
+          "x": -1564.6,
+          "y": 46,
+          "z": -920.4,
+          "speedMps": 9.1
+        }
+      ],
+      "spawnTMs": 0
+    },
+    "c04": {
+      "path": [
+        {
+          "x": -1550.7,
+          "y": 49,
+          "z": -892.9,
+          "speedMps": 9.1
+        }
+      ],
+      "spawnTMs": 0
+    },
+    "c05": {
+      "path": [
+        {
+          "x": -1547.1,
+          "y": 46,
+          "z": -911.4,
+          "speedMps": 9.1
+        }
+      ],
+      "spawnTMs": 0
+    },
+    "c06": {
+      "path": [
+        {
+          "x": -2368.4,
+          "y": 55,
+          "z": -317.3,
+          "speedMps": 12.2
+        },
+        {
+          "x": -1422.7,
+          "y": 55,
+          "z": -1027.0,
+          "speedMps": 12.2
+        },
+        {
+          "x": -806.1,
+          "y": 55,
+          "z": -1715.8,
+          "speedMps": 12.2
+        },
+        {
+          "x": -22.3,
+          "y": 55,
+          "z": -1459.9,
+          "speedMps": 12.2
+        },
+        {
+          "x": 826.8,
+          "y": 55,
+          "z": -1861.3,
+          "speedMps": 12.2
+        },
+        {
+          "x": 1943.8,
+          "y": 55,
+          "z": -1969.6,
+          "speedMps": 12.2
+        }
+      ],
+      "spawnTMs": 0
+    },
+    "c07": {
+      "path": [
+        {
+          "x": -2361.7,
+          "y": 53,
+          "z": -324.4,
+          "speedMps": 12.2
+        }
+      ],
+      "spawnTMs": 0
+    },
+    "c08": {
+      "path": [
+        {
+          "x": -2364.9,
+          "y": 59,
+          "z": -337.6,
+          "speedMps": 12.2
+        }
+      ],
+      "spawnTMs": 0
+    }
+  }
+}

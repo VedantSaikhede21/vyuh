@@ -29,6 +29,9 @@ FULL_BODY = TRAINEE_BODY | {
 
 Headers = Callable[[User], dict[str, str]]
 
+#: Trainee library list (difficulty, then code); test scenarios S11-S14 hidden.
+LIBRARY = ["S01", "S02", "S03", "S15", "S04", "S05", "S06", "S07", "S08", "S09", "S10"]
+
 
 def generate(client: TestClient, headers: dict[str, str], body: dict[str, Any]) -> Any:
     return client.post(URL, json=body, headers=headers)
@@ -128,9 +131,9 @@ def test_generated_runs_stay_out_of_the_library_list(
             for i in client.get(f"/api/v1/scenarios{query}", headers=headers).json()["items"]
         ]
 
-    assert codes(trainee) == ["S01", "S02", "S03"]
+    assert codes(trainee) == LIBRARY
     assert None not in codes(staff)
-    assert codes(trainee, "?kind=GENERATED") == ["S01", "S02", "S03"]  # filter ignored
+    assert codes(trainee, "?kind=GENERATED") == LIBRARY  # filter ignored
     listed = client.get("/api/v1/scenarios?kind=GENERATED", headers=staff).json()["items"]
     assert [i["id"] for i in listed] == [made["scenarioId"]]
 
