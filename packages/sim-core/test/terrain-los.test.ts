@@ -207,7 +207,7 @@ describe('MSL waypoints', () => {
 describe('committed terrain presets', () => {
   const dir = (name: string) =>
     new URL(`../../../apps/web/public/terrain/${name}/`, import.meta.url);
-  for (const name of ['PUNJAB_PLAINS', 'JK_MOUNTAIN']) {
+  for (const name of ['PUNJAB_PLAINS', 'JK_MOUNTAIN', 'URBAN_GENERIC']) {
     it(`${name}: meta validates and the heightmap decodes with the origin at 0`, () => {
       const meta = TerrainPresetMeta.parse(
         JSON.parse(readFileSync(new URL('meta.json', dir(name)), 'utf8')),
