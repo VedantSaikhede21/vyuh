@@ -1,13 +1,15 @@
 // Hillshade images from a committed terrain preset (heightmap.u16 + meta.json),
-// for the login background now and scenario thumbnails / briefing maps later
-// (Phase 3b). Node stdlib only: a minimal PNG writer on node:zlib.
+// the login background, and per preset a scenario-list thumbnail and a briefing
+// map with building footprints (Phase 3b). Node stdlib only: a minimal PNG writer
+// on node:zlib.
 //
 //   node scripts/hillshade/gen-hillshade.ts --preset JK_MOUNTAIN \
 //     --out apps/web/public/landing/login-hillshade.png --size 1600 --tone login
+//   node scripts/hillshade/gen-hillshade.ts --all     # every preset: thumb.png, map.png
 //
 // Colours come from the design tokens (apps/web/lib/theme/scene-colours.ts).
 
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import { UI } from '../../apps/web/lib/theme/scene-colours.ts';
@@ -17,6 +19,8 @@ interface Meta {
   metresPerPx: number;
   relMinM: number;
   relMaxM: number;
+  sizeM: number;
+  files: { buildings: string };
 }
 
 /** Heights in metres, row 0 = south edge (SPEC §14 heightmap.u16 layout). */
@@ -140,10 +144,103 @@ export function encodePng(rgb: Uint8Array, width: number, height: number): Buffe
   ]);
 }
 
-/** Tones: `login` = muted, darkened background (DESIGN §11.2). */
+/** Tones: `login` = muted, darkened background (DESIGN §11.2); `map` = briefing map
+ * and list thumbnail base (DESIGN §11.3–11.4), dark enough for overlays on top. */
 const TONES = {
   login: { dark: UI.bg0, light: UI.line1, gamma: 1.4, levels: 20 },
+  map: { dark: UI.bg0, light: UI.line2, gamma: 1.2, levels: 32 },
 } as const;
+
+/** Map footprints: a muted tone that reads as built-up area on the map ramp. */
+const BUILDING_FILL = UI.text3;
+/** Briefing map side (px) and list thumbnail (64 × 40 at 2×). */
+export const MAP_PX = 1024;
+export const THUMB_W = 128;
+export const THUMB_H = 80;
+
+/** Vertical exaggeration so flat plains still show their relief (1 for mountains). */
+export function zFactorFor(meta: Meta): number {
+  const relief = Math.max(meta.relMaxM - meta.relMinM, 1);
+  return Math.min(8, Math.max(1, 150 / relief));
+}
+
+/** Fill building footprints (local metres, x east, z north) into a north-up RGB image. */
+export function drawBuildings(
+  rgb: Uint8Array,
+  size: number,
+  sizeM: number,
+  rings: readonly (readonly [number, number])[][],
+  colour: string,
+): void {
+  const [r, g, b] = hex(colour);
+  const half = sizeM / 2;
+  const px = (x: number) => ((x + half) / sizeM) * size;
+  const py = (z: number) => ((half - z) / sizeM) * size;
+  for (const ring of rings) {
+    const pts = ring.map(([x, z]) => [px(x), py(z)] as const);
+    const ys = pts.map((p) => p[1]);
+    const y0 = Math.max(0, Math.floor(Math.min(...ys)));
+    const y1 = Math.min(size - 1, Math.ceil(Math.max(...ys)));
+    for (let y = y0; y <= y1; y++) {
+      const yc = y + 0.5;
+      const xs: number[] = [];
+      for (let i = 0; i < pts.length; i++) {
+        const [ax, ay] = pts[i]!;
+        const [bx, by] = pts[(i + 1) % pts.length]!;
+        if (ay > yc !== by > yc) xs.push(ax + ((yc - ay) / (by - ay)) * (bx - ax));
+      }
+      xs.sort((p, q) => p - q);
+      for (let k = 0; k + 1 < xs.length; k += 2) {
+        // At least one pixel: small footprints still show at map scale.
+        const xa = Math.max(0, Math.floor(xs[k]!));
+        const xb = Math.min(size - 1, Math.max(xa, Math.ceil(xs[k + 1]!) - 1));
+        for (let x = xa; x <= xb; x++) {
+          const o = (y * size + x) * 3;
+          rgb[o] = r;
+          rgb[o + 1] = g;
+          rgb[o + 2] = b;
+        }
+      }
+    }
+  }
+}
+
+/** Centre crop of a square RGB image to width × height. */
+export function crop(rgb: Uint8Array, size: number, width: number, height: number): Uint8Array {
+  const out = new Uint8Array(width * height * 3);
+  const x0 = Math.floor((size - width) / 2);
+  const y0 = Math.floor((size - height) / 2);
+  for (let y = 0; y < height; y++) {
+    const from = ((y0 + y) * size + x0) * 3;
+    out.set(rgb.subarray(from, from + width * 3), y * width * 3);
+  }
+  return out;
+}
+
+/** thumb.png and map.png for one preset folder. */
+export function presetImages(presetDir: string): { map: Buffer; thumb: Buffer } {
+  const { meta, h } = readHeights(presetDir);
+  const shade = hillshade(meta, h, zFactorFor(meta));
+  const tone = TONES.map;
+  const file = join(presetDir, meta.files.buildings);
+  const rings = existsSync(file)
+    ? (
+        JSON.parse(readFileSync(file, 'utf8')) as {
+          features: { geometry: { coordinates: [number, number][][] } }[];
+        }
+      ).features.map((f) => f.geometry.coordinates[0]!)
+    : [];
+  const image = (size: number) => {
+    const rgb = toRgb(shade, meta.resolution, size, tone.dark, tone.light, tone.gamma, tone.levels);
+    drawBuildings(rgb, size, meta.sizeM, rings, BUILDING_FILL);
+    return rgb;
+  };
+  // The thumbnail shows the central 14 km × 8.75 km band, 128 px across.
+  return {
+    map: encodePng(image(MAP_PX), MAP_PX, MAP_PX),
+    thumb: encodePng(crop(image(THUMB_W), THUMB_W, THUMB_W, THUMB_H), THUMB_W, THUMB_H),
+  };
+}
 
 function arg(name: string, fallback?: string): string {
   const i = process.argv.indexOf(`--${name}`);
@@ -154,6 +251,23 @@ function arg(name: string, fallback?: string): string {
 
 if (import.meta.url === `file:///${resolve(process.argv[1] ?? '').replace(/\\/g, '/')}`) {
   const root = resolve(import.meta.dirname, '../..');
+  if (process.argv.includes('--all')) {
+    const terrain = join(root, 'apps/web/public/terrain');
+    for (const name of readdirSync(terrain).sort()) {
+      const dir = join(terrain, name);
+      if (!existsSync(join(dir, 'meta.json'))) continue;
+      const { map, thumb } = presetImages(dir);
+      writeFileSync(join(dir, 'map.png'), map);
+      writeFileSync(join(dir, 'thumb.png'), thumb);
+      const kb = (b: Buffer) => (b.length / 1024).toFixed(1);
+      console.log(`wrote ${name}/map.png (${kb(map)} KB), thumb.png (${kb(thumb)} KB)`);
+    }
+  } else {
+    writeOne(root);
+  }
+}
+
+function writeOne(root: string): void {
   const preset = arg('preset');
   const out = resolve(root, arg('out'));
   const size = Number(arg('size', '1024'));
