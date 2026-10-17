@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SIM_VERSION } from '@vyuh/sim-core';
-import { VIEWPORTS, beginSession, login, selectTrack, stepTo, stepUntilTracked } from './helpers';
+import { VIEWPORTS, awaitSession, login, selectTrack, stepTo, stepUntilTracked } from './helpers';
 
 // Phase 3a Step 10 checkpoint captures (tag @checkpoint, not part of `pnpm e2e`):
 //   pnpm --filter @vyuh/web e2e:checkpoint
@@ -47,7 +47,7 @@ for (const vp of VIEWPORTS) {
     await page.goto(`/train/session/${sessionId}`);
     // The Next.js dev-tools badge is not part of the product (dev server only).
     await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
-    await beginSession(page);
+    await awaitSession(page);
 
     // 1. Generated D3 scenario with its no-kinetic zones (hatched, labelled) in 3D and on the PPI.
     await stepTo(page, 45_000);

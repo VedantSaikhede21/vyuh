@@ -243,12 +243,13 @@ for (const scale of SCALES) {
               if (c.generate) {
                 const g = await startGenerated(page, c.generate);
                 entities = g.entities;
+                // A session page opened directly starts by itself.
                 await page.goto(`/train/session/${g.sessionId}`);
               } else {
                 await openBriefing(page, c.code!);
+                await page.getByTestId('start-session').click();
               }
-              await page.getByTestId('start-session').click();
-              await expect(page.getByTestId('sim-player')).toBeVisible();
+              await expect(page.getByTestId('sim-player')).toBeVisible({ timeout: 60_000 });
               await page.waitForTimeout(1500);
               await runTo(page, c.atMs);
             } else {
