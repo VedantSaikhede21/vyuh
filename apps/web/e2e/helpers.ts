@@ -16,17 +16,25 @@ export async function login(page: Page, email: string): Promise<void> {
   await page.waitForURL('**/train');
 }
 
-/** Open a scenario's briefing from the training list. */
+/** Open a scenario's briefing page from the training list (/train/scenario/[id]). */
 export async function openBriefing(page: Page, code: string): Promise<void> {
   await page.goto('/train');
   await page.getByTestId(`scenario-${code}`).click();
   await expect(page.getByTestId('start-session')).toBeVisible();
 }
 
-/** Start the session and wait until the test hook holds it at t ≈ 0. */
+/** Begin on the briefing page and wait until the test hook holds the session at t ≈ 0. */
 export async function beginSession(page: Page): Promise<void> {
   await page.getByTestId('start-session').click();
-  await expect(page.getByTestId('sim-player')).toBeVisible();
+  await awaitSession(page);
+}
+
+/**
+ * A session page opened directly (session created through the API) starts by
+ * itself; wait for the player and the test hook.
+ */
+export async function awaitSession(page: Page): Promise<void> {
+  await expect(page.getByTestId('sim-player')).toBeVisible({ timeout: 60_000 });
   await page.waitForFunction(() => window.__vyuhE2E !== undefined);
   // Fonts, terrain and the first frames.
   await page.waitForTimeout(500);

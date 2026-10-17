@@ -2,6 +2,7 @@ import {
   CreateSessionResponse,
   ErrorEnvelope,
   EventBatchResponse,
+  GenerateScenarioResponse,
   MeResponse,
   ScenarioDetailResponse,
   ScenarioListResponse,
@@ -10,6 +11,7 @@ import {
   TokenResponse,
   type ClientMeta,
   type ErrorCode,
+  type GenerateRequest,
   type MeResponse as MeResponseT,
   type SessionMode,
   type SimEvent,
@@ -101,6 +103,9 @@ export const api = {
   listScenarios: (signal?: AbortSignal) => apiFetch('/scenarios', ScenarioListResponse, { signal }),
   getScenario: (id: string, signal?: AbortSignal) =>
     apiFetch(`/scenarios/${id}`, ScenarioDetailResponse, { signal }),
+  /** POST /scenarios/generate; a 429 carries `retryAfterS` in ApiError.details. */
+  generateScenario: (body: GenerateRequest) =>
+    apiFetch('/scenarios/generate', GenerateScenarioResponse, { method: 'POST', body }),
   createSession: (scenarioId: string, mode: SessionMode) =>
     apiFetch('/sessions', CreateSessionResponse, {
       method: 'POST',

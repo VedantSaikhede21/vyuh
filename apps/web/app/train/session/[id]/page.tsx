@@ -1,19 +1,17 @@
 'use client';
 
-import type { SessionMode } from '@vyuh/shared';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { RequireAuth } from '@/components/require-auth';
 import { ResultScreen } from '@/components/sim/result-screen';
 import { Button } from '@/components/ui/button';
-import { Kbd, Panel, PanelBody, Skeleton, StateChip } from '@/components/hud/primitives';
+import { Panel, PanelBody, Skeleton } from '@/components/hud/primitives';
 import { useCommands } from '@/lib/sim/commands';
 import { useSimLoop } from '@/lib/sim/use-sim-loop';
 import { useTrainingSession } from '@/lib/sim/use-training-session';
 import { useUiStore } from '@/lib/sim/ui-store';
-import { ROE_LABEL } from '@/lib/strings';
 
 // WebGL only exists in the browser.
 const SimPlayer = dynamic(() => import('@/components/sim/player').then((m) => m.SimPlayer), {
@@ -21,87 +19,18 @@ const SimPlayer = dynamic(() => import('@/components/sim/player').then((m) => m.
   loading: () => <Skeleton label="Loading 3D view" className="p-6" />,
 });
 
-/** Split simple briefing markdown into `## Heading` sections. */
-function sections(md: string): { title: string; lines: string[] }[] {
-  const out: { title: string; lines: string[] }[] = [];
-  for (const line of md.split('\n')) {
-    if (line.startsWith('## ')) out.push({ title: line.slice(3).trim(), lines: [] });
-    else if (line.trim()) {
-      if (out.length === 0) out.push({ title: '', lines: [] });
-      out.at(-1)!.lines.push(line);
-    }
-  }
-  return out;
-}
-
-/** Pre-mission briefing (restyle only; the map briefing of DESIGN §11.4 is Phase 3b). */
-function Briefing({
-  name,
-  briefing,
-  mode,
-  roe,
-  onStart,
-}: {
-  name: string;
-  briefing: string;
-  mode: SessionMode;
-  roe: keyof typeof ROE_LABEL;
-  onStart: () => void;
-}) {
-  return (
-    <div className="max-w-2xl space-y-4">
-      <div className="space-y-1">
-        <p className="text-label">Briefing</p>
-        <h1 className="text-h1">{name}</h1>
-        <div className="flex gap-2">
-          <StateChip>{ROE_LABEL[roe]}</StateChip>
-          <StateChip tone="muted">{mode}</StateChip>
-        </div>
-      </div>
-      <Panel>
-        <PanelBody className="space-y-4">
-          {sections(briefing).map((sec, i) =>
-            sec.title.toUpperCase() === 'ROE' ? (
-              <section key={i} className="border border-line-2 bg-bg-2 p-3">
-                <h2 className="text-panel-title text-text-1">Rules of engagement</h2>
-                {sec.lines.map((l, k) => (
-                  <p key={k} className="text-body">
-                    {l}
-                  </p>
-                ))}
-              </section>
-            ) : (
-              <section key={i} className="space-y-1">
-                {sec.title && <h2 className="text-label">{sec.title}</h2>}
-                {sec.lines.map((l, k) => (
-                  <p key={k} className="text-body">
-                    {l}
-                  </p>
-                ))}
-              </section>
-            ),
-          )}
-        </PanelBody>
-      </Panel>
-      <div className="flex flex-wrap items-center gap-4">
-        <Button variant="primary" onClick={onStart} autoFocus data-testid="start-session">
-          Begin <Kbd className="border-primary-fg/40 text-primary-fg">Enter</Kbd>
-        </Button>
-        <p className="text-small text-text-2">
-          <Kbd>?</Kbd> shows every shortcut during the session.{' '}
-          {mode === 'ASSESSMENT'
-            ? 'Assessment runs on a fixed clock with no pause.'
-            : 'Practice: P pauses.'}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function Session({ sessionId }: { sessionId: string }) {
   const { phase, upload, start, finish, recordFrame } = useTrainingSession(sessionId);
   const runtime = phase.kind === 'running' || phase.kind === 'submitting' ? phase.runtime : null;
   const commands = useCommands(runtime);
+  // The briefing page created this session with Begin, so it starts straight away
+  // (once: StrictMode runs effects twice in development).
+  const started = useRef(false);
+  useEffect(() => {
+    if (phase.kind !== 'briefing' || started.current) return;
+    started.current = true;
+    void start();
+  }, [phase.kind, start]);
   useSimLoop(phase.kind === 'running' ? phase.runtime : null, finish, recordFrame);
 
   const eoFov = useMemo(() => {
@@ -139,15 +68,6 @@ function Session({ sessionId }: { sessionId: string }) {
     case 'loading':
       return <Skeleton label="Loading session" className="p-6" />;
     case 'briefing':
-      return (
-        <Briefing
-          name={phase.scenario.name}
-          briefing={phase.scenario.briefing}
-          mode={phase.mode}
-          roe={phase.scenario.roe}
-          onStart={() => void start()}
-        />
-      );
     case 'preparing':
       return <Skeleton label="Loading terrain and sensors" className="p-6" />;
     case 'running':

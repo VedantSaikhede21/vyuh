@@ -77,7 +77,8 @@ for (const vp of [
 test('core actions by keyboard alone', async ({ page }) => {
   await login(page, 'trainee1@demo');
   // Open the briefing and begin without the mouse.
-  await page.getByRole('button', { name: 'Open the briefing for First Contact' }).focus();
+  // Rows are focusable (arrows move between them); Enter opens the briefing page.
+  await page.getByRole('row', { name: 'S01 First Contact: open the briefing' }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('start-session')).toBeFocused();
   await page.keyboard.press('Enter');

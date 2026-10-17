@@ -162,11 +162,16 @@ export function ResultScreen({
           <Button
             variant="primary"
             disabled={busy !== null || !next}
-            onClick={() => next && void start('next', next.id)}
+            onClick={() => {
+              // Next opens that scenario's briefing (plan answer 9); retry starts directly.
+              if (!next) return;
+              setBusy('next');
+              router.push(`/train/scenario/${next.id}`);
+            }}
             title={next ? undefined : 'No other scenario in the library'}
           >
             {busy === 'next'
-              ? 'Starting…'
+              ? 'Opening briefing…'
               : next
                 ? `Next · ${[next.code, next.name].filter(Boolean).join(' ')}`
                 : 'Next scenario'}
