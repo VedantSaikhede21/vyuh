@@ -574,6 +574,7 @@ class TerrainPresetMeta(BaseModel):
     files: TerrainPresetFiles
     source: Annotated[str, Field(min_length=1)]
     attribution: Annotated[list[AttributionItem], Field(min_length=1)]
+    revision: Annotated[int | None, Field(ge=1, le=9007199254740991)] = None
 
 
 class TerrainRef(BaseModel):

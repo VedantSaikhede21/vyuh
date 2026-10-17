@@ -40,6 +40,9 @@ DENSE_MIN_BUILDINGS = 2000
 BUILT_UP_CELL_M = 100.0
 BUILT_UP_SHARE = 0.2
 SETTLEMENT_MIN_CELLS = 3
+#: The largest settlement is a town only from this many built-up cells (3 km²); a
+#: villages-only preset keeps the asset near the centre (decision 93).
+TOWN_MIN_CELLS = 300
 #: Dense presets: zones at most this side (larger settlements are tiled), kept only within
 #: ZONE_ASSET_RANGE_M of the asset (beyond interceptor reach a zone constrains nothing).
 ZONE_MAX_SIDE_M = 1200.0
@@ -133,7 +136,7 @@ Cell = tuple[int, int]
 
 @dataclass(frozen=True)
 class DenseSettlements:
-    #: Built-up cells (BUILT_UP_CELL_M) of the town.
+    #: Built-up cells (BUILT_UP_CELL_M) of the town; empty when there is none.
     town_cells: frozenset[Cell]
     #: (box, "town" | "village"), boxes at most ZONE_MAX_SIDE_M, by south-west corner.
     zones: list[tuple[list[Point], str]]
@@ -183,7 +186,7 @@ def dense_settlements(terrain: Terrain) -> DenseSettlements:
     tile = int(ZONE_MAX_SIDE_M // c)
     zones: list[tuple[list[Point], str]] = []
     for k, comp in enumerate(components):
-        label = "town" if k == 0 else "village"
+        label = "town" if k == 0 and len(comp) >= TOWN_MIN_CELLS else "village"
         i0 = min(i for i, _ in comp)
         j0 = min(j for _, j in comp)
         tiles: dict[Cell, list[Cell]] = {}
@@ -198,7 +201,8 @@ def dense_settlements(terrain: Terrain) -> DenseSettlements:
             z1 = (max(j for _, j in part) + 1) * c
             zones.append(([(x0, z0), (x1, z0), (x1, z1), (x0, z1)], label))
     zones.sort(key=lambda zn: (zn[0][0][1], zn[0][0][0]))
-    out = DenseSettlements(frozenset(components[0]) if components else frozenset(), zones)
+    has_town = bool(components) and len(components[0]) >= TOWN_MIN_CELLS
+    out = DenseSettlements(frozenset(components[0]) if has_town else frozenset(), zones)
     _dense[name] = out
     return out
 
@@ -339,7 +343,7 @@ def site(rng: random.Random, terrain: Terrain, difficulty: int) -> Site:
     if len(terrain.buildings) >= DENSE_MIN_BUILDINGS:
         dense = dense_settlements(terrain)
         all_boxes = [b for b, _ in dense.zones] if difficulty >= 2 else []
-        sites = town_asset_candidates(terrain, dense, all_boxes)
+        sites = town_asset_candidates(terrain, dense, all_boxes) if dense.town_cells else []
         ax, az = rng.choice(sites) if sites else pick_asset_xz(rng, terrain, all_boxes)
         named = (
             [zn for zn in dense.zones if _box_distance(zn[0], ax, az) <= ZONE_ASSET_RANGE_M]

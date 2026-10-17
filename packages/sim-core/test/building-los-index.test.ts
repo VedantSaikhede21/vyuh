@@ -74,6 +74,7 @@ describe('building LOS index (25 m cells + roof early-out)', () => {
       // The sample must exercise clear rays and rays only a building blocks.
       expect(byBuilding).toBeGreaterThan(25);
       expect(blocked).toBeLessThan(9_900);
-    });
+      // 20 000 reference LOS walks on presets with thousands of footprints.
+    }, 30_000);
   }
 });
