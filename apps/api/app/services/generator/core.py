@@ -50,7 +50,7 @@ from app.services.generator.visibility import FINE_STEP_M, GRID_N, exposure_grid
 from app.services.scenarios import scenario_rule_violations
 from app.services.terrain import Terrain, load_terrain
 
-GENERATOR_VERSION = 1
+GENERATOR_VERSION = 2
 SCORING_TREE_ID = "default_v3"
 SCHEMA_VERSION = 1
 #: Attempts per contact group before giving up (deterministic attempt sub-streams).
@@ -354,6 +354,9 @@ def _threat_agl(rng: random.Random, level: Level, behaviour: str, cls: str) -> f
 MIN_LEG_EXPOSURE = 0.85
 AGL_RAISE_STEP_M = 10.0
 AGL_RAISE_MAX_M = 60.0
+#: ...and an attack run's last (minimum warning + CORE_MARGIN_S) x speed must be fully in
+#: view: a masked stretch there delays the first track below the minimum (decision 92).
+CORE_MARGIN_S = 15.0
 
 
 def _segment_exposure(
@@ -400,15 +403,20 @@ def _lift_scored(
     from_b: float,
     length: float,
     need: float = MIN_LEG_EXPOSURE,
+    core_m: float = 0.0,
 ) -> tuple[float, float]:
-    """(exposure, agl): the first lift reaching MIN_LEG_EXPOSURE, else the best one."""
+    """(exposure, agl): the first lift reaching `need` with the `core_m` nearest `b`
+    (after `from_b`) fully in view, else the best exposure."""
     best = (-1.0, agl)
     k = 0
     while k * AGL_RAISE_STEP_M <= AGL_RAISE_MAX_M:
         trial = agl + k * AGL_RAISE_STEP_M
         exposure = _segment_exposure(ctx, a, b, trial, from_b, length)
-        if exposure >= need:
+        core_ok = core_m <= 0 or _segment_exposure(ctx, a, b, trial, from_b, core_m) >= 1.0
+        if exposure >= need and core_ok:
             return exposure, trial
+        if not core_ok:
+            exposure = min(exposure, need - 0.01)
         if exposure > best[0]:
             best = (exposure, trial)
         k += 1
@@ -473,6 +481,7 @@ def _fit_approach(
     from_asset: float,
     length: float,
     max_deg: int = BEARING_MAX_DEG,
+    core_m: float = 0.0,
 ) -> tuple[float, float]:
     """(bearing, agl) near the planned bearing whose straight approach to the asset is in
     view from `from_asset` to `from_asset + length` metres out (decision 76)."""
@@ -484,7 +493,7 @@ def _fit_approach(
         spawn = bearing_point(asset, b, ctx.level.spawn_m)
         if not inside(spawn, half):
             continue
-        exposure, lifted = _lift_scored(ctx, agl, spawn, asset, from_asset, length)
+        exposure, lifted = _lift_scored(ctx, agl, spawn, asset, from_asset, length, core_m=core_m)
         if exposure >= MIN_LEG_EXPOSURE:
             return b, lifted
         if exposure > best[0]:
@@ -537,6 +546,35 @@ def _contact(
         "emissions": cs.emissions(rng, link, kw.pop("friendly_id", None)),
         **kw,
     }
+
+
+#: Radar-equation estimate (as sim-core radar.ts): Pd 0.5 at refRange x (RCS / 0.01)^(1/4);
+#: a track is usually confirmed by TRACK_RANGE_FACTOR of that range. Heuristic only: it
+#: caps a small, fast threat's speed so the minimum warning fits (decision 92).
+RADAR_REF_RCS_M2 = 0.01
+TRACK_RANGE_FACTOR = 0.8
+WARNING_SPEED_MARGIN_S = 5.0
+
+
+def _speed_for_warning(ctx: Ctx, cls: str, bearing: float, speed: float) -> float:
+    """`speed`, or less (never below the class's table minimum) when the approach on
+    `bearing` comes within expected track range of the radar too close to the asset."""
+    radar = next(s for s in ctx.site.sensors if s["kind"] == "RADAR")
+    rcs = cs.profiles()[cls]["rcsM2"]
+    r_trk = TRACK_RANGE_FACTOR * radar["refRangeM"] * (rcs / RADAR_REF_RCS_M2) ** 0.25
+    b = math.radians(bearing)
+    ux, uz = math.sin(b), math.cos(b)
+    dx, dz = ctx.asset[0] - ctx.site.radar_xz[0], ctx.asset[1] - ctx.site.radar_xz[1]
+    # Farthest s with |asset + s u - radar| <= r_trk.
+    half_b = ux * dx + uz * dz
+    disc = half_b * half_b - (dx * dx + dz * dz - r_trk * r_trk)
+    if disc <= 0:
+        return speed
+    s = -half_b + math.sqrt(disc)
+    cap = s / (ctx.level.min_warning_s + WARNING_SPEED_MARGIN_S)
+    if cap >= speed:
+        return speed
+    return round(max(cap, cs.SPEED_MPS[cls][0]), 1)
 
 
 def _build_threat(ctx: Ctx, slot: Slot, rng: random.Random) -> Group:
@@ -607,8 +645,10 @@ def _build_threat(ctx: Ctx, slot: Slot, rng: random.Random) -> Group:
     else:
         # Swarm followers fly a little higher than the leader; check with a margin.
         margin = SWARM_AGL_JITTER_M if slot.role == "SWARM" else 0.0
-        bearing, agl = _fit_approach(ctx, bearing, agl - margin, 200, reveal_m - 200)
+        core_m = (level.min_warning_s + CORE_MARGIN_S) * speed - 200
+        bearing, agl = _fit_approach(ctx, bearing, agl - margin, 200, reveal_m - 200, core_m=core_m)
         agl += margin
+        speed = _speed_for_warning(ctx, slot.cls, bearing, speed)
     spawn = bearing_point(asset, bearing, _spawn_dist(ctx, bearing, first, spawn_s, speed))
     if slot.behaviour == "RECON_LOITER":
         p = bh.recon_loiter(rng, spawn, asset, agl, speed, ctx.half)
@@ -994,10 +1034,10 @@ def generate(req: GenerateRequest) -> dict:
         {
             "id": f"Z{i + 1}",
             "kind": "NO_KINETIC",
-            "name": "village",
+            "name": name,
             "polygon": [list(p) for p in box],
         }
-        for i, box in enumerate(where.no_kinetic)
+        for i, (box, name) in enumerate(zip(where.no_kinetic, where.no_kinetic_names, strict=True))
     ]
     if ctx.border_axis is not None:
         zones.append(
@@ -1034,11 +1074,14 @@ def generate(req: GenerateRequest) -> dict:
         "roe": roe,
     }
     request = {k: v for k, v in request.items() if v is not None}
+    # The generator version is part of the content id, so a request re-run after a
+    # generator change is a new scenario, not a deduplicated old one (decision 92).
     scenario_id = (
         "GEN-"
         + hashlib.sha256(
             json.dumps(
-                req.model_dump(mode="json", by_alias=True, exclude_none=True), sort_keys=True
+                [GENERATOR_VERSION, req.model_dump(mode="json", by_alias=True, exclude_none=True)],
+                sort_keys=True,
             ).encode()
         ).hexdigest()[:12]
     )

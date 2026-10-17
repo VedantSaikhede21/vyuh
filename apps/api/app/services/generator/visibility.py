@@ -3,7 +3,9 @@
 A straight ray from the radar to a point, sampled on the heightmap: every
 FINE_STEP_M (about the DEM's 27 m) for axis choice and radar siting, every
 RAY_STEP_M for the masked-route grid (which only steers the hidden outer route).
-It ignores buildings, Earth curvature, radar Pd, clutter and noise:
+Buildings count through the coarse roof grid (each 50 m cell blocks up to its highest
+roof, decision 91), which is conservative. It ignores Earth curvature, radar Pd, clutter
+and noise:
 it only biases where the generator puts the radar and how low routes run. What
 is actually detected, and when, is decided by sim-core (the validator).
 """
@@ -34,7 +36,7 @@ def visible(
     agl: float,
     step: float = RAY_STEP_M,
 ) -> bool:
-    """True when no terrain sample rises above the straight line src → dst (dst at `agl`)."""
+    """True when no terrain or roof-grid sample rises above the line src → dst (at `agl`)."""
     dst_y = terrain.height_at(*dst) + agl
     dist = math.dist(src, dst)
     if dist < 2 * NEAR_STEP_M:
@@ -51,10 +53,15 @@ def visible(
     off = size / 2
     sx, sz = src
     dx, dz, dy = dst[0] - sx, dst[1] - sz, dst_y - src_y
+    roofs = terrain.roof_grid()
+    tops = roofs.tops if roofs else None
+    rn = roofs.n if roofs else 0
+    rscale = 1 / roofs.cell_m if roofs else 0.0
     for d in near + far:
         f = d / dist
-        gx = min(max((sx + dx * f + off) * scale, 0.0), n)
-        gz = min(max((sz + dz * f + off) * scale, 0.0), n)
+        px, pz = sx + dx * f + off, sz + dz * f + off
+        gx = min(max(px * scale, 0.0), n)
+        gz = min(max(pz * scale, 0.0), n)
         x0 = min(int(gx), n - 1)
         z0 = min(int(gz), n - 1)
         fx, fz = gx - x0, gz - z0
@@ -62,8 +69,13 @@ def visible(
         ground = (h[i] * (1 - fx) + h[i + 1] * fx) * (1 - fz) + (
             h[i + r] * (1 - fx) + h[i + r + 1] * fx
         ) * fz
-        if ground > src_y + dy * f:
+        line = src_y + dy * f
+        if ground > line:
             return False
+        if tops is not None:
+            ci, cj = int(px * rscale), int(pz * rscale)
+            if 0 <= ci < rn and 0 <= cj < rn and tops[cj * rn + ci] > line:
+                return False
     return True
 
 

@@ -46,7 +46,7 @@ from app.services.generator.static_checks import contact_problems
 from app.services.scenarios import scenario_rule_violations
 from app.services.terrain import load_terrain
 
-PRESETS = ("PUNJAB_PLAINS", "JK_MOUNTAIN")
+PRESETS = ("PUNJAB_PLAINS", "JK_MOUNTAIN", "URBAN_GENERIC")
 CROSSCHECK = Path(__file__).resolve().parent / "fixtures" / "crosscheck"
 
 
@@ -79,7 +79,7 @@ def wide() -> list[dict]:
 
 
 @pytest.mark.parametrize("preset", PRESETS)
-@pytest.mark.parametrize("difficulty", [1, 3, 5])
+@pytest.mark.parametrize("difficulty", [1, 2, 3, 4, 5])
 def test_same_request_is_byte_identical(preset: str, difficulty: int) -> None:
     r = req(terrainPreset=preset, difficulty=difficulty, seed=4242)
     a = canonical_json(generate(r))

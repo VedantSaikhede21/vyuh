@@ -21,6 +21,9 @@ from app.schemas.generated import ErrorCode, TerrainPresetMeta
 
 Point = tuple[float, float]
 
+#: Roof grid cell (decision 91): highest roof per cell, for the generator's ray heuristic.
+ROOF_CELL_M = 50.0
+
 
 @dataclass(frozen=True)
 class Building:
@@ -55,6 +58,17 @@ class CoarseGrid:
 
 
 @dataclass(frozen=True)
+class RoofGrid:
+    """n-by-n cells of ROOF_CELL_M from the south-west corner: highest roof top in each
+    (scenario-frame y, building base = lowest terrain under its corners, as sim-core);
+    -inf where there is no building."""
+
+    n: int
+    cell_m: float
+    tops: array
+
+
+@dataclass(frozen=True)
 class Terrain:
     meta: TerrainPresetMeta
     #: Row-major heights (m, relative to the origin elevation); row 0 = south.
@@ -84,6 +98,13 @@ class Terrain:
         h01, h11 = h[(z0 + 1) * r + x0], h[(z0 + 1) * r + x0 + 1]
         return (h00 * (1 - fx) + h10 * fx) * (1 - fz) + (h01 * (1 - fx) + h11 * fx) * fz
 
+    def roof_grid(self) -> RoofGrid | None:
+        """The preset's roof grid (cached), or None without buildings."""
+        name = self.meta.name
+        if name not in _roofs:
+            _roofs[name] = _build_roof_grid(self) if self.buildings else None
+        return _roofs[name]
+
     def coarse_grid(self, n: int = 64) -> CoarseGrid:
         cell = self.meta.size_m / n
         half = self.meta.size_m / 2
@@ -94,6 +115,30 @@ class Terrain:
             for r in range(n)
         )
         return CoarseGrid(n=n, cell_m=cell, size_m=self.meta.size_m, heights=rows)
+
+
+_roofs: dict[str, RoofGrid | None] = {}
+
+
+def _build_roof_grid(terrain: Terrain) -> RoofGrid:
+    c = ROOF_CELL_M
+    n = math.ceil(terrain.size_m / c)
+    half = terrain.half
+    tops = array("d", [-math.inf]) * (n * n)
+    for b in terrain.buildings:
+        top = min(terrain.height_at(x, z) for x, z in b.ring) + b.height_m
+        xs = [p[0] for p in b.ring]
+        zs = [p[1] for p in b.ring]
+        i0 = max(int((min(xs) + half) // c), 0)
+        i1 = min(int((max(xs) + half) // c), n - 1)
+        j0 = max(int((min(zs) + half) // c), 0)
+        j1 = min(int((max(zs) + half) // c), n - 1)
+        for j in range(j0, j1 + 1):
+            for i in range(i0, i1 + 1):
+                k = j * n + i
+                if top > tops[k]:
+                    tops[k] = top
+    return RoofGrid(n=n, cell_m=c, tops=tops)
 
 
 def _decode_u16(data: bytes, meta: TerrainPresetMeta) -> array:
