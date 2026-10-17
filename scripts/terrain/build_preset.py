@@ -5,7 +5,14 @@ Outputs into <out>/<NAME>/:
                      height relative to the origin = relMinM + v * (relMaxM - relMinM) / 65535
   heightmap.png      16-bit north-up preview (humans only; nothing loads it)
   meta.json          TerrainPresetMeta (packages/shared/src/terrain.ts)
-  buildings.geojson  footprints in local metres [x east, z north], property heightM
+  buildings.geojson  footprints in local metres [x east, z north], property heightM,
+                     one compact feature per line
+
+Buildings come from OSM and, optionally, offline footprint tiles (--footprints:
+Microsoft Global ML Building Footprints GeoJSONL, ODbL, kept in git-ignored raw/).
+OSM wins where the two overlap. Tile footprints without a height are merged where
+they touch (--footprint-merge-gap-m): they share the 2-level default height, so LOS
+sees the same solid block.
 
 The DEM is reprojected (bilinear) onto a square local azimuthal-equidistant grid
 centred on the origin, whose nodes span sizeM edge to edge (metresPerPx =
@@ -14,11 +21,15 @@ sizeM / (resolution - 1)), matching sim-core's Heightmap sampling.
 Example:
   uv run python build_preset.py --dem raw/Copernicus_DSM_COG_10_N30_00_E075_00_DEM.tif \
       --centre 30.52,75.70 --size-km 14 --name PUNJAB_PLAINS
+  uv run python build_preset.py --dem raw/Copernicus_DSM_COG_10_N29_00_E076_00_DEM.tif \
+      --centre 29.7997,76.3990 --size-km 14 --name URBAN_GENERIC \
+      --footprints raw/msbuildings/india-123121122.csv.gz
 """
 
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import logging
 import math
@@ -62,6 +73,15 @@ GLO30_ATTRIBUTION = (
     "2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved"
 )
 OSM_ATTRIBUTION = "Building footprints © OpenStreetMap contributors, ODbL 1.0"
+MS_ATTRIBUTION = (
+    "Building footprints © Microsoft, Global ML Building Footprints "
+    "(github.com/microsoft/GlobalMLBuildingFootprints), ODbL 1.0"
+)
+
+# Footprint tiles (decision 89): merge where closer than 2 * gap, simplify, drop sheds.
+FOOTPRINT_MERGE_GAP_M = 1.0
+FOOTPRINT_SIMPLIFY_M = 2.0
+FOOTPRINT_MIN_AREA_M2 = 40.0
 
 BuildingsSource = Callable[[tuple[float, float, float, float]], Any]
 
@@ -282,43 +302,157 @@ def fetch_with_retry(
     return None, "UNAVAILABLE"
 
 
-def buildings_to_features(gdf: Any, grid: Grid) -> list[dict[str, Any]]:
-    """Project, clip to the square, simplify, filter and attach heightM. Deterministic order."""
+@dataclass(frozen=True)
+class Footprint:
+    polygon: Any  # shapely Polygon in local metres, no holes
+    height_m: float
+    digits: int | None  # coordinate rounding: decimals, None = whole metres
+
+
+def _parts_in_square(geom: Any, grid: Grid, tolerance_m: float, min_area_m2: float) -> list[Any]:
+    """Clip to the square, simplify, drop holes and slivers."""
     from shapely.geometry import MultiPolygon, Polygon, box
 
+    square = box(-grid.half, -grid.half, grid.half, grid.half)
+    clipped = geom.intersection(square)
+    parts = clipped.geoms if isinstance(clipped, MultiPolygon) else [clipped]
+    out = []
+    for part in parts:
+        if not isinstance(part, Polygon) or part.is_empty:
+            continue
+        simple = part.simplify(tolerance_m, preserve_topology=True)
+        # Holes (courtyards) are dropped: LOS treats a footprint as solid.
+        if isinstance(simple, Polygon) and simple.area >= min_area_m2:
+            out.append(Polygon(simple.exterior))
+    return out
+
+
+def osm_footprints(gdf: Any, grid: Grid) -> list[Footprint]:
+    """Project OSM buildings, clip, simplify, filter and attach heights."""
     gdf = gdf[gdf.geometry.geom_type.isin(["Polygon", "MultiPolygon"])]
     if len(gdf) == 0:
         return []
     projected = gdf.to_crs(grid.crs)
-    square = box(-grid.half, -grid.half, grid.half, grid.half)
-    features: list[tuple[float, float, dict[str, Any]]] = []
+    out: list[Footprint] = []
     for geom, (_, row) in zip(projected.geometry, projected.iterrows(), strict=True):
         tags = {k: row.get(k) for k in ("height", "building:levels")}
         height = building_height_m(tags)
-        clipped = geom.intersection(square)
-        parts = clipped.geoms if isinstance(clipped, MultiPolygon) else [clipped]
-        for part in parts:
-            if not isinstance(part, Polygon) or part.is_empty:
-                continue
-            simple = part.simplify(SIMPLIFY_TOLERANCE_M, preserve_topology=True)
-            # Holes (courtyards) are dropped: LOS treats a footprint as solid.
-            if not isinstance(simple, Polygon) or simple.area < MIN_BUILDING_AREA_M2:
-                continue
-            ring = [[round(x, 1), round(z, 1)] for x, z in simple.exterior.coords]
-            c = simple.centroid
-            features.append(
-                (
-                    round(c.y, 1),
-                    round(c.x, 1),
-                    {
-                        "type": "Feature",
-                        "properties": {"heightM": round(height, 1)},
-                        "geometry": {"type": "Polygon", "coordinates": [ring]},
-                    },
-                )
+        for part in _parts_in_square(geom, grid, SIMPLIFY_TOLERANCE_M, MIN_BUILDING_AREA_M2):
+            out.append(Footprint(part, height, 1))
+    return out
+
+
+def read_footprint_tiles(paths: Sequence[Path], grid: Grid) -> list[tuple[Any, float]]:
+    """(local-metre polygon, height or -1) for each tile footprint near the box, file order.
+
+    Input: GeoJSONL, optionally gzipped, one lon/lat Polygon Feature per line with property
+    `height` (m, -1 = unknown): the Microsoft Global ML Building Footprints tile format.
+    """
+    from pyproj import Transformer
+    from shapely.geometry import Polygon
+
+    to_local = Transformer.from_crs("EPSG:4326", grid.crs, always_xy=True)
+    west, south, east, north = grid.lonlat_bounds(margin_m=100)
+    out: list[tuple[Any, float]] = []
+    for path in paths:
+        with (
+            gzip.open(path, "rt", encoding="utf-8")
+            if path.suffix == ".gz"
+            else path.open(encoding="utf-8")
+        ) as fh:
+            for line in fh:
+                if not line.strip():
+                    continue
+                feature = json.loads(line)
+                geometry = feature.get("geometry") or {}
+                if geometry.get("type") != "Polygon":
+                    continue
+                ring = geometry["coordinates"][0]
+                lons = [p[0] for p in ring]
+                lats = [p[1] for p in ring]
+                if max(lons) < west or min(lons) > east or max(lats) < south or min(lats) > north:
+                    continue
+                xs, zs = to_local.transform(lons, lats)
+                height = _number((feature.get("properties") or {}).get("height"))
+                out.append((Polygon(zip(xs, zs, strict=True)), height or -1.0))
+    return out
+
+
+def tile_footprints(
+    tiles: Sequence[tuple[Any, float]],
+    grid: Grid,
+    taken: Sequence[Footprint],
+    merge_gap_m: float = FOOTPRINT_MERGE_GAP_M,
+    tolerance_m: float = FOOTPRINT_SIMPLIFY_M,
+    min_area_m2: float = FOOTPRINT_MIN_AREA_M2,
+) -> list[Footprint]:
+    """Tile footprints that do not overlap a `taken` (OSM) one.
+
+    A footprint with a known height stays separate. The rest get the 2-level default
+    (decision 31) and are merged where closer than 2 * merge_gap_m, so a row of
+    terraced houses becomes one block.
+    """
+    from shapely import STRtree
+    from shapely.geometry import MultiPolygon
+    from shapely.ops import unary_union
+
+    taken_tree = STRtree([f.polygon for f in taken]) if taken else None
+    known: list[Footprint] = []
+    unknown: list[Any] = []
+    for poly, height in tiles:
+        geom = poly if poly.is_valid else poly.buffer(0)
+        if geom.is_empty:
+            continue
+        if taken_tree is not None and len(taken_tree.query(geom, predicate="intersects")):
+            continue
+        if height > 0:
+            known.extend(
+                Footprint(p, height, None)
+                for p in _parts_in_square(geom, grid, tolerance_m, min_area_m2)
             )
-    features.sort(key=lambda f: (f[0], f[1]))
-    return [f[2] for f in features]
+        else:
+            unknown.append(geom)
+    if unknown and merge_gap_m > 0:
+        merged = unary_union([g.buffer(merge_gap_m, join_style="mitre") for g in unknown])
+        merged = merged.buffer(-merge_gap_m, join_style="mitre")
+        unknown = list(merged.geoms) if isinstance(merged, MultiPolygon) else [merged]
+    default_h = DEFAULT_LEVELS * LEVEL_HEIGHT_M
+    blocks = [
+        Footprint(p, default_h, None)
+        for g in unknown
+        for p in _parts_in_square(g, grid, tolerance_m, min_area_m2)
+    ]
+    return known + blocks
+
+
+def footprints_to_features(footprints: Sequence[Footprint]) -> list[dict[str, Any]]:
+    """GeoJSON features sorted by centroid (north, then east): deterministic order."""
+
+    def rnd(v: float, digits: int | None) -> float | int:
+        return round(v) if digits is None else round(v, digits)
+
+    keyed: list[tuple[float, float, dict[str, Any]]] = []
+    for f in footprints:
+        ring = [[rnd(x, f.digits), rnd(z, f.digits)] for x, z in f.polygon.exterior.coords]
+        c = f.polygon.centroid
+        keyed.append(
+            (
+                round(c.y, 1),
+                round(c.x, 1),
+                {
+                    "type": "Feature",
+                    "properties": {"heightM": round(f.height_m, 1)},
+                    "geometry": {"type": "Polygon", "coordinates": [ring]},
+                },
+            )
+        )
+    keyed.sort(key=lambda f: (f[0], f[1]))
+    return [f[2] for f in keyed]
+
+
+def buildings_to_features(gdf: Any, grid: Grid) -> list[dict[str, Any]]:
+    """OSM buildings only: project, clip, simplify, filter and attach heightM."""
+    return footprints_to_features(osm_footprints(gdf, grid))
 
 
 # ---- build ----------------------------------------------------------------
@@ -328,6 +462,14 @@ def _json_bytes(obj: object) -> bytes:
     return (json.dumps(obj, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
 
 
+def _feature_collection_bytes(features: Sequence[dict[str, Any]]) -> bytes:
+    """Compact GeoJSON, one feature per line: small for a dense town, still diff-friendly."""
+    if not features:
+        return b'{"type":"FeatureCollection","features":[]}\n'
+    lines = ",\n".join(json.dumps(f, separators=(",", ":")) for f in features)
+    return ('{"type":"FeatureCollection","features":[\n' + lines + "\n]}\n").encode("utf-8")
+
+
 def build_preset(
     dem_paths: Sequence[Path],
     grid: Grid,
@@ -335,8 +477,12 @@ def build_preset(
     utc_offset_min: int,
     buildings_source: BuildingsSource | None,
     sleep: Callable[[float], None] = time.sleep,
+    footprint_paths: Sequence[Path] = (),
 ) -> dict[str, Any]:
-    """Build and write one preset; returns the meta dict. buildings_source=None = --no-buildings."""
+    """Build and write one preset; returns the meta dict.
+
+    buildings_source=None skips OSM (--no-buildings); footprint_paths adds offline tiles.
+    """
     if grid.px < 2:
         raise PresetError("--px must be at least 2")
     elev = reproject_dem(dem_paths, grid)
@@ -346,14 +492,24 @@ def build_preset(
         gdf, status = None, "EMPTY"
     else:
         gdf, status = fetch_with_retry(buildings_source, grid.lonlat_bounds(), sleep=sleep)
-    features = buildings_to_features(gdf, grid) if gdf is not None else []
-    if status == "OK" and not features:
+    osm = osm_footprints(gdf, grid) if gdf is not None else []
+    tiles = (
+        tile_footprints(read_footprint_tiles(footprint_paths, grid), grid, osm)
+        if footprint_paths
+        else []
+    )
+    features = footprints_to_features([*osm, *tiles])
+    if status == "OK" and not osm:
         status = "EMPTY"
+    if tiles:
+        status = "OK"  # real footprints present (an OSM outage still printed its banner)
 
     attribution = [GLO30_ATTRIBUTION]
-    if status == "OK":
+    if osm:
         attribution.append(OSM_ATTRIBUTION)
-    tiles = ", ".join(Path(p).stem for p in dem_paths)
+    if tiles:
+        attribution.append(MS_ATTRIBUTION)
+    dem_tiles = ", ".join(Path(p).stem for p in dem_paths)
     meta: dict[str, Any] = {
         "name": grid.name,
         "origin": {"lat": grid.lat, "lon": grid.lon},
@@ -373,13 +529,13 @@ def build_preset(
             "preview": "heightmap.png",
             "buildings": "buildings.geojson",
         },
-        "source": f"Copernicus DEM GLO-30 ({tiles}); local AEQD grid, bilinear",
+        "source": f"Copernicus DEM GLO-30 ({dem_tiles}); local AEQD grid, bilinear",
         "attribution": attribution,
     }
     files = {
         "heightmap.u16": enc.u16.tobytes(),
         "heightmap.png": png_preview_bytes(enc.u16),
-        "buildings.geojson": _json_bytes({"type": "FeatureCollection", "features": features}),
+        "buildings.geojson": _feature_collection_bytes(features),
         "meta.json": _json_bytes(meta),
     }
     total = sum(len(b) for b in files.values())
@@ -393,7 +549,8 @@ def build_preset(
     for name, data in files.items():
         (out_dir / name).write_bytes(data)
     log.info(
-        "Wrote %s: %dx%d, %.1f m/px, elev %.0f..%.0f m, %d buildings (%s), %.2f MB",
+        "Wrote %s: %dx%d, %.1f m/px, elev %.0f..%.0f m, %d buildings (%d OSM, %d tile; %s), "
+        "buildings %.2f MB, preset %.2f MB",
         out_dir,
         grid.px,
         grid.px,
@@ -401,7 +558,10 @@ def build_preset(
         meta["minElevM"],
         meta["maxElevM"],
         len(features),
+        len(osm),
+        len(tiles),
         status,
+        len(files["buildings.geojson"]) / 1e6,
         total / 1e6,
     )
     return meta
@@ -419,7 +579,14 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     p.add_argument("--utc-offset-min", type=int, default=330, help="local time offset (IST=330)")
     p.add_argument("--out", type=Path, default=DEFAULT_OUT)
     p.add_argument("--cache-dir", type=Path, default=DEFAULT_CACHE, help="OSM reply cache")
-    p.add_argument("--no-buildings", action="store_true", help="write an empty buildings.geojson")
+    p.add_argument("--no-buildings", action="store_true", help="skip the OSM building fetch")
+    p.add_argument(
+        "--footprints",
+        nargs="+",
+        type=Path,
+        default=[],
+        help="offline footprint tiles, GeoJSONL[.gz] (Microsoft Global ML Building Footprints)",
+    )
     return p.parse_args(argv)
 
 
@@ -444,7 +611,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
     source = None if args.no_buildings else osmnx_source(args.cache_dir)
     try:
-        build_preset(args.dem, grid_from_args(args), args.out, args.utc_offset_min, source)
+        build_preset(
+            args.dem,
+            grid_from_args(args),
+            args.out,
+            args.utc_offset_min,
+            source,
+            footprint_paths=args.footprints,
+        )
     except PresetError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

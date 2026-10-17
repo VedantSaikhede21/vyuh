@@ -1,5 +1,6 @@
 """build_preset.py on a tiny synthetic DEM; no network (buildings are injected)."""
 
+import gzip
 import json
 import math
 from pathlib import Path
@@ -215,6 +216,75 @@ def test_dem_not_covering_box_is_a_clear_error(dem: Path, tmp_path: Path) -> Non
     big = bp.Grid(name="TOO_BIG", lat=LAT, lon=LON, size_m=40_000, px=17)
     with pytest.raises(bp.PresetError, match="does not cover"):
         bp.build_preset([dem], big, tmp_path / "out", 330, None)
+
+
+def write_tile(path: Path, squares: list[tuple[float, float, float, float]]) -> Path:
+    """A GeoJSONL footprint tile (Microsoft format; gzipped if .gz): (x, z, side, height)."""
+    lines = []
+    for x, z, side, height in squares:
+        ll = local_square(GRID, x, z, side)
+        feature = {
+            "type": "Feature",
+            "properties": {"height": height, "confidence": -1.0},
+            "geometry": {"type": "Polygon", "coordinates": [list(ll.exterior.coords)]},
+        }
+        lines.append(json.dumps(feature) + "\n")
+    data = "".join(lines).encode("utf-8")
+    path.write_bytes(gzip.compress(data) if path.suffix == ".gz" else data)
+    return path
+
+
+def test_footprint_tiles_merge_under_osm(dem: Path, tmp_path: Path) -> None:
+    tile = write_tile(
+        tmp_path / "tile.csv.gz",
+        [
+            (1005, 5, 10, -1.0),  # overlaps the OSM 12 m building → dropped
+            (2000, 0, 10, -1.0),  # two row houses 1 m apart → one 21 m block
+            (2011, 0, 10, -1.0),
+            (-2000, 0, 10, 9.0),  # known height → kept as is
+            (-1000, -1000, 5, -1.0),  # 25 m² shed → dropped
+            (9000, 9000, 10, -1.0),  # outside the box → dropped
+        ],
+    )
+    meta = bp.build_preset(
+        [dem],
+        GRID,
+        tmp_path / "out",
+        330,
+        lambda _bbox: fake_buildings(GRID),
+        sleep=lambda _s: None,
+        footprint_paths=[tile],
+    )
+    raw = (tmp_path / "out" / GRID.name / "buildings.geojson").read_text(encoding="utf-8")
+    fc = json.loads(raw)
+    assert meta["buildingsStatus"] == "OK"
+    assert meta["buildingCount"] == 3 + 2 == len(fc["features"])
+    assert any("OpenStreetMap" in a for a in meta["attribution"])
+    assert any("Microsoft" in a for a in meta["attribution"])
+    # One compact feature per line.
+    assert len(raw.splitlines()) == 2 + len(fc["features"])
+
+    by_x = {
+        round(min(p[0] for p in f["geometry"]["coordinates"][0]), -1): f for f in fc["features"]
+    }
+    assert set(by_x) == {1000.0, -500.0, 0.0, 2000.0, -2000.0}
+    block = by_x[2000.0]["geometry"]["coordinates"][0]
+    assert max(p[0] for p in block) - min(p[0] for p in block) == pytest.approx(21, abs=1)
+    assert by_x[2000.0]["properties"]["heightM"] == 6.0
+    assert by_x[-2000.0]["properties"]["heightM"] == 9.0
+    # Tile coordinates are whole metres.
+    assert all(isinstance(v, int) for p in block for v in p)
+
+
+def test_footprint_tiles_without_osm(dem: Path, tmp_path: Path) -> None:
+    tile = write_tile(tmp_path / "tile.geojsonl", [(0, 0, 12, -1.0)])
+    meta = bp.build_preset(
+        [dem], GRID, tmp_path / "out", 330, None, sleep=lambda _s: None, footprint_paths=[tile]
+    )
+    assert meta["buildingsStatus"] == "OK"
+    assert meta["buildingCount"] == 1
+    assert not any("OpenStreetMap" in a for a in meta["attribution"])
+    assert any("Microsoft" in a for a in meta["attribution"])
 
 
 def test_cli_rejects_bad_name(dem: Path) -> None:
