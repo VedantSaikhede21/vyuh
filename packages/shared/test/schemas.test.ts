@@ -287,8 +287,15 @@ describe('ScenarioListResponse', () => {
       date: '2026-11-20',
       time: '10:30',
       tags: ['tutorial'],
+      bestScore: null,
     };
     expect(ScenarioListResponse.safeParse({ items: [item] }).success).toBe(true);
+    expect(ScenarioListResponse.safeParse({ items: [{ ...item, bestScore: 81 }] }).success).toBe(
+      true,
+    );
+    expect(ScenarioListResponse.safeParse({ items: [{ ...item, bestScore: 101 }] }).success).toBe(
+      false,
+    );
     expect(ScenarioListResponse.safeParse({ items: [{ ...item, difficulty: 0 }] }).success).toBe(
       false,
     );

@@ -28,7 +28,9 @@ def list_scenarios(
     if kind is ScenarioKind.GENERATED and user.role not in scenarios.STAFF_ROLES:
         kind = None  # trainees never list generated runs (theirs come in Part 3b)
     return ScenarioListResponse(
-        items=scenarios.list_scenarios(db, kind, difficulty, include_test=include_test)
+        items=scenarios.list_scenarios(
+            db, kind, difficulty, include_test=include_test, user_id=user.id
+        )
     )
 
 
