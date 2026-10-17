@@ -1,0 +1,235 @@
+{
+  "id": "S09",
+  "name": "Dusk Swarm",
+  "tags": [
+    "library"
+  ],
+  "citation": "swarm attacks",
+  "request": {
+    "terrainPreset": "PUNJAB_PLAINS",
+    "difficulty": 4,
+    "timeBand": "DUSK",
+    "swarmSize": 4,
+    "seed": 90915
+  },
+  "briefing": "## Situation\nDusk, the sun low in the west. Pump Station is on open farmland. A coordinated swarm attack is expected: two groups of four small drones arriving close together from different directions, with a high decoy to split your attention.\n## Mission\nDetect, identify and defeat every hostile before it reaches Pump Station. Leave birds, civilians and friendlies alone.\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nOne group is expected out of the setting sun, from the west-south-west, where the day camera looks into the glare; the other from the north. Rounds are limited: the jammer and the spoofer cover a whole sector at once.",
+  "patch": {
+    "effectors": [
+      {
+        "id": "jam1",
+        "kind": "EW_JAM",
+        "x": -100,
+        "z": -200,
+        "rangeM": 2000,
+        "cooldownS": 10
+      },
+      {
+        "id": "spf1",
+        "kind": "EW_SPOOF",
+        "x": -100,
+        "z": -200,
+        "rangeM": 2000,
+        "cooldownS": 15
+      },
+      {
+        "id": "int1",
+        "kind": "INTERCEPT",
+        "x": -100,
+        "z": -200,
+        "rangeM": 1500,
+        "cooldownS": 6,
+        "ammo": 11
+      }
+    ]
+  },
+  "contacts": {
+    "x01": {
+      "class": "FPV",
+      "isThreat": true,
+      "affiliation": "HOSTILE",
+      "controlLink": "RF_MANUAL",
+      "behaviour": "SWARM_SATURATION",
+      "spawnTMs": 62700,
+      "path": [
+        {
+          "x": 282.6,
+          "y": 25,
+          "z": 2775.5,
+          "speedMps": 28.5
+        },
+        {
+          "x": 123.0,
+          "y": 25,
+          "z": 2173.0,
+          "speedMps": 28.5
+        },
+        {
+          "x": 154.5,
+          "y": 25,
+          "z": 1778.7,
+          "speedMps": 28.5
+        },
+        {
+          "x": 100.0,
+          "y": 25,
+          "z": 1354.7,
+          "speedMps": 28.5
+        },
+        {
+          "x": 80.9,
+          "y": 13.6,
+          "z": 1205.9,
+          "speedMps": 28.5
+        },
+        {
+          "x": -100.0,
+          "y": 0,
+          "z": -200.0,
+          "speedMps": 28.5,
+          "action": "DIVE"
+        }
+      ],
+      "emissions": {
+        "rfActive": true,
+        "rfBand": "2.4GHz"
+      },
+      "groupId": "sw1-north",
+      "aiSuggestion": {
+        "suggestedClass": "FPV",
+        "confidence": 0.72
+      }
+    },
+    "x02": {
+      "class": "FPV",
+      "isThreat": true,
+      "affiliation": "HOSTILE",
+      "controlLink": "RF_MANUAL",
+      "behaviour": "SWARM_SATURATION",
+      "spawnTMs": 69600,
+      "path": [
+        {
+          "x": 255.0,
+          "y": 29.6,
+          "z": 2779.0,
+          "speedMps": 28.5
+        },
+        {
+          "x": 95.2,
+          "y": 25.8,
+          "z": 2176.7,
+          "speedMps": 28.5
+        },
+        {
+          "x": 126.8,
+          "y": 26.5,
+          "z": 1782.3,
+          "speedMps": 28.5
+        },
+        {
+          "x": -111.1,
+          "y": 0,
+          "z": -198.6,
+          "speedMps": 28.5,
+          "action": "DIVE"
+        }
+      ],
+      "emissions": {
+        "rfActive": true,
+        "rfBand": "5.8GHz"
+      },
+      "groupId": "sw1-north",
+      "aiSuggestion": {
+        "suggestedClass": "QUAD_SMALL",
+        "confidence": 0.72
+      }
+    },
+    "x03": {
+      "class": "FPV",
+      "isThreat": true,
+      "affiliation": "HOSTILE",
+      "controlLink": "RF_MANUAL",
+      "behaviour": "SWARM_SATURATION",
+      "spawnTMs": 73300,
+      "path": [
+        {
+          "x": 317.3,
+          "y": 26,
+          "z": 2771.0,
+          "speedMps": 28.5
+        },
+        {
+          "x": 157.7,
+          "y": 26.7,
+          "z": 2168.6,
+          "speedMps": 28.5
+        },
+        {
+          "x": 189.2,
+          "y": 25.5,
+          "z": 1774.3,
+          "speedMps": 28.5
+        },
+        {
+          "x": -86.2,
+          "y": 0,
+          "z": -201.7,
+          "speedMps": 28.5,
+          "action": "DIVE"
+        }
+      ],
+      "emissions": {
+        "rfActive": true,
+        "rfBand": "2.4GHz"
+      },
+      "groupId": "sw1-north",
+      "aiSuggestion": {
+        "suggestedClass": "FPV",
+        "confidence": 0.74
+      }
+    },
+    "x04": {
+      "class": "FPV",
+      "isThreat": true,
+      "affiliation": "HOSTILE",
+      "controlLink": "RF_MANUAL",
+      "behaviour": "SWARM_SATURATION",
+      "spawnTMs": 78400,
+      "path": [
+        {
+          "x": 232.7,
+          "y": 28.6,
+          "z": 2781.9,
+          "speedMps": 28.5
+        },
+        {
+          "x": 73.1,
+          "y": 28.4,
+          "z": 2179.5,
+          "speedMps": 28.5
+        },
+        {
+          "x": 104.6,
+          "y": 26.3,
+          "z": 1785.1,
+          "speedMps": 28.5
+        },
+        {
+          "x": -119.9,
+          "y": 0,
+          "z": -197.4,
+          "speedMps": 28.5,
+          "action": "DIVE"
+        }
+      ],
+      "emissions": {
+        "rfActive": true,
+        "rfBand": "5.8GHz"
+      },
+      "groupId": "sw1-north",
+      "aiSuggestion": {
+        "suggestedClass": "QUAD_SMALL",
+        "confidence": 0.63
+      }
+    }
+  }
+}

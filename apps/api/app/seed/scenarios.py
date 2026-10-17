@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 DISPLAY_FIELDS = ("name", "briefing")  # content keys a used scenario may still change
 
 SCENARIO_DIR = Path(__file__).resolve().parent / "scenarios"
+#: Library sources (scripts/scenarios/build_scripted.py); their tags are seeded too.
+SOURCE_DIR = SCENARIO_DIR / "src"
 
 TAGS: dict[str, list[str]] = {
     "S01": ["tutorial", "demo"],
@@ -32,6 +34,16 @@ TAGS: dict[str, list[str]] = {
     "S13": ["test"],
     "S14": ["test"],
 }
+
+
+def scenario_tags(code: str, sources: Path = SOURCE_DIR) -> list[str]:
+    """Tags of a scripted scenario: TAGS, else its library source's tags."""
+    if code in TAGS:
+        return TAGS[code]
+    source = sources / f"{code}.json"
+    if source.is_file():
+        return list(json.loads(source.read_text(encoding="utf-8")).get("tags", []))
+    return []
 
 
 def load_scripted(directory: Path = SCENARIO_DIR) -> list[Scenario]:
@@ -57,7 +69,7 @@ def seed_scenarios(db: Session, directory: Path = SCENARIO_DIR) -> int:
     written = 0
     for scenario in load_scripted(directory):
         content = scenario.model_dump(mode="json", by_alias=True, exclude_none=True)
-        tags = TAGS.get(scenario.id, [])
+        tags = scenario_tags(scenario.id, directory / "src")
         row = db.scalar(select(ScenarioRow).where(ScenarioRow.code == scenario.id))
         if row is None:
             row = ScenarioRow(code=scenario.id, kind=ScenarioKind.SCRIPTED)

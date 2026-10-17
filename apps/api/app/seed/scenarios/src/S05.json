@@ -1,0 +1,18 @@
+{
+  "id": "S05",
+  "name": "Silent Approach",
+  "tags": ["library"],
+  "citation": "fibre-optic FPV",
+  "request": {
+    "terrainPreset": "JK_MOUNTAIN",
+    "difficulty": 3,
+    "seed": 50528,
+    "timeBand": "DAY",
+    "threatMix": { "FPV": 1 }
+  },
+  "briefing": "## Situation\nDaylight, haze. Post Alpha sits in a mountain valley. FPV drones guided over a fibre-optic cable have been reported in this sector: they emit no radio signal and cannot be jammed.\n## Mission\nDetect, identify and defeat the FPV before it reaches Post Alpha. Leave birds and friendlies alone.\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nExpect a low approach along the valley from the south-east, hidden by the ridges until late. The RF detector will hear nothing from it, and the jammer will not stop it: the interceptor is the answer.",
+  "patch": {},
+  "contacts": {
+    "c01": { "controlLink": "FIBRE_OPTIC", "emissions": { "rfActive": false } }
+  }
+}

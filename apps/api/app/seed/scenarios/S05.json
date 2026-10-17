@@ -1,0 +1,426 @@
+{
+  "id": "S05",
+  "schemaVersion": 1,
+  "generatorVersion": 2,
+  "name": "Silent Approach",
+  "briefing": "## Situation\nDaylight, haze. Post Alpha sits in a mountain valley. FPV drones guided over a fibre-optic cable have been reported in this sector: they emit no radio signal and cannot be jammed.\n## Mission\nDetect, identify and defeat the FPV before it reaches Post Alpha. Leave birds and friendlies alone.\n## ROE\nWEAPONS TIGHT — intercept only tracks you have classified as a threat type and declared HOSTILE. No intercepts inside the marked no-kinetic zones (settlements).\n## Assets\n- Radar, EO/IR camera and RF detector on high ground near the asset\n- RF jammer, 2.0 km, ±10° sector, 10 s cycle\n- GNSS spoofer, 2.0 km, ±10° sector, 15 s cycle\n- Interceptor, 1.5 km, 2 rounds, 6 s reload\n## Intel\nExpect a low approach along the valley from the south-east, hidden by the ridges until late. The RF detector will hear nothing from it, and the jammer will not stop it: the interceptor is the answer.",
+  "seed": 50528,
+  "difficulty": 3,
+  "request": {
+    "terrainPreset": "JK_MOUNTAIN",
+    "timeOfDay": "16:10",
+    "date": "2026-02-14",
+    "weather": {
+      "rainMmph": 0,
+      "windMps": 4.1,
+      "windDirDeg": 322,
+      "visibilityM": 6000,
+      "cloudPct": 34
+    },
+    "difficulty": 3,
+    "seed": 50528,
+    "threatMix": {
+      "FPV": 1
+    },
+    "aiAssistAccuracy": 0.85,
+    "durationS": 270,
+    "roe": "WEAPONS_TIGHT"
+  },
+  "terrain": {
+    "preset": "JK_MOUNTAIN",
+    "origin": {
+      "lat": 33.75,
+      "lon": 75.88
+    }
+  },
+  "environment": {
+    "date": "2026-02-14",
+    "time": "16:10",
+    "isNight": false,
+    "weather": {
+      "rainMmph": 0,
+      "windMps": 4.1,
+      "windDirDeg": 322,
+      "visibilityM": 6000,
+      "cloudPct": 34
+    }
+  },
+  "roe": "WEAPONS_TIGHT",
+  "zones": [
+    {
+      "id": "Z1",
+      "kind": "NO_KINETIC",
+      "name": "village",
+      "polygon": [
+        [
+          -2760,
+          1424
+        ],
+        [
+          -2378,
+          1424
+        ],
+        [
+          -2378,
+          1687
+        ],
+        [
+          -2760,
+          1687
+        ]
+      ]
+    },
+    {
+      "id": "Z2",
+      "kind": "NO_KINETIC",
+      "name": "village",
+      "polygon": [
+        [
+          802.6,
+          1616.1
+        ],
+        [
+          1031.7,
+          1616.1
+        ],
+        [
+          1031.7,
+          1859.9
+        ],
+        [
+          802.6,
+          1859.9
+        ]
+      ]
+    },
+    {
+      "id": "Z3",
+      "kind": "NO_KINETIC",
+      "name": "village",
+      "polygon": [
+        [
+          -3101,
+          2480
+        ],
+        [
+          -2781,
+          2480
+        ],
+        [
+          -2781,
+          2781
+        ],
+        [
+          -3101,
+          2781
+        ]
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "id": "a1",
+      "name": "Post Alpha",
+      "x": -400,
+      "z": 200,
+      "radiusM": 60
+    }
+  ],
+  "sensors": [
+    {
+      "id": "rad1",
+      "kind": "RADAR",
+      "x": -850,
+      "y": 6,
+      "z": -450,
+      "refRangeM": 3000,
+      "scanPeriodS": 2
+    },
+    {
+      "id": "eo1",
+      "kind": "EO_IR",
+      "x": -850,
+      "y": 8,
+      "z": -450,
+      "fovDegMin": 1.5,
+      "fovDegMax": 30,
+      "resolution": [
+        640,
+        360
+      ],
+      "irResolution": [
+        640,
+        512
+      ]
+    },
+    {
+      "id": "rf1",
+      "kind": "RF",
+      "x": -850,
+      "y": 4,
+      "z": -450,
+      "rangeM": 4000,
+      "bearingErrDeg": 7
+    }
+  ],
+  "effectors": [
+    {
+      "id": "jam1",
+      "kind": "EW_JAM",
+      "x": -400,
+      "z": 200,
+      "rangeM": 2000,
+      "cooldownS": 10
+    },
+    {
+      "id": "spf1",
+      "kind": "EW_SPOOF",
+      "x": -400,
+      "z": 200,
+      "rangeM": 2000,
+      "cooldownS": 15
+    },
+    {
+      "id": "int1",
+      "kind": "INTERCEPT",
+      "x": -400,
+      "z": 200,
+      "rangeM": 1500,
+      "cooldownS": 6,
+      "ammo": 2
+    }
+  ],
+  "contacts": [
+    {
+      "class": "FPV",
+      "isThreat": true,
+      "affiliation": "HOSTILE",
+      "controlLink": "FIBRE_OPTIC",
+      "behaviour": "ATTACK_RUN",
+      "spawnTMs": 30600,
+      "path": [
+        {
+          "x": 2664.6,
+          "y": 38,
+          "z": -2370.7,
+          "speedMps": 29.6
+        },
+        {
+          "x": 2552.1,
+          "y": 38,
+          "z": -2552.1,
+          "speedMps": 29.6
+        },
+        {
+          "x": 2114.6,
+          "y": 38,
+          "z": -2697.9,
+          "speedMps": 29.6
+        },
+        {
+          "x": 1239.6,
+          "y": 38,
+          "z": -1822.9,
+          "speedMps": 29.6
+        },
+        {
+          "x": 1093.8,
+          "y": 38,
+          "z": -1385.4,
+          "speedMps": 29.6
+        },
+        {
+          "x": 1300.8,
+          "y": 38,
+          "z": -1226.7,
+          "speedMps": 29.6
+        },
+        {
+          "x": -400,
+          "y": 0,
+          "z": 200,
+          "speedMps": 29.6,
+          "action": "DIVE"
+        }
+      ],
+      "emissions": {
+        "rfActive": false,
+        "rfBand": "2.4GHz"
+      },
+      "id": "c01",
+      "aiSuggestion": {
+        "suggestedClass": "FPV",
+        "confidence": 0.8
+      }
+    },
+    {
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "spawnTMs": 80400,
+      "path": [
+        {
+          "x": -3283,
+          "y": 85,
+          "z": 29.3,
+          "speedMps": 12
+        },
+        {
+          "x": -3861.7,
+          "y": 85,
+          "z": 275.7,
+          "speedMps": 12
+        },
+        {
+          "x": -4076.1,
+          "y": 85,
+          "z": 1019.9,
+          "speedMps": 12
+        },
+        {
+          "x": -3445.5,
+          "y": 85,
+          "z": 1627.4,
+          "speedMps": 12
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      },
+      "id": "c02",
+      "groupId": "fl1",
+      "aiSuggestion": {
+        "suggestedClass": "BIRD_LARGE",
+        "confidence": 0.63
+      }
+    },
+    {
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "spawnTMs": 80400,
+      "path": [
+        {
+          "x": -3274.9,
+          "y": 82,
+          "z": 18.1,
+          "speedMps": 12
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      },
+      "id": "c03",
+      "groupId": "fl1",
+      "aiSuggestion": {
+        "suggestedClass": "BIRD_LARGE",
+        "confidence": 0.69
+      }
+    },
+    {
+      "class": "BIRD_LARGE",
+      "isThreat": false,
+      "affiliation": "NEUTRAL",
+      "controlLink": "NONE",
+      "behaviour": "BIRD_FLOCK",
+      "spawnTMs": 80400,
+      "path": [
+        {
+          "x": -3286.1,
+          "y": 90,
+          "z": 29,
+          "speedMps": 12
+        }
+      ],
+      "emissions": {
+        "rfActive": false
+      },
+      "id": "c04",
+      "groupId": "fl1",
+      "aiSuggestion": {
+        "suggestedClass": "FIXED_WING_SMALL",
+        "confidence": 0.83
+      }
+    },
+    {
+      "class": "FRIENDLY_QUAD",
+      "isThreat": false,
+      "affiliation": "FRIENDLY",
+      "controlLink": "RF_MANUAL",
+      "behaviour": "FRIENDLY_PATROL",
+      "spawnTMs": 21600,
+      "path": [
+        {
+          "x": -747.9,
+          "y": 60,
+          "z": -362.1,
+          "speedMps": 8.4
+        },
+        {
+          "x": -962.1,
+          "y": 60,
+          "z": 547.9,
+          "speedMps": 8.4
+        },
+        {
+          "x": -52.1,
+          "y": 60,
+          "z": 762.1,
+          "speedMps": 8.4
+        },
+        {
+          "x": 162.1,
+          "y": 60,
+          "z": -147.9,
+          "speedMps": 8.4
+        },
+        {
+          "x": -747.9,
+          "y": 60,
+          "z": -362.1,
+          "speedMps": 8.4
+        },
+        {
+          "x": -962.1,
+          "y": 60,
+          "z": 547.9,
+          "speedMps": 8.4
+        },
+        {
+          "x": -52.1,
+          "y": 60,
+          "z": 762.1,
+          "speedMps": 8.4
+        },
+        {
+          "x": 162.1,
+          "y": 60,
+          "z": -147.9,
+          "speedMps": 8.4
+        },
+        {
+          "x": -747.9,
+          "y": 60,
+          "z": -362.1,
+          "speedMps": 8.4
+        }
+      ],
+      "emissions": {
+        "rfActive": true,
+        "rfBand": "2.4GHz",
+        "friendlyIdCode": "BLUE-13"
+      },
+      "id": "c05",
+      "aiSuggestion": {
+        "suggestedClass": "FRIENDLY_QUAD",
+        "confidence": 0.72
+      }
+    }
+  ],
+  "durationS": 270,
+  "scoringTreeId": "default_v3"
+}

@@ -9,11 +9,14 @@ import { playScripted, presetWorld } from './fixtures.ts';
 // against the zod schema, a real threat if ignored, and defensible in time.
 // Since Phase 2 radar has LOS masking, so low threats appear later (S03 is the
 // low-level one); 45 s of warning is the floor, and a scripted defence must win.
+// Library scenarios built from seed/scenarios/src/ (S04–S10, S15) have their own
+// guard in library-scenarios.test.ts (validator + per-scenario checks).
 
 const MIN_WARNING_MS = 45_000;
 
 const DIR = new URL('../../../apps/api/app/seed/scenarios/', import.meta.url);
-const files = readdirSync(DIR).filter((f) => f.endsWith('.json'));
+const built = new Set(readdirSync(new URL('src/', DIR)));
+const files = readdirSync(DIR).filter((f) => f.endsWith('.json') && !built.has(f));
 
 describe.each(files)('scripted scenario %s', (file) => {
   const scenario = Scenario.parse(JSON.parse(readFileSync(new URL(file, DIR), 'utf8')));
