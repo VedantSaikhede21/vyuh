@@ -1,11 +1,19 @@
 import { readFileSync } from 'node:fs';
-import { Scenario, type SimEvent } from '@vyuh/shared';
-import { createProceduralTerrain, createSim, type Sim } from '../src/index.ts';
+import { Scenario, type SessionMode, type SimEvent } from '@vyuh/shared';
+import {
+  SIM_VERSION,
+  createDefender,
+  createProceduralTerrain,
+  createSim,
+  type Sim,
+} from '../src/index.ts';
 import { playScripted, presetWorld } from './fixtures.ts';
 
 // Real event logs used as API test fixtures (see scripts/export-api-fixtures.ts).
 
 export const FIXTURE_DIR = new URL('../../../apps/api/tests/fixtures/', import.meta.url);
+/** Completed sessions seeded for the `e2e@demo` trainee (apps/api/app/seed/e2e.py). */
+export const E2E_SEED_DIR = new URL('../../../apps/api/app/seed/e2e/', import.meta.url);
 
 export function loadScripted(id: string): Scenario {
   const url = new URL(`../../../apps/api/app/seed/scenarios/${id}.json`, import.meta.url);
@@ -30,6 +38,44 @@ export function playS14Jam(): Sim {
     sim.tick();
   }
   return sim;
+}
+
+/** Play a scenario with the ground-truth defender (src/defender.ts). */
+export function playDefender(scenario: Scenario, mode: SessionMode): Sim {
+  const sim = createSim(scenario, presetWorld(scenario.terrain.preset), { mode });
+  const defender = createDefender(scenario);
+  while (sim.getState().endReason === null) {
+    for (const cmd of defender.step(sim.getState())) sim.dispatch(cmd);
+    sim.tick();
+  }
+  return sim;
+}
+
+export interface E2eSeedLog {
+  scenarioCode: string;
+  mode: SessionMode;
+  simVersion: number;
+  events: readonly SimEvent[];
+}
+
+/** Fixed completed sessions for `e2e@demo`, so visual baselines never depend on local play. */
+export function recordE2eSeedLogs(): Record<string, E2eSeedLog> {
+  const s01 = loadScripted('S01');
+  const s04 = loadScripted('S04');
+  return {
+    s01_practice: {
+      scenarioCode: 'S01',
+      mode: 'PRACTICE',
+      simVersion: SIM_VERSION,
+      events: playScripted(s01, createProceduralTerrain(), 'PRACTICE').getEvents(),
+    },
+    s04_assessment: {
+      scenarioCode: 'S04',
+      mode: 'ASSESSMENT',
+      simVersion: SIM_VERSION,
+      events: playDefender(s04, 'ASSESSMENT').getEvents(),
+    },
+  };
 }
 
 export function recordFixtureLogs(): Record<string, readonly SimEvent[]> {

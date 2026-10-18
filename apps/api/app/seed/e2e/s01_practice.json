@@ -1,0 +1,106 @@
+{
+ "scenarioCode": "S01",
+ "mode": "PRACTICE",
+ "simVersion": 4,
+ "events": [
+  {
+   "tMs": 0,
+   "type": "SESSION_STARTED",
+   "payload": {
+    "mode": "PRACTICE",
+    "scenarioId": "S01",
+    "seed": 1001
+   },
+   "seq": 0
+  },
+  {
+   "tMs": 15000,
+   "type": "CONTACT_SPAWNED",
+   "contactId": "c01",
+   "payload": {},
+   "seq": 1
+  },
+  {
+   "tMs": 20000,
+   "type": "SENSOR_TRACK_CREATED",
+   "contactId": "c01",
+   "trackId": "T001",
+   "payload": {
+    "sensorId": "rad1",
+    "sensorKind": "RADAR",
+    "rangeM": 2328.28807501485,
+    "bearingDeg": 3.621577851531018
+   },
+   "seq": 2
+  },
+  {
+   "type": "TRACK_SELECTED",
+   "trackId": "T001",
+   "payload": {},
+   "tMs": 20050,
+   "seq": 3
+  },
+  {
+   "type": "MARKED_DETECTED",
+   "trackId": "T001",
+   "payload": {},
+   "tMs": 20050,
+   "seq": 4
+  },
+  {
+   "type": "CLASSIFIED",
+   "trackId": "T001",
+   "payload": {
+    "class": "QUAD_SMALL"
+   },
+   "tMs": 20050,
+   "seq": 5
+  },
+  {
+   "type": "AFFILIATION_SET",
+   "trackId": "T001",
+   "payload": {
+    "affiliation": "HOSTILE"
+   },
+   "tMs": 20050,
+   "seq": 6
+  },
+  {
+   "type": "RESPONSE_ORDERED",
+   "trackId": "T001",
+   "payload": {
+    "response": "INTERCEPT"
+   },
+   "tMs": 97100,
+   "seq": 7
+  },
+  {
+   "tMs": 97100,
+   "type": "RESPONSE_OUTCOME",
+   "trackId": "T001",
+   "contactId": "c01",
+   "payload": {
+    "response": "INTERCEPT",
+    "result": "NEUTRALISED"
+   },
+   "seq": 8
+  },
+  {
+   "tMs": 97100,
+   "type": "CONTACT_NEUTRALISED",
+   "contactId": "c01",
+   "payload": {
+    "by": "INTERCEPT"
+   },
+   "seq": 9
+  },
+  {
+   "tMs": 97100,
+   "type": "SESSION_ENDED",
+   "payload": {
+    "reason": "ALL_RESOLVED"
+   },
+   "seq": 10
+  }
+ ]
+}

@@ -42,6 +42,10 @@ before committing it.
   chips) and the 2D radar PPI stay in the picture.
 - Sessions created by the tests are real rows for the demo users in the
   local database.
+- The training-list baseline logs in as `e2e@demo`, whose completed sessions are
+  fixed sim logs (`apps/api/app/seed/e2e/`) scored by the real server when
+  `uv run python -m app.seed.demo` runs. Re-run the seed after
+  `node packages/sim-core/scripts/export-api-fixtures.ts` rewrites them.
 
 ## FPS
 

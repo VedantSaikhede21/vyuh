@@ -11,6 +11,17 @@ export const VIEWPORTS = [
 
 export async function login(page: Page, email: string): Promise<void> {
   await page.goto('/login');
+  if ((await page.locator(`#email option[value="${email}"]`).count()) === 0) {
+    // Test-only accounts (e2e@demo) are not on the login list: dev-login through
+    // the API and store the token where the app keeps it (lib/auth.tsx).
+    const api = process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
+    const res = await page.request.post(`${api}/auth/dev-login`, { data: { email } });
+    expect(res.ok(), await res.text()).toBe(true);
+    const { accessToken } = (await res.json()) as { accessToken: string };
+    await page.evaluate((t) => window.localStorage.setItem('vyuh.localToken', t), accessToken);
+    await page.goto('/train');
+    return;
+  }
   await page.selectOption('#email', email);
   await page.click('button[type=submit]');
   await page.waitForURL('**/train');
