@@ -16,7 +16,8 @@
     "e2e": "pnpm --filter @vyuh/web e2e",
     "gen:hillshade": "node scripts/hillshade/gen-hillshade.ts --preset JK_MOUNTAIN --out apps/web/public/landing/login-hillshade.png --size 1200 --tone login",
     "gen:maps": "node scripts/hillshade/gen-hillshade.ts --all",
-    "sweep:generator": "node scripts/generator/sweep.ts"
+    "sweep:generator": "node scripts/generator/sweep.ts",
+    "graph": "graphify update ."
   },
   "devDependencies": {
     "@eslint/js": "~9.39.5",
