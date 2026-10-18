@@ -78,15 +78,28 @@ export {
   FILTER_ALPHA,
   FILTER_BETA,
   LOSE_MISSES,
+  HEIGHT_NOISE_BASE_M,
+  HEIGHT_NOISE_PER_M,
+  createHeightFilter,
   createScanHistory,
   createTrackFilter,
   formatTrackId,
+  heightNoiseSigmaM,
   lostReason,
   predictFilter,
+  predictHeight,
   recordScan,
+  updateHeightFilter,
   updateTrackFilter,
 } from './tracks.ts';
-export type { ScanHistory, ScanUpdate, TrackFilter, TrackState, TrackStatus } from './tracks.ts';
+export type {
+  HeightFilter,
+  ScanHistory,
+  ScanUpdate,
+  TrackFilter,
+  TrackState,
+  TrackStatus,
+} from './tracks.ts';
 export {
   EW_SECTOR_HALF_DEG,
   JAM_P,
@@ -102,7 +115,15 @@ export {
 } from './effectors.ts';
 export type { EffectorState, EwOutcome } from './effectors.ts';
 export { commandFromEvent, createSim } from './sim.ts';
-export type { CameraState, DispatchResult, Sim, SimCommand, SimOptions, SimState } from './sim.ts';
+export type {
+  CameraState,
+  DispatchResult,
+  Sim,
+  SimCommand,
+  SimOptions,
+  SimSnapshot,
+  SimState,
+} from './sim.ts';
 export {
   BAND_MIN_VERTICES,
   BUILDING_CELL_M,
@@ -195,3 +216,5 @@ export type {
   ValidationCheckName,
   ValidationResult,
 } from './validate.ts';
+export { ReplayDivergence, compareLogs, replaySchedule, replayTick, replayTo } from './replay.ts';
+export type { ReplayCheck, ReplaySchedule } from './replay.ts';

@@ -139,6 +139,8 @@ export function hasLineOfSight(world: World, from: Readonly<Vec3>, to: Readonly<
  */
 export interface LosCache {
   visible(tick: number, sensorId: string, from: Vec3, contactId: string, to: Vec3): boolean;
+  /** Forget everything (after a sim restore, the same tick number can recur). */
+  clear(): void;
 }
 
 export function createLosCache(world: World): LosCache {
@@ -157,6 +159,10 @@ export function createLosCache(world: World): LosCache {
         results.set(key, v);
       }
       return v;
+    },
+    clear() {
+      results.clear();
+      cachedTick = -1;
     },
   };
 }

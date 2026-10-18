@@ -1,6 +1,8 @@
 import {
   CLASS_PROFILES,
   TraineeEventType,
+  activityOf,
+  type ReportTruthContact,
   type ContactSpec,
   type EffectorKind,
   type EoIrSensor,
@@ -16,7 +18,7 @@ import {
 import { createFlocks, stepFlock } from './boids.ts';
 import { TICK_MS, TICK_S, advanceClock, ceilToTick, createClock, type SimClock } from './clock.ts';
 import { createContactState, stepContact, type ContactState } from './contacts.ts';
-import { bearingDeg, headingVector, slantRange, type Vec3 } from './coords.ts';
+import { bearingDeg, headingVector, slantRange, wrapDeg, type Vec3 } from './coords.ts';
 import {
   createEffectorState,
   resolveEw,
@@ -62,12 +64,16 @@ import { sampleHeight, type Heightmap } from './terrain.ts';
 import { createWorld, isWorld, type World } from './world.ts';
 import { noKineticPolygons } from './zones.ts';
 import {
+  createHeightFilter,
   createScanHistory,
   createTrackFilter,
   formatTrackId,
+  heightNoiseSigmaM,
   lostReason,
   predictFilter,
+  predictHeight,
   recordScan,
+  updateHeightFilter,
   updateTrackFilter,
   type ScanHistory,
   type TrackState,
@@ -106,6 +112,19 @@ export interface SimState {
   camera: CameraState;
 }
 
+/**
+ * Everything mutable in a running sim, as plain data (structured-clone safe), so a
+ * replay can jump to a keyframe without re-simulating from t = 0 (decision 107).
+ * Taken between ticks. Opaque to callers.
+ */
+export interface SimSnapshot {
+  readonly scenarioId: string;
+  readonly tMs: number;
+  /** Events logged up to this point; `restore` needs exactly these. */
+  readonly eventCount: number;
+  readonly data: unknown;
+}
+
 export interface Sim {
   /** Advance one 50 ms tick. No-op after the session has ended. */
   tick(): void;
@@ -116,6 +135,38 @@ export interface Sim {
   /** Live state — treat as read-only. */
   getState(): Readonly<SimState>;
   getEvents(): readonly SimEvent[];
+  /** Copy of all mutable state (between ticks). */
+  snapshot(): SimSnapshot;
+  /**
+   * Return to a snapshot of a sim of the same scenario and world. `events` is the
+   * log up to the snapshot (at least `eventCount` long; extra events are ignored).
+   * Running on from here gives exactly what the original run gave.
+   */
+  restore(snap: SimSnapshot, events: readonly SimEvent[]): void;
+}
+
+/** The plain data inside a SimSnapshot. */
+interface SnapshotData {
+  clock: SimClock;
+  endReason: SessionEndReason | null;
+  contacts: ContactState[];
+  tracks: TrackState[];
+  rfStrobes: RfStrobe[];
+  effectors: EffectorState[];
+  selectedTrackId: string | null;
+  camera: CameraState;
+  histories: [string, ScanHistory][];
+  nextTrackNo: number;
+  nextStrobeNo: number;
+  queue: SimCommand[];
+  eoEpisodes: [string, { rank: number; lastSeenMs: number }][];
+  eoTracker: {
+    contactId: string | null;
+    centredSinceMs: number | null;
+    noLevelSinceMs: number | null;
+  };
+  wander: [string, [string, number][]][];
+  rng: Record<string, number>;
 }
 
 export interface SimOptions {
@@ -134,6 +185,19 @@ export function commandFromEvent(ev: SimEvent): SimCommand | null {
 }
 
 const ORIGIN: Readonly<Vec3> = { x: 0, y: 0, z: 0 };
+
+/**
+ * Deep copy of plain data (objects, arrays, primitives) — exact for every number,
+ * including -0, NaN and ±Infinity, unlike a JSON round trip. Snapshot state holds
+ * nothing else (no Maps, functions or class instances).
+ */
+function clonePlain<T>(value: T): T {
+  if (value === null || typeof value !== 'object') return value;
+  if (Array.isArray(value)) return value.map(clonePlain) as T;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value)) out[k] = clonePlain(v);
+  return out as T;
+}
 
 const NO_EFFECTOR: Readonly<Record<EffectorKind, string>> = {
   INTERCEPT: 'No interceptor available',
@@ -164,6 +228,8 @@ export function createSim(
     .map((cfg) => ({
       cfg,
       stream: rng.stream(`radar:${cfg.id}`),
+      /** Height measurement noise (SIM_VERSION 5, decision 108). */
+      heightStream: rng.stream(`radar-height:${cfg.id}`),
       scanMs: Math.max(TICK_MS, ceilToTick(cfg.scanPeriodS * 1000)),
     }));
   const sensorPositions: Record<string, Vec3> = {};
@@ -220,6 +286,10 @@ export function createSim(
     if (state.endReason !== null) return 'Session has ended';
     if ('trackId' in cmd && cmd.trackId !== undefined && !tracksById.has(cmd.trackId)) {
       return `Unknown track ${cmd.trackId}`;
+    }
+    if (cmd.type === 'REPORT_SUBMITTED') {
+      const unknown = cmd.payload.trackIds.find((id) => !tracksById.has(id));
+      if (unknown !== undefined) return `Unknown track ${unknown}`;
     }
     if (cmd.type === 'RESPONSE_ORDERED') {
       const { response, effectorId } = cmd.payload;
@@ -291,8 +361,40 @@ export function createSim(
     }
   }
 
+  /** Truth behind a contact report, at the tick it is applied (decision 104). */
+  function reportTruth(trackIds: readonly string[]): ReportTruthContact[] {
+    const ids = [...new Set(trackIds.map((id) => tracksById.get(id)?.contactId))]
+      .filter((id): id is string => id !== undefined)
+      .sort();
+    return ids.flatMap((id) => {
+      const c = contactsById.get(id);
+      if (c === undefined) return [];
+      const [east, north] = headingVector(c.headingDeg);
+      let nearest: { x: number; z: number } | null = null;
+      let best = Infinity;
+      for (const a of assets) {
+        const d = Math.hypot(a.x - c.pos.x, a.z - c.pos.z);
+        if (d < best) {
+          best = d;
+          nearest = { x: a.x - c.pos.x, z: a.z - c.pos.z };
+        }
+      }
+      return [
+        {
+          contactId: c.id,
+          x: c.pos.x,
+          z: c.pos.z,
+          aglM: c.agl,
+          headingDeg: wrapDeg(c.headingDeg),
+          speedMps: c.speedMps,
+          activity: activityOf(east * c.speedMps, north * c.speedMps, nearest),
+        },
+      ];
+    });
+  }
+
   function applyCommand(cmd: SimCommand, tMs: number): void {
-    emit({ ...cmd, tMs } as EventDraft);
+    const logged = emit({ ...cmd, tMs } as EventDraft);
     const track =
       'trackId' in cmd && cmd.trackId !== undefined ? tracksById.get(cmd.trackId) : undefined;
     switch (cmd.type) {
@@ -328,8 +430,16 @@ export function createSim(
       case 'RESPONSE_ORDERED':
         applyResponse(cmd, tMs);
         break;
+      case 'REPORT_SUBMITTED':
+        // Hidden truth for server-side report scoring (SIM_VERSION 5).
+        emit({
+          tMs,
+          type: 'REPORT_TRUTH',
+          payload: { reportSeq: logged.seq, contacts: reportTruth(cmd.payload.trackIds) },
+        });
+        break;
       default:
-        break; // REPORT_SUBMITTED, AI_SUGGESTION_*: logged only
+        break; // AI_SUGGESTION_*: logged only
     }
   }
 
@@ -341,14 +451,13 @@ export function createSim(
     return { x: radarPos.x + east * horiz, z: radarPos.z + north * horiz };
   }
 
-  /** Set the displayed estimate from the filter, predicted to `tMs` (decision 51). */
+  /** Set the displayed estimate from the filters, predicted to `tMs` (decisions 51, 108). */
   function refreshTrack(track: TrackState, tMs: number): void {
     const radarPos = sensorPositions[track.sensorId];
     if (radarPos === undefined) return;
     const { x, z } = predictFilter(track.filter, tMs);
-    const contact = contactsById.get(track.contactId);
-    if (contact !== undefined) track.altitudeAglM = contact.agl;
-    track.pos = { x, y: contact?.pos.y ?? track.pos.y, z };
+    track.altitudeAglM = predictHeight(track.heightFilter, tMs);
+    track.pos = { x, y: sampleHeight(terrain, x, z) + track.altitudeAglM, z };
     track.rangeM = slantRange(radarPos, track.pos);
     track.bearingDeg = bearingDeg(radarPos, track.pos);
     const f = track.filter;
@@ -358,9 +467,15 @@ export function createSim(
     }
   }
 
+  /** Noisy height measurement of one radar hit (decision 108). */
+  function measuredAgl(stream: RandomStream, contact: ContactState, rangeM: number): number {
+    return contact.agl + gaussian(stream) * heightNoiseSigmaM(rangeM);
+  }
+
   function updateTrackFromHit(
     track: TrackState,
     radarPos: Vec3,
+    heightStream: RandomStream,
     contact: ContactState,
     rangeM: number,
     bearing: number,
@@ -368,6 +483,7 @@ export function createSim(
   ): void {
     const m = measuredXZ(radarPos, contact, rangeM, bearing);
     updateTrackFilter(track.filter, m.x, m.z, tMs);
+    updateHeightFilter(track.heightFilter, measuredAgl(heightStream, contact, rangeM), tMs);
     track.lastUpdateTMs = tMs;
     refreshTrack(track, tMs);
   }
@@ -407,6 +523,7 @@ export function createSim(
         if (ret?.hit === true && ret.rangeM !== undefined && ret.bearingDeg !== undefined) {
           if (update === 'CONFIRMED') {
             const m = measuredXZ(radarPos, contact, ret.rangeM, ret.bearingDeg);
+            const h0 = measuredAgl(radar.heightStream, contact, ret.rangeM);
             const track: TrackState = {
               id: formatTrackId(nextTrackNo++),
               contactId: contact.id,
@@ -417,9 +534,10 @@ export function createSim(
               lastUpdateTMs: tMs,
               rangeM: ret.rangeM,
               bearingDeg: ret.bearingDeg,
-              pos: { x: m.x, y: contact.pos.y, z: m.z },
-              altitudeAglM: contact.agl,
+              pos: { x: m.x, y: sampleHeight(terrain, m.x, m.z) + Math.max(h0, 0), z: m.z },
+              altitudeAglM: Math.max(h0, 0),
               filter: createTrackFilter(m.x, m.z, tMs),
+              heightFilter: createHeightFilter(h0, tMs),
               rf: null,
               headingDeg: null,
               speedMps: null,
@@ -444,7 +562,15 @@ export function createSim(
               },
             });
           } else if (live) {
-            updateTrackFromHit(live, radarPos, contact, ret.rangeM, ret.bearingDeg, tMs);
+            updateTrackFromHit(
+              live,
+              radarPos,
+              radar.heightStream,
+              contact,
+              ret.rangeM,
+              ret.bearingDeg,
+              tMs,
+            );
           }
         } else if (update === 'LOST' && live) {
           live.status = 'LOST';
@@ -723,6 +849,72 @@ export function createSim(
     }
   }
 
+  function snapshot(): SimSnapshot {
+    const data: SnapshotData = {
+      clock: state.clock,
+      endReason: state.endReason,
+      contacts: state.contacts,
+      tracks: state.tracks,
+      rfStrobes: state.rfStrobes,
+      effectors: state.effectors,
+      selectedTrackId: state.selectedTrackId,
+      camera: state.camera,
+      histories: [...histories],
+      nextTrackNo,
+      nextStrobeNo,
+      queue,
+      eoEpisodes: [...eoEpisodes],
+      eoTracker,
+      wander: flocks.map((f) => [f.groupId, [...f.wander]]),
+      rng: rng.getStates(),
+    };
+    return {
+      scenarioId: scenario.id,
+      tMs: state.clock.tMs,
+      eventCount: log.events.length,
+      data: clonePlain(data),
+    };
+  }
+
+  function restore(snap: SimSnapshot, events: readonly SimEvent[]): void {
+    if (snap.scenarioId !== scenario.id) {
+      throw new Error(`Snapshot of ${snap.scenarioId} cannot restore ${scenario.id}`);
+    }
+    if (events.length < snap.eventCount) {
+      throw new Error(`Restore needs ${snap.eventCount} events, got ${events.length}`);
+    }
+    const d = clonePlain(snap.data) as SnapshotData;
+    state.clock = d.clock;
+    state.endReason = d.endReason;
+    (state.contacts as ContactState[]).splice(0, state.contacts.length, ...d.contacts);
+    contactsById.clear();
+    for (const c of state.contacts) contactsById.set(c.id, c);
+    (state.tracks as TrackState[]).splice(0, state.tracks.length, ...d.tracks);
+    tracksById.clear();
+    for (const t of state.tracks) tracksById.set(t.id, t);
+    state.rfStrobes = d.rfStrobes;
+    (state.effectors as EffectorState[]).splice(0, state.effectors.length, ...d.effectors);
+    state.selectedTrackId = d.selectedTrackId;
+    state.camera = d.camera;
+    histories.clear();
+    for (const [k, h] of d.histories) histories.set(k, h);
+    nextTrackNo = d.nextTrackNo;
+    nextStrobeNo = d.nextStrobeNo;
+    queue.splice(0, queue.length, ...d.queue);
+    eoEpisodes.clear();
+    for (const [k, e] of d.eoEpisodes) eoEpisodes.set(k, e);
+    Object.assign(eoTracker, d.eoTracker);
+    const wander = new Map(d.wander);
+    for (const f of flocks) {
+      f.wander.clear();
+      for (const [id, v] of wander.get(f.groupId) ?? []) f.wander.set(id, v);
+    }
+    rng.setStates(d.rng);
+    log.events.length = 0;
+    for (const ev of events.slice(0, snap.eventCount)) log.events.push(ev);
+    los.clear();
+  }
+
   return {
     tick,
     dispatch(cmd) {
@@ -734,5 +926,7 @@ export function createSim(
     end: endSession,
     getState: () => state,
     getEvents: () => log.events,
+    snapshot,
+    restore,
   };
 }

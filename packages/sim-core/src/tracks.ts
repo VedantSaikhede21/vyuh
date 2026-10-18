@@ -53,8 +53,8 @@ export function lostReason(h: Readonly<ScanHistory>): 'LOS' | 'MISSES' {
 }
 
 // ---- Alpha-beta filter (decision 51) ------------------------------------------
-// 2D (x east, z north) position + velocity. Radar height is not measured with
-// noise, so track height stays the true AGL (tech debt: track height leaks truth).
+// 2D (x east, z north) position + velocity. Height has its own filter below
+// (SIM_VERSION 5, decision 108).
 
 export const FILTER_ALPHA = 0.5;
 export const FILTER_BETA = 0.2;
@@ -105,6 +105,54 @@ export function updateTrackFilter(f: TrackFilter, mx: number, mz: number, tMs: n
   f.tMs = tMs;
 }
 
+// ---- Height estimate (SIM_VERSION 5, decision 108) ----------------------------
+// Each radar hit measures height above ground with seeded noise, σ = base + a
+// range-proportional term (elevation-angle error; representative). The same α-β
+// filter smooths it, so the HUD never shows the true height.
+
+export const HEIGHT_NOISE_BASE_M = 15;
+/** σ grows by this many metres per metre of slant range (≈ 0.29° elevation error). */
+export const HEIGHT_NOISE_PER_M = 0.005;
+
+export function heightNoiseSigmaM(rangeM: number): number {
+  return HEIGHT_NOISE_BASE_M + HEIGHT_NOISE_PER_M * rangeM;
+}
+
+export interface HeightFilter {
+  /** Filtered AGL at `tMs` (may dip below 0 between measurements; display clamps). */
+  h: number;
+  /** Vertical rate, m/s; meaningful once `hasVelocity`. */
+  vh: number;
+  tMs: number;
+  hasVelocity: boolean;
+}
+
+export function createHeightFilter(h: number, tMs: number): HeightFilter {
+  return { h, vh: 0, tMs, hasVelocity: false };
+}
+
+/** Estimated AGL at `tMs`, never below ground. */
+export function predictHeight(f: Readonly<HeightFilter>, tMs: number): number {
+  const h = f.hasVelocity ? f.h + (f.vh * (tMs - f.tMs)) / 1000 : f.h;
+  return Math.max(h, 0);
+}
+
+export function updateHeightFilter(f: HeightFilter, mh: number, tMs: number): void {
+  const dt = (tMs - f.tMs) / 1000;
+  if (dt <= 0) return;
+  if (!f.hasVelocity) {
+    f.vh = (mh - f.h) / dt;
+    f.h = mh;
+    f.hasVelocity = true;
+  } else {
+    const ph = f.h + f.vh * dt;
+    const r = mh - ph;
+    f.h = ph + FILTER_ALPHA * r;
+    f.vh += (FILTER_BETA / dt) * r;
+  }
+  f.tMs = tMs;
+}
+
 export function formatTrackId(n: number): string {
   return `T${String(n).padStart(3, '0')}`;
 }
@@ -123,12 +171,14 @@ export interface TrackState {
   /** Filtered (and predicted between scans) range / bearing from the sensor. */
   rangeM: number;
   bearingDeg: number;
-  /** Filtered position estimate, predicted forward every tick. */
+  /** Filtered position estimate, predicted forward every tick (y = terrain + altitudeAglM). */
   pos: Vec3;
-  /** Height above ground — true AGL (the 2D filter does not estimate it). */
+  /** Estimated height above ground from noisy radar measurements — never the truth. */
   altitudeAglM: number;
-  /** α-β filter state behind `pos`. */
+  /** α-β filter state behind `pos` (x, z). */
   filter: TrackFilter;
+  /** α-β filter state behind `altitudeAglM`. */
+  heightFilter: HeightFilter;
   /** RF strobe lined up with this track (band, friendly ID), or null. */
   rf: RfBadge | null;
   /** From the filter velocity; null until the second measurement. */

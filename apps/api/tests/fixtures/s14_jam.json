@@ -196,14 +196,14 @@
   "type": "TRACK_SELECTED",
   "trackId": "T009",
   "payload": {},
-  "tMs": 108100,
+  "tMs": 108000,
   "seq": 19
  },
  {
   "type": "MARKED_DETECTED",
   "trackId": "T009",
   "payload": {},
-  "tMs": 108100,
+  "tMs": 108000,
   "seq": 20
  },
  {
@@ -212,11 +212,11 @@
   "payload": {
    "response": "EW_JAM"
   },
-  "tMs": 108100,
+  "tMs": 108000,
   "seq": 21
  },
  {
-  "tMs": 108100,
+  "tMs": 108000,
   "type": "RESPONSE_OUTCOME",
   "trackId": "T009",
   "contactId": "c01",
@@ -232,7 +232,7 @@
   "seq": 22
  },
  {
-  "tMs": 108100,
+  "tMs": 108000,
   "type": "CONTACT_NEUTRALISED",
   "contactId": "c01",
   "payload": {
@@ -241,7 +241,7 @@
   "seq": 23
  },
  {
-  "tMs": 108100,
+  "tMs": 108000,
   "type": "CONTACT_NEUTRALISED",
   "contactId": "c02",
   "payload": {
@@ -250,7 +250,7 @@
   "seq": 24
  },
  {
-  "tMs": 108100,
+  "tMs": 108000,
   "type": "SESSION_ENDED",
   "payload": {
    "reason": "ALL_RESOLVED"
