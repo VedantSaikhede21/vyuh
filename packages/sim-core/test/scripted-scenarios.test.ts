@@ -2,7 +2,12 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { Scenario } from '@vyuh/shared';
 import { describe, expect, it } from 'vitest';
 import { PROCEDURAL_HILLS, createSim } from '../src/index.ts';
-import { FIXTURE_DIR, recordFixtureLogs } from './fixture-logs.ts';
+import {
+  E2E_SEED_DIR,
+  FIXTURE_DIR,
+  recordE2eSeedLogs,
+  recordFixtureLogs,
+} from './fixture-logs.ts';
 import { playScripted, presetWorld } from './fixtures.ts';
 
 // Guards the hand-written scenarios in apps/api/app/seed/scenarios: valid
@@ -69,6 +74,17 @@ describe('API fixture logs (apps/api/tests/fixtures)', () => {
         readFileSync(new URL(`${name}.json`, FIXTURE_DIR), 'utf8'),
       );
       expect(committed, name).toEqual(JSON.parse(JSON.stringify(events)));
+    }
+  });
+});
+
+describe('e2e@demo seed logs (apps/api/app/seed/e2e)', () => {
+  it('match what the sim records today — re-run scripts/export-api-fixtures.ts if not', () => {
+    for (const [name, log] of Object.entries(recordE2eSeedLogs())) {
+      const committed: unknown = JSON.parse(
+        readFileSync(new URL(`${name}.json`, E2E_SEED_DIR), 'utf8'),
+      );
+      expect(committed, name).toEqual(JSON.parse(JSON.stringify(log)));
     }
   });
 });

@@ -34,9 +34,13 @@ for (const vp of VIEWPORTS) {
     });
 
     test('training list, briefing and result', async ({ page }) => {
-      await login(page, 'trainee1@demo');
+      // e2e@demo has fixed seeded sessions (apps/api/app/seed/e2e.py), so the
+      // best-score column does not depend on what was played on this machine.
+      await login(page, 'e2e@demo');
       await expect(page.getByTestId('scenario-S01')).toBeVisible();
+      await expect(page.getByTestId('own-generated')).toContainText('No generated scenarios yet');
       await shot(page, 'training');
+      await login(page, 'trainee1@demo');
       await openBriefing(page, 'S01');
       // The shaded LOS coverage and the status text settle once it is computed.
       await expect(page.getByTestId('coverage-status')).toHaveText(/^LOS coverage ·/, {

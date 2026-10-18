@@ -18,6 +18,7 @@ from app.core.db import make_engine, make_session_factory
 from app.core.security import local_auth_id
 from app.models import Unit, User
 from app.schemas.generated import UserRole
+from app.seed.e2e import seed_e2e_user
 from app.seed.scenarios import seed_scenarios
 from app.seed.threats import seed_threat_types
 
@@ -71,9 +72,11 @@ def run() -> None:
         threats = seed_threat_types(db)
         scenarios = seed_scenarios(db)
         db.commit()
+        # Fixed sessions for visual baselines; scored through the real session path.
+        e2e = seed_e2e_user(db, units[UNITS[0]]) if settings.auth_mode is AuthMode.LOCAL else 0
     print(
         f"Seeded {len(units)} units, {created} new demo users (auth mode: {settings.auth_mode}), "
-        f"{threats} threat types, {scenarios} scenarios written"
+        f"{threats} threat types, {scenarios} scenarios written, {e2e} e2e sessions rebuilt"
     )
 
 
