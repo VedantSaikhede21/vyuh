@@ -494,6 +494,14 @@ class SessionEndReason(StrEnum):
     ABORTED = "ABORTED"
 
 
+class SessionEnded(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    reason: SessionEndReason
+    t_ms: Annotated[int, Field(alias="tMs", ge=0, le=9007199254740991)]
+
+
 class SessionEndedPayload(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1105,6 +1113,7 @@ class SessionDetailResponse(BaseModel):
     ended_at: Annotated[AwareDatetime | None, Field(alias="endedAt")]
     sim_version: Annotated[SimVersion | None, Field(alias="simVersion")]
     score: Score | None
+    ended: SessionEnded | None
 
 
 class SessionEndedEvent(BaseModel):

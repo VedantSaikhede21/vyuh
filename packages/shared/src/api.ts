@@ -4,6 +4,7 @@ import {
   ErrorCode,
   Roe,
   ScenarioKind,
+  SessionEndReason,
   SessionMode,
   SessionStatus,
   UserRole,
@@ -133,6 +134,13 @@ export const CompleteSessionRequest = named(
 );
 export type CompleteSessionRequest = z.infer<typeof CompleteSessionRequest>;
 
+/** How a run ended, from its stored SESSION_ENDED event. */
+export const SessionEnded = named(
+  'SessionEnded',
+  z.object({ reason: SessionEndReason, tMs: z.int().min(0) }),
+);
+export type SessionEnded = z.infer<typeof SessionEnded>;
+
 /** GET /sessions/{id}. `score` is null until the session is COMPLETED. */
 export const SessionDetailResponse = named(
   'SessionDetailResponse',
@@ -147,6 +155,8 @@ export const SessionDetailResponse = named(
     /** Null for sessions created before sim versions were recorded. */
     simVersion: z.int().min(1).nullable(),
     score: Score.nullable(),
+    /** Null until the log holds a SESSION_ENDED event. */
+    ended: SessionEnded.nullable(),
   }),
 );
 export type SessionDetailResponse = z.infer<typeof SessionDetailResponse>;

@@ -2553,6 +2553,16 @@
               "type": "null"
             }
           ]
+        },
+        "ended": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SessionEnded"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -2564,7 +2574,8 @@
         "startedAt",
         "endedAt",
         "simVersion",
-        "score"
+        "score",
+        "ended"
       ]
     },
     "SessionEndReason": {
@@ -2573,6 +2584,23 @@
         "TIME_UP",
         "ALL_RESOLVED",
         "ABORTED"
+      ]
+    },
+    "SessionEnded": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "$ref": "#/$defs/SessionEndReason"
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "reason",
+        "tMs"
       ]
     },
     "SessionEndedEvent": {
