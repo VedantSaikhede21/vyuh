@@ -5,7 +5,10 @@ import { sampleHeight, type Heightmap } from './terrain.ts';
 // the buildings in its cell. Each cell also keeps its highest roof, so a sample
 // above it skips the footprint tests (Phase 3b: dense towns). The early-out
 // cannot change a result: a covering building's roof is never above its cells'
-// maximum.
+// maximum. Footprints with many vertices also keep their edges in horizontal
+// bands, so a point test reads only the edges that reach its band: an edge
+// outside it cannot change the even-odd count, and the kept edges are tested
+// with the same arithmetic, so the answer is identical to pointInRing.
 
 /** Grid cell size for the footprint index, metres. */
 export const BUILDING_CELL_M = 25;
@@ -16,6 +19,20 @@ export interface BuildingFootprint {
   readonly heightM: number;
 }
 
+/** Rings with more vertices than this get edge bands. */
+export const BAND_MIN_VERTICES = 16;
+/** Target edges per band. */
+const BAND_EDGES = 8;
+const MAX_BANDS = 64;
+
+/** Ring edges [xi, zi, xj, zj] (cur, prev as in pointInRing) grouped by z band. */
+export interface EdgeBands {
+  readonly minZ: number;
+  readonly bandM: number;
+  readonly count: number;
+  readonly edges: readonly Float64Array[];
+}
+
 export interface Building extends BuildingFootprint {
   /** Lowest terrain height under the footprint's corners (scenario frame). */
   readonly baseY: number;
@@ -24,6 +41,8 @@ export interface Building extends BuildingFootprint {
   readonly maxX: number;
   readonly minZ: number;
   readonly maxZ: number;
+  /** Present for rings with more than BAND_MIN_VERTICES vertices. */
+  readonly bands: EdgeBands | null;
 }
 
 export interface BuildingIndex {
@@ -48,6 +67,47 @@ export function pointInRing(ring: readonly (readonly [number, number])[], x: num
     const [xj, zj] = prev;
     if (zi > z !== zj > z && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) inside = !inside;
     prev = cur;
+  }
+  return inside;
+}
+
+function bandOf(b: Pick<EdgeBands, 'minZ' | 'bandM' | 'count'>, z: number): number {
+  return Math.min(Math.max(Math.floor((z - b.minZ) / b.bandM), 0), b.count - 1);
+}
+
+export function createEdgeBands(
+  ring: readonly (readonly [number, number])[],
+  minZ: number,
+  maxZ: number,
+): EdgeBands {
+  const count = Math.max(1, Math.min(MAX_BANDS, Math.ceil(ring.length / BAND_EDGES)));
+  const bands = { minZ, bandM: Math.max(maxZ - minZ, 1e-9) / count, count };
+  const lists: number[][] = Array.from({ length: count }, () => []);
+  let prev = ring[ring.length - 1];
+  for (const cur of ring) {
+    if (prev === undefined) break;
+    const [xi, zi] = cur;
+    const [xj, zj] = prev;
+    // An edge counts for z only when min(zi, zj) <= z < max(zi, zj), and bandOf is
+    // monotonic, so the edge is needed in bands bandOf(min) to bandOf(max) alone.
+    const hi = bandOf(bands, Math.max(zi, zj));
+    for (let k = bandOf(bands, Math.min(zi, zj)); k <= hi; k++) lists[k]?.push(xi, zi, xj, zj);
+    prev = cur;
+  }
+  return { ...bands, edges: lists.map((l) => Float64Array.from(l)) };
+}
+
+/** pointInRing over the banded edges; same result, fewer edges. */
+export function pointInBands(b: EdgeBands, x: number, z: number): boolean {
+  const e = b.edges[bandOf(b, z)];
+  if (e === undefined) return false;
+  let inside = false;
+  for (let k = 0; k < e.length; k += 4) {
+    const xi = e[k] ?? 0;
+    const zi = e[k + 1] ?? 0;
+    const xj = e[k + 2] ?? 0;
+    const zj = e[k + 3] ?? 0;
+    if (zi > z !== zj > z && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) inside = !inside;
   }
   return inside;
 }
@@ -83,7 +143,18 @@ export function createBuildingIndex(
     }
     const i = buildings.length;
     const topY = baseY + fp.heightM;
-    buildings.push({ ...fp, baseY, topY, minX, maxX, minZ, maxZ });
+    const bands = fp.ring.length > BAND_MIN_VERTICES ? createEdgeBands(fp.ring, minZ, maxZ) : null;
+    buildings.push({
+      ring: fp.ring,
+      heightM: fp.heightM,
+      baseY,
+      topY,
+      minX,
+      maxX,
+      minZ,
+      maxZ,
+      bands,
+    });
     for (let cz = cellOf(geo, minZ); cz <= cellOf(geo, maxZ); cz++) {
       for (let cx = cellOf(geo, minX); cx <= cellOf(geo, maxX); cx++) {
         const key = cz * cols + cx;
@@ -113,7 +184,8 @@ export function buildingTopAt(index: BuildingIndex, x: number, z: number): numbe
   for (const i of list) {
     const b = index.buildings[i];
     if (b === undefined || x < b.minX || x > b.maxX || z < b.minZ || z > b.maxZ) continue;
-    if (pointInRing(b.ring, x, z) && (top === null || b.topY > top)) top = b.topY;
+    const inside = b.bands ? pointInBands(b.bands, x, z) : pointInRing(b.ring, x, z);
+    if (inside && (top === null || b.topY > top)) top = b.topY;
   }
   return top;
 }

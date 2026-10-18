@@ -116,7 +116,7 @@ describe('S04 Night Drop (PUNJAB_PLAINS, night)', () => {
     const start: Point2 = [c01.path[0]!.x, c01.path[0]!.z];
     const at = (drop as Extract<SimEvent, { type: 'CONTACT_DROPPED' }>).payload;
     expect(
-      crosses(start, [at.x, at.z], border!.kind === 'BORDER_LINE' ? border.polyline : []),
+      crosses(start, [at.x, at.z], border?.kind === 'BORDER_LINE' ? border.polyline : []),
     ).toBe(true);
   });
 

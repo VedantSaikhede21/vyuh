@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BAND_MIN_VERTICES,
   LOS_OWN_SITE_M,
   LOS_STEP_M,
   LOS_TOLERANCE_M,
-  buildingTopAt,
   createBuildingIndex,
   hasLineOfSight,
   mulberry32,
+  pointInBands,
+  pointInRing,
   sampleHeight,
   type BuildingIndex,
   type Vec3,
@@ -15,9 +17,27 @@ import {
 import { FILE_PRESETS } from './cross-fixtures.ts';
 import { presetWorld } from './fixtures.ts';
 
-// Phase 3b Step 4: the 25 m building grid with a per-cell roof early-out must
-// give exactly the LOS of the Phase 2 index (100 m cells, every footprint in
-// the cell tested). The reference below is the Phase 2 algorithm verbatim.
+// Phase 3b: the 25 m building grid with a per-cell roof early-out, the edge
+// bands of large footprints and the 100 m obstacle-ceiling chunk skip must give
+// exactly the LOS of the Phase 2 index (100 m cells, every footprint in the
+// cell tested with pointInRing, every sample tested). The reference below is
+// the Phase 2 algorithm verbatim.
+
+function referenceTopAt(index: BuildingIndex, x: number, z: number): number | null {
+  if (index.buildings.length === 0) return null;
+  if (Math.abs(x) > index.half || Math.abs(z) > index.half) return null;
+  const cell = (v: number) =>
+    Math.min(Math.max(Math.floor((v + index.half) / index.cellM), 0), index.cols - 1);
+  const list = index.cells.get(cell(z) * index.cols + cell(x));
+  if (list === undefined) return null;
+  let top: number | null = null;
+  for (const i of list) {
+    const b = index.buildings[i]!;
+    if (x < b.minX || x > b.maxX || z < b.minZ || z > b.maxZ) continue;
+    if (pointInRing(b.ring, x, z) && (top === null || b.topY > top)) top = b.topY;
+  }
+  return top;
+}
 
 function referenceLos(world: World, index: BuildingIndex, from: Vec3, to: Vec3): boolean {
   const dx = to.x - from.x;
@@ -32,14 +52,14 @@ function referenceLos(world: World, index: BuildingIndex, from: Vec3, to: Vec3):
     const z = from.z + dz * t;
     if (y + LOS_TOLERANCE_M < sampleHeight(world.heightmap, x, z)) return false;
     if (horiz * t > LOS_OWN_SITE_M) {
-      const top = buildingTopAt(index, x, z);
+      const top = referenceTopAt(index, x, z);
       if (top !== null && y + LOS_TOLERANCE_M < top) return false;
     }
   }
   return true;
 }
 
-describe('building LOS index (25 m cells + roof early-out)', () => {
+describe('building LOS index (25 m cells, roof early-out, edge bands, ceiling skip)', () => {
   for (const preset of FILE_PRESETS) {
     it(`matches the Phase 2 index on 10 000 rays near buildings — ${preset}`, () => {
       const world = presetWorld(preset);
@@ -76,5 +96,71 @@ describe('building LOS index (25 m cells + roof early-out)', () => {
       expect(blocked).toBeLessThan(9_900);
       // 20 000 reference LOS walks on presets with thousands of footprints.
     }, 30_000);
+
+    it(`matches on rays through large footprints and across the map — ${preset}`, () => {
+      const world = presetWorld(preset);
+      const blds = world.buildings.buildings;
+      const reference = createBuildingIndex(blds, world.heightmap, 100);
+      const raw = mulberry32(777);
+      const rand = () => raw() / 2 ** 32;
+      const size = world.heightmap.sizeM;
+      const ground = (x: number, z: number, lo: number, hi: number): Vec3 => ({
+        x,
+        y: sampleHeight(world.heightmap, x, z) + lo + rand() * (hi - lo),
+        z,
+      });
+      const big = [...blds].sort((a, b) => b.ring.length - a.ring.length).slice(0, 20);
+      let blocked = 0;
+      for (let k = 0; k < 2_000; k++) {
+        let from: Vec3;
+        let to: Vec3;
+        if (k % 2 === 0 && big.length > 0) {
+          // Low rays across a large footprint, crossing it in any direction.
+          const b = big[k % big.length]!;
+          const w = b.maxX - b.minX + 60;
+          const d = b.maxZ - b.minZ + 60;
+          const at = () => [b.minX - 30 + rand() * w, b.minZ - 30 + rand() * d] as const;
+          const [x0, z0] = at();
+          const [x1, z1] = at();
+          from = ground(x0, z0, 1, 6);
+          to = ground(x1, z1, 1, 25);
+        } else {
+          // Map-wide rays, some ending past the map edge (clamped terrain, no buildings).
+          const span = k % 4 === 1 ? size * 0.55 : size * 0.45;
+          const x0 = (rand() * 2 - 1) * span;
+          const z0 = (rand() * 2 - 1) * span;
+          from = ground(x0, z0, 2, 40);
+          to = ground((rand() * 2 - 1) * span, (rand() * 2 - 1) * span, 2, 300);
+        }
+        const want = referenceLos(world, reference, from, to);
+        if (!want) blocked++;
+        expect(hasLineOfSight(world, from, to), `ray ${k}`).toBe(want);
+      }
+      expect(blocked).toBeGreaterThan(50);
+      expect(blocked).toBeLessThan(1_950);
+    }, 30_000);
   }
+
+  it('edge bands answer exactly like pointInRing on the large footprints', () => {
+    const world = presetWorld('URBAN_GENERIC');
+    const big = world.buildings.buildings.filter((b) => b.ring.length > BAND_MIN_VERTICES);
+    expect(big.length).toBeGreaterThan(50);
+    const raw = mulberry32(99);
+    const rand = () => raw() / 2 ** 32;
+    let inside = 0;
+    for (const b of big) {
+      expect(b.bands).not.toBeNull();
+      // Random points in the box plus every vertex (on-edge cases).
+      const pts: [number, number][] = b.ring.map(([x, z]) => [x, z]);
+      for (let k = 0; k < 50; k++) {
+        pts.push([b.minX + rand() * (b.maxX - b.minX), b.minZ + rand() * (b.maxZ - b.minZ)]);
+      }
+      for (const [x, z] of pts) {
+        const want = pointInRing(b.ring, x, z);
+        if (want) inside++;
+        expect(pointInBands(b.bands!, x, z)).toBe(want);
+      }
+    }
+    expect(inside).toBeGreaterThan(100);
+  });
 });
