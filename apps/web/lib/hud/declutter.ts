@@ -2,6 +2,7 @@
 // labels unreadable). Each track label tries right, left, above, below its
 // symbol; a label that would overlap another label or symbol, or leave the
 // scope, is dropped — except the selected track's, which is always drawn.
+// Fixed obstacles (zone labels, decision 98) are avoided the same way.
 
 export interface LabelRequest {
   id: string;
@@ -31,6 +32,7 @@ export function placeLabels(
   bounds: { w: number; h: number },
   symbolR: number,
   gap = 3,
+  obstacles: readonly Rect[] = [],
 ): Map<string, { x: number; y: number }> {
   const symbols = items.map((i) => ({
     id: i.id,
@@ -39,7 +41,7 @@ export function placeLabels(
   const order = [...items].sort((a, b) =>
     a.keep === b.keep ? a.id.localeCompare(b.id) : a.keep ? -1 : 1,
   );
-  const placed: Rect[] = [];
+  const placed: Rect[] = [...obstacles];
   const out = new Map<string, { x: number; y: number }>();
   for (const it of order) {
     const d = symbolR + gap;

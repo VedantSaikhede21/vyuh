@@ -2,16 +2,31 @@
 
 import type { Scenario } from '@vyuh/shared';
 import { useEffect, useRef, useState } from 'react';
-import { GRID, MASKED, OUT_OF_RANGE, type SensorSite } from '@/lib/briefing/coverage';
+import {
+  GRID,
+  MASKED,
+  OUT_OF_RANGE,
+  type CoverageAltitude,
+  type SensorSite,
+} from '@/lib/briefing/coverage';
 import type { CoverageState } from '@/lib/briefing/use-coverage';
 import { UI, ZONES } from '@/lib/theme/scene-colours';
+import { BriefingLegend, LEGEND_H } from './briefing-legend';
 
 // Briefing map (DESIGN §11.4): the preset's hillshade with buildings (map.png),
 // LOS coverage shading, zones, the asset, sensor sites, effector and radar range
 // rings, the intel axis when the briefing states one, a north arrow and a scale
-// bar. Canvas 2D, north up; scenario frame x east, z north.
+// bar. Canvas 2D, north up; scenario frame x east, z north. A legend sits under
+// the map when the map is width-limited and the height left over fits it.
 
 const SCALE_STEPS_M = [500, 1000, 2000, 5000];
+/** Gap between the map and the legend, px. */
+const LEGEND_GAP = 12;
+
+/** Scale bar length: the largest step up to a sixth of the map. */
+export function scaleStepM(sizeM: number): number {
+  return [...SCALE_STEPS_M].reverse().find((s) => s <= sizeM / 6) ?? SCALE_STEPS_M[0]!;
+}
 
 function cssVar(name: string): string {
   if (typeof document === 'undefined') return 'sans-serif';
@@ -29,16 +44,23 @@ export function BriefingMap({
   sites,
   coverage,
   intelAxisDeg,
+  altitude,
+  onLegend,
 }: {
   scenario: Scenario;
   sizeM: number;
   sites: readonly SensorSite[];
   coverage: CoverageState;
   intelAxisDeg: number | null;
+  altitude: CoverageAltitude;
+  /** Told whether the legend is shown (the page hides its caption then). */
+  onLegend?: (shown: boolean) => void;
 }) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
-  const [px, setPx] = useState(0);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  const legend = box.h - box.w >= LEGEND_H + LEGEND_GAP;
+  const px = Math.floor(Math.min(box.w, box.h));
   const [image, setImage] = useState<HTMLImageElement | null>(null);
 
   useEffect(() => {
@@ -50,9 +72,7 @@ export function BriefingMap({
   useEffect(() => {
     const el = wrap.current;
     if (!el) return;
-    const ro = new ResizeObserver(() =>
-      setPx(Math.floor(Math.min(el.clientWidth, el.clientHeight))),
-    );
+    const ro = new ResizeObserver(() => setBox({ w: el.clientWidth, h: el.clientHeight }));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
@@ -234,8 +254,7 @@ export function BriefingMap({
     g.fill();
     g.font = `600 12px ${cond}`;
     g.fillText('N', px - 24, 48);
-    const target = sizeM / 6;
-    const step = [...SCALE_STEPS_M].reverse().find((s) => s <= target) ?? SCALE_STEPS_M[0]!;
+    const step = scaleStepM(sizeM);
     const w = step * k;
     g.fillStyle = hexToRgba(UI.bg0, 0.8);
     g.fillRect(8, px - 30, w + 16, 22);
@@ -247,15 +266,31 @@ export function BriefingMap({
     g.fillText(step >= 1000 ? `${step / 1000} km` : `${step} m`, 18, px - 20);
   }, [px, image, scenario, sizeM, sites, coverage, intelAxisDeg]);
 
+  useEffect(() => onLegend?.(legend), [legend, onLegend]);
+
   return (
-    <div ref={wrap} className="relative h-full w-full">
+    <div
+      ref={wrap}
+      className="relative flex h-full w-full flex-col items-center justify-start overflow-hidden"
+      style={{ gap: LEGEND_GAP }}
+    >
       <canvas
         ref={canvas}
         style={{ width: px, height: px }}
+        className="shrink-0"
         role="img"
         aria-label="Briefing map: terrain, zones, defended asset, sensor site and coverage"
         data-testid="briefing-map"
       />
+      {legend && (
+        <BriefingLegend
+          scenario={scenario}
+          altitude={altitude}
+          intelAxis={intelAxisDeg !== null}
+          scaleStepM={scaleStepM(sizeM)}
+          width={px}
+        />
+      )}
     </div>
   );
 }

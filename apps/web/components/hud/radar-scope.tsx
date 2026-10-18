@@ -1,10 +1,16 @@
 'use client';
 
-import { TICK_MS } from '@vyuh/sim-core';
-import { useEffect, useRef } from 'react';
+import { TICK_MS, pointInPolygon } from '@vyuh/sim-core';
+import { useEffect, useMemo, useRef } from 'react';
 import { AFFILIATION_STYLE, traceAffiliation } from '@/lib/affiliation';
 import { PPI, RF_STROBE, ZONES, canvasMonoFont, withAlpha } from '@/lib/theme/scene-colours';
-import { centroid } from '@/lib/hud/zones';
+import {
+  centroid,
+  groupNoKineticZones,
+  hoveredZoneIds,
+  zonesBox,
+  zonesNearTrack,
+} from '@/lib/hud/zones';
 import { placeLabels } from '@/lib/hud/declutter';
 import type { Commands } from '@/lib/sim/commands';
 import type { SimRuntime } from '@/lib/sim/runtime';
@@ -21,6 +27,10 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
     Math.ceil(((radar?.kind === 'RADAR' ? radar.refRangeM : 3000) * 1.4) / 1000) * 1000;
   const scanMs = (radar?.kind === 'RADAR' ? radar.scanPeriodS : 2) * 1000;
   const origin = { x: radar?.x ?? 0, z: radar?.z ?? 0 };
+  const { groups, members } = useMemo(() => {
+    const g = groupNoKineticZones(runtime.scenario.zones);
+    return { groups: g, members: g.flatMap((x) => (x.zones.length > 1 ? x.zones : [])) };
+  }, [runtime]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -96,12 +106,17 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
       }
       ctx.setLineDash([]);
 
-      // Zones: NO_KINETIC hatched + outlined with its id, border lines dashed.
+      // Zones: NO_KINETIC hatched + outlined, one label per zone or cluster (a
+      // member's id only on hover or near the selected track); borders dashed.
       ctx.save();
       ctx.beginPath();
       ctx.arc(c, c, r, 0, Math.PI * 2);
       ctx.clip();
       ctx.font = canvasMonoFont(11);
+      const selected = hud?.tracks.find(
+        (t) => t.id === hud.selectedTrackId && t.status === 'ACTIVE',
+      );
+      const near = selected ? zonesNearTrack(members, selected) : null;
       for (const z of runtime.scenario.zones) {
         if (z.kind === 'NO_KINETIC') {
           ctx.beginPath();
@@ -116,9 +131,6 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
           ctx.strokeStyle = ZONES.outline;
           ctx.lineWidth = 1;
           ctx.stroke();
-          const [cx, cz] = centroid(z.polygon);
-          ctx.fillStyle = ZONES.label;
-          ctx.fillText(z.id, px(cx) + 6, py(cz) - 4);
         } else if (z.kind === 'BORDER_LINE') {
           ctx.setLineDash([6, 4]);
           ctx.strokeStyle = ZONES.border;
@@ -133,6 +145,28 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
             ctx.fillStyle = ZONES.label;
             ctx.fillText('BORDER', px(mid[0]) + 4, py(mid[1]) - 4);
           }
+        }
+      }
+      ctx.fillStyle = ZONES.label;
+      // Zone label boxes: track labels are placed around them.
+      const zoneLabels: { x: number; y: number; w: number; h: number }[] = [];
+      for (const g of groups) {
+        const w = ctx.measureText(g.shortLabel).width;
+        if (g.zones.length === 1) {
+          const [cx, cz] = centroid(g.zones[0]!.polygon);
+          ctx.fillText(g.shortLabel, px(cx) + 6, py(cz) - 4);
+          zoneLabels.push({ x: px(cx) + 6, y: py(cz) - 13, w, h: 11 });
+          continue;
+        }
+        const box = zonesBox(g.zones);
+        const x = Math.min(Math.max(px((box.minX + box.maxX) / 2) - w / 2, 4), SIZE - w - 4);
+        const y = Math.max(py(box.maxZ) - 4, 24);
+        ctx.fillText(g.shortLabel, x, y);
+        zoneLabels.push({ x, y: y - 9, w, h: 11 });
+        for (const z of g.zones) {
+          if (!hoveredZoneIds.has(z.id) && near?.has(z.id) !== true) continue;
+          const [cx, cz] = centroid(z.polygon);
+          ctx.fillText(z.id, px(cx) - ctx.measureText(z.id).width / 2, py(cz) + 4);
         }
       }
       ctx.restore();
@@ -211,7 +245,7 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
         h: 11,
         keep: tr.id === hud?.selectedTrackId,
       }));
-      const placed = placeLabels(labels, { w: SIZE, h: SIZE }, 8);
+      const placed = placeLabels(labels, { w: SIZE, h: SIZE }, 8, 3, zoneLabels);
       ctx.textBaseline = 'top';
       for (const { tr } of blips) {
         const at = placed.get(tr.id);
@@ -225,7 +259,25 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
     };
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [runtime, maxRangeM, scanMs, origin.x, origin.z]);
+  }, [runtime, maxRangeM, scanMs, origin.x, origin.z, groups, members]);
+
+  /** Canvas pixel → scenario metres. */
+  const toMetres = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const scale = SIZE / rect.width;
+    const pxPerM = (SIZE / 2 - 14) / maxRangeM;
+    return {
+      x: origin.x + ((e.clientX - rect.left) * scale - SIZE / 2) / pxPerM,
+      z: origin.z - ((e.clientY - rect.top) * scale - SIZE / 2) / pxPerM,
+    };
+  };
+
+  const onMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const m = toMetres(e);
+    hoveredZoneIds.clear();
+    const hit = members.find((z) => pointInPolygon(m.x, m.z, z.polygon));
+    if (hit) hoveredZoneIds.add(hit.id);
+  };
 
   const onClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const hud = useHudStore.getState().hud;
@@ -251,6 +303,8 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
     <canvas
       ref={canvasRef}
       onClick={onClick}
+      onMouseMove={onMove}
+      onMouseLeave={() => hoveredZoneIds.clear()}
       className="aspect-square w-full cursor-crosshair"
       aria-label={`Radar PPI, ${maxRangeM / 1000} km range, rings every 1 km. Click a track to select it.`}
     />

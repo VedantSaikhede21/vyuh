@@ -19,6 +19,14 @@ describe('placeLabels', () => {
     });
   });
 
+  it('moves around a fixed obstacle (a zone label)', () => {
+    const zone = { x: 105, y: 90, w: 60, h: 12 };
+    expect(placeLabels([label('T001', 100, 100)], bounds, 5, 3, [zone]).get('T001')).toEqual({
+      x: 52,
+      y: 94,
+    });
+  });
+
   it('moves to the left when the right side would leave the scope', () => {
     expect(placeLabels([label('T001', 300, 100)], bounds, 5).get('T001')).toEqual({
       x: 252,
