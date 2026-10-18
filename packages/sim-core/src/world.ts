@@ -5,6 +5,7 @@ import {
   type BuildingFootprint,
   type BuildingIndex,
 } from './buildings.ts';
+import { createObstacleCeiling, type ObstacleCeiling } from './los.ts';
 import {
   PROCEDURAL_HILLS,
   createHeightmap,
@@ -19,6 +20,8 @@ import {
 export interface World {
   readonly heightmap: Heightmap;
   readonly buildings: BuildingIndex;
+  /** LOS early-out ceilings (terrain + roofs per 100 m tile). */
+  readonly ceiling: ObstacleCeiling;
   /** null when a bare Heightmap was supplied (tests, legacy callers). */
   readonly meta: TerrainPresetMeta | null;
 }
@@ -28,7 +31,8 @@ export function createWorld(
   footprints: readonly BuildingFootprint[] = [],
   meta: TerrainPresetMeta | null = null,
 ): World {
-  return { heightmap, buildings: createBuildingIndex(footprints, heightmap), meta };
+  const buildings = createBuildingIndex(footprints, heightmap);
+  return { heightmap, buildings, ceiling: createObstacleCeiling(heightmap, buildings), meta };
 }
 
 export function isWorld(t: Heightmap | World): t is World {

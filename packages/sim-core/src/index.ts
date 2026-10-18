@@ -104,22 +104,28 @@ export type { EffectorState, EwOutcome } from './effectors.ts';
 export { commandFromEvent, createSim } from './sim.ts';
 export type { CameraState, DispatchResult, Sim, SimCommand, SimOptions, SimState } from './sim.ts';
 export {
+  BAND_MIN_VERTICES,
   BUILDING_CELL_M,
   buildingTopAt,
   cellTopAt,
   createBuildingIndex,
+  createEdgeBands,
   parseBuildingsGeoJson,
+  pointInBands,
   pointInRing,
 } from './buildings.ts';
-export type { Building, BuildingFootprint, BuildingIndex } from './buildings.ts';
+export type { Building, BuildingFootprint, BuildingIndex, EdgeBands } from './buildings.ts';
 export {
+  LOS_CHUNK_SAMPLES,
   LOS_OWN_SITE_M,
   LOS_STEP_M,
+  LOS_TILE_M,
   LOS_TOLERANCE_M,
   createLosCache,
+  createObstacleCeiling,
   hasLineOfSight,
 } from './los.ts';
-export type { LosCache } from './los.ts';
+export type { LosCache, ObstacleCeiling } from './los.ts';
 export {
   PROCEDURAL_HILLS_META,
   builtinWorld,
