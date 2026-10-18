@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { Scenario } from '@vyuh/shared';
-import { TICK_MS, createProceduralTerrain } from '@vyuh/sim-core';
+import { TICK_MS, createProceduralTerrain, heightNoiseSigmaM } from '@vyuh/sim-core';
 import { describe, expect, it } from 'vitest';
 import { MAX_FRAME_MS, SimRuntime } from '../lib/sim/runtime';
 import { snapshot } from '../lib/sim/store';
@@ -54,8 +54,12 @@ describe('SimRuntime', () => {
     const hud = snapshot(rt);
     expect(hud.tracks[0]!.id).toBe('T001');
     expect(JSON.stringify(hud)).not.toContain('c01');
-    // S01 cruises between 50 m and 45 m AGL before the dive.
-    expect(hud.tracks[0]!.altitudeAglM).toBeGreaterThanOrEqual(45);
-    expect(hud.tracks[0]!.altitudeAglM).toBeLessThanOrEqual(50);
+    // S01 cruises between 50 m and 45 m AGL before the dive. The HUD shows the
+    // radar's noisy height estimate (decision 108): within 3 σ of that, never the truth.
+    const t = hud.tracks[0]!;
+    const sigma = heightNoiseSigmaM(t.rangeM);
+    expect(t.altitudeAglM).toBeGreaterThanOrEqual(Math.max(45 - 3 * sigma, 0));
+    expect(t.altitudeAglM).toBeLessThanOrEqual(50 + 3 * sigma);
+    expect(t.altitudeAglM).not.toBe(rt.sim.getState().contacts[0]!.agl);
   });
 });

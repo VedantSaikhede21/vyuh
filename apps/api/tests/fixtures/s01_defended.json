@@ -67,11 +67,11 @@
   "payload": {
    "response": "INTERCEPT"
   },
-  "tMs": 97100,
+  "tMs": 97150,
   "seq": 7
  },
  {
-  "tMs": 97100,
+  "tMs": 97150,
   "type": "RESPONSE_OUTCOME",
   "trackId": "T001",
   "contactId": "c01",
@@ -82,7 +82,7 @@
   "seq": 8
  },
  {
-  "tMs": 97100,
+  "tMs": 97150,
   "type": "CONTACT_NEUTRALISED",
   "contactId": "c01",
   "payload": {
@@ -91,7 +91,7 @@
   "seq": 9
  },
  {
-  "tMs": 97100,
+  "tMs": 97150,
   "type": "SESSION_ENDED",
   "payload": {
    "reason": "ALL_RESOLVED"

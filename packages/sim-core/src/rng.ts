@@ -18,12 +18,19 @@ export interface RandomStream {
   chance(p: number): boolean;
   /** Uniformly chosen element of a non-empty list. */
   pick<T>(items: readonly T[]): T;
+  /** Generator state, for sim snapshots (decision 107). */
+  getState(): number;
+  setState(state: number): void;
 }
 
 export interface Rng {
   readonly seed: number;
   /** Returns the stream with this name; repeated calls return the same stream. */
   stream(name: string): RandomStream;
+  /** Every created stream's state, by name (sim snapshots). */
+  getStates(): Record<string, number>;
+  /** Restore states from `getStates()`; streams not listed are created at their seed. */
+  setStates(states: Readonly<Record<string, number>>): void;
 }
 
 function assertUint32(seed: number): void {
@@ -71,7 +78,15 @@ export function mulberry32(seed: number): () => number {
 }
 
 function createStream(name: string, seed: number): RandomStream {
-  const nextUint32 = mulberry32(seed);
+  // The mulberry32 step, inlined so the state can be read and restored.
+  let state = seed;
+  const nextUint32 = (): number => {
+    state = (state + 0x6d2b79f5) | 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return (t ^ (t >>> 14)) >>> 0;
+  };
   const next = (): number => nextUint32() / UINT32;
   return {
     name,
@@ -89,6 +104,10 @@ function createStream(name: string, seed: number): RandomStream {
       if (items.length === 0) throw new RangeError('Cannot pick from an empty list');
       return items[Math.floor(next() * items.length)] as (typeof items)[number];
     },
+    getState: () => state >>> 0,
+    setState: (s) => {
+      state = s | 0;
+    },
   };
 }
 
@@ -105,6 +124,19 @@ export function createRng(seed: number): Rng {
         streams.set(name, s);
       }
       return s;
+    },
+    getStates() {
+      const out: Record<string, number> = {};
+      for (const [name, s] of [...streams].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+        out[name] = s.getState();
+      }
+      return out;
+    },
+    setStates(states) {
+      for (const [name, s] of streams) {
+        if (!(name in states)) s.setState(deriveStreamSeed(seed, name));
+      }
+      for (const [name, value] of Object.entries(states)) this.stream(name).setState(value);
     },
   };
 }
