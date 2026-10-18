@@ -38,6 +38,11 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByTestId('scenario-S01')).toBeVisible();
       await shot(page, 'training');
       await openBriefing(page, 'S01');
+      // The shaded LOS coverage and the status text settle once it is computed.
+      await expect(page.getByTestId('coverage-status')).toHaveText(/^LOS coverage ·/, {
+        timeout: 120_000,
+      });
+      await page.waitForTimeout(400);
       await shot(page, 'briefing');
       // No response: the threat leaks and the server scores the run.
       await beginSession(page);
