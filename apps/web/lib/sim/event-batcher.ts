@@ -2,7 +2,9 @@ import { MAX_EVENTS_PER_BATCH, type SimEvent } from '@vyuh/shared';
 
 // Ships the sim event log to the API (SPEC §3.1): every 2 s and on end, one
 // batch in flight at a time. A batch's content is fixed once formed, so a retry
-// re-sends the same batchSeq and the server ignores duplicates.
+// re-sends the same batchSeq and the server ignores duplicates. With nothing new
+// to send for `heartbeatMs` (e.g. a paused practice run), an empty batch tells
+// the server the page is still open, so the session is not abandoned (SPEC §4.5).
 
 export interface BatchSender {
   (batchSeq: number, events: readonly SimEvent[]): Promise<void>;
@@ -26,6 +28,8 @@ export interface BatcherOptions {
   /** Decide whether an error is worth retrying. Default: everything is. */
   isRetryable?: (err: unknown) => boolean;
   intervalMs?: number;
+  /** Send an empty batch after this long with nothing to send. Default 60 s. */
+  heartbeatMs?: number;
   backoffMs?: readonly number[];
   onStatus?: (status: BatcherStatus) => void;
 }
@@ -50,11 +54,14 @@ export class EventBatcher {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private fatal: FatalBatchError | null = null;
   private stopped = false;
+  /** Wall time of the last successful send (or of start). */
+  private lastSentAt = 0;
 
   constructor(private readonly opts: BatcherOptions) {}
 
   start(): void {
     this.stopped = false;
+    this.lastSentAt = Date.now();
     this.schedule(this.opts.intervalMs ?? 2000);
   }
 
@@ -106,18 +113,30 @@ export class EventBatcher {
     if (this.fatal) return Promise.resolve();
     if (this.current === null) {
       const all = this.opts.getEvents();
-      if (this.formedUpTo >= all.length) return Promise.resolve();
+      if (this.formedUpTo >= all.length) {
+        // Heartbeats only while running; finish() has nothing left to send.
+        const idle = Date.now() - this.lastSentAt >= (this.opts.heartbeatMs ?? 60_000);
+        if (this.stopped || !idle) return Promise.resolve();
+        this.current = { seq: this.nextBatchSeq++, events: [] };
+        return this.sendCurrent();
+      }
       const events = all.slice(this.formedUpTo, this.formedUpTo + MAX_EVENTS_PER_BATCH);
       this.current = { seq: this.nextBatchSeq++, events };
       this.formedUpTo += events.length;
     }
+    return this.sendCurrent();
+  }
+
+  private sendCurrent(): Promise<void> {
     const batch = this.current;
+    if (batch === null) return Promise.resolve();
     this.inFlight = this.opts
       .send(batch.seq, batch.events)
       .then(() => {
         this.sentUpTo += batch.events.length;
         this.current = null;
         this.attempt = 0;
+        this.lastSentAt = Date.now();
       })
       .catch((err: unknown) => {
         const retry = !(err instanceof FatalBatchError) && (this.opts.isRetryable?.(err) ?? true);
