@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { placeLabels } from '@/lib/hud/declutter';
+import { layoutPpiLabels, placeLabels } from '@/lib/hud/declutter';
 
 const bounds = { w: 320, h: 320 };
 const label = (id: string, x: number, y: number, keep = false) => ({
@@ -55,5 +55,66 @@ describe('placeLabels', () => {
         expect(overlap).toBe(false);
       }
     }
+  });
+});
+
+describe('layoutPpiLabels (priority)', () => {
+  const sym = (id: string, x: number, y: number, priority: boolean) => ({
+    ...label(id, x, y),
+    priority,
+  });
+  const zone = (key: string, candidates: { x: number; y: number }[], forced = false) => ({
+    key,
+    candidates: candidates.map((c) => ({ ...c, w: 60, h: 12 })),
+    forced,
+  });
+
+  it('a zone label yields to a threat label: it moves to its far edge', () => {
+    // The threat label sits right of its symbol at (108, 94); the zone's usual spot overlaps it.
+    const out = layoutPpiLabels(
+      [sym('T001', 100, 100, true)],
+      [
+        zone('Z', [
+          { x: 110, y: 92 },
+          { x: 200, y: 200 },
+        ]),
+      ],
+      bounds,
+      5,
+    );
+    expect(out.symbols.get('T001')).toEqual({ x: 108, y: 94 });
+    expect(out.zones.get('Z')).toEqual({ x: 200, y: 200 });
+  });
+
+  it('a zone label with no clear spot is hidden, unless its zone is hovered', () => {
+    const blocked = [
+      { x: 110, y: 92 },
+      { x: 96, y: 96 },
+    ]; // label, then the symbol itself
+    const hidden = layoutPpiLabels([sym('T001', 100, 100, true)], [zone('Z', blocked)], bounds, 5);
+    expect(hidden.zones.has('Z')).toBe(false);
+    const hovered = layoutPpiLabels(
+      [sym('T001', 100, 100, true)],
+      [zone('Z', blocked, true)],
+      bounds,
+      5,
+    );
+    expect(hovered.zones.get('Z')).toEqual({ x: 110, y: 92 });
+  });
+
+  it('a non-threat track label yields to a zone label', () => {
+    const out = layoutPpiLabels(
+      [sym('T002', 100, 100, false)],
+      [zone('Z', [{ x: 105, y: 90 }])],
+      bounds,
+      5,
+    );
+    expect(out.zones.get('Z')).toEqual({ x: 105, y: 90 });
+    expect(out.symbols.get('T002')).toEqual({ x: 52, y: 94 });
+  });
+
+  it('a zone label never sits outside the scope circle', () => {
+    const out = layoutPpiLabels([], [zone('Z', [{ x: 2, y: 2 }])], bounds, 5, (r) => r.x > 10);
+    expect(out.zones.has('Z')).toBe(false);
   });
 });

@@ -47,6 +47,9 @@ export const PPI = {
   assetRing: UI.text2,
   sweep: UI.text1,
   selected: UI.select,
+  /** Defended asset square and its name. */
+  asset: UI.select,
+  assetLabel: UI.text1,
 } as const;
 
 /** Sky, haze and light colours for the 3D views (physical look, not UI). */

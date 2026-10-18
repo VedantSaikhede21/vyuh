@@ -28,6 +28,30 @@ async function coverageReady(page: Page) {
   await page.waitForTimeout(400);
 }
 
+// PPI label priority (3b close-out step 2): the S06 PPI at 1366×768, without a
+// selection and with the hostile selected inside the town. PPI_TAG names the
+// capture set ("before" / "after").
+test.describe('S06 PPI label priority @checkpoint', () => {
+  // 2× device pixels so the 250 px scope is legible; the layout is still 1366×768.
+  test.use({ viewport: { width: 1366, height: 768 }, deviceScaleFactor: 2 });
+  test('S06 PPI label priority at 1366x768', async ({ page }) => {
+    test.setTimeout(240_000);
+    const tag = process.env.PPI_TAG ?? 'after';
+    await login(page, 'trainee1@demo');
+    await openBriefing(page, 'S06');
+    await beginSession(page);
+    const ppi = page.getByLabel(/^Radar PPI/);
+    await stepTo(page, 150_000);
+    await page.waitForTimeout(300);
+    await ppi.screenshot({ path: `${OUT}/3b-ppi-${tag}-1-no-selection.png` });
+    const track = await stepUntilTracked(page, 'c01');
+    await stepTo(page, 215_000);
+    await selectTrack(page, track);
+    await page.waitForTimeout(300);
+    await ppi.screenshot({ path: `${OUT}/3b-ppi-${tag}-2-hostile-selected.png` });
+  });
+});
+
 for (const vp of VIEWPORTS) {
   test.describe(`Phase 3b checkpoint at ${vp.name} @checkpoint`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });

@@ -11,13 +11,16 @@ import {
   zonesBox,
   zonesNearTrack,
 } from '@/lib/hud/zones';
-import { placeLabels } from '@/lib/hud/declutter';
+import { layoutPpiLabels } from '@/lib/hud/declutter';
+import { isThreatTrack } from '@/lib/hud/derive';
 import type { Commands } from '@/lib/sim/commands';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useHudStore } from '@/lib/sim/store';
 
 const SIZE = 320;
 const PICK_PX = 14;
+/** Label box height, px (11 px mono). */
+const LABEL_H = 11;
 
 /** Radar PPI (SPEC §15): north-up, range rings every km, rotating sweep, track blips. */
 export function RadarScope({ runtime, commands }: { runtime: SimRuntime; commands: Commands }) {
@@ -147,29 +150,45 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
           }
         }
       }
+      // Member ids on demand (hover, near the selected track), over their zone.
       ctx.fillStyle = ZONES.label;
-      // Zone label boxes: track labels are placed around them.
-      const zoneLabels: { x: number; y: number; w: number; h: number }[] = [];
-      for (const g of groups) {
-        const w = ctx.measureText(g.shortLabel).width;
-        if (g.zones.length === 1) {
-          const [cx, cz] = centroid(g.zones[0]!.polygon);
-          ctx.fillText(g.shortLabel, px(cx) + 6, py(cz) - 4);
-          zoneLabels.push({ x: px(cx) + 6, y: py(cz) - 13, w, h: 11 });
-          continue;
-        }
-        const box = zonesBox(g.zones);
-        const x = Math.min(Math.max(px((box.minX + box.maxX) / 2) - w / 2, 4), SIZE - w - 4);
-        const y = Math.max(py(box.maxZ) - 4, 24);
-        ctx.fillText(g.shortLabel, x, y);
-        zoneLabels.push({ x, y: y - 9, w, h: 11 });
-        for (const z of g.zones) {
-          if (!hoveredZoneIds.has(z.id) && near?.has(z.id) !== true) continue;
-          const [cx, cz] = centroid(z.polygon);
-          ctx.fillText(z.id, px(cx) - ctx.measureText(z.id).width / 2, py(cz) + 4);
-        }
+      for (const z of members) {
+        if (!hoveredZoneIds.has(z.id) && near?.has(z.id) !== true) continue;
+        const [cx, cz] = centroid(z.polygon);
+        ctx.fillText(z.id, px(cx) - ctx.measureText(z.id).width / 2, py(cz) + 4);
       }
       ctx.restore();
+
+      // Zone label candidates (placed after the asset and threat labels, below):
+      // the usual spot, then the zone's edge away from the asset.
+      const asset0 = runtime.scenario.assets[0];
+      const ax = asset0 ? px(asset0.x) : c;
+      const ay = asset0 ? py(asset0.z) : c;
+      const zoneRequests = groups.map((g) => {
+        const w = ctx.measureText(g.shortLabel).width;
+        const h = LABEL_H;
+        const b = zonesBox(g.zones);
+        const [l, rt, tp, bt] = [px(b.minX), px(b.maxX), py(b.maxZ), py(b.minZ)];
+        const [mx, my] = [(l + rt) / 2, (tp + bt) / 2];
+        const usual =
+          g.zones.length === 1
+            ? (() => {
+                const [cx, cz] = centroid(g.zones[0]!.polygon);
+                return { x: px(cx) + 6, y: py(cz) - 4 - h, w, h };
+              })()
+            : { x: mx - w / 2, y: tp - 3 - h, w, h };
+        const [dx, dy] = [mx - ax, my - ay];
+        const far =
+          Math.abs(dx) > Math.abs(dy)
+            ? { x: dx > 0 ? rt + 4 : l - 4 - w, y: my - h / 2, w, h }
+            : { x: mx - w / 2, y: dy > 0 ? bt + 3 : tp - 3 - h, w, h };
+        return {
+          key: g.key,
+          text: g.shortLabel,
+          candidates: [usual, far],
+          forced: g.zones.some((z) => hoveredZoneIds.has(z.id)),
+        };
+      });
 
       // Sweep.
       const t = (hud?.tMs ?? 0) + runtime.alpha * TICK_MS;
@@ -237,22 +256,67 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
           ctx.strokeRect(x - 8, y - 8, 16, 16);
         }
       }
-      const labels = blips.map(({ tr, x, y }) => ({
-        id: tr.id,
-        x,
-        y,
-        w: ctx.measureText(`${AFFILIATION_STYLE[tr.affiliation].letter} ${tr.id}`).width,
-        h: 11,
-        keep: tr.id === hud?.selectedTrackId,
+      // Defended assets: square + name (DESIGN §11.4 map symbol).
+      ctx.strokeStyle = PPI.asset;
+      ctx.lineWidth = 1.5;
+      const assets = runtime.scenario.assets.map((a) => ({
+        a,
+        x: px(a.x),
+        y: py(a.z),
+        text: a.name.toUpperCase(),
       }));
-      const placed = placeLabels(labels, { w: SIZE, h: SIZE }, 8, 3, zoneLabels);
+      for (const { x, y } of assets) ctx.strokeRect(x - 4, y - 4, 8, 8);
+      ctx.lineWidth = 1;
+
+      // Labels by priority: asset, selected and threat tracks always; zone labels
+      // yield (far edge or hidden, shown on hover); other tracks when there is room.
+      const { symbols: at, zones: zoneAt } = layoutPpiLabels(
+        [
+          ...assets.map(({ a, x, y, text }) => ({
+            id: `asset:${a.id}`,
+            x,
+            y,
+            w: ctx.measureText(text).width,
+            h: LABEL_H,
+            priority: true,
+          })),
+          ...blips.map(({ tr, x, y }) => ({
+            id: tr.id,
+            x,
+            y,
+            w: ctx.measureText(`${AFFILIATION_STYLE[tr.affiliation].letter} ${tr.id}`).width,
+            h: LABEL_H,
+            priority: tr.id === hud?.selectedTrackId || isThreatTrack(tr),
+          })),
+        ],
+        zoneRequests,
+        { w: SIZE, h: SIZE },
+        8,
+        (b) =>
+          [
+            [b.x, b.y],
+            [b.x + b.w, b.y],
+            [b.x, b.y + b.h],
+            [b.x + b.w, b.y + b.h],
+          ].every(([x, y]) => Math.hypot(x! - c, y! - c) <= r),
+      );
       ctx.textBaseline = 'top';
+      ctx.fillStyle = ZONES.label;
+      for (const z of zoneRequests) {
+        const p = zoneAt.get(z.key);
+        if (p) ctx.fillText(z.text, p.x, p.y);
+      }
+      ctx.fillStyle = PPI.assetLabel;
+      for (const { a, text } of assets) {
+        const p = at.get(`asset:${a.id}`);
+        if (p) ctx.fillText(text, p.x, p.y);
+      }
       for (const { tr } of blips) {
-        const at = placed.get(tr.id);
-        if (!at) continue;
+        const p = at.get(tr.id);
+        if (!p) continue;
         const style = AFFILIATION_STYLE[tr.affiliation];
         ctx.fillStyle = tr.id === hud?.selectedTrackId ? PPI.selected : style.hex;
-        ctx.fillText(`${style.letter} ${tr.id}`, at.x, at.y);
+        ctx.fillText(`${style.letter} ${tr.id}`, p.x, p.y);
       }
       ctx.textBaseline = 'alphabetic';
       raf = requestAnimationFrame(draw);

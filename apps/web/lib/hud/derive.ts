@@ -164,6 +164,14 @@ function capitalise(s: string): string {
 
 const THREAT_CLASSES: ReadonlySet<string> = new Set(ThreatClass.options);
 
+/** A track the operator treats as a threat: declared HOSTILE or classified as a threat type. */
+export function isThreatTrack(track: Pick<TrackView, 'affiliation' | 'classifiedAs'>): boolean {
+  return (
+    track.affiliation === 'HOSTILE' ||
+    (track.classifiedAs !== null && THREAT_CLASSES.has(track.classifiedAs))
+  );
+}
+
 /** ROE gate as in sim-core (SIM_VERSION 3): TIGHT needs a threat class and a HOSTILE call. */
 export function roeBlocksIntercept(roe: Roe, track: TrackView): string | null {
   if (roe === 'WEAPONS_HOLD') return 'ROE: weapons hold — no intercept';
