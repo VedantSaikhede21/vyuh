@@ -23,10 +23,14 @@ def list_scenarios(
     db: DbDep,
     kind: ScenarioKind | None = None,
     difficulty: Annotated[int | None, Query(ge=1, le=5)] = None,
+    mine: bool = False,
 ) -> ScenarioListResponse:
+    """The library; with `mine=true`, the caller's own generated scenarios, newest first."""
+    if mine:
+        return ScenarioListResponse(items=scenarios.list_own_generated(db, user.id))
     include_test = user.role is not UserRole.TRAINEE
     if kind is ScenarioKind.GENERATED and user.role not in scenarios.STAFF_ROLES:
-        kind = None  # trainees never list generated runs (theirs come in Part 3b)
+        kind = None  # trainees list only their own generated runs, with `mine=true`
     return ScenarioListResponse(
         items=scenarios.list_scenarios(
             db, kind, difficulty, include_test=include_test, user_id=user.id
