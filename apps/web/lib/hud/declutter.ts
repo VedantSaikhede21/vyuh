@@ -33,11 +33,15 @@ export function placeLabels(
   symbolR: number,
   gap = 3,
   obstacles: readonly Rect[] = [],
+  /** Symbols of other items (not labelled in this call) that labels must avoid. */
+  others: readonly { id: string; x: number; y: number }[] = [],
 ): Map<string, { x: number; y: number }> {
-  const symbols = items.map((i) => ({
-    id: i.id,
-    rect: { x: i.x - symbolR, y: i.y - symbolR, w: symbolR * 2, h: symbolR * 2 },
-  }));
+  const symbols = [...items, ...others.filter((o) => !items.some((i) => i.id === o.id))].map(
+    (i) => ({
+      id: i.id,
+      rect: { x: i.x - symbolR, y: i.y - symbolR, w: symbolR * 2, h: symbolR * 2 },
+    }),
+  );
   const order = [...items].sort((a, b) =>
     a.keep === b.keep ? a.id.localeCompare(b.id) : a.keep ? -1 : 1,
   );
@@ -64,4 +68,78 @@ export function placeLabels(
     out.set(it.id, { x: chosen.x, y: chosen.y });
   }
   return out;
+}
+
+/** A symbol drawn on the scope (track or asset) whose label is placed beside it. */
+export interface SymbolLabel extends LabelRequest {
+  /** Placed before zone labels and always drawn (asset, selected track, threat track). */
+  priority: boolean;
+}
+
+/** A zone label with its candidate boxes in order of preference. */
+export interface ZoneLabelRequest {
+  key: string;
+  candidates: readonly Rect[];
+  /** Drawn at its first candidate even with no clear spot (the zone is hovered). */
+  forced: boolean;
+}
+
+/**
+ * PPI label layout by priority (3b close-out): asset, selected-track and
+ * threat-track labels first (always drawn, beside their symbol); then zone
+ * labels at the first candidate clear of everything placed and of every
+ * symbol, or hidden; then the other track labels, dropped when crowded.
+ * `inside` limits zone labels to the scope circle.
+ */
+export function layoutPpiLabels(
+  symbols: readonly SymbolLabel[],
+  zones: readonly ZoneLabelRequest[],
+  bounds: { w: number; h: number },
+  symbolR: number,
+  inside: (r: Rect) => boolean = () => true,
+): {
+  symbols: Map<string, { x: number; y: number }>;
+  zones: Map<string, { x: number; y: number }>;
+} {
+  const first = placeLabels(
+    symbols.filter((s) => s.priority).map((s) => ({ ...s, keep: true })),
+    bounds,
+    symbolR,
+    3,
+    [],
+    symbols,
+  );
+  const placed: Rect[] = symbols.flatMap((s) => {
+    const at = first.get(s.id);
+    return at ? [{ ...at, w: s.w, h: s.h }] : [];
+  });
+  const marks = symbols.map((s) => ({
+    x: s.x - symbolR,
+    y: s.y - symbolR,
+    w: symbolR * 2,
+    h: symbolR * 2,
+  }));
+  const zoneOut = new Map<string, { x: number; y: number }>();
+  for (const z of zones) {
+    const clear = (r: Rect) =>
+      r.x >= 0 &&
+      r.y >= 0 &&
+      r.x + r.w <= bounds.w &&
+      r.y + r.h <= bounds.h &&
+      inside(r) &&
+      ![...placed, ...marks].some((p) => overlaps(p, r));
+    const chosen = z.candidates.find(clear) ?? (z.forced ? z.candidates[0] : undefined);
+    if (!chosen) continue;
+    placed.push(chosen);
+    zoneOut.set(z.key, { x: chosen.x, y: chosen.y });
+  }
+  const rest = placeLabels(
+    symbols.filter((s) => !s.priority),
+    bounds,
+    symbolR,
+    3,
+    placed,
+    symbols,
+  );
+  return { symbols: new Map([...first, ...rest]), zones: zoneOut };
 }
