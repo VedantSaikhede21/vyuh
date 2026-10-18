@@ -7,3 +7,4 @@ apps/api
 packages/shared/schema
 *.md
 apps/web/public/terrain
+graphify-out

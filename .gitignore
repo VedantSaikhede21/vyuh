@@ -47,3 +47,6 @@ apps/web/e2e/checkpoint/
 
 # build-time copy of docs/realism-sources.md (scripts/copy-sources.ts)
 apps/web/.generated/
+
+# graphify code map (generated locally by `pnpm graph`)
+graphify-out/

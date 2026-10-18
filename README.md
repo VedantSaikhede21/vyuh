@@ -32,6 +32,8 @@ pnpm dev           # web on http://localhost:3000, API on http://localhost:8000/
 
 Open http://localhost:3000/login, pick a demo account (e.g. `trainee1@demo`) and sign in — `/train` shows your user and role.
 
+Run `pnpm graph` to regenerate the code map (output is git-ignored).
+
 ## API in Docker (optional)
 
 ```bash
