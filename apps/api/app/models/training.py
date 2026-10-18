@@ -39,6 +39,8 @@ class TrainingSession(Base):
         str_enum(SessionStatus, "session_status"), server_default=SessionStatus.CREATED.value
     )
     last_batch_seq: Mapped[int | None]
+    #: Wall time of the last accepted batch, heartbeats included (abandonment, SPEC §4.5).
+    last_batch_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     is_demo: Mapped[bool] = mapped_column(server_default=text("false"))
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -1,10 +1,10 @@
 """Session lifecycle (SPEC §4.5): create, ingest event batches, complete + score, read."""
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.core.errors import ApiError
@@ -33,6 +33,39 @@ from app.services.scoring.tree import load_tree
 
 ACCEPTS_EVENTS = frozenset({SessionStatus.CREATED, SessionStatus.ACTIVE})
 VIEWER_ROLES = frozenset({UserRole.INSTRUCTOR, UserRole.ADMIN})
+#: An ACTIVE session with no batch (heartbeats count) for this long is ABANDONED (SPEC §4.5).
+IDLE_LIMIT = timedelta(minutes=15)
+
+
+def _idle_since(row: TrainingSession) -> datetime:
+    # Sessions from before last_batch_at existed fall back to their start time.
+    return row.last_batch_at or row.started_at
+
+
+def expire_if_stale(row: TrainingSession, now: datetime | None = None) -> bool:
+    """Mark one ACTIVE session ABANDONED if it has been idle too long (caller commits)."""
+    now = now or datetime.now(UTC)
+    if row.status is not SessionStatus.ACTIVE or now - _idle_since(row) <= IDLE_LIMIT:
+        return False
+    row.status = SessionStatus.ABANDONED
+    row.ended_at = now
+    return True
+
+
+def expire_stale_sessions(db: Session, now: datetime | None = None) -> int:
+    """Startup sweep: every idle ACTIVE session becomes ABANDONED. Returns the count."""
+    now = now or datetime.now(UTC)
+    result = db.execute(
+        update(TrainingSession)
+        .where(
+            TrainingSession.status == SessionStatus.ACTIVE,
+            func.coalesce(TrainingSession.last_batch_at, TrainingSession.started_at)
+            < now - IDLE_LIMIT,
+        )
+        .values(status=SessionStatus.ABANDONED, ended_at=now)
+    )
+    db.commit()
+    return result.rowcount
 
 
 def create_session(db: Session, user: User, body: CreateSessionRequest) -> CreateSessionResponse:
@@ -67,6 +100,8 @@ def get_owned_session(
     row = _get(db, session_id, for_update=for_update)
     if row.user_id != user.id:
         raise ApiError(ErrorCode.FORBIDDEN, "Not your session")
+    if expire_if_stale(row):
+        db.commit()
     return row
 
 
@@ -74,6 +109,8 @@ def get_viewable_session(db: Session, user: User, session_id: uuid.UUID) -> Trai
     row = _get(db, session_id)
     if row.user_id != user.id and user.role not in VIEWER_ROLES:
         raise ApiError(ErrorCode.FORBIDDEN, "Not your session")
+    if expire_if_stale(row):
+        db.commit()
     return row
 
 
@@ -104,7 +141,11 @@ def load_log_state(db: Session, session_id: uuid.UUID) -> LogState:
 def ingest_batch(
     db: Session, user: User, session_id: uuid.UUID, body: EventBatchRequest
 ) -> EventBatchResponse:
-    """Append a batch. Idempotent by batchSeq: a re-sent batch is ignored."""
+    """Append a batch. Idempotent by batchSeq: a re-sent batch is ignored.
+
+    An empty batch is a heartbeat (a paused practice run sends no events): it keeps
+    the session from being abandoned and writes no event rows.
+    """
     row = get_owned_session(db, user, session_id, for_update=True)
     if row.status not in ACCEPTS_EVENTS:
         raise ApiError(
@@ -140,7 +181,9 @@ def ingest_batch(
     )
     advance_state(state, events)
     row.last_batch_seq = body.batch_seq
-    row.status = SessionStatus.ACTIVE
+    row.last_batch_at = datetime.now(UTC)
+    if events:
+        row.status = SessionStatus.ACTIVE
     db.commit()
     return EventBatchResponse(accepted=len(events), last_seq=state.last_seq)
 

@@ -46,6 +46,36 @@ describe('EventBatcher', () => {
     batcher.stop();
   });
 
+  it('sends an empty heartbeat batch after 60 s with nothing new, then carries on', async () => {
+    const { log, calls, batcher } = setup();
+    batcher.start();
+    log.push(ev(0));
+    await vi.advanceTimersByTimeAsync(2000);
+    await vi.advanceTimersByTimeAsync(58_000); // paused: nothing new, no heartbeat yet
+    expect(calls).toEqual([{ seq: 0, seqs: [0] }]);
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(calls).toEqual([
+      { seq: 0, seqs: [0] },
+      { seq: 1, seqs: [] },
+    ]);
+    await vi.advanceTimersByTimeAsync(30_000); // the heartbeat reset the idle clock
+    log.push(ev(1));
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(calls.at(-1)).toEqual({ seq: 2, seqs: [1] });
+    batcher.stop();
+  });
+
+  it('sends no heartbeat from finish()', async () => {
+    const { log, calls, batcher } = setup();
+    batcher.start();
+    log.push(ev(0));
+    await vi.advanceTimersByTimeAsync(120_000);
+    const before = calls.length;
+    await batcher.finish();
+    expect(calls.length).toBe(before);
+    expect(calls.every((c) => c.seqs.length > 0 || c.seq > 0)).toBe(true);
+  });
+
   it('splits large logs into batches of at most 500', async () => {
     const { log, calls, batcher } = setup();
     for (let i = 0; i < 1201; i++) log.push(ev(i));

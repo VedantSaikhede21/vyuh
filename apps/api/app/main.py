@@ -1,5 +1,8 @@
 """FastAPI app factory. Run: `uv run uvicorn app.main:create_app --factory --reload`."""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -10,6 +13,7 @@ from app.core.errors import install_error_handlers
 from app.core.logging import REQUEST_ID_HEADER, configure_logging, request_id_middleware
 from app.routers import auth, health, scenarios, sessions
 from app.services.ratelimit import RateLimiter
+from app.services.sessions import expire_stale_sessions
 
 API_PREFIX = "/api/v1"
 
@@ -18,7 +22,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_level)
 
-    app = FastAPI(title="VYUH API", version=__version__, openapi_url=f"{API_PREFIX}/openapi.json")
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        # Startup sweep: sessions left ACTIVE by closed tabs become ABANDONED (SPEC §4.5).
+        with app.state.session_factory() as db:
+            expire_stale_sessions(db)
+        yield
+
+    app = FastAPI(
+        title="VYUH API",
+        version=__version__,
+        openapi_url=f"{API_PREFIX}/openapi.json",
+        lifespan=lifespan,
+    )
     app.state.settings = settings
     app.state.engine = make_engine(settings.database_url)
     app.state.session_factory = make_session_factory(app.state.engine)
