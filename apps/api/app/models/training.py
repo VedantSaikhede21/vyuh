@@ -47,6 +47,8 @@ class TrainingSession(Base):
     client_meta: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     #: sim-core SIM_VERSION of the client that ran it (null for pre-Part-B sessions).
     sim_version: Mapped[int | None]
+    #: Terrain preset meta.revision at creation (null before Phase 4a; decision 106).
+    terrain_revision: Mapped[int | None]
 
 
 class SessionEvent(Base):

@@ -9,6 +9,7 @@ import {
   SessionStatus,
   UserRole,
 } from './enums.ts';
+import { ContactKillChain } from './aar.ts';
 import { SimEvent } from './events.ts';
 import { named } from './registry.ts';
 import { Scenario, TimeOfDay, Weather } from './scenario.ts';
@@ -154,12 +155,29 @@ export const SessionDetailResponse = named(
     endedAt: z.iso.datetime({ offset: true }).nullable(),
     /** Null for sessions created before sim versions were recorded. */
     simVersion: z.int().min(1).nullable(),
+    /** Terrain preset `meta.revision` at session creation; null before Phase 4a. */
+    terrainRevision: z.int().min(1).nullable(),
     score: Score.nullable(),
     /** Null until the log holds a SESSION_ENDED event. */
     ended: SessionEnded.nullable(),
   }),
 );
 export type SessionDetailResponse = z.infer<typeof SessionDetailResponse>;
+
+/**
+ * GET /aar/sessions/{id} (COMPLETED sessions only): everything a replay needs —
+ * the scenario, the stored event log (ground truth included) and the kill chain.
+ */
+export const AarSessionResponse = named(
+  'AarSessionResponse',
+  z.object({
+    session: SessionDetailResponse,
+    scenario: Scenario,
+    events: z.array(SimEvent),
+    killChain: z.array(ContactKillChain),
+  }),
+);
+export type AarSessionResponse = z.infer<typeof AarSessionResponse>;
 
 // ---- Scenarios (§11.1) --------------------------------------------------------
 

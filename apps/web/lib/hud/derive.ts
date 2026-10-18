@@ -1,4 +1,11 @@
-import { ThreatClass, type AltitudeBand, type Asset, type Roe, type Zone } from '@vyuh/shared';
+import {
+  ThreatClass,
+  altitudeBandOf,
+  type AltitudeBand,
+  type Asset,
+  type Roe,
+  type Zone,
+} from '@vyuh/shared';
 import { noKineticZoneAt, type EoTrackMode } from '@vyuh/sim-core';
 import type { EffectorView, HudSnapshot, RfStrobeView, TrackView } from '@/lib/sim/store';
 
@@ -6,12 +13,8 @@ import type { EffectorView, HudSnapshot, RfStrobeView, TrackView } from '@/lib/s
 // only what the operator can see — track estimates, RF strobes, the trainee's
 // own calls and effector status — never contact ids or ground truth.
 
-/** SPEC §4.3 altitude bands: LOW < 50 m, MEDIUM 50–150 m, HIGH > 150 m AGL. */
-export function altitudeBand(aglM: number): AltitudeBand {
-  if (aglM < 50) return 'LOW';
-  if (aglM <= 150) return 'MEDIUM';
-  return 'HIGH';
-}
+/** SPEC §4.3 altitude bands (one rule, in packages/shared). */
+export const altitudeBand = altitudeBandOf;
 
 export const ALTITUDE_BAND_LABEL: Record<AltitudeBand, string> = {
   LOW: 'LOW',

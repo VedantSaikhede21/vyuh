@@ -189,6 +189,16 @@ def _load(root: Path, preset: str) -> Terrain:
     return Terrain(meta=meta, heights=heights, buildings=buildings)
 
 
+def preset_revision(preset: str) -> int:
+    """A preset's content revision (`meta.revision`, absent = 1). Presets without
+    files (the built-in PROCEDURAL_HILLS) are revision 1."""
+    path = terrain_dir() / preset / "meta.json"
+    if not preset.replace("_", "").isalnum() or not path.is_file():
+        return 1
+    meta = TerrainPresetMeta.model_validate_json(path.read_text("utf-8"))
+    return meta.revision or 1
+
+
 def load_terrain(preset: str) -> Terrain:
     """The preset's terrain (cached). Unknown preset → VALIDATION_ERROR."""
     return _load(terrain_dir(), preset)

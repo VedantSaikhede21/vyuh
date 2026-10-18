@@ -50,6 +50,8 @@ def test_create_session_returns_scenario(
     assert row.sim_version == 7
     detail = client.get(f"/api/v1/sessions/{body['sessionId']}", headers=auth_header(user))
     assert detail.json()["simVersion"] == 7
+    # S01 is on the built-in PROCEDURAL_HILLS preset: revision 1 (decision 106).
+    assert detail.json()["terrainRevision"] == row.terrain_revision == 1
     assert (row.user_id, row.status, row.mode.value) == (
         user.id,
         SessionStatus.CREATED,

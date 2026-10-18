@@ -4,6 +4,35 @@
   "title": "VyuhSchemas",
   "description": "GENERATED from packages/shared (zod). Do not edit — run `pnpm gen:schemas`.",
   "$defs": {
+    "AarSessionResponse": {
+      "type": "object",
+      "properties": {
+        "session": {
+          "$ref": "#/$defs/SessionDetailResponse"
+        },
+        "scenario": {
+          "$ref": "#/$defs/Scenario"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SimEvent"
+          }
+        },
+        "killChain": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContactKillChain"
+          }
+        }
+      },
+      "required": [
+        "session",
+        "scenario",
+        "events",
+        "killChain"
+      ]
+    },
     "Activity": {
       "type": "string",
       "enum": [
@@ -622,6 +651,50 @@
       "required": [
         "x",
         "z"
+      ]
+    },
+    "ContactKillChain": {
+      "type": "object",
+      "properties": {
+        "contactId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "isThreat": {
+          "type": "boolean"
+        },
+        "trueClass": {
+          "$ref": "#/$defs/ContactClass"
+        },
+        "trueAffiliation": {
+          "$ref": "#/$defs/Affiliation"
+        },
+        "trackIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "outcome": {
+          "$ref": "#/$defs/ContactOutcome"
+        },
+        "stages": {
+          "minItems": 6,
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KillChainStep"
+          }
+        }
+      },
+      "required": [
+        "contactId",
+        "isThreat",
+        "trueClass",
+        "trueAffiliation",
+        "trackIds",
+        "stages"
       ]
     },
     "ContactNeutralisedEvent": {
@@ -1306,6 +1379,7 @@
         "RESPONSE_OUTCOME",
         "AI_SUGGESTION_SHOWN",
         "SESSION_ENDED",
+        "REPORT_TRUTH",
         "TRACK_SELECTED",
         "CAMERA_SLEWED",
         "MARKED_DETECTED",
@@ -1420,6 +1494,61 @@
         "DECIDE",
         "RESPOND",
         "ASSESS"
+      ]
+    },
+    "KillChainStatus": {
+      "type": "string",
+      "enum": [
+        "OK",
+        "LATE",
+        "WRONG",
+        "MISSED",
+        "NOT_APPLICABLE"
+      ]
+    },
+    "KillChainStep": {
+      "type": "object",
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/KillChainStage"
+        },
+        "availableTMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "actionTMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "latencyS": {
+          "type": "number",
+          "minimum": 0
+        },
+        "action": {
+          "type": "string"
+        },
+        "truth": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/KillChainStatus"
+        },
+        "feedback": {
+          "type": "string"
+        },
+        "jumpTMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "stage",
+        "status",
+        "feedback",
+        "jumpTMs"
       ]
     },
     "LatLon": {
@@ -1768,6 +1897,94 @@
         "tMs",
         "type",
         "payload"
+      ]
+    },
+    "ReportTruthContact": {
+      "type": "object",
+      "properties": {
+        "contactId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "x": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "aglM": {
+          "type": "number"
+        },
+        "headingDeg": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 360
+        },
+        "speedMps": {
+          "type": "number",
+          "minimum": 0
+        },
+        "activity": {
+          "$ref": "#/$defs/Activity"
+        }
+      },
+      "required": [
+        "contactId",
+        "x",
+        "z",
+        "aglM",
+        "headingDeg",
+        "speedMps",
+        "activity"
+      ]
+    },
+    "ReportTruthEvent": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "type": {
+          "type": "string",
+          "const": "REPORT_TRUTH"
+        },
+        "payload": {
+          "$ref": "#/$defs/ReportTruthPayload"
+        }
+      },
+      "required": [
+        "seq",
+        "tMs",
+        "type",
+        "payload"
+      ]
+    },
+    "ReportTruthPayload": {
+      "type": "object",
+      "properties": {
+        "reportSeq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "contacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ReportTruthContact"
+          }
+        }
+      },
+      "required": [
+        "reportSeq",
+        "contacts"
       ]
     },
     "ReportedClass": {
@@ -2544,6 +2761,18 @@
             }
           ]
         },
+        "terrainRevision": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "score": {
           "anyOf": [
             {
@@ -2574,6 +2803,7 @@
         "startedAt",
         "endedAt",
         "simVersion",
+        "terrainRevision",
         "score",
         "ended"
       ]
@@ -2746,6 +2976,9 @@
           "$ref": "#/$defs/SessionEndedEvent"
         },
         {
+          "$ref": "#/$defs/ReportTruthEvent"
+        },
+        {
           "$ref": "#/$defs/TrackSelectedEvent"
         },
         {
@@ -2788,6 +3021,7 @@
           "RESPONSE_OUTCOME": "#/$defs/ResponseOutcomeEvent",
           "AI_SUGGESTION_SHOWN": "#/$defs/AiSuggestionShownEvent",
           "SESSION_ENDED": "#/$defs/SessionEndedEvent",
+          "REPORT_TRUTH": "#/$defs/ReportTruthEvent",
           "TRACK_SELECTED": "#/$defs/TrackSelectedEvent",
           "CAMERA_SLEWED": "#/$defs/CameraSlewedEvent",
           "MARKED_DETECTED": "#/$defs/MarkedDetectedEvent",
@@ -2829,7 +3063,8 @@
         "EO_IDENTIFIABLE",
         "RESPONSE_OUTCOME",
         "AI_SUGGESTION_SHOWN",
-        "SESSION_ENDED"
+        "SESSION_ENDED",
+        "REPORT_TRUTH"
       ]
     },
     "TerrainPresetFiles": {

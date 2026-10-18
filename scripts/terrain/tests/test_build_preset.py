@@ -283,7 +283,7 @@ def test_footprint_tiles_without_osm(dem: Path, tmp_path: Path) -> None:
     )
     assert meta["buildingsStatus"] == "OK"
     assert meta["buildingCount"] == 1
-    assert "revision" not in meta  # absent = 1
+    assert meta["revision"] == 1  # always written (decision 106)
     assert not any("OpenStreetMap" in a for a in meta["attribution"])
     assert any("Microsoft" in a for a in meta["attribution"])
 
