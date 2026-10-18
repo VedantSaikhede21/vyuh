@@ -101,6 +101,9 @@ export const api = {
   devLogin: (email: string): Promise<TokenResponseT> =>
     apiFetch('/auth/dev-login', TokenResponse, { method: 'POST', body: { email }, auth: false }),
   listScenarios: (signal?: AbortSignal) => apiFetch('/scenarios', ScenarioListResponse, { signal }),
+  /** The caller's own generated scenarios, newest first. */
+  listOwnGenerated: (signal?: AbortSignal) =>
+    apiFetch('/scenarios?mine=true', ScenarioListResponse, { signal }),
   getScenario: (id: string, signal?: AbortSignal) =>
     apiFetch(`/scenarios/${id}`, ScenarioDetailResponse, { signal }),
   /** POST /scenarios/generate; a 429 carries `retryAfterS` in ApiError.details. */

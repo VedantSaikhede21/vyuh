@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { Panel, PanelBody, PanelHeader, Readout, Skeleton } from '@/components/hud/primitives';
 import { RequireAuth } from '@/components/require-auth';
 import { GeneratePanel } from '@/components/training/generate-panel';
+import { OwnGeneratedTable } from '@/components/training/own-generated';
 import { ScenarioTable } from '@/components/training/scenario-table';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth';
@@ -55,9 +56,12 @@ export default function TrainPage() {
             <OperatorPanel />
             <GenerateForUser />
           </div>
-          <Suspense fallback={<Skeleton label="Loading scenarios" />}>
-            <ScenarioTable />
-          </Suspense>
+          <div className="space-y-4">
+            <Suspense fallback={<Skeleton label="Loading scenarios" />}>
+              <ScenarioTable />
+            </Suspense>
+            <OwnGeneratedTable />
+          </div>
         </div>
       </div>
     </RequireAuth>

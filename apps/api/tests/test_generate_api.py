@@ -138,6 +138,32 @@ def test_generated_runs_stay_out_of_the_library_list(
     assert [i["id"] for i in listed] == [made["scenarioId"]]
 
 
+def test_mine_lists_only_the_callers_generated_runs_newest_first(
+    client: TestClient,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    auth_header: Headers,
+) -> None:
+    trainee = auth_header(make_user())
+    other = auth_header(make_user(email="other@test"))
+    first = generate(client, trainee, TRAINEE_BODY).json()
+    second = generate(client, trainee, TRAINEE_BODY | {"seed": 78}).json()
+    generate(client, other, TRAINEE_BODY | {"seed": 79})
+
+    def mine(headers: dict[str, str]) -> list[dict[str, Any]]:
+        res = client.get("/api/v1/scenarios?mine=true", headers=headers)
+        assert res.status_code == 200, res.text
+        items: list[dict[str, Any]] = res.json()["items"]
+        return items
+
+    items = mine(trainee)
+    assert [i["id"] for i in items] == [second["scenarioId"], first["scenarioId"]]
+    assert {i["kind"] for i in items} == {"GENERATED"}
+    assert items[0]["bestScore"] is None
+    assert len(mine(other)) == 1
+    assert mine(auth_header(make_user(UserRole.INSTRUCTOR, "i@test"))) == []
+
+
 def test_visible_by_id_to_creator_and_staff_only(
     client: TestClient, make_user: Callable[..., User], auth_header: Headers
 ) -> None:

@@ -71,37 +71,9 @@ function FilterSelect({
   );
 }
 
-export function ScenarioTable() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-  const { filters, sort } = useMemo(
-    () => readQuery(new URLSearchParams(params.toString())),
-    [params],
-  );
-  const [items, setItems] = useState<ScenarioListItem[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+/** Time of day per row, computed from the preset meta (as in the sim); the stored flag until it loads. */
+export function useTimeOfDay(items: ScenarioListItem[] | null) {
   const [metas, setMetas] = useState<Record<string, TerrainPresetMeta>>({});
-  const [opening, setOpening] = useState<string | null>(null);
-  const [focus, setFocus] = useState(0);
-  const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
-
-  const fetchList = useCallback((signal?: AbortSignal) => {
-    api
-      .listScenarios(signal)
-      .then((r) => setItems(r.items))
-      .catch((err: unknown) => {
-        if (!signal?.aborted) setError(err instanceof Error ? err.message : 'Network error');
-      });
-  }, []);
-
-  useEffect(() => {
-    const ctrl = new AbortController();
-    fetchList(ctrl.signal);
-    return () => ctrl.abort();
-  }, [fetchList]);
-
-  // Time of day is computed from the preset meta (as in the sim); the stored flag until it loads.
   useEffect(() => {
     if (!items) return;
     let live = true;
@@ -128,18 +100,27 @@ export function ScenarioTable() {
     (s: ScenarioListItem): TimeBandLabel => timeOf(s)?.label ?? (s.isNight ? 'Night' : 'Day'),
     [timeOf],
   );
+  return { timeOf, label };
+}
 
-  const rows = useMemo(
-    () => (items ? filterAndSort(items, filters, sort, label) : []),
-    [items, filters, sort, label],
-  );
-
-  const setQuery = (next: Partial<ListFilters>, nextSort: SortKey = sort) => {
-    router.replace(`${pathname}${writeQuery({ ...filters, ...next }, nextSort)}`, {
-      scroll: false,
-    });
-    setFocus(0);
-  };
+/** Scenario rows: arrows / Home / End move, Enter or a click opens the briefing. */
+export function ScenarioRowsTable({
+  rows,
+  ariaLabel,
+  testId,
+  timeOf,
+  label,
+}: {
+  rows: ScenarioListItem[];
+  ariaLabel: string;
+  testId: string;
+} & ReturnType<typeof useTimeOfDay>) {
+  const router = useRouter();
+  const [opening, setOpening] = useState<string | null>(null);
+  const [focus, setFocus] = useState(0);
+  const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
+  // A filter change can shrink the list under the focused row.
+  const focused = Math.min(focus, Math.max(rows.length - 1, 0));
 
   const open = (s: ScenarioListItem) => {
     setOpening(s.id);
@@ -162,6 +143,150 @@ export function ScenarioTable() {
       const s = rows[i];
       if (s) open(s);
     }
+  };
+
+  return (
+    <table className="w-full border-collapse" aria-label={ariaLabel} data-testid={testId}>
+      <thead>
+        <tr>
+          <th className={cn(TH, 'w-[4.5rem]')}>
+            <span className="sr-only">Terrain</span>
+          </th>
+          <th className={cn(TH, 'w-full')}>Scenario</th>
+          <th className={TH}>Difficulty</th>
+          <th className={TH}>Time</th>
+          <th className={TH}>Conditions</th>
+          <th className={TH}>Tags</th>
+          <th className={cn(TH, 'text-right')}>Duration</th>
+          <th className={cn(TH, 'text-right')}>Best</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((s, i) => {
+          const tod = timeOf(s);
+          const tl = label(s);
+          const Icon = TIME_ICON[tl];
+          const cond = conditions(s.weather);
+          return (
+            <tr
+              key={s.id}
+              ref={(el) => {
+                rowRefs.current[i] = el;
+              }}
+              tabIndex={i === focused ? 0 : -1}
+              data-testid={`scenario-${s.code ?? s.id}`}
+              aria-label={`${s.code ? `${s.code} ` : ''}${s.name}: open the briefing`}
+              onClick={() => open(s)}
+              onKeyDown={(e) => onKey(e, i)}
+              onFocus={() => setFocus(i)}
+              className={cn(
+                'cursor-pointer border-t border-line-1 transition-colors duration-150 ease-ui hover:bg-bg-2 focus-visible:bg-bg-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-select',
+                opening === s.id && 'bg-bg-3',
+              )}
+            >
+              <td className="h-8 w-[3.25rem] min-w-[3.25rem] py-0 pl-2">
+                {/* Decorative: the terrain is named in the row's Conditions tooltip. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/terrain/${s.terrainPreset}/thumb.png`}
+                  width={64}
+                  height={40}
+                  alt=""
+                  className="block h-[26px] w-[42px] max-w-none shrink-0 rounded-sm border border-line-1 object-cover"
+                />
+              </td>
+              <td className={cn(TD, 'text-body')}>
+                {s.code && <span className="mr-2 text-readout text-text-2">{s.code}</span>}
+                <span className="text-text-1">{s.name}</span>
+                {opening === s.id && (
+                  <span className="ml-2 text-small text-text-2">Opening briefing…</span>
+                )}
+              </td>
+              <td className={TD}>
+                <Pips value={s.difficulty} />
+              </td>
+              <td className={cn(TD, 'text-body text-text-2')}>
+                <span
+                  className="flex items-center gap-1.5"
+                  title={tod ? `Sun ${tod.sunElDeg.toFixed(1)}° · ${s.date} ${s.time}` : undefined}
+                >
+                  <Icon size={16} strokeWidth={1.5} aria-hidden />
+                  {tl}
+                </span>
+              </td>
+              <td className={cn(TD, 'text-body text-text-2')} title={terrainLabel(s.terrainPreset)}>
+                {cond.label}
+                <span className="text-readout text-text-1">
+                  {' '}
+                  {visibilityKm(s.weather.visibilityM)}
+                </span>
+                <span className="text-text-3"> km</span>
+              </td>
+              <td className={TD}>
+                <span className="flex gap-1">
+                  {shownTags(s).map((t) => (
+                    <Badge key={t} tone={t === 'test' ? 'default' : 'strong'}>
+                      {t}
+                    </Badge>
+                  ))}
+                </span>
+              </td>
+              <td className={cn(TD, 'text-right text-readout')}>
+                {Math.round(s.durationS / 60)}
+                <span className="text-text-3"> min</span>
+              </td>
+              <td className={cn(TD, 'text-right text-readout')} data-testid="best-score">
+                {s.bestScore === null ? (
+                  <span className="text-text-3">—</span>
+                ) : (
+                  Math.round(s.bestScore)
+                )}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
+export function ScenarioTable() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const { filters, sort } = useMemo(
+    () => readQuery(new URLSearchParams(params.toString())),
+    [params],
+  );
+  const [items, setItems] = useState<ScenarioListItem[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchList = useCallback((signal?: AbortSignal) => {
+    api
+      .listScenarios(signal)
+      .then((r) => setItems(r.items))
+      .catch((err: unknown) => {
+        if (!signal?.aborted) setError(err instanceof Error ? err.message : 'Network error');
+      });
+  }, []);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetchList(ctrl.signal);
+    return () => ctrl.abort();
+  }, [fetchList]);
+
+  const { timeOf, label } = useTimeOfDay(items);
+
+  const rows = useMemo(
+    () => (items ? filterAndSort(items, filters, sort, label) : []),
+    [items, filters, sort, label],
+  );
+
+  const setQuery = (next: Partial<ListFilters>, nextSort: SortKey = sort) => {
+    router.replace(`${pathname}${writeQuery({ ...filters, ...next }, nextSort)}`, {
+      scroll: false,
+    });
   };
 
   const presets = [...new Set(items?.map((s) => s.terrainPreset) ?? [])].sort();
@@ -261,116 +386,13 @@ export function ScenarioTable() {
         />
       )}
       {rows.length > 0 && (
-        <table
-          className="w-full border-collapse"
-          aria-label="Scenarios"
-          data-testid="scenario-table"
-        >
-          <thead>
-            <tr>
-              <th className={cn(TH, 'w-[4.5rem]')}>
-                <span className="sr-only">Terrain</span>
-              </th>
-              <th className={cn(TH, 'w-full')}>Scenario</th>
-              <th className={TH}>Difficulty</th>
-              <th className={TH}>Time</th>
-              <th className={TH}>Conditions</th>
-              <th className={TH}>Tags</th>
-              <th className={cn(TH, 'text-right')}>Duration</th>
-              <th className={cn(TH, 'text-right')}>Best</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((s, i) => {
-              const tod = timeOf(s);
-              const tl = label(s);
-              const Icon = TIME_ICON[tl];
-              const cond = conditions(s.weather);
-              return (
-                <tr
-                  key={s.id}
-                  ref={(el) => {
-                    rowRefs.current[i] = el;
-                  }}
-                  tabIndex={i === focus ? 0 : -1}
-                  data-testid={`scenario-${s.code ?? s.id}`}
-                  aria-label={`${s.code ? `${s.code} ` : ''}${s.name}: open the briefing`}
-                  onClick={() => open(s)}
-                  onKeyDown={(e) => onKey(e, i)}
-                  onFocus={() => setFocus(i)}
-                  className={cn(
-                    'cursor-pointer border-t border-line-1 transition-colors duration-150 ease-ui hover:bg-bg-2 focus-visible:bg-bg-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-select',
-                    opening === s.id && 'bg-bg-3',
-                  )}
-                >
-                  <td className="h-8 w-[3.25rem] min-w-[3.25rem] py-0 pl-2">
-                    {/* Decorative: the terrain is named in the row's Conditions tooltip. */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`/terrain/${s.terrainPreset}/thumb.png`}
-                      width={64}
-                      height={40}
-                      alt=""
-                      className="block h-[26px] w-[42px] max-w-none shrink-0 rounded-sm border border-line-1 object-cover"
-                    />
-                  </td>
-                  <td className={cn(TD, 'text-body')}>
-                    {s.code && <span className="mr-2 text-readout text-text-2">{s.code}</span>}
-                    <span className="text-text-1">{s.name}</span>
-                    {opening === s.id && (
-                      <span className="ml-2 text-small text-text-2">Opening briefing…</span>
-                    )}
-                  </td>
-                  <td className={TD}>
-                    <Pips value={s.difficulty} />
-                  </td>
-                  <td className={cn(TD, 'text-body text-text-2')}>
-                    <span
-                      className="flex items-center gap-1.5"
-                      title={
-                        tod ? `Sun ${tod.sunElDeg.toFixed(1)}° · ${s.date} ${s.time}` : undefined
-                      }
-                    >
-                      <Icon size={16} strokeWidth={1.5} aria-hidden />
-                      {tl}
-                    </span>
-                  </td>
-                  <td
-                    className={cn(TD, 'text-body text-text-2')}
-                    title={terrainLabel(s.terrainPreset)}
-                  >
-                    {cond.label}
-                    <span className="text-readout text-text-1">
-                      {' '}
-                      {visibilityKm(s.weather.visibilityM)}
-                    </span>
-                    <span className="text-text-3"> km</span>
-                  </td>
-                  <td className={TD}>
-                    <span className="flex gap-1">
-                      {shownTags(s).map((t) => (
-                        <Badge key={t} tone={t === 'test' ? 'default' : 'strong'}>
-                          {t}
-                        </Badge>
-                      ))}
-                    </span>
-                  </td>
-                  <td className={cn(TD, 'text-right text-readout')}>
-                    {Math.round(s.durationS / 60)}
-                    <span className="text-text-3"> min</span>
-                  </td>
-                  <td className={cn(TD, 'text-right text-readout')} data-testid="best-score">
-                    {s.bestScore === null ? (
-                      <span className="text-text-3">—</span>
-                    ) : (
-                      Math.round(s.bestScore)
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <ScenarioRowsTable
+          rows={rows}
+          ariaLabel="Scenarios"
+          testId="scenario-table"
+          timeOf={timeOf}
+          label={label}
+        />
       )}
       {filtered && rows.length > 0 && (
         <p className="border-t border-line-1 px-3 py-1.5 text-small text-text-3">

@@ -107,8 +107,8 @@ def best_scores(db: Session, user_id: uuid.UUID) -> dict[uuid.UUID, float]:
 # Scenarios tagged `test` (S11-S14) verify sim behaviour; they are not part of the
 # training library (SPEC §7.2), so trainees do not see them in the list.
 TEST_TAG = "test"
-# Generated scenarios (Phase 3a, plan Q6) are not part of the library list; the
-# 3b list redesign decides how a trainee's generated runs are shown.
+# Generated scenarios (Phase 3a, plan Q6) are not part of the library list; each
+# trainee sees their own under "My generated" (`list_own_generated`, Phase 4a).
 GENERATED_TAG = "generated"
 STAFF_ROLES = frozenset({UserRole.INSTRUCTOR, UserRole.ADMIN})
 #: Fields a trainee may set on POST /scenarios/generate (requirements 3a.6).
@@ -134,6 +134,17 @@ def list_scenarios(
     if difficulty is not None:
         query = query.where(ScenarioRow.difficulty == difficulty)
     best = best_scores(db, user_id) if user_id is not None else {}
+    return [list_item(row, best.get(row.id)) for row in db.scalars(query)]
+
+
+def list_own_generated(db: Session, user_id: uuid.UUID) -> list[ScenarioListItem]:
+    """The user's own generated scenarios, newest first, with their best scores."""
+    query = (
+        select(ScenarioRow)
+        .where(ScenarioRow.kind == ScenarioKind.GENERATED, ScenarioRow.created_by == user_id)
+        .order_by(ScenarioRow.created_at.desc(), ScenarioRow.id)
+    )
+    best = best_scores(db, user_id)
     return [list_item(row, best.get(row.id)) for row in db.scalars(query)]
 
 
