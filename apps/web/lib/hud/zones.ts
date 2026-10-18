@@ -1,7 +1,121 @@
-import type { Point2, Zone } from '@vyuh/shared';
+import type { AreaZone, Point2, Zone } from '@vyuh/shared';
+import { pointInPolygon } from '@vyuh/sim-core';
 
 // Zone geometry helpers for drawing (3D and PPI). Display only — the sim's
 // NO_KINETIC gate lives in sim-core (decision 69).
+
+/** NO_KINETIC zones with the same name and at most this far apart share one label. */
+export const ZONE_GROUP_GAP_M = 500;
+/** A grouped zone's id shows while the selected track is this close to it… */
+export const ZONE_NEAR_M = 300;
+/** …or is predicted (straight line, current speed) to enter it within this time. */
+export const ZONE_LOOKAHEAD_S = 30;
+
+/** One label on the tactical view and the PPI: a single zone or a cluster. */
+export interface ZoneLabelGroup {
+  /** The zone id for a single zone; "group:<first id>" for a cluster. */
+  key: string;
+  label: string;
+  /** PPI text: the id for a single zone, the cluster label otherwise. */
+  shortLabel: string;
+  zones: AreaZone[];
+}
+
+function bbox(polygon: readonly Point2[]) {
+  const xs = polygon.map((p) => p[0]);
+  const zs = polygon.map((p) => p[1]);
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minZ: Math.min(...zs),
+    maxZ: Math.max(...zs),
+  };
+}
+
+/** Bounding box of several polygons. */
+export function zonesBox(zones: readonly AreaZone[]) {
+  return bbox(zones.flatMap((z) => z.polygon));
+}
+
+/**
+ * NO_KINETIC zones grouped for labelling (Checkpoint B, decision 98): zones with
+ * the same name whose bounding boxes are within ZONE_GROUP_GAP_M of each other
+ * (single link) share one label, "NO KINETIC · TOWN"; a lone zone keeps its own.
+ */
+export function groupNoKineticZones(zones: readonly Zone[]): ZoneLabelGroup[] {
+  const area = zones.filter((z): z is AreaZone => z.kind === 'NO_KINETIC');
+  const boxes = area.map((z) => bbox(z.polygon));
+  const near = (i: number, j: number) => {
+    const a = boxes[i]!;
+    const b = boxes[j]!;
+    const gx = Math.max(0, Math.max(a.minX, b.minX) - Math.min(a.maxX, b.maxX));
+    const gz = Math.max(0, Math.max(a.minZ, b.minZ) - Math.min(a.maxZ, b.maxZ));
+    return Math.hypot(gx, gz) <= ZONE_GROUP_GAP_M;
+  };
+  const seen = new Set<number>();
+  const groups: ZoneLabelGroup[] = [];
+  for (let i = 0; i < area.length; i++) {
+    if (seen.has(i)) continue;
+    seen.add(i);
+    const members = [i];
+    for (let k = 0; k < members.length; k++) {
+      for (let j = 0; j < area.length; j++) {
+        if (seen.has(j) || area[j]!.name !== area[i]!.name || !near(members[k]!, j)) continue;
+        seen.add(j);
+        members.push(j);
+      }
+    }
+    const list = members.sort((a, b) => a - b).map((m) => area[m]!);
+    const first = list[0]!;
+    const cluster = ['NO KINETIC', first.name?.toUpperCase()].filter(Boolean).join(' · ');
+    groups.push(
+      list.length === 1
+        ? { key: first.id, label: zoneLabel(first), shortLabel: first.id, zones: list }
+        : { key: `group:${first.id}`, label: cluster, shortLabel: cluster, zones: list },
+    );
+  }
+  return groups;
+}
+
+function distanceToPolygon(polygon: readonly Point2[], x: number, z: number): number {
+  if (pointInPolygon(x, z, polygon)) return 0;
+  const p = nearestPoint([...polygon, polygon[0]!], [x, z]);
+  return Math.hypot(p[0] - x, p[1] - z);
+}
+
+/**
+ * Ids of the zones the selected track is inside, within ZONE_NEAR_M of, or
+ * heading into within ZONE_LOOKAHEAD_S (straight line at its current speed).
+ */
+export function zonesNearTrack(
+  zones: readonly AreaZone[],
+  track: { x: number; z: number; headingDeg: number | null; speedMps: number | null },
+): Set<string> {
+  const out = new Set<string>();
+  const a = ((track.headingDeg ?? 0) * Math.PI) / 180;
+  const v = track.speedMps ?? 0;
+  for (const zone of zones) {
+    if (distanceToPolygon(zone.polygon, track.x, track.z) <= ZONE_NEAR_M) {
+      out.add(zone.id);
+      continue;
+    }
+    for (let t = 5; v > 0 && t <= ZONE_LOOKAHEAD_S; t += 5) {
+      if (
+        pointInPolygon(track.x + Math.sin(a) * v * t, track.z + Math.cos(a) * v * t, zone.polygon)
+      ) {
+        out.add(zone.id);
+        break;
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Zone ids revealed by the pointer (a hovered cluster label in 3D, a hovered
+ * zone on the PPI). Written by the hover handlers, read every frame.
+ */
+export const hoveredZoneIds = new Set<string>();
 
 /** Upper-case label for a zone: "Z1 · NO KINETIC · VILLAGE", "B1 · BORDER". */
 export function zoneLabel(zone: Zone): string {

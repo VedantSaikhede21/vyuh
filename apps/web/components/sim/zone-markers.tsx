@@ -2,11 +2,18 @@
 
 import { Line } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import type { Point2, Zone } from '@vyuh/shared';
+import type { AreaZone, Point2, Zone } from '@vyuh/shared';
 import { toThree } from '@vyuh/sim-core';
 import { useEffect, useMemo } from 'react';
 import { Vector3 } from 'three';
-import { centroid, densify, hatchSegments, nearestPoint } from '@/lib/hud/zones';
+import {
+  centroid,
+  densify,
+  groupNoKineticZones,
+  hatchSegments,
+  nearestPoint,
+  type ZoneLabelGroup,
+} from '@/lib/hud/zones';
 import { ZONES } from '@/lib/theme/scene-colours';
 import { useSimRuntime } from './sim-context';
 import { zoneLabelNdc } from './zone-labels';
@@ -42,7 +49,7 @@ function LabelAnchor({ id, at }: { id: string; at: V3 }) {
   return null;
 }
 
-function NoKineticZone({ zone }: { zone: Extract<Zone, { polygon: Point2[] }> }) {
+function NoKineticZone({ zone, member }: { zone: AreaZone; member: boolean }) {
   const ground = useGround();
   const { outline, hatch, label } = useMemo(() => {
     const ring = densify(zone.polygon, STEP_M, true).map((p) => ground(p));
@@ -50,10 +57,8 @@ function NoKineticZone({ zone }: { zone: Extract<Zone, { polygon: Point2[] }> })
       const pts = densify([a, b], STEP_M).map((p) => ground(p, LIFT_M - 1));
       return pts.slice(1).flatMap((p, i) => [pts[i]!, p]);
     });
-    // Label just beyond the zone's north edge, so it does not cover the zone.
-    const [cx] = centroid(zone.polygon);
-    const north = Math.max(...zone.polygon.map((p) => p[1]));
-    return { outline: ring, hatch: segs, label: ground([cx, north + 40], 25) };
+    // A cluster member's id (shown on demand) sits over the zone itself.
+    return { outline: ring, hatch: segs, label: ground(centroid(zone.polygon), 25) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zone]);
   return (
@@ -62,9 +67,22 @@ function NoKineticZone({ zone }: { zone: Extract<Zone, { polygon: Point2[] }> })
       {hatch.length > 0 && (
         <Line points={hatch} segments color={ZONES.hatchTerrain} lineWidth={1} />
       )}
-      <LabelAnchor id={zone.id} at={label} />
+      {member && <LabelAnchor id={zone.id} at={label} />}
     </group>
   );
+}
+
+/** One label per zone group, just beyond its north edge so it does not cover the zones. */
+function GroupLabelAnchor({ group }: { group: ZoneLabelGroup }) {
+  const ground = useGround();
+  const at = useMemo(() => {
+    const points: Point2[] = group.zones.flatMap((z) => z.polygon);
+    const [cx] = centroid(points);
+    const north = Math.max(...points.map((p) => p[1]));
+    return ground([cx, north + 40], 25);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [group]);
+  return <LabelAnchor id={group.key} at={at} />;
 }
 
 function BorderLine({ zone }: { zone: Extract<Zone, { kind: 'BORDER_LINE' }> }) {
@@ -96,17 +114,22 @@ function BorderLine({ zone }: { zone: Extract<Zone, { kind: 'BORDER_LINE' }> }) 
  */
 export function ZoneMarkers() {
   const rt = useSimRuntime();
+  const groups = useMemo(() => groupNoKineticZones(rt.scenario.zones), [rt.scenario.zones]);
   // Labels of a previous session must not linger in the shared map.
   useEffect(() => () => zoneLabelNdc.clear(), []);
   return (
     <>
       {rt.scenario.zones.map((z) =>
-        z.kind === 'BORDER_LINE' ? (
-          <BorderLine key={z.id} zone={z} />
-        ) : z.kind === 'NO_KINETIC' ? (
-          <NoKineticZone key={z.id} zone={z} />
-        ) : null,
+        z.kind === 'BORDER_LINE' ? <BorderLine key={z.id} zone={z} /> : null,
       )}
+      {groups.map((g) => (
+        <group key={g.key}>
+          {g.zones.map((z) => (
+            <NoKineticZone key={z.id} zone={z} member={g.zones.length > 1} />
+          ))}
+          <GroupLabelAnchor group={g} />
+        </group>
+      ))}
     </>
   );
 }

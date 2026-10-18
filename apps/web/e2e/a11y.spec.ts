@@ -48,6 +48,20 @@ test('no horizontal scroll at 1366×768', async ({ page }) => {
   await noHorizontalScroll(page, 'result');
 });
 
+test('briefing: mode toggle and Begin stay in view while the mission card scrolls', async ({
+  page,
+}) => {
+  await login(page, 'trainee1@demo');
+  await openBriefing(page, 'S06');
+  const body = page.getByTestId('mission-body');
+  // At 1366×768 the long S06 card scrolls; its footer must not.
+  expect(await body.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+  await body.evaluate((el) => el.scrollTo(0, el.scrollHeight));
+  await expect(page.getByTestId('start-session')).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('radiogroup', { name: 'Session mode' })).toBeInViewport({ ratio: 1 });
+  expect(await page.evaluate(() => document.scrollingElement!.scrollTop)).toBe(0);
+});
+
 for (const vp of [
   { width: 1366, height: 768 },
   { width: 1920, height: 1080 },

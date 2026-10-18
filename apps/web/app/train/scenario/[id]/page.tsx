@@ -147,7 +147,7 @@ function MissionCard({
   return (
     <Panel className="flex min-h-0 flex-col">
       <PanelHeader title="Mission" />
-      <PanelBody className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+      <PanelBody className="min-h-0 flex-1 space-y-4 overflow-y-auto" data-testid="mission-body">
         {text.map((sec, i) =>
           sec.title.toUpperCase() === 'ROE' ? (
             <section key={i} className="border border-line-2 bg-bg-2 p-3" data-testid="roe-callout">
@@ -263,6 +263,7 @@ function Briefing({ detail }: { detail: ScenarioDetailResponse }) {
   const [altitude, setAltitude] = useState<CoverageAltitude>(DEFAULT_ALTITUDE);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [legendShown, setLegendShown] = useState(false);
   const sites = useMemo(() => sensorSites(scenario), [scenario]);
   const coverage = useCoverage(preset, sites, altitude);
   const axis = useMemo(() => intelAxisDeg(scenario.briefing), [scenario.briefing]);
@@ -365,12 +366,17 @@ function Briefing({ detail }: { detail: ScenarioDetailResponse }) {
               sites={sites}
               coverage={coverage}
               intelAxisDeg={axis}
+              altitude={altitude}
+              onLegend={setLegendShown}
             />
           </div>
-          <p className="border-t border-line-1 px-3 py-1.5 text-small text-text-2">
-            Shaded: masked from the radar and camera for a contact {altitude} m above the ground,
-            within 1.5 × radar range. {axis !== null ? 'Arrow: expected axis from the intel.' : ''}
-          </p>
+          {!legendShown && (
+            <p className="border-t border-line-1 px-3 py-1.5 text-small text-text-2">
+              Shaded: masked from the radar and camera for a contact {altitude} m above the ground,
+              within 1.5 × radar range.{' '}
+              {axis !== null ? 'Arrow: expected axis from the intel.' : ''}
+            </p>
+          )}
         </Panel>
         <MissionCard
           scenario={scenario}
