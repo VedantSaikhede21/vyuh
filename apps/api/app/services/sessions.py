@@ -31,6 +31,7 @@ from app.services.recommendation import recommend_difficulty
 from app.services.scenarios import get_scenario_row, load_scenario
 from app.services.scoring.engine import score_session
 from app.services.scoring.tree import load_tree
+from app.services.terrain import preset_revision
 
 ACCEPTS_EVENTS = frozenset({SessionStatus.CREATED, SessionStatus.ACTIVE})
 VIEWER_ROLES = frozenset({UserRole.INSTRUCTOR, UserRole.ADMIN})
@@ -71,18 +72,20 @@ def expire_stale_sessions(db: Session, now: datetime | None = None) -> int:
 
 def create_session(db: Session, user: User, body: CreateSessionRequest) -> CreateSessionResponse:
     scenario_row = get_scenario_row(db, body.scenario_id, user)
+    scenario = load_scenario(scenario_row)
     row = TrainingSession(
         user_id=user.id,
         scenario_id=scenario_row.id,
         mode=body.mode,
         sim_version=body.sim_version,
+        terrain_revision=preset_revision(scenario.terrain.preset),
     )
     db.add(row)
     db.commit()
     db.refresh(row)
     return CreateSessionResponse(
         session_id=row.id,
-        scenario=load_scenario(scenario_row),
+        scenario=scenario,
         started_at=row.started_at,
         sim_version=body.sim_version,
     )
@@ -336,6 +339,7 @@ def session_detail(db: Session, row: TrainingSession) -> SessionDetailResponse:
         started_at=row.started_at,
         ended_at=row.ended_at,
         sim_version=row.sim_version,
+        terrain_revision=row.terrain_revision,
         score=latest_score(db, row.id),
         ended=session_ended(db, row.id),
     )

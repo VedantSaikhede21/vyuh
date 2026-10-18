@@ -533,8 +533,8 @@ def build_preset(
         "source": f"Copernicus DEM GLO-30 ({dem_tiles}); local AEQD grid, bilinear",
         "attribution": attribution,
     }
-    if revision > 1:
-        meta["revision"] = revision
+    # Always explicit (decision 106): replay compares it with the session's stored revision.
+    meta["revision"] = revision
     files = {
         "heightmap.u16": enc.u16.tobytes(),
         "heightmap.png": png_preview_bytes(enc.u16),

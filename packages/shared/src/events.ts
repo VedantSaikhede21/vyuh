@@ -12,7 +12,7 @@ import {
   TrackLostReason,
 } from './enums.ts';
 import { named } from './registry.ts';
-import { ContactReport } from './report.ts';
+import { ContactReport, ReportTruthContact } from './report.ts';
 import { Seed } from './scenario.ts';
 
 // SPEC §4.1/§4.2. trackId / contactId live only at the top level of an event,
@@ -170,6 +170,28 @@ export const SessionEndedEvent = named(
   }),
 );
 
+/**
+ * Ground truth for a contact report, emitted by the sim right after it applies
+ * REPORT_SUBMITTED (seq + 1, same tMs) — for server-side report scoring only,
+ * never shown to the trainee (decision 104, SPEC §4.2).
+ */
+export const ReportTruthEvent = named(
+  'ReportTruthEvent',
+  z.object({
+    ...base,
+    type: z.literal('REPORT_TRUTH'),
+    payload: named(
+      'ReportTruthPayload',
+      z.object({
+        /** seq of the REPORT_SUBMITTED event this describes. */
+        reportSeq: z.int().min(0),
+        /** The contacts behind the reported tracks, in id order (empty if none). */
+        contacts: z.array(ReportTruthContact),
+      }),
+    ),
+  }),
+);
+
 // ---- Trainee events ------------------------------------------------------
 
 function trackEvent<T extends string, P extends z.ZodType>(id: string, type: T, payload: P) {
@@ -243,6 +265,7 @@ export const SimEvent = named(
     ResponseOutcomeEvent,
     AiSuggestionShownEvent,
     SessionEndedEvent,
+    ReportTruthEvent,
     TrackSelectedEvent,
     CameraSlewedEvent,
     MarkedDetectedEvent,

@@ -56,3 +56,13 @@ def test_terrain_dir_setting(tmp_path: Path) -> None:
     assert Settings(local_jwt_secret=secret, terrain_dir=str(tmp_path)).terrain_dir == tmp_path
     with pytest.raises(ApiError):
         _load(tmp_path, "JK_MOUNTAIN")
+
+
+def test_preset_revision_reads_meta_and_defaults_to_one() -> None:
+    from app.services.terrain import preset_revision
+
+    assert preset_revision("PUNJAB_PLAINS") == 2
+    assert preset_revision("JK_MOUNTAIN") == 2
+    assert preset_revision("URBAN_GENERIC") == 1
+    assert preset_revision("PROCEDURAL_HILLS") == 1  # built in, no files
+    assert preset_revision("../etc") == 1

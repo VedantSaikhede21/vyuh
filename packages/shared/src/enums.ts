@@ -93,6 +93,13 @@ export const KillChainStage = named(
 );
 export type KillChainStage = z.infer<typeof KillChainStage>;
 
+/** How the trainee did at one kill-chain stage of one contact (AAR, Phase 4a). */
+export const KillChainStatus = named(
+  'KillChainStatus',
+  z.enum(['OK', 'LATE', 'WRONG', 'MISSED', 'NOT_APPLICABLE']),
+);
+export type KillChainStatus = z.infer<typeof KillChainStatus>;
+
 export const Difficulty = named('Difficulty', z.int().min(1).max(5));
 export type Difficulty = z.infer<typeof Difficulty>;
 
@@ -129,6 +136,7 @@ export const SystemEventType = named(
     'RESPONSE_OUTCOME',
     'AI_SUGGESTION_SHOWN',
     'SESSION_ENDED',
+    'REPORT_TRUTH',
   ]),
 );
 export type SystemEventType = z.infer<typeof SystemEventType>;

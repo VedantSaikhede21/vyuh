@@ -154,6 +154,10 @@ class ContactDroppedPayload(BaseModel):
     z: float
 
 
+class TrackId(RootModel[str]):
+    root: Annotated[str, Field(min_length=1)]
+
+
 class ContactOutcome(StrEnum):
     NEUTRALISED = "NEUTRALISED"
     LEAKED = "LEAKED"
@@ -170,10 +174,6 @@ class ContactReachedAssetPayload(BaseModel):
         populate_by_name=True,
     )
     asset_id: Annotated[str, Field(alias="assetId", max_length=64, min_length=1)]
-
-
-class TrackId(RootModel[str]):
-    root: Annotated[str, Field(min_length=1)]
 
 
 class ControlLink(StrEnum):
@@ -281,6 +281,7 @@ class EventType(StrEnum):
     RESPONSE_OUTCOME = "RESPONSE_OUTCOME"
     AI_SUGGESTION_SHOWN = "AI_SUGGESTION_SHOWN"
     SESSION_ENDED = "SESSION_ENDED"
+    REPORT_TRUTH = "REPORT_TRUTH"
     TRACK_SELECTED = "TRACK_SELECTED"
     CAMERA_SLEWED = "CAMERA_SLEWED"
     MARKED_DETECTED = "MARKED_DETECTED"
@@ -314,6 +315,31 @@ class KillChainStage(StrEnum):
     DECIDE = "DECIDE"
     RESPOND = "RESPOND"
     ASSESS = "ASSESS"
+
+
+class KillChainStatus(StrEnum):
+    OK = "OK"
+    LATE = "LATE"
+    WRONG = "WRONG"
+    MISSED = "MISSED"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+
+
+class KillChainStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    stage: KillChainStage
+    available_t_ms: Annotated[
+        int | None, Field(alias="availableTMs", ge=0, le=9007199254740991)
+    ] = None
+    action_t_ms: Annotated[int | None, Field(alias="actionTMs", ge=0, le=9007199254740991)] = None
+    latency_s: Annotated[float | None, Field(alias="latencyS", ge=0.0)] = None
+    action: str | None = None
+    truth: str | None = None
+    status: KillChainStatus
+    feedback: str
+    jump_t_ms: Annotated[int, Field(alias="jumpTMs", ge=0, le=9007199254740991)]
 
 
 class LatLon(BaseModel):
@@ -383,6 +409,27 @@ class ReportLocation(BaseModel):
     bearing_deg: Annotated[float, Field(alias="bearingDeg", ge=0.0, lt=360.0)]
     range_m: Annotated[float, Field(alias="rangeM", ge=0.0)]
     from_sensor_id: Annotated[str, Field(alias="fromSensorId", min_length=1)]
+
+
+class ReportTruthContact(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    contact_id: Annotated[str, Field(alias="contactId", max_length=64, min_length=1)]
+    x: float
+    z: float
+    agl_m: Annotated[float, Field(alias="aglM")]
+    heading_deg: Annotated[float, Field(alias="headingDeg", ge=0.0, lt=360.0)]
+    speed_mps: Annotated[float, Field(alias="speedMps", ge=0.0)]
+    activity: Activity
+
+
+class ReportTruthPayload(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    report_seq: Annotated[int, Field(alias="reportSeq", ge=0, le=9007199254740991)]
+    contacts: list[ReportTruthContact]
 
 
 class ReportedClass(StrEnum):
@@ -488,6 +535,10 @@ class SimVersion(RootModel[int]):
     root: Annotated[int, Field(ge=1, le=9007199254740991)]
 
 
+class TerrainRevision(RootModel[int]):
+    root: Annotated[int, Field(ge=1, le=9007199254740991)]
+
+
 class SessionEndReason(StrEnum):
     TIME_UP = "TIME_UP"
     ALL_RESOLVED = "ALL_RESOLVED"
@@ -551,6 +602,7 @@ class SystemEventType(StrEnum):
     RESPONSE_OUTCOME = "RESPONSE_OUTCOME"
     AI_SUGGESTION_SHOWN = "AI_SUGGESTION_SHOWN"
     SESSION_ENDED = "SESSION_ENDED"
+    REPORT_TRUTH = "REPORT_TRUTH"
 
 
 class TerrainPresetFiles(BaseModel):
@@ -809,6 +861,19 @@ class ContactDroppedEvent(BaseModel):
     payload: ContactDroppedPayload
 
 
+class ContactKillChain(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    contact_id: Annotated[str, Field(alias="contactId", min_length=1)]
+    is_threat: Annotated[bool, Field(alias="isThreat")]
+    true_class: Annotated[ContactClass, Field(alias="trueClass")]
+    true_affiliation: Annotated[Affiliation, Field(alias="trueAffiliation")]
+    track_ids: Annotated[list[TrackId], Field(alias="trackIds")]
+    outcome: ContactOutcome | None = None
+    stages: Annotated[list[KillChainStep], Field(max_length=6, min_length=6)]
+
+
 class ContactNeutralisedPayload(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -991,6 +1056,16 @@ class ReportSubmittedEvent(BaseModel):
     payload: ContactReport
 
 
+class ReportTruthEvent(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    seq: Annotated[int, Field(ge=0, le=9007199254740991)]
+    t_ms: Annotated[int, Field(alias="tMs", ge=0, le=9007199254740991)]
+    type: Literal["REPORT_TRUTH"]
+    payload: ReportTruthPayload
+
+
 class ResponseOrderedEvent(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1112,6 +1187,7 @@ class SessionDetailResponse(BaseModel):
     started_at: Annotated[AwareDatetime, Field(alias="startedAt")]
     ended_at: Annotated[AwareDatetime | None, Field(alias="endedAt")]
     sim_version: Annotated[SimVersion | None, Field(alias="simVersion")]
+    terrain_revision: Annotated[TerrainRevision | None, Field(alias="terrainRevision")]
     score: Score | None
     ended: SessionEnded | None
 
@@ -1286,6 +1362,42 @@ class SensorTrackLostEvent(BaseModel):
     payload: SensorTrackLostPayload
 
 
+class AarSessionResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    session: SessionDetailResponse
+    scenario: Scenario
+    events: list[
+        Annotated[
+            SessionStartedEvent
+            | ContactSpawnedEvent
+            | ContactDespawnedEvent
+            | ContactReachedAssetEvent
+            | ContactNeutralisedEvent
+            | ContactDroppedEvent
+            | SensorTrackCreatedEvent
+            | SensorTrackLostEvent
+            | EoIdentifiableEvent
+            | ResponseOutcomeEvent
+            | AiSuggestionShownEvent
+            | SessionEndedEvent
+            | ReportTruthEvent
+            | TrackSelectedEvent
+            | CameraSlewedEvent
+            | MarkedDetectedEvent
+            | ClassifiedEvent
+            | AffiliationSetEvent
+            | ResponseOrderedEvent
+            | ReportSubmittedEvent
+            | AiSuggestionAcceptedEvent
+            | AiSuggestionRejectedEvent,
+            Field(discriminator="type"),
+        ]
+    ]
+    kill_chain: Annotated[list[ContactKillChain], Field(alias="killChain")]
+
+
 class CreateSessionResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1316,6 +1428,7 @@ class EventBatchRequest(BaseModel):
                 | ResponseOutcomeEvent
                 | AiSuggestionShownEvent
                 | SessionEndedEvent
+                | ReportTruthEvent
                 | TrackSelectedEvent
                 | CameraSlewedEvent
                 | MarkedDetectedEvent

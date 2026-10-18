@@ -248,7 +248,9 @@ describe('Session detail / Score', () => {
     startedAt: '2026-10-14T10:00:00+00:00',
     endedAt: '2026-10-14T10:03:00+00:00',
     simVersion: 1,
+    terrainRevision: null,
     score,
+    ended: { reason: 'TIME_UP', tMs: 180000 },
   };
 
   it('accepts a completed session with a score, and an active one without', () => {
