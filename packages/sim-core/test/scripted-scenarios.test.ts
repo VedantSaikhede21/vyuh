@@ -2,12 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { Scenario } from '@vyuh/shared';
 import { describe, expect, it } from 'vitest';
 import { PROCEDURAL_HILLS, createSim } from '../src/index.ts';
-import {
-  E2E_SEED_DIR,
-  FIXTURE_DIR,
-  recordE2eSeedLogs,
-  recordFixtureLogs,
-} from './fixture-logs.ts';
+import { E2E_SEED_DIR, FIXTURE_DIR, recordE2eSeedLogs, recordFixtureLogs } from './fixture-logs.ts';
 import { playScripted, presetWorld } from './fixtures.ts';
 
 // Guards the hand-written scenarios in apps/api/app/seed/scenarios: valid
