@@ -143,7 +143,7 @@ export function ResultScreen({
           <p className="text-label">Debrief · {mode.toLowerCase()}</p>
           <h1 className="text-h1">{scenarioName}</h1>
           {ended && (
-            <p className="text-small text-text-2">
+            <p className="text-small text-text-2" data-testid="result-ended">
               {END_LABEL[ended.reason]} at{' '}
               <span className="font-mono tnum">{formatClock(ended.tMs)}</span>
             </p>

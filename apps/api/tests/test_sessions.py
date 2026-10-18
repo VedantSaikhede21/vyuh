@@ -220,6 +220,7 @@ def test_get_session(
     assert (body["mode"], body["status"]) == ("ASSESSMENT", "CREATED")
     assert body["endedAt"] is None  # explicit null, not omitted
     assert body["score"] is None
+    assert body["ended"] is None
 
     instructor = make_user(UserRole.INSTRUCTOR, "instructor@test")
     assert client.get(f"/api/v1/sessions/{sid}", headers=auth_header(instructor)).status_code == 200
@@ -286,6 +287,9 @@ def test_complete_scores_on_server(
     detail = client.get(f"/api/v1/sessions/{sid}", headers=headers).json()
     assert detail["status"] == "COMPLETED"
     assert detail["score"] == score  # stored score reads back identically
+    # How it ended, from the stored SESSION_ENDED event (the result screen after a reload).
+    end = next(e for e in log if e["type"] == "SESSION_ENDED")
+    assert detail["ended"] == {"reason": end["payload"]["reason"], "tMs": end["tMs"]}
 
     again = _complete(client, sid, headers, log[-1]["tMs"])
     assert_error(again, 409, "SESSION_NOT_ACTIVE")

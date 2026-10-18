@@ -22,6 +22,7 @@ from app.schemas.generated import (
     Score,
     ScoreComponents,
     SessionDetailResponse,
+    SessionEnded,
     SessionStatus,
     UserRole,
 )
@@ -312,6 +313,18 @@ def latest_score(db: Session, session_id: uuid.UUID) -> Score | None:
     return with_derived_fields(score, load_scenario(db.get_one(ScenarioRow, session.scenario_id)))
 
 
+def session_ended(db: Session, session_id: uuid.UUID) -> SessionEnded | None:
+    """How the run ended, from its stored SESSION_ENDED event (null before it ends)."""
+    ev = db.scalar(
+        select(SessionEvent).where(
+            SessionEvent.session_id == session_id, SessionEvent.type == "SESSION_ENDED"
+        )
+    )
+    if ev is None:
+        return None
+    return SessionEnded.model_validate({"reason": ev.payload["reason"], "tMs": ev.t_ms})
+
+
 def session_detail(db: Session, row: TrainingSession) -> SessionDetailResponse:
     scenario_row = db.get_one(ScenarioRow, row.scenario_id)
     return SessionDetailResponse(
@@ -324,4 +337,5 @@ def session_detail(db: Session, row: TrainingSession) -> SessionDetailResponse:
         ended_at=row.ended_at,
         sim_version=row.sim_version,
         score=latest_score(db, row.id),
+        ended=session_ended(db, row.id),
     )

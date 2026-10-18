@@ -53,6 +53,10 @@ for (const vp of VIEWPORTS) {
       await stepTo(page, 3_600_000);
       await expect(page.getByTestId('result-screen')).toBeVisible({ timeout: 60_000 });
       await shot(page, 'result', { fullPage: true });
+      // After a reload the end reason comes from the stored SESSION_ENDED event.
+      const ended = await page.getByTestId('result-ended').textContent();
+      await page.reload();
+      await expect(page.getByTestId('result-ended')).toHaveText(ended ?? '');
     });
 
     test('console states', async ({ page }) => {

@@ -23,7 +23,7 @@ export type Phase =
       /** DB id of the scenario, for Retry / Next. */
       scenarioId: string;
       mode: SessionMode;
-      /** How the run ended — known when it was just played here, not after a reload. */
+      /** How the run ended (after a reload, from the stored SESSION_ENDED event). */
       ended: { reason: SessionEndReason; tMs: number } | null;
     }
   | { kind: 'interrupted' }
@@ -64,7 +64,7 @@ export function useTrainingSession(sessionId: string) {
           scenarioName: session.scenarioName,
           scenarioId: session.scenarioId,
           mode: session.mode,
-          ended: null,
+          ended: session.ended,
         });
         return;
       }
