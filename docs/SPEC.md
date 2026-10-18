@@ -328,21 +328,21 @@ Minimum warning and the D1–D2 first-track target are shared constants (`packag
 | ROE | FREE | FREE | TIGHT | TIGHT | TIGHT |
 
 ### 7.2 Scripted scenario library (Phase 3 target)
-| Id | Name | Diff | What it trains | Inspired by (cite in realism-sources.md) |
-|---|---|---|---|---|
-| S01 | First Contact | 1 | Basic loop: detect, classify, intercept one quad in daylight | — (tutorial) |
-| S02 | Two Axes | 1 | Two quads on two axes; prioritise by time to the asset | — (tutorial) |
-| S03 | Low and Fast | 2 | A low, fast quad that appears late on radar | — (tutorial) |
-| S04 | Night Drop | 3 | Night smuggling drop across a border line; IR, RF bearing, report | Reported cross-border drone drops |
-| S05 | Silent Approach | 3 | Fibre-optic FPV through a mountain valley; jamming useless, terrain masking | Reported fibre-optic FPV use in recent conflicts |
-| S06 | Crowded Skies | 3 | Urban area with civilian hobby drones and NO_KINETIC zones; one hostile | Urban drone incidents, collateral constraints |
-| S07 | Look Over There | 4 | Loud high decoy + silent low loitering threat | Reported decoy + strike tactics |
-| S08 | Fog Line | 4 | Winter fog on the Punjab plains (0.8 km, January): EO identifies only inside 0.8 km, radar-led decisions; friendly patrols and birds | Weather-degraded operations; IMD winter fog |
-| S09 | Dusk Swarm | 4 | 8-drone swarm on 2 axes with sun glare at dusk | Reported swarm attacks |
-| S10 | Saturation | 5 | Night mixed swarm + decoys + birds + friendly helicopter, limited ammo | Reported large-scale drone incursions |
-| S15 | Birds or Drone? | 2 | Two bird flocks tracked first, then a single quad on a nearby bearing; sort by radar behaviour and EO (the spectrogram arrives in Phase 5) | Common bird false-alarm problem in C-UAS |
+| Id | Name | Diff | Preset · time | What it trains | Inspired by (cite in realism-sources.md) |
+|---|---|---|---|---|---|
+| S01 | First Contact | 1 | PROCEDURAL_HILLS · day | Basic loop: detect, classify, intercept one quad in daylight | — (tutorial) |
+| S02 | Two Axes | 1 | PROCEDURAL_HILLS · day | Two quads on two axes; prioritise by time to the asset | — (tutorial) |
+| S03 | Low and Fast | 2 | PROCEDURAL_HILLS · day | A low, fast quad that appears late on radar | — (tutorial) |
+| S04 | Night Drop | 3 | PUNJAB_PLAINS · night | Night smuggling drop across a border line; IR, RF bearing, report | Reported cross-border drone drops |
+| S05 | Silent Approach | 3 | JK_MOUNTAIN · day, haze | Fibre-optic FPV through a mountain valley; jamming useless, terrain masking | Reported fibre-optic FPV use in recent conflicts |
+| S06 | Crowded Skies | 3 | URBAN_GENERIC · day, haze | Urban area with civilian hobby drones and NO_KINETIC zones; one hostile | Urban drone incidents, collateral constraints |
+| S07 | Look Over There | 4 | PUNJAB_PLAINS · dusk | Loud high decoy + silent low loitering threat | Reported decoy + strike tactics |
+| S08 | Fog Line | 4 | PUNJAB_PLAINS · day, fog 0.8 km | Winter fog on the Punjab plains (0.8 km, January): EO identifies only inside 0.8 km, radar-led decisions; friendly patrols and birds | Weather-degraded operations; IMD winter fog |
+| S09 | Dusk Swarm | 4 | PUNJAB_PLAINS · dusk | 8-drone swarm on 2 axes with sun glare at dusk | Reported swarm attacks |
+| S10 | Saturation | 5 | PUNJAB_PLAINS · night, rain | Night mixed swarm + decoys + birds + friendly helicopter, limited ammo | Reported large-scale drone incursions |
+| S15 | Birds or Drone? | 2 | PUNJAB_PLAINS · day | Two bird flocks tracked first, then a single quad on a nearby bearing; sort by radar behaviour and EO (the spectrogram arrives in Phase 5) | Common bird false-alarm problem in C-UAS |
 
-**Presets and build (Phase 3b):** S04 PUNJAB_PLAINS night; S05 JK_MOUNTAIN day; S06 URBAN_GENERIC day; S07 PUNJAB dusk; S08 PUNJAB January fog; S09 PUNJAB dusk; S10 PUNJAB night + rain; S15 PUNJAB day. Each is a generator request with a fixed seed plus small overrides, built from `apps/api/app/seed/scenarios/src/<id>.json` by `scripts/scenarios/build_scripted.py`; a pytest fails if a committed file drifts from its source (decision 95). Sun glare in EO is not modelled (S09 puts one axis on the sun's bearing; glare is an open idea).
+**Build (Phase 3b):** S01–S03 are hand-written on the built-in PROCEDURAL_HILLS. S04–S10 and S15 are each a generator request with a fixed seed plus small overrides, built from `apps/api/app/seed/scenarios/src/<id>.json` by `scripts/scenarios/build_scripted.py`; a pytest fails if a committed file drifts from its source (decision 95). Sun glare in EO is not modelled (S09 puts one axis on the sun's bearing; glare is an open idea).
 
 **Test scenarios (tag `test`, not part of the training library):**
 | Id | Name | Preset | Purpose |
@@ -562,6 +562,7 @@ All errors: `{ "error": { "code": "...", "message": "...", "details": {} } }`
 - Scripted scenario library: 8–10 scenarios inspired by public incident patterns (cited), from easy day single-drone to night mixed swarm with decoys.
 - Briefing screen (map with zones, ROE, assets, weather).
 **Done when:** same request + seed ⇒ identical scenario (pytest); 50 random seeds per difficulty all generate valid, playable scenarios (schema-valid, contacts reachable, no spawn inside assets).
+**Status (Part 3b, 2026-10-18):** scripted library S04–S10 and S15 built from sources with guard tests (decision 95); URBAN_GENERIC (Kaithal, 13,654 real footprints) and real footprints on PUNJAB_PLAINS / JK_MOUNTAIN (decisions 89, 93); generator siting on dense presets and `GENERATOR_VERSION` 2 (decisions 91–92); IR fog ramp, `SIM_VERSION` 4 (decision 94); exact LOS speed-ups for dense towns (decisions 88, 97); training list with filters and best score, Generate panel, briefing page with LOS coverage, legend and pinned Begin (decisions 96, 98); grouped zone labels and PPI label priority (decisions 98–99). Sweeps run on all three file presets. Evidence: CLAUDE.md §14.
 **Status (Part 3a, 2026-10-16):** generator, `POST /scenarios/generate`, `SIM_VERSION` 3 (DROP / RTH, ROE class check, NO_KINETIC), `default_v3` and the sim-core validator are done. Playability is judged by the sim itself: `pnpm sweep:generator` generates 50 per difficulty (both presets) and runs the validator (schema, geometry, night flag, detectability, minimum warning, D1–D2 first track, defender wins at D1–D3); CI runs 20 per difficulty and fails above 2 % (decisions 74–76, 79). Scripted library S04–S10, URBAN_GENERIC and the select / briefing redesign are Part 3b.
 
 ### Phase 4 — AAR & instructor
@@ -616,9 +617,12 @@ All errors: `{ "error": { "code": "...", "message": "...", "details": {} } }`
   - `heightmap.u16` — **the format sim-core and web load**: raw little-endian uint16, `resolution × resolution`, row 0 = south edge, column 0 = west edge; height relative to the origin elevation = `relMinM + v × (relMaxM − relMinM) / 65535`. The DEM is reprojected to a local azimuthal-equidistant grid centred on the origin (bilinear).
   - `heightmap.png` — 16-bit north-up **preview only**.
   - `meta.json` — validated by the `TerrainPresetMeta` zod schema: name, origin {lat, lon}, `utcOffsetMin`, `sizeM`, `resolution`, `metresPerPx` (= sizeM / (resolution − 1)), `originElevM`, `relMinM`, `relMaxM`, absolute `minElevM` / `maxElevM`, `buildingsStatus` (`OK` / `EMPTY` / `UNAVAILABLE`), file names, source + attribution.
-  - `buildings.geojson` — osmnx footprints in **local metres `[x, z]`** (not lon/lat, so the browser needs no projection library), simplified to 1 m, ≥ 10 m², with `heightM` from `height`, else `building:levels` × 3 m, else 2 levels (6 m).
+  - `buildings.geojson` — footprints in **local metres `[x, z]`** (not lon/lat, so the browser needs no projection library), with `heightM` from `height`, else `building:levels` × 3 m, else 2 levels (6 m). Sources: osmnx (OSM) plus, with `--footprints <tile…>`, Microsoft Global ML Building Footprints (ODbL) — OSM wins where they overlap, tile footprints without a height are merged where closer than 2 m, simplified to 2 m, whole-metre coordinates, footprints under 40 m² dropped (decisions 89, 93). Written as compact GeoJSON, one feature per line. `--revision N` sets `meta.revision` (absent = 1) so replay can detect sessions recorded on older terrain.
   - Overpass is retried with exponential backoff (3 attempts); if it stays unavailable the preset is finished without buildings and `buildingsStatus = "UNAVAILABLE"`. Raw OSM replies are cached in `raw/` so rebuilds are offline. The build fails if a preset exceeds 10 MB.
-  - Presets: `PUNJAB_PLAINS`, `JK_MOUNTAIN`, `THAR_DESERT`, `URBAN_GENERIC`, `COASTAL`. Use generic areas — never model a real military installation (each box ≥ 50 km from the IB/LoC, no cantonments, airfields or known installations inside; vetted against OSM).
+  - Built (Phase 3b): `PUNJAB_PLAINS` (7,361 buildings, revision 2), `JK_MOUNTAIN` (67, revision 2), `URBAN_GENERIC` (Kaithal, 13,654, revision 1), plus the built-in `PROCEDURAL_HILLS` (no files). Planned: `THAR_DESERT`, `COASTAL`.
+  - Sim LOS over buildings: 25 m footprint cells with a per-cell roof early-out, edge bands for footprints over 16 vertices and a 100 m obstacle-ceiling skip — results identical to testing every sample against every footprint (decisions 88, 97). The web renders buildings as per-tile indexed meshes with a 2 px LOD (decision 90).
+  - `public/terrain/<NAME>/map.png` (briefing hillshade with buildings) and `thumb.png` (list thumbnail) come from `pnpm gen:maps`.
+  - Original preset list: `PUNJAB_PLAINS`, `JK_MOUNTAIN`, `THAR_DESERT`, `URBAN_GENERIC`, `COASTAL`. Use generic areas — never model a real military installation (each box ≥ 50 km from the IB/LoC, no cantonments, airfields or known installations inside; vetted against OSM).
 - **Sun:** suncalc with preset lat/lon + scenario date/time → sun azimuth/elevation → directional light, sky, `isNight` (sun elevation < −6°).
 - **Weather:** scenario presets; optional `LIVE` → API calls Open-Meteo for preset location/time, caches result, maps to `{visibility, rain, wind, cloud}`.
 - **Signatures:** `scripts/signatures/gen_spectrograms.py` → PNG templates per class in `apps/web/public/signatures/`.
@@ -632,6 +636,9 @@ Visual and UX rules are defined in `docs/DESIGN.md` and are binding.
 
 - **Style:** dark tactical HUD, high-contrast, monospace numerics, APP-6 affiliation colours, shadcn components, **no glassmorphism**, minimal animation. Must be readable on a 1366×768 laptop.
 - **Screens:** landing (what it is + "Try demo") → guided tour → scenario select / assignments → briefing (2D map, ROE, assets, weather) → sim player → result screen → AAR → trends; instructor dashboard; scenario builder.
+- **Scenario select (`/train`, Phase 3b):** a table of library scenarios (thumbnail, code + name, difficulty, Day / Dawn / Dusk / Night from the sun, conditions, tags, duration, best score) with filters and sort kept in the URL, keyboard row navigation; a Generate panel (terrain, difficulty, time, weather for staff, seed) that opens the new scenario's briefing (decision 96).
+- **Briefing (`/train/scenario/[id]`, Phase 3b):** hillshade map with buildings, zones with ids, border, radar and interceptor rings, sensor sites, asset, intel axis only when the intel names one, LOS coverage shading at 15 / 50 / 150 m AGL; a legend under the map when it is width-limited (1920×1080); mission card (situation, mission, ROE callout, intel, sensors and effectors, environment, controls) that may scroll while Practice / Assessment and Begin (Enter) stay pinned in its footer (decisions 96, 98).
+- **Zone labels in the player (Phase 3b):** NO_KINETIC zones with the same name within 500 m share one label ("NO KINETIC · TOWN") in 3D and on the PPI; a zone's id shows on hover, when the selected track is in, near (300 m) or heading into it (30 s), and in the disabled-intercept reason. On the PPI the asset, the selected track and threat tracks always keep their labels; zone labels move to the zone's far edge from the asset or hide (decisions 98–99).
 - **Sim player layout:** centre 3D tactical view; right radar PPI; bottom-left EO/IR view (slewable, zoom); bottom-centre contact list with track state (UNKNOWN → classified, affiliation colour); bottom-right action bar + response buttons with cooldown/ammo; top bar clock, ROE state, alerts; RF panel and spectrogram as tabs; AI-assist chip on the selected track.
 - **Keyboard shortcuts** for core actions (operators work fast).
 - **Assessment mode:** no pause, fixed time. **Practice mode:** pause and hints allowed.
@@ -736,11 +743,11 @@ Rules: one branch per feature; **`packages/shared` changes go through one owner 
 A judge should get through this in about 5 minutes without help:
 1. **Landing:** one-screen problem statement, the kill chain diagram, "Try demo" button.
 2. **Guided tour** of the sim player (6–8 steps: tactical view, radar, EO/IR, track list, actions, report, AI assist).
-3. **Play S15 "Birds or Drone?"** in practice mode (≈ 3 min) — shows false contacts and EO identification (the spectrogram view arrives in Phase 5).
+3. **Pick S15 "Birds or Drone?"** in the training list, read its briefing (map, coverage, ROE), and play it in practice mode (≈ 3 min) — shows false contacts and EO identification (the spectrogram view arrives in Phase 5). S06 "Crowded Skies" is the urban follow-up (civilian drones, no-kinetic town).
 4. **Result screen:** score breakdown, feedback lines, LLM debrief, recommended next difficulty.
 5. **AAR replay** with the ground-truth toggle — "here is what was really there".
 6. **Trends and unit dashboard** using labelled demo data (§22) to show progress over sessions.
-7. **Instructor:** type a scenario in plain text → see parsed parameters → generate → preview briefing.
+7. **Instructor:** type a scenario in plain text → see parsed parameters → generate → preview briefing. (Phase 3b already has the form version: the Generate panel opens the generated scenario's briefing.)
 8. **Realism Sources page:** every model, dataset and incident inspiration, cited.
 
 Pitch storyline: *problem (costly, too few reps) → our loop (realistic kill chain) → realism (terrain, night, silent drones, false contacts, ROE) → measurement (decision-tree scoring, AAR, over-trust) → evidence (user study improvement) → deployability (browser, low-end PCs, offline build, near-zero cost).*
