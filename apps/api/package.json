@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "uv run uvicorn app.main:create_app --factory --reload --port 8000",
     "lint": "uv run ruff check . && uv run ruff format --check .",
-    "gen:pydantic": "uv run python scripts/gen_pydantic.py"
+    "gen:pydantic": "uv run python scripts/gen_pydantic.py",
+    "seed": "uv run python -m app.seed.demo"
   }
 }

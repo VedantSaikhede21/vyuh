@@ -1,6 +1,7 @@
 """Seed demo units, users, the threat library and scripted scenarios (SPEC §22). Idempotent.
 
-Run: `uv run python -m app.seed.demo`
+Run: `pnpm seed` (or `uv run python -m app.seed.demo` in apps/api). In ENV=dev the API
+also re-seeds at startup when the seed files changed (decision 119).
 
 Users get `auth_id = local:<email>` so `POST /auth/dev-login` works in AUTH_MODE=local.
 There are no passwords in our DB. In AUTH_MODE=supabase, create the demo users in the
@@ -11,14 +12,15 @@ set here in the DB.
 import logging
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.config import AuthMode, get_settings
+from app.core.config import AuthMode, Settings, get_settings
 from app.core.db import make_engine, make_session_factory
 from app.core.security import local_auth_id
 from app.models import Unit, User
 from app.schemas.generated import UserRole
 from app.seed.e2e import seed_e2e_user
+from app.seed.fingerprint import seed_fingerprint, store_fingerprint, stored_fingerprint
 from app.seed.scenarios import seed_scenarios
 from app.seed.threats import seed_threat_types
 
@@ -63,9 +65,9 @@ def seed_users(db: Session, units: dict[str, Unit]) -> int:
     return count
 
 
-def run() -> None:
-    settings = get_settings()
-    factory = make_session_factory(make_engine(settings.database_url))
+def seed_all(factory: sessionmaker[Session], settings: Settings) -> str:
+    """Run every seed step and record the seed files' fingerprint; returns a summary."""
+    fingerprint = seed_fingerprint()
     with factory() as db:
         units = seed_units(db)
         created = seed_users(db, units) if settings.auth_mode is AuthMode.LOCAL else 0
@@ -74,10 +76,25 @@ def run() -> None:
         db.commit()
         # Fixed sessions for visual baselines; scored through the real session path.
         e2e = seed_e2e_user(db, units[UNITS[0]]) if settings.auth_mode is AuthMode.LOCAL else 0
-    print(
+        store_fingerprint(db, fingerprint)
+        db.commit()
+    return (
         f"Seeded {len(units)} units, {created} new demo users (auth mode: {settings.auth_mode}), "
         f"{threats} threat types, {scenarios} scenarios written, {e2e} e2e sessions rebuilt"
     )
+
+
+def seed_if_changed(factory: sessionmaker[Session], settings: Settings) -> str | None:
+    """Re-seed when the seed files differ from what the DB last got; None if unchanged."""
+    with factory() as db:
+        if stored_fingerprint(db) == seed_fingerprint():
+            return None
+    return seed_all(factory, settings)
+
+
+def run() -> None:
+    settings = get_settings()
+    print(seed_all(make_session_factory(make_engine(settings.database_url)), settings))
 
 
 if __name__ == "__main__":

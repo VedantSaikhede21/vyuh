@@ -21,7 +21,8 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
 cp apps/web/.env.example apps/web/.env.local
 
 docker compose up -d                            # Postgres on :5432 (+ vyuh_test DB)
-cd apps/api && uv run alembic upgrade head && uv run python -m app.seed.demo && cd ../..
+cd apps/api && uv run alembic upgrade head && cd ../..
+pnpm seed                                       # demo units, users, threats, scenarios
 ```
 
 ## Daily use
@@ -31,6 +32,8 @@ pnpm dev           # web on http://localhost:3000, API on http://localhost:8000/
 ```
 
 Open http://localhost:3000/login, pick a demo account (e.g. `trainee1@demo`) and sign in — `/train` shows your user and role.
+
+Run pnpm seed after any deploy that changes seed data. (With `ENV=dev` the API also re-seeds at startup when the seed files changed.)
 
 Run `pnpm graph` to regenerate the code map (output is git-ignored).
 
