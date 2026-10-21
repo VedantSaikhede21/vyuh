@@ -146,7 +146,7 @@ def test_rules_span_batches() -> None:
     assert rules(first, state) == []
     advance_state(state, first)
     assert state.last_seq == 1
-    assert state.known_tracks == {"T001"}
+    assert state.known_tracks == {"T001": "c01"}
     assert rules([ev(2, 20_050, "MARKED_DETECTED", trackId="T001")], state) == []
     assert rules([ev(3, 20_050, "MARKED_DETECTED", trackId="T001")], state) == [
         "SEQ_NOT_CONTIGUOUS"
@@ -157,3 +157,70 @@ def test_rules_span_batches() -> None:
 def test_too_many_events() -> None:
     state = LogState(last_seq=0, event_count=MAX_EVENTS_PER_SESSION)
     assert "TOO_MANY_EVENTS" in rules([ev(1, 50, "TRACK_SELECTED", trackId="T001")], state)
+
+
+# ---- REPORT_TRUTH (decision 104) ------------------------------------------------------
+
+S04 = Scenario.model_validate(json.loads((SCENARIO_DIR / "S04.json").read_text(encoding="utf-8")))
+
+
+def s04_rules(events: list[dict[str, Any]], state: LogState | None = None) -> list[str]:
+    return [v.rule for v in check_batch(S04, state or LogState(), events, mode="ASSESSMENT")]
+
+
+def _first_report(log: list[dict[str, Any]]) -> int:
+    return next(i for i, e in enumerate(log) if e["type"] == "REPORT_SUBMITTED")
+
+
+def _renumber(log: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [{**e, "seq": i} for i, e in enumerate(log)]
+
+
+def test_real_log_with_reports_is_plausible() -> None:
+    assert s04_rules(fixture_log("s04_reports")) == []
+
+
+def test_report_split_from_its_truth_across_batches_is_plausible() -> None:
+    log = fixture_log("s04_reports")
+    cut = _first_report(log) + 1  # the batch ends with REPORT_SUBMITTED
+    state = LogState()
+    assert s04_rules(log[:cut], state) == []
+    advance_state(state, log[:cut])
+    assert state.pending_report is not None
+    assert s04_rules(log[cut:], state) == []
+
+
+def test_report_without_truth_is_rejected() -> None:
+    log = fixture_log("s04_reports")
+    i = _first_report(log)
+    assert log[i + 1]["type"] == "REPORT_TRUTH"
+    assert "REPORT_TRUTH_MISSING" in s04_rules(_renumber(log[: i + 1] + log[i + 2 :]))
+
+
+def test_truth_without_its_report_or_with_other_contacts_is_rejected() -> None:
+    log = fixture_log("s04_reports")
+    i = _first_report(log)
+    orphan = _renumber(log[:i] + log[i + 1 :])
+    assert "REPORT_TRUTH_MISMATCH" in s04_rules(orphan)
+
+    wrong = [dict(e) for e in log]
+    truth = wrong[i + 1]["payload"]
+    wrong[i + 1] = {
+        **wrong[i + 1],
+        "payload": {**truth, "contacts": [{**c, "contactId": "c99"} for c in truth["contacts"]]},
+    }
+    assert {"REPORT_TRUTH_MISMATCH", "UNKNOWN_CONTACT"} <= set(s04_rules(wrong))
+
+    far = [dict(e) for e in log]
+    far[i + 1] = {
+        **far[i + 1],
+        "payload": {**truth, "contacts": [{**c, "aglM": 50_000} for c in truth["contacts"]]},
+    }
+    assert "REPORT_TRUTH_OUT_OF_BOUNDS" in s04_rules(far)
+
+
+def test_report_naming_an_unknown_track_is_rejected() -> None:
+    log = [dict(e) for e in fixture_log("s04_reports")]
+    i = _first_report(log)
+    log[i] = {**log[i], "payload": {**log[i]["payload"], "trackIds": ["T999"]}}
+    assert "UNKNOWN_TRACK" in s04_rules(log)
