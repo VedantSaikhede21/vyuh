@@ -1,3 +1,5 @@
+import { datan2, dcos, dsin } from './dmath.ts';
+
 // Coordinate helpers. Sim positions use the scenario frame: x = east (m),
 // z = north (m), y = height above the terrain datum (m, i.e. terrain + AGL).
 // This file is the ONLY place the Three.js flip (z = -north) happens.
@@ -32,13 +34,13 @@ export function angleDiffDeg(a: number, b: number): number {
 
 /** Compass bearing (0 = north, clockwise) from one point to another, degrees in [0, 360). */
 export function bearingDeg(from: Readonly<Vec3>, to: Readonly<Vec3>): number {
-  return wrapDeg((Math.atan2(to.x - from.x, to.z - from.z) * 180) / Math.PI);
+  return wrapDeg((datan2(to.x - from.x, to.z - from.z) * 180) / Math.PI);
 }
 
 /** Heading (compass degrees) → unit [east, north]. */
 export function headingVector(headingDeg: number): [number, number] {
   const r = (headingDeg * Math.PI) / 180;
-  return [Math.sin(r), Math.cos(r)];
+  return [dsin(r), dcos(r)];
 }
 
 export function horizontalRange(a: Readonly<Vec3>, b: Readonly<Vec3>): number {

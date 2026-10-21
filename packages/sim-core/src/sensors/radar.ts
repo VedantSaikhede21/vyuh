@@ -2,6 +2,7 @@ import { CLASS_PROFILES, type ContactSpec, type RadarSensor } from '@vyuh/shared
 import type { ContactState } from '../contacts.ts';
 import { bearingDeg, horizontalRange, slantRange, wrapDeg, type Vec3 } from '../coords.ts';
 import type { RandomStream } from '../rng.ts';
+import { dcos, dexp, dlog, dlog10, dpow } from '../dmath.ts';
 
 // Radar (SPEC §6.1). SNR relative to the reference point (0.01 m² at refRangeM
 // ⇒ Pd 0.5) follows the radar equation, SNR ∝ RCS / R⁴, so detection range
@@ -26,7 +27,7 @@ export const RAIN_A = 1.276;
 /** Two-way rain loss in dB over a slant range: 2 · γ(R) · range_km. */
 export function rainLossDb(rainMmph: number, rangeM: number): number {
   if (rainMmph <= 0) return 0;
-  return 2 * RAIN_K * Math.pow(rainMmph, RAIN_A) * (Math.max(rangeM, 0) / 1000);
+  return 2 * RAIN_K * dpow(rainMmph, RAIN_A) * (Math.max(rangeM, 0) / 1000);
 }
 
 /** Pd multiplier for ground clutter: low (AGL) and close (horizontal range). */
@@ -36,20 +37,20 @@ export function clutterFactor(aglM: number, horizontalRangeM: number): number {
 
 export function radarSnrDb(refRangeM: number, rcsM2: number, rangeM: number): number {
   const r = Math.max(rangeM, 1);
-  return 10 * Math.log10(rcsM2 / REF_RCS_M2) - 40 * Math.log10(r / refRangeM);
+  return 10 * dlog10(rcsM2 / REF_RCS_M2) - 40 * dlog10(r / refRangeM);
 }
 
 /** Pd before clutter and LOS; `rainMmph` adds the two-way rain loss. */
 export function radarPd(refRangeM: number, rcsM2: number, rangeM: number, rainMmph = 0): number {
   const snr = radarSnrDb(refRangeM, rcsM2, rangeM) - rainLossDb(rainMmph, rangeM);
-  return 1 / (1 + Math.exp(-snr / PD_SLOPE_DB));
+  return 1 / (1 + dexp(-snr / PD_SLOPE_DB));
 }
 
 /** Standard normal sample (Box–Muller); always draws exactly two numbers. */
 export function gaussian(stream: RandomStream): number {
   const u1 = 1 - stream.next(); // (0, 1]
   const u2 = stream.next();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  return Math.sqrt(-2 * dlog(u1)) * dcos(2 * Math.PI * u2);
 }
 
 export interface RadarReturn {

@@ -84,6 +84,19 @@ function same(a: unknown, b: unknown): boolean {
   );
 }
 
+/** Where two JSON-like values first differ: a path and both values (for the fallback reason). */
+function firstDifference(a: unknown, b: unknown, path: string): string {
+  if (typeof a === 'object' && typeof b === 'object' && a !== null && b !== null) {
+    const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+    for (const k of keys) {
+      const x = (a as Record<string, unknown>)[k];
+      const y = (b as Record<string, unknown>)[k];
+      if (!same(x, y)) return firstDifference(x, y, `${path}.${k}`);
+    }
+  }
+  return `${path || '.'}: ${JSON.stringify(a)} vs ${JSON.stringify(b)}`;
+}
+
 /**
  * Compare a regenerated log with the stored one, event by event. The first
  * difference is reported; a replay that differs anywhere is not shown (decision 109).
@@ -96,7 +109,8 @@ export function compareLogs(
   for (let i = 0; i < n; i++) {
     const ev = stored[i];
     if (ev !== undefined && !same(ev, replayed[i])) {
-      return { ok: false, seq: ev.seq, reason: `event ${ev.seq} differs` };
+      const at = firstDifference(ev, replayed[i], '');
+      return { ok: false, seq: ev.seq, reason: `event ${ev.seq} (${ev.type}) differs at ${at}` };
     }
   }
   if (stored.length !== replayed.length) {

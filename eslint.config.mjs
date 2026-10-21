@@ -40,6 +40,31 @@ export default tseslint.config(
         { object: 'Math', property: 'random', message: 'Use the seeded RNG (rng.ts).' },
         { object: 'Date', property: 'now', message: 'Use the sim clock.' },
         { object: 'performance', property: 'now', message: 'Use the sim clock.' },
+        // Engine-defined last bits differ between browsers and Node (decision 111).
+        ...[
+          'sin',
+          'cos',
+          'tan',
+          'asin',
+          'acos',
+          'atan',
+          'atan2',
+          'exp',
+          'expm1',
+          'log',
+          'log1p',
+          'log2',
+          'log10',
+          'pow',
+          'cbrt',
+          'sinh',
+          'cosh',
+          'tanh',
+        ].map((property) => ({
+          object: 'Math',
+          property,
+          message: 'Use the engine-independent version in dmath.ts.',
+        })),
       ],
       'no-restricted-syntax': [
         'error',
@@ -58,6 +83,11 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  {
+    // suncalc's sun position only feeds the night flag (a threshold), and dmath is the port itself.
+    files: ['packages/sim-core/src/dmath.ts', 'packages/sim-core/src/sun.ts'],
+    rules: { 'no-restricted-properties': 'off' },
   },
   prettier,
 );

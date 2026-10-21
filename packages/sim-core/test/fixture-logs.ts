@@ -99,5 +99,11 @@ export function recordFixtureLogs(): Record<string, readonly SimEvent[]> {
       presetWorld('PUNJAB_PLAINS'),
       'ASSESSMENT',
     ).getEvents(),
+    // Dense town (URBAN_GENERIC): replay memory and the checkpoint captures.
+    s06_trainee: playTrainee(
+      loadScripted('S06'),
+      presetWorld('URBAN_GENERIC'),
+      'ASSESSMENT',
+    ).getEvents(),
   };
 }
