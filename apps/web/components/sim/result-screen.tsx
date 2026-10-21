@@ -12,6 +12,7 @@ import type {
 } from '@vyuh/shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { SIM_VERSION } from '@vyuh/sim-core';
 import { useEffect, useState } from 'react';
 import {
   AffiliationSymbol,
@@ -24,10 +25,37 @@ import {
 } from '@/components/hud/primitives';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip } from '@/components/ui/tooltip';
 import { api } from '@/lib/api';
+import { REPLAY_FALLBACK_TEXT, penaltyHref, replayGate, type ReplayGate } from '@/lib/replay/gate';
+import { loadPresetMeta } from '@/lib/terrain/load-world';
 import { OUTCOME_LABEL, OUTCOME_TONE, humaniseFeedback } from '@/lib/hud/feedback';
 import { CLASS_LABEL, formatClock } from '@/lib/strings';
 import { cn } from '@/lib/utils';
+
+/**
+ * Whether this session can be replayed exactly (decision 109): the stored sim
+ * version and terrain revision against this build's. Null while checking.
+ */
+function useReplayGate(sessionId: string, scenarioId: string): ReplayGate | null {
+  const [gate, setGate] = useState<ReplayGate | null>(null);
+  useEffect(() => {
+    const ctrl = new AbortController();
+    (async () => {
+      const [session, detail] = await Promise.all([
+        api.getSession(sessionId, ctrl.signal),
+        api.getScenario(scenarioId, ctrl.signal),
+      ]);
+      const meta = await loadPresetMeta(detail.scenario.terrain.preset);
+      setGate(replayGate(session, SIM_VERSION, meta.revision ?? 1));
+    })().catch(() => {
+      // The AAR page checks again on open; leave the button enabled.
+      if (!ctrl.signal.aborted) setGate({ ok: true });
+    });
+    return () => ctrl.abort();
+  }, [sessionId, scenarioId]);
+  return gate;
+}
 
 const COMPONENT_LABEL: Record<keyof ScoreComponents, string> = {
   detection: 'Detection',
@@ -100,6 +128,7 @@ export function ResultScreen({
   ended: { reason: SessionEndReason; tMs: number } | null;
 }) {
   const router = useRouter();
+  const gate = useReplayGate(sessionId, scenarioId);
   const [items, setItems] = useState<ScenarioListItem[] | null>(null);
   const [busy, setBusy] = useState<'retry' | 'next' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -156,9 +185,22 @@ export function ResultScreen({
           <Button variant="ghost" asChild>
             <Link href="/train">Back to training</Link>
           </Button>
-          <Button asChild data-testid="open-replay">
-            <Link href={`/aar/session/${sessionId}`}>Replay (AAR)</Link>
-          </Button>
+          {gate && !gate.ok ? (
+            <>
+              <Tooltip content={`${REPLAY_FALLBACK_TEXT} ${gate.why}`} align="end">
+                <Button disabled data-testid="open-replay">
+                  Replay (AAR)
+                </Button>
+              </Tooltip>
+              <Button variant="ghost" asChild data-testid="open-timeline">
+                <Link href={`/aar/session/${sessionId}`}>Event timeline</Link>
+              </Button>
+            </>
+          ) : (
+            <Button asChild data-testid="open-replay">
+              <Link href={`/aar/session/${sessionId}`}>Replay (AAR)</Link>
+            </Button>
+          )}
           <Button
             disabled={busy !== null || !scenarioId}
             onClick={() => void start('retry', scenarioId)}
@@ -271,7 +313,14 @@ export function ResultScreen({
                 {penalties.map((p, i) => (
                   <tr key={i} className="border-t border-line-1">
                     <td className={cn(TD, 'text-readout text-text-2')}>
-                      {p.tMs === undefined ? '—' : formatClock(p.tMs)}
+                      <Link
+                        href={penaltyHref(sessionId, p, score.penalties.indexOf(p))}
+                        className="underline decoration-line-2 underline-offset-2 hover:text-text-1 hover:decoration-text-2 focus-visible:outline-2 focus-visible:outline-select"
+                        aria-label={`Open the replay at this moment: ${humaniseFeedback(p.feedback)}`}
+                        data-testid="penalty-link"
+                      >
+                        {p.tMs === undefined ? 'View' : formatClock(p.tMs)}
+                      </Link>
                     </td>
                     <td
                       className={cn(

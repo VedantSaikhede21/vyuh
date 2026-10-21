@@ -21,6 +21,7 @@ import {
 //      kill-chain stage chosen, the replay help
 //  06  the fallback for a session recorded on an older simulator version
 //  07–08  the contact report form (S10 swarm), then the Comms acknowledgement
+//  09–10  result screen: penalty links (v4), and Replay unavailable with its reason
 // The S06 test also prints peak browser memory while the replay loads and plays.
 
 const OUT = 'e2e/checkpoint';
@@ -180,6 +181,23 @@ for (const vp of VIEWPORTS) {
       await page.keyboard.press('Enter');
       await page.waitForTimeout(200);
       await shot(page, '08-report-sent');
+    });
+
+    test('result screen: penalty links, replay unavailable @checkpoint', async ({ page }) => {
+      test.setTimeout(180_000);
+      await login(page, 'trainee1@demo');
+      // default_v4 penalties carry their time and link to that moment in the replay.
+      const v4 = await sessionFromLog(page, 'S06', 's06_roe_attempts', 5);
+      await page.goto(`/train/session/${v4}`);
+      await expect(page.getByTestId('penalty-link').first()).toBeVisible({ timeout: 60_000 });
+      await shot(page, '09-result-penalty-links');
+      // A session the replay cannot reproduce: the button says why, the timeline stays reachable.
+      const old = await sessionFromLog(page, 'S01', 's01_defended', 4);
+      await page.goto(`/train/session/${old}`);
+      await expect(page.getByTestId('open-replay')).toBeDisabled({ timeout: 60_000 });
+      await page.getByTestId('open-replay').locator('..').hover();
+      await expect(page.getByRole('tooltip')).toBeVisible();
+      await shot(page, '10-result-replay-unavailable');
     });
 
     test('fallback for an older simulator version @checkpoint', async ({ page }) => {

@@ -34,6 +34,29 @@ export function replayGate(
   return { ok: true };
 }
 
+/**
+ * Link from a result-screen penalty to its moment in the AAR (Phase 4a Step 12).
+ * v4 penalties carry their time; older ones are resolved by the AAR page from the
+ * kill chain (`penaltyMoment`), so they link by their index in the score.
+ */
+export function penaltyHref(sessionId: string, p: Penalty, index: number): string {
+  const base = `/aar/session/${sessionId}`;
+  return p.tMs !== undefined ? `${base}?t=${p.tMs}` : `${base}?penalty=${index}`;
+}
+
+/** Start time for the AAR page from `?t=` or `?penalty=` (null = from the start). */
+export function initialReplayTime(
+  params: { t: string | null; penalty: string | null },
+  score: Score | null | undefined,
+  killChain: readonly ContactKillChain[],
+): number {
+  const t = Number(params.t);
+  if (params.t !== null && Number.isFinite(t) && t > 0) return t;
+  const i = Number(params.penalty);
+  const p = params.penalty !== null && Number.isInteger(i) ? score?.penalties[i] : undefined;
+  return (p && penaltyMoment(p, killChain)) ?? 0;
+}
+
 export type MarkerKind = 'DETECT' | 'CLASSIFY' | 'RESPOND' | 'GOOD' | 'BAD' | 'PENALTY';
 
 export interface TimelineMarker {

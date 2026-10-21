@@ -43,3 +43,31 @@ test('a session from an older simulator version falls back to the timeline', asy
   );
   await expect(page.getByTestId('kill-chain')).toBeVisible();
 });
+
+test('result-screen penalties open the replay at their moment', async ({ page }) => {
+  test.setTimeout(180_000);
+  await login(page, 'trainee1@demo');
+  // S06 Assessment (default_v4): intercepts blocked for the ROE and the town, each timed.
+  const sid = await sessionFromLog(page, 'S06', 's06_roe_attempts', 5);
+  await page.goto(`/train/session/${sid}`);
+  await expect(page.getByTestId('result-screen')).toBeVisible({ timeout: 60_000 });
+  const link = page.getByTestId('penalty-link').first();
+  const when = (await link.textContent())!.trim();
+  expect(when).toMatch(/^\d\d:\d\d$/);
+  await link.click();
+  await expect(page.getByTestId('replay-timeline')).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByTestId('replay-clock')).toHaveText(new RegExp(`^${when}`));
+});
+
+test('the result screen explains why an old session cannot be replayed', async ({ page }) => {
+  await login(page, 'trainee1@demo');
+  const sid = await sessionFromLog(page, 'S01', 's01_defended', 4);
+  await page.goto(`/train/session/${sid}`);
+  await expect(page.getByTestId('result-screen')).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByTestId('open-replay')).toBeDisabled();
+  // A disabled button gets no pointer events: its tooltip wrapper does.
+  await page.getByTestId('open-replay').locator('..').hover();
+  await expect(page.getByRole('tooltip')).toContainText('Recorded on simulator version 4');
+  await page.getByTestId('open-timeline').click();
+  await expect(page.getByTestId('replay-fallback')).toBeVisible();
+});

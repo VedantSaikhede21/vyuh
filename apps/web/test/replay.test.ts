@@ -18,6 +18,8 @@ import { describe, expect, it } from 'vitest';
 import { KEYFRAME_MS, ReplayController } from '../lib/replay/controller';
 import {
   REPLAY_FALLBACK_TEXT,
+  initialReplayTime,
+  penaltyHref,
   penaltyMoment,
   replayGate,
   timelineMarkers,
@@ -185,6 +187,25 @@ describe('timeline markers', () => {
     for (const k of ['DETECT', 'CLASSIFY', 'RESPOND', 'GOOD', 'PENALTY'])
       expect(kinds).toContain(k);
     expect(markers.find((m) => m.kind === 'PENALTY')?.tMs).toBe(42_000);
+  });
+
+  it('links a v4 penalty by its time and an older one by its index', () => {
+    expect(penaltyHref('s1', penalty({ tMs: 61_000 }), 3)).toBe('/aar/session/s1?t=61000');
+    expect(penaltyHref('s1', penalty({ contactId: 'c01' }), 3)).toBe('/aar/session/s1?penalty=3');
+  });
+
+  it('starts the replay at ?t=, else at the penalty moment, else at 0', () => {
+    const score = {
+      penalties: [penalty({ contactId: 'c01' }), penalty({ tMs: 9000 })],
+    } as unknown as Score;
+    const at = (t: string | null, p: string | null) =>
+      initialReplayTime({ t, penalty: p }, score, killChain);
+    expect(at('61000', null)).toBe(61_000);
+    expect(at(null, '0')).toBe(42_000); // the contact's RESPOND moment in the kill chain
+    expect(at(null, '1')).toBe(9000);
+    expect(at(null, '7')).toBe(0);
+    expect(at('abc', 'x')).toBe(0);
+    expect(at(null, null)).toBe(0);
   });
 
   it('does not mark a bonus as a penalty', () => {
