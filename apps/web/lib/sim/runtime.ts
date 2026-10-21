@@ -101,6 +101,13 @@ export class SimRuntime {
     };
   }
 
+  /** After a jump in sim time (replay seek): render the new state as is, no interpolation. */
+  afterJump(): void {
+    this.capturePositions();
+    this.accumulatorMs = 0;
+    this.alpha = 0;
+  }
+
   groundHeight(x: number, z: number): number {
     return sampleHeight(this.terrain, x, z);
   }
