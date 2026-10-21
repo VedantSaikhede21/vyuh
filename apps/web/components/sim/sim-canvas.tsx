@@ -2,7 +2,7 @@
 
 import { PerformanceMonitor, View } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
-import { useEffect, useState, type RefObject } from 'react';
+import { useEffect, useState, type ReactNode, type RefObject } from 'react';
 import { EoScene } from '@/components/hud/eo-view';
 import {
   ADAPTIVE_FPS_BOUNDS,
@@ -46,12 +46,15 @@ export function SimCanvas({
   tactical,
   eo,
   onSelectTrack,
+  tacticalExtra,
 }: {
   runtime: SimRuntime;
   container: RefObject<HTMLDivElement | null>;
   tactical: RefObject<HTMLDivElement | null>;
   eo: RefObject<HTMLDivElement | null>;
   onSelectTrack: (trackId: string) => void;
+  /** Extra 3D content in the tactical view (AAR ground-truth anchors). */
+  tacticalExtra?: ReactNode;
 }) {
   const [adaptive] = useState(adaptivePixelRatioEnabled);
   const [dpr] = useState(() => startPixelRatio(deviceRatio()));
@@ -66,6 +69,7 @@ export function SimCanvas({
       <SimRuntimeContext.Provider value={runtime}>
         <View track={tactical as RefObject<HTMLElement>} index={1}>
           <TacticalScene element={tactical} onSelectTrack={onSelectTrack} />
+          {tacticalExtra}
         </View>
         <View track={eo as RefObject<HTMLElement>} index={2}>
           <EoScene />

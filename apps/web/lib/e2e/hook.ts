@@ -19,6 +19,8 @@ export interface VyuhE2E {
   release(): void;
   /** Ground-truth peek for tests: the active track on a scenario contact, if any. */
   trackFor(contactId: string): string | null;
+  /** Estimated range of a track (what the track list shows), metres; null if gone. */
+  trackRange(trackId: string): number | null;
   /** The EO tracker state shown on the chip (MANUAL / CUE / TRACK). */
   eoTrackMode(): string;
   ended(): boolean;
@@ -55,6 +57,7 @@ export function installE2EHook(rt: SimRuntime): () => void {
         .tracks.find((tr) => tr.status === 'ACTIVE' && tr.contactId === contactId);
       return t?.id ?? null;
     },
+    trackRange: (trackId) => rt.sim.getState().tracks.find((t) => t.id === trackId)?.rangeM ?? null,
     eoTrackMode: () => useUiStore.getState().eo.trackMode,
     ended: () => rt.ended,
   };

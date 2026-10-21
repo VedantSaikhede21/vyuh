@@ -44,7 +44,7 @@ export interface TimelineMarker {
 
 /**
  * Where a penalty happened: its own time (trees from default_v4 record it), else
- * the moment of the contact's response in the kill chain (decision 111).
+ * the moment of the contact's response in the kill chain (decision 112).
  */
 export function penaltyMoment(p: Penalty, killChain: readonly ContactKillChain[]): number | null {
   if (p.tMs !== undefined) return p.tMs;
@@ -95,8 +95,10 @@ export function timelineMarkers(
         break;
     }
   }
+  // Session adjustments include bonuses (a non-threat correctly identified, +5); only
+  // deductions are penalties.
   for (const p of score?.penalties ?? []) {
-    const t = penaltyMoment(p, killChain);
+    const t = p.points < 0 ? penaltyMoment(p, killChain) : null;
     if (t !== null) out.push({ tMs: t, kind: 'PENALTY', text: `${p.points} · ${p.feedback}` });
   }
   return out.sort((a, b) => a.tMs - b.tMs);

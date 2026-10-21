@@ -218,3 +218,37 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* AAR replay scrubber (Phase 4a): a 2 px hairline track and a narrow bone
+   thumb, no browser default look (DESIGN §2, §12). */
+.replay-scrubber {
+  appearance: none;
+  background: transparent;
+}
+.replay-scrubber::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--line-2);
+}
+.replay-scrubber::-moz-range-track {
+  height: 2px;
+  background: var(--line-2);
+}
+.replay-scrubber::-webkit-slider-thumb {
+  appearance: none;
+  width: 4px;
+  height: 16px;
+  margin-top: -7px;
+  border-radius: 1px;
+  background: var(--select);
+}
+.replay-scrubber::-moz-range-thumb {
+  width: 4px;
+  height: 16px;
+  border: 0;
+  border-radius: 1px;
+  background: var(--select);
+}
+.replay-scrubber:focus-visible {
+  outline: 2px solid var(--select);
+  outline-offset: 2px;
+}

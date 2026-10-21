@@ -178,4 +178,11 @@ describe('timeline markers', () => {
       expect(kinds).toContain(k);
     expect(markers.find((m) => m.kind === 'PENALTY')?.tMs).toBe(42_000);
   });
+
+  it('does not mark a bonus as a penalty', () => {
+    const score = {
+      penalties: [penalty({ code: 'NON_THREAT_IDENTIFIED', points: 5, contactId: 'c01' })],
+    } as unknown as Score;
+    expect(timelineMarkers(events, score, killChain).some((m) => m.kind === 'PENALTY')).toBe(false);
+  });
 });
