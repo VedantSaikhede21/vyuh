@@ -1,9 +1,9 @@
 {
   "id": "S09",
   "schemaVersion": 1,
-  "generatorVersion": 2,
+  "generatorVersion": 3,
   "name": "Dusk Swarm",
-  "briefing": "## Situation\nDusk, the sun low in the west. Pump Station is on open farmland. A coordinated swarm attack is expected: two groups of four small drones arriving close together from different directions, with a high decoy to split your attention.\n## Mission\nDetect, identify and defeat every hostile before it reaches Pump Station. Leave birds, civilians and friendlies alone.\n## ROE\nWEAPONS TIGHT — intercept only tracks you have classified as a threat type and declared HOSTILE. No intercepts inside the marked no-kinetic zones (settlements).\n## Assets\n- Radar, EO/IR camera and RF detector on high ground near the asset\n- RF jammer, 2.0 km, ±10° sector, 10 s cycle\n- GNSS spoofer, 2.0 km, ±10° sector, 15 s cycle\n- Interceptor, 1.5 km, 11 rounds, 6 s reload\n## Intel\nOne group is expected out of the setting sun, from the west-south-west, where the day camera looks into the glare; the other from the north. Rounds are limited: the jammer and the spoofer cover a whole sector at once.",
+  "briefing": "## Situation\nDusk, the sun low in the west. Pump Station is on open farmland. A coordinated swarm attack is expected: two groups of four small drones arriving close together from different directions, with a high decoy to split your attention.\n## Mission\nDetect, identify and defeat every hostile before it reaches Pump Station. Leave birds, civilians and friendlies alone. Contact reports are expected: send one for every threat track (R).\n## ROE\nWEAPONS TIGHT — intercept only tracks you have classified as a threat type and declared HOSTILE. No intercepts inside the marked no-kinetic zones (settlements).\n## Assets\n- Radar, EO/IR camera and RF detector on high ground near the asset\n- RF jammer, 2.0 km, ±10° sector, 10 s cycle\n- GNSS spoofer, 2.0 km, ±10° sector, 15 s cycle\n- Interceptor, 1.5 km, 11 rounds, 6 s reload\n## Intel\nOne group is expected out of the setting sun, from the west-south-west, where the day camera looks into the glare; the other from the north. Rounds are limited: the jammer and the spoofer cover a whole sector at once.",
   "seed": 90915,
   "difficulty": 4,
   "request": {
@@ -833,5 +833,5 @@
     }
   ],
   "durationS": 240,
-  "scoringTreeId": "default_v3"
+  "scoringTreeId": "default_v4"
 }

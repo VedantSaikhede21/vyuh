@@ -15,7 +15,7 @@
     },
     "falseContactDensity": "HIGH"
   },
-  "briefing": "## Situation\nDaylight, clear. Post Alpha is on the edge of a busy market town. Several civilian hobby drones are flying over the town today. One hostile quadcopter is expected.\n## Mission\nDetect, identify and defeat the hostile before it reaches Post Alpha. Do not harm civilians: no intercepts over the town, and check the jam sector before jamming.\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nThe hostile is RF-controlled and expected from the north, over the town. Civilian drones are RF-linked too: jamming the hostile's bearing also jams any civilian in the same sector.",
+  "briefing": "## Situation\nDaylight, clear. Post Alpha is on the edge of a busy market town. Several civilian hobby drones are flying over the town today. One hostile quadcopter is expected.\n## Mission\nDetect, identify and defeat the hostile before it reaches Post Alpha. Do not harm civilians: no intercepts over the town, and check the jam sector before jamming. Contact reports are expected: send one for every threat track (R).\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nThe hostile is RF-controlled and expected from the north, over the town. Civilian drones are RF-linked too: jamming the hostile's bearing also jams any civilian in the same sector.",
   "patch": {},
   "contacts": {
     "c02": {

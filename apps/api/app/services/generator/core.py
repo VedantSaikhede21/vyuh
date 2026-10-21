@@ -50,8 +50,8 @@ from app.services.generator.visibility import FINE_STEP_M, GRID_N, exposure_grid
 from app.services.scenarios import scenario_rule_violations
 from app.services.terrain import Terrain, load_terrain
 
-GENERATOR_VERSION = 2
-SCORING_TREE_ID = "default_v3"
+GENERATOR_VERSION = 3
+SCORING_TREE_ID = "default_v4"
 SCHEMA_VERSION = 1
 #: Attempts per contact group before giving up (deterministic attempt sub-streams).
 MAX_ATTEMPTS = 8

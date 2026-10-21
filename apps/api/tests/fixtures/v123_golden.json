@@ -1,0 +1,3773 @@
+{
+ "s01_defended:default_v1": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 11,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "c01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fast detection: acted 0.1 s after the track appeared.",
+     "Correctly classified as QUAD_SMALL.",
+     "Neutralised before it reached the asset (1 round(s) used)."
+    ],
+    "first_detectable_t_ms": 20000,
+    "identifiable_when_classified": false,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_UNDER_5S",
+     "CLASS_EXACT",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 80.0,
+    "response_appropriate": true,
+    "responses": [
+     "INTERCEPT"
+    ],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": 20050,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 100.0,
+  "tree_version": "default_v1"
+ },
+ "s01_defended:default_v2": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 11,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "c01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fast detection: acted 0.1 s after the track appeared.",
+     "Correctly classified as QUAD_SMALL.",
+     "Neutralised before it reached the asset (1 round(s))."
+    ],
+    "first_detectable_t_ms": 20000,
+    "identifiable_when_classified": false,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_UNDER_5S",
+     "CLASS_EXACT",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 80.0,
+    "response_appropriate": true,
+    "responses": [
+     "INTERCEPT"
+    ],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": 20050,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 100.0,
+  "tree_version": "default_v2"
+ },
+ "s01_defended:default_v3": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 11,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "c01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fast detection: acted 0.1 s after the track appeared.",
+     "Correctly classified as QUAD_SMALL.",
+     "Neutralised before it reached the asset (1 round(s))."
+    ],
+    "first_detectable_t_ms": 20000,
+    "identifiable_when_classified": false,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_UNDER_5S",
+     "CLASS_EXACT",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 80.0,
+    "response_appropriate": true,
+    "responses": [
+     "INTERCEPT"
+    ],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": 20050,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 100.0,
+  "tree_version": "default_v3"
+ },
+ "s01_ignored:default_v1": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 0.0,
+   "decision": 0.0,
+   "detection": 0.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 6,
+   "leaked": 1,
+   "neutralised": 0,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c01",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Threat was on radar from 20 s but you never acted on its track."
+    ],
+    "first_detectable_t_ms": 20000,
+    "identifiable_when_classified": null,
+    "is_threat": true,
+    "leaves": [
+     "MISSED"
+    ],
+    "outcome": "LEAKED",
+    "points": 0.0,
+    "response_appropriate": false,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 0.0,
+  "tree_version": "default_v1"
+ },
+ "s01_ignored:default_v2": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 0.0,
+   "decision": 0.0,
+   "detection": 0.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 6,
+   "leaked": 1,
+   "neutralised": 0,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c01",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Threat was on radar from 20 s but you never acted on its track."
+    ],
+    "first_detectable_t_ms": 20000,
+    "identifiable_when_classified": null,
+    "is_threat": true,
+    "leaves": [
+     "MISSED"
+    ],
+    "outcome": "LEAKED",
+    "points": 0.0,
+    "response_appropriate": false,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 0.0,
+  "tree_version": "default_v2"
+ },
+ "s01_ignored:default_v3": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 0.0,
+   "decision": 0.0,
+   "detection": 0.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 6,
+   "leaked": 1,
+   "neutralised": 0,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c01",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Threat was on radar from 20 s but you never acted on its track."
+    ],
+    "first_detectable_t_ms": 20000,
+    "identifiable_when_classified": null,
+    "is_threat": true,
+    "leaves": [
+     "MISSED"
+    ],
+    "outcome": "LEAKED",
+    "points": 0.0,
+    "response_appropriate": false,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 0.0,
+  "tree_version": "default_v3"
+ },
+ "s04_reports:default_v1": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 43,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c06",
+    "feedback": "Correctly identified a non-threat (FRIENDLY_QUAD) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   }
+  ],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "QUAD_HEAVY",
+    "contact_id": "c01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fast detection: acted 0.1 s after the track appeared.",
+     "Correctly classified as QUAD_HEAVY.",
+     "Neutralised before it reached the asset (0 round(s) used)."
+    ],
+    "first_detectable_t_ms": 84000,
+    "identifiable_when_classified": false,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_UNDER_5S",
+     "CLASS_EXACT",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 80.0,
+    "response_appropriate": true,
+    "responses": [
+     "EW_JAM"
+    ],
+    "track_ids": [
+     "T002"
+    ],
+    "trainee_detected_t_ms": 84050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c02",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_SMALL) was left alone."
+    ],
+    "first_detectable_t_ms": null,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c03",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_SMALL) was left alone."
+    ],
+    "first_detectable_t_ms": null,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c04",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_SMALL) was left alone."
+    ],
+    "first_detectable_t_ms": null,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c05",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_SMALL) was left alone."
+    ],
+    "first_detectable_t_ms": null,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "FRIENDLY_QUAD",
+    "contact_id": "c06",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (FRIENDLY_QUAD) and held fire."
+    ],
+    "first_detectable_t_ms": 16000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": 16050,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 100.0,
+  "tree_version": "default_v1"
+ },
+ "s04_reports:default_v2": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 43,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c06",
+    "feedback": "Correctly identified a non-threat (FRIENDLY_QUAD) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   }
+  ],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "QUAD_HEAVY",
+    "contact_id": "c01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fast detection: acted 0.1 s after the track appeared.",
+     "Correctly classified as QUAD_HEAVY.",
+     "Neutralised before it reached the asset (jammed)."
+    ],
+    "first_detectable_t_ms": 84000,
+    "identifiable_when_classified": false,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_UNDER_5S",
+     "CLASS_EXACT",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 80.0,
+    "response_appropriate": true,
+    "responses": [
+     "EW_JAM"
+    ],
+    "track_ids": [
+     "T002"
+    ],
+    "trainee_detected_t_ms": 84050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c02",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_SMALL) was left alone."
+    ],
+    "first_detectable_t_ms": null,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c03",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_SMALL) was left alone."
+    ],
+    "first_detectable_t_ms": null,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c04",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_SMALL) was left alone."
+    ],
+    "first_detectable_t_ms": null,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c05",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_SMALL) was left alone."
+    ],
+    "first_detectable_t_ms": null,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "FRIENDLY_QUAD",
+    "contact_id": "c06",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (FRIENDLY_QUAD) and held fire."
+    ],
+    "first_detectable_t_ms": 16000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": 16050,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 100.0,
+  "tree_version": "default_v2"
+ },
+ "s04_reports:default_v3": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 43,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c06",
+    "feedback": "Correctly identified a non-threat (FRIENDLY_QUAD) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   }
+  ],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "QUAD_HEAVY",
+    "contact_id": "c01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fast detection: acted 0.1 s after the track appeared.",
+     "Correctly classified as QUAD_HEAVY.",
+     "Neutralised before it reached the asset (jammed)."
+    ],
+    "first_detectable_t_ms": 84000,
+    "identifiable_when_classified": false,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_UNDER_5S",
+     "CLASS_EXACT",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 80.0,
+    "response_appropriate": true,
+    "responses": [
+     "EW_JAM"
+    ],
+    "track_ids": [
+     "T002"
+    ],
+    "trainee_detected_t_ms": 84050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c02",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_SMALL) was left alone."
+    ],
+    "first_detectable_t_ms": null,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c03",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_SMALL) was left alone."
+    ],
+    "first_detectable_t_ms": null,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c04",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_SMALL) was left alone."
+    ],
+    "first_detectable_t_ms": null,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c05",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_SMALL) was left alone."
+    ],
+    "first_detectable_t_ms": null,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "FRIENDLY_QUAD",
+    "contact_id": "c06",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (FRIENDLY_QUAD) and held fire."
+    ],
+    "first_detectable_t_ms": 16000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": 16050,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 100.0,
+  "tree_version": "default_v3"
+ },
+ "s06_trainee:default_v1": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 112,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c02",
+    "feedback": "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c03",
+    "feedback": "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c04",
+    "feedback": "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c05",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c06",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c07",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c08",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c09",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   }
+  ],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "c01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fast detection: acted 0.1 s after the track appeared.",
+     "Correctly classified as QUAD_SMALL.",
+     "Neutralised before it reached the asset (0 round(s) used)."
+    ],
+    "first_detectable_t_ms": 158000,
+    "identifiable_when_classified": false,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_UNDER_5S",
+     "CLASS_EXACT",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 80.0,
+    "response_appropriate": true,
+    "responses": [
+     "EW_JAM"
+    ],
+    "track_ids": [
+     "T003"
+    ],
+    "trainee_detected_t_ms": 158050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "CIVILIAN_HOBBY",
+    "contact_id": "c02",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire."
+    ],
+    "first_detectable_t_ms": 154000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T002"
+    ],
+    "trainee_detected_t_ms": 154050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "CIVILIAN_HOBBY",
+    "contact_id": "c03",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire."
+    ],
+    "first_detectable_t_ms": 176000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T009"
+    ],
+    "trainee_detected_t_ms": 176050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "CIVILIAN_HOBBY",
+    "contact_id": "c04",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire."
+    ],
+    "first_detectable_t_ms": 94000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": 94050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c05",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T004"
+    ],
+    "trainee_detected_t_ms": 160050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c06",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T005"
+    ],
+    "trainee_detected_t_ms": 160050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c07",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T006"
+    ],
+    "trainee_detected_t_ms": 160050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c08",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T007"
+    ],
+    "trainee_detected_t_ms": 160050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c09",
+    "detection_latency_s": 2.0,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160050,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T008"
+    ],
+    "trainee_detected_t_ms": 162050,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 100.0,
+  "tree_version": "default_v1"
+ },
+ "s06_trainee:default_v2": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 112,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c02",
+    "feedback": "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c03",
+    "feedback": "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c04",
+    "feedback": "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c05",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c06",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c07",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c08",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c09",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   }
+  ],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "c01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fast detection: acted 0.1 s after the track appeared.",
+     "Correctly classified as QUAD_SMALL.",
+     "Neutralised before it reached the asset (jammed)."
+    ],
+    "first_detectable_t_ms": 158000,
+    "identifiable_when_classified": false,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_UNDER_5S",
+     "CLASS_EXACT",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 80.0,
+    "response_appropriate": true,
+    "responses": [
+     "EW_JAM"
+    ],
+    "track_ids": [
+     "T003"
+    ],
+    "trainee_detected_t_ms": 158050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "CIVILIAN_HOBBY",
+    "contact_id": "c02",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire."
+    ],
+    "first_detectable_t_ms": 154000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T002"
+    ],
+    "trainee_detected_t_ms": 154050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "CIVILIAN_HOBBY",
+    "contact_id": "c03",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire."
+    ],
+    "first_detectable_t_ms": 176000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T009"
+    ],
+    "trainee_detected_t_ms": 176050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "CIVILIAN_HOBBY",
+    "contact_id": "c04",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire."
+    ],
+    "first_detectable_t_ms": 94000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": 94050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c05",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T004"
+    ],
+    "trainee_detected_t_ms": 160050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c06",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T005"
+    ],
+    "trainee_detected_t_ms": 160050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c07",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T006"
+    ],
+    "trainee_detected_t_ms": 160050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c08",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T007"
+    ],
+    "trainee_detected_t_ms": 160050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c09",
+    "detection_latency_s": 2.0,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160050,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T008"
+    ],
+    "trainee_detected_t_ms": 162050,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 100.0,
+  "tree_version": "default_v2"
+ },
+ "s06_trainee:default_v3": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 112,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c02",
+    "feedback": "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c03",
+    "feedback": "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c04",
+    "feedback": "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c05",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c06",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c07",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c08",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   },
+   {
+    "code": "NON_THREAT_IDENTIFIED",
+    "contact_id": "c09",
+    "feedback": "Correctly identified a non-threat (BIRD_LARGE) and held fire.",
+    "points": 5.0,
+    "t_ms": null,
+    "unavoidable": null
+   }
+  ],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "c01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fast detection: acted 0.1 s after the track appeared.",
+     "Correctly classified as QUAD_SMALL.",
+     "Neutralised before it reached the asset (jammed)."
+    ],
+    "first_detectable_t_ms": 158000,
+    "identifiable_when_classified": false,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_UNDER_5S",
+     "CLASS_EXACT",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 80.0,
+    "response_appropriate": true,
+    "responses": [
+     "EW_JAM"
+    ],
+    "track_ids": [
+     "T003"
+    ],
+    "trainee_detected_t_ms": 158050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "CIVILIAN_HOBBY",
+    "contact_id": "c02",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire."
+    ],
+    "first_detectable_t_ms": 154000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T002"
+    ],
+    "trainee_detected_t_ms": 154050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "CIVILIAN_HOBBY",
+    "contact_id": "c03",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire."
+    ],
+    "first_detectable_t_ms": 176000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T009"
+    ],
+    "trainee_detected_t_ms": 176050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "CIVILIAN_HOBBY",
+    "contact_id": "c04",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (CIVILIAN_HOBBY) and held fire."
+    ],
+    "first_detectable_t_ms": 94000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": 94050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c05",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T004"
+    ],
+    "trainee_detected_t_ms": 160050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c06",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T005"
+    ],
+    "trainee_detected_t_ms": 160050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c07",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T006"
+    ],
+    "trainee_detected_t_ms": 160050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c08",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T007"
+    ],
+    "trainee_detected_t_ms": 160050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "BIRD_LARGE",
+    "contact_id": "c09",
+    "detection_latency_s": 2.0,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Correctly identified a non-threat (BIRD_LARGE) and held fire."
+    ],
+    "first_detectable_t_ms": 160050,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_IDENTIFIED"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 5.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T008"
+    ],
+    "trainee_detected_t_ms": 162050,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 100.0,
+  "tree_version": "default_v3"
+ },
+ "s14_jam:default_v1": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 0.0,
+   "decision": 30.0,
+   "detection": 4.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 26,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b01",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b02",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 8000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T005"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b03",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T002"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b04",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 8000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T006"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b05",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 10000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T007"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b06",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T003"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c01",
+    "detection_latency_s": 96.0,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Very slow detection: 96.0 s after the track appeared.",
+     "Never classified. Identify every track you act on.",
+     "Neutralised before it reached the asset (0 round(s) used)."
+    ],
+    "first_detectable_t_ms": 12000,
+    "identifiable_when_classified": null,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_OVER_30S",
+     "NOT_CLASSIFIED",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 34.0,
+    "response_appropriate": true,
+    "responses": [
+     "EW_JAM"
+    ],
+    "track_ids": [
+     "T008",
+     "T009"
+    ],
+    "trainee_detected_t_ms": 108000,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c02",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (FRIENDLY_QUAD) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "FRIENDLY_JAMMED",
+    "points": 0.0,
+    "response_appropriate": false,
+    "responses": [],
+    "track_ids": [
+     "T004"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 42.5,
+  "tree_version": "default_v1"
+ },
+ "s14_jam:default_v2": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 0.0,
+   "decision": 30.0,
+   "detection": 4.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 26,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [
+   {
+    "code": "FRIENDLY_JAMMED",
+    "contact_id": "c02",
+    "feedback": "Your jam cut the link of a friendly FRIENDLY_QUAD. Check the sector for own drones before jamming.",
+    "points": -15.0,
+    "t_ms": null,
+    "unavoidable": null
+   }
+  ],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b01",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b02",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 8000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T005"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b03",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T002"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b04",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 8000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T006"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b05",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 10000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T007"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b06",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T003"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c01",
+    "detection_latency_s": 96.0,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Very slow detection: 96.0 s after the track appeared.",
+     "Never classified. Identify every track you act on.",
+     "Neutralised before it reached the asset (jammed)."
+    ],
+    "first_detectable_t_ms": 12000,
+    "identifiable_when_classified": null,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_OVER_30S",
+     "NOT_CLASSIFIED",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 34.0,
+    "response_appropriate": true,
+    "responses": [
+     "EW_JAM"
+    ],
+    "track_ids": [
+     "T008",
+     "T009"
+    ],
+    "trainee_detected_t_ms": 108000,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c02",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Your jam cut the link of a friendly FRIENDLY_QUAD. Check the sector for own drones before jamming."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "FRIENDLY_JAMMED"
+    ],
+    "outcome": "FRIENDLY_JAMMED",
+    "points": -15.0,
+    "response_appropriate": false,
+    "responses": [],
+    "track_ids": [
+     "T004"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 27.5,
+  "tree_version": "default_v2"
+ },
+ "s14_jam:default_v3": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 0.0,
+   "decision": 30.0,
+   "detection": 4.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 26,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [
+   {
+    "code": "FRIENDLY_JAMMED",
+    "contact_id": "c02",
+    "feedback": "Your jam cut the link of a friendly FRIENDLY_QUAD. Check the sector for own drones before jamming.",
+    "points": -15.0,
+    "t_ms": null,
+    "unavoidable": null
+   }
+  ],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b01",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b02",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 8000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T005"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b03",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T002"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b04",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 8000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T006"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b05",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 10000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T007"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "b06",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T003"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c01",
+    "detection_latency_s": 96.0,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Very slow detection: 96.0 s after the track appeared.",
+     "Never classified. Identify every track you act on.",
+     "Neutralised before it reached the asset (jammed)."
+    ],
+    "first_detectable_t_ms": 12000,
+    "identifiable_when_classified": null,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_OVER_30S",
+     "NOT_CLASSIFIED",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 34.0,
+    "response_appropriate": true,
+    "responses": [
+     "EW_JAM"
+    ],
+    "track_ids": [
+     "T008",
+     "T009"
+    ],
+    "trainee_detected_t_ms": 108000,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": null,
+    "classified_as": null,
+    "contact_id": "c02",
+    "detection_latency_s": null,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Your jam cut the link of a friendly FRIENDLY_QUAD. Check the sector for own drones before jamming."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": null,
+    "is_threat": false,
+    "leaves": [
+     "FRIENDLY_JAMMED"
+    ],
+    "outcome": "FRIENDLY_JAMMED",
+    "points": -15.0,
+    "response_appropriate": false,
+    "responses": [],
+    "track_ids": [
+     "T004"
+    ],
+    "trainee_detected_t_ms": null,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 27.5,
+  "tree_version": "default_v3"
+ },
+ "s14_scripted:default_v1": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 135,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [
+   {
+    "code": "FRATRICIDE",
+    "contact_id": "c02",
+    "feedback": "Engaged a friendly FRIENDLY_QUAD. Confirm affiliation before engaging.",
+    "points": -40.0,
+    "t_ms": null,
+    "unavoidable": null
+   }
+  ],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": 6050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b02",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 8000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T005"
+    ],
+    "trainee_detected_t_ms": 8050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b03",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T002"
+    ],
+    "trainee_detected_t_ms": 6050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b04",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 8000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T006"
+    ],
+    "trainee_detected_t_ms": 8050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b05",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 10000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T007"
+    ],
+    "trainee_detected_t_ms": 10050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b06",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T003"
+    ],
+    "trainee_detected_t_ms": 6050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "c01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fast detection: acted 0.1 s after the track appeared.",
+     "Correctly classified as QUAD_SMALL.",
+     "Neutralised before it reached the asset (1 round(s) used)."
+    ],
+    "first_detectable_t_ms": 10000,
+    "identifiable_when_classified": false,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_UNDER_5S",
+     "CLASS_EXACT",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 80.0,
+    "response_appropriate": true,
+    "responses": [
+     "INTERCEPT"
+    ],
+    "track_ids": [
+     "T008"
+    ],
+    "trainee_detected_t_ms": 10050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "c02",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Engaged a friendly FRIENDLY_QUAD. Confirm affiliation before engaging."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "FRATRICIDE"
+    ],
+    "outcome": "FRATRICIDE",
+    "points": -40.0,
+    "response_appropriate": false,
+    "responses": [
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT"
+    ],
+    "track_ids": [
+     "T004"
+    ],
+    "trainee_detected_t_ms": 6050,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 60.0,
+  "tree_version": "default_v1"
+ },
+ "s14_scripted:default_v2": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 135,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [
+   {
+    "code": "FRATRICIDE",
+    "contact_id": "c02",
+    "feedback": "Fired on a friendly FRIENDLY_QUAD. Confirm affiliation before engaging.",
+    "points": -40.0,
+    "t_ms": null,
+    "unavoidable": null
+   }
+  ],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": 6050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b02",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 8000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T005"
+    ],
+    "trainee_detected_t_ms": 8050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b03",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T002"
+    ],
+    "trainee_detected_t_ms": 6050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b04",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 8000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T006"
+    ],
+    "trainee_detected_t_ms": 8050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b05",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 10000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T007"
+    ],
+    "trainee_detected_t_ms": 10050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b06",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T003"
+    ],
+    "trainee_detected_t_ms": 6050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "c01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fast detection: acted 0.1 s after the track appeared.",
+     "Correctly classified as QUAD_SMALL.",
+     "Neutralised before it reached the asset (1 round(s))."
+    ],
+    "first_detectable_t_ms": 10000,
+    "identifiable_when_classified": false,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_UNDER_5S",
+     "CLASS_EXACT",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 80.0,
+    "response_appropriate": true,
+    "responses": [
+     "INTERCEPT"
+    ],
+    "track_ids": [
+     "T008"
+    ],
+    "trainee_detected_t_ms": 10050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "c02",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fired on a friendly FRIENDLY_QUAD. Confirm affiliation before engaging."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "FRATRICIDE"
+    ],
+    "outcome": "FRATRICIDE",
+    "points": -40.0,
+    "response_appropriate": false,
+    "responses": [
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT"
+    ],
+    "track_ids": [
+     "T004"
+    ],
+    "trainee_detected_t_ms": 6050,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 60.0,
+  "tree_version": "default_v2"
+ },
+ "s14_scripted:default_v3": {
+  "component_max": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "components": {
+   "classification": 25.0,
+   "decision": 30.0,
+   "detection": 25.0,
+   "efficiency": 0.0,
+   "report": 0.0
+  },
+  "metrics": {
+   "eventCount": 135,
+   "leaked": 0,
+   "neutralised": 1,
+   "scoredThreats": 1,
+   "threats": 1
+  },
+  "penalties": [
+   {
+    "code": "FRATRICIDE",
+    "contact_id": "c02",
+    "feedback": "Fired on a friendly FRIENDLY_QUAD. Confirm affiliation before engaging.",
+    "points": -40.0,
+    "t_ms": null,
+    "unavoidable": null
+   }
+  ],
+  "per_contact": [
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T001"
+    ],
+    "trainee_detected_t_ms": 6050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b02",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 8000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T005"
+    ],
+    "trainee_detected_t_ms": 8050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b03",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T002"
+    ],
+    "trainee_detected_t_ms": 6050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b04",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 8000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T006"
+    ],
+    "trainee_detected_t_ms": 8050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b05",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 10000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T007"
+    ],
+    "trainee_detected_t_ms": 10050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "b06",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Non-threat (BIRD_LARGE) was left alone."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "NON_THREAT_LEFT_ALONE"
+    ],
+    "outcome": "IGNORED_OK",
+    "points": 0.0,
+    "response_appropriate": true,
+    "responses": [],
+    "track_ids": [
+     "T003"
+    ],
+    "trainee_detected_t_ms": 6050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "EXACT",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "c01",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fast detection: acted 0.1 s after the track appeared.",
+     "Correctly classified as QUAD_SMALL.",
+     "Neutralised before it reached the asset (1 round(s))."
+    ],
+    "first_detectable_t_ms": 10000,
+    "identifiable_when_classified": false,
+    "is_threat": true,
+    "leaves": [
+     "LATENCY_UNDER_5S",
+     "CLASS_EXACT",
+     "DECISION_NEUTRALISED"
+    ],
+    "outcome": "NEUTRALISED",
+    "points": 80.0,
+    "response_appropriate": true,
+    "responses": [
+     "INTERCEPT"
+    ],
+    "track_ids": [
+     "T008"
+    ],
+    "trainee_detected_t_ms": 10050,
+    "true_class": null
+   },
+   {
+    "ai_suggestion_accepted": null,
+    "ai_suggestion_correct": null,
+    "ai_suggestion_shown": null,
+    "classification_correct": "WRONG",
+    "classified_as": "QUAD_SMALL",
+    "contact_id": "c02",
+    "detection_latency_s": 0.05,
+    "dropped_t_ms": null,
+    "feedback": [
+     "Fired on a friendly FRIENDLY_QUAD. Confirm affiliation before engaging."
+    ],
+    "first_detectable_t_ms": 6000,
+    "identifiable_when_classified": false,
+    "is_threat": false,
+    "leaves": [
+     "FRATRICIDE"
+    ],
+    "outcome": "FRATRICIDE",
+    "points": -40.0,
+    "response_appropriate": false,
+    "responses": [
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT",
+     "INTERCEPT"
+    ],
+    "track_ids": [
+     "T004"
+    ],
+    "trainee_detected_t_ms": 6050,
+    "true_class": null
+   }
+  ],
+  "recommendation_basis": null,
+  "recommended_difficulty": null,
+  "total": 60.0,
+  "tree_version": "default_v3"
+ }
+}

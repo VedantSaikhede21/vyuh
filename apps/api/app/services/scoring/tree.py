@@ -4,6 +4,12 @@ A tree is JSON: `if` nodes test one metric, `bands` nodes pick a leaf by value
 range, and leaves award component points (or a session-level `adjust`) with a
 feedback line. A leaf may continue to another node via `next`.
 
+default_v4 extensions (decision 115): `roots` lists further subtrees walked for
+every contact after `root`; a leaf's `pointsMetric` takes its points from a
+metric (clamped to 0..`points`); `tMetric` names the metric that gives an
+adjustment's time; an `if` branch may be null to end the walk. Trees that do not
+use them evaluate exactly as before.
+
 Tree versions that have scored sessions are immutable (CLAUDE.md §12).
 """
 
@@ -41,6 +47,11 @@ class TreeLeaf(_Strict):
     exclude_components: Annotated[list[Component], Field(alias="excludeComponents")] = []
     feedback: str
     next: str | None = None
+    #: v4: points come from this metric (capped at `points`); the leaf is skipped
+    #: from the component when the metric is missing.
+    points_metric: Annotated[str | None, Field(alias="pointsMetric")] = None
+    #: v4: the metric (ms) that dates this adjustment on the result screen and timeline.
+    t_metric: Annotated[str | None, Field(alias="tMetric")] = None
 
 
 class Condition(_Strict):
@@ -51,8 +62,8 @@ class Condition(_Strict):
 
 class IfNode(_Strict):
     if_: Annotated[Condition, Field(alias="if")]
-    then: str | TreeLeaf
-    else_: Annotated[str | TreeLeaf, Field(alias="else")]
+    then: str | TreeLeaf | None
+    else_: Annotated[str | TreeLeaf | None, Field(alias="else")]
 
 
 class Bands(_Strict):
@@ -79,12 +90,14 @@ class Tree(_Strict):
     description: str = ""
     component_max: Annotated[ScoreComponents, Field(alias="componentMax")]
     root: str
+    #: v4: further subtrees walked for every contact after `root`.
+    roots: list[str] = []
     nodes: dict[str, IfNode | BandsNode]
 
     @model_validator(mode="after")
     def _check_references(self) -> "Tree":
         maxima = self.component_max.model_dump()
-        refs: list[str] = [self.root]
+        refs: list[str] = [self.root, *self.roots]
         leaves: list[TreeLeaf] = []
         for node in self.nodes.values():
             branches = [node.then, node.else_] if isinstance(node, IfNode) else node.leaves
@@ -93,7 +106,7 @@ class Tree(_Strict):
             for b in branches:
                 if isinstance(b, str):
                     refs.append(b)
-                else:
+                elif b is not None:
                     leaves.append(b)
         for leaf in leaves:
             if leaf.next:
@@ -148,9 +161,26 @@ def _test(cond: Condition, metrics: dict[str, Any]) -> bool:
 
 
 def evaluate(tree: Tree, metrics: dict[str, Any]) -> list[TreeLeaf]:
-    """Walk the tree for one contact; returns the leaves reached, in order."""
+    """Walk the tree (root, then any extra roots) for one contact; leaves reached, in order."""
     reached: list[TreeLeaf] = []
-    target: str | TreeLeaf | None = tree.root
+    for root in [tree.root, *tree.roots]:
+        reached += _walk(tree, root, metrics)
+    return reached
+
+
+def leaf_points(leaf: TreeLeaf, metrics: dict[str, Any]) -> float:
+    """Component points of a leaf: fixed, or from `pointsMetric` capped at `points`."""
+    if leaf.points_metric is None:
+        return leaf.points
+    value = metrics.get(leaf.points_metric)
+    if value is None:
+        return 0.0
+    return min(max(float(value), 0.0), leaf.points)
+
+
+def _walk(tree: Tree, root: str, metrics: dict[str, Any]) -> list[TreeLeaf]:
+    reached: list[TreeLeaf] = []
+    target: str | TreeLeaf | None = root
     for _ in range(MAX_STEPS):
         if target is None:
             return reached
