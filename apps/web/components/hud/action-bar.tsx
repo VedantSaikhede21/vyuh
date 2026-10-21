@@ -142,7 +142,7 @@ export function ActionBar({ runtime, commands }: { runtime: SimRuntime; commands
   const setUi = useUiStore((s) => s.set);
   const sites = useEffectorSites(runtime, hud);
   if (!hud) return null;
-  const st = actionStates(hud, sites, runtime.scenario.zones);
+  const st = actionStates(hud, sites, runtime.scenario.zones, runtime.mode);
   const selected = hud.tracks.find((t) => t.id === hud.selectedTrackId) ?? null;
   const ring = (kind: 'EW_JAM' | 'EW_SPOOF' | 'INTERCEPT') => {
     const e = sites[kind]?.view;

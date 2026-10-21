@@ -5,6 +5,7 @@ import {
   createDefender,
   createProceduralTerrain,
   createSim,
+  noKineticZoneAt,
   type Sim,
 } from '../src/index.ts';
 import { playScripted, presetWorld } from './fixtures.ts';
@@ -35,6 +36,58 @@ export function playS14Jam(): Sim {
       sim.dispatch({ type: 'TRACK_SELECTED', trackId: t.id, payload: {} });
       sim.dispatch({ type: 'MARKED_DETECTED', trackId: t.id, payload: {} });
       sim.dispatch({ type: 'RESPONSE_ORDERED', trackId: t.id, payload: { response: 'EW_JAM' } });
+    }
+    sim.tick();
+  }
+  return sim;
+}
+
+/**
+ * S06 in Assessment (WEAPONS_TIGHT, a no-kinetic town): the trainee tries to
+ * intercept every new track without classifying it (the sim blocks it for the
+ * ROE before any range check), then calls the hostile a hostile quadcopter and
+ * tries again while its track is over the town (blocked for the zone). The
+ * defender plays the rest, holding its orders on the hostile until then.
+ * Decision 116.
+ */
+export function playS06RoeAttempts(): Sim {
+  const scenario = loadScripted('S06');
+  const sim = createSim(scenario, presetWorld(scenario.terrain.preset), { mode: 'ASSESSMENT' });
+  const defender = createDefender(scenario);
+  const tried = new Set<string>();
+  let zoneTried = false;
+  while (sim.getState().endReason === null) {
+    const st = sim.getState();
+    const hostileTracks = new Set(st.tracks.filter((t) => t.contactId === 'c01').map((t) => t.id));
+    for (const t of st.tracks) {
+      if (t.status !== 'ACTIVE') continue;
+      const order = {
+        type: 'RESPONSE_ORDERED',
+        trackId: t.id,
+        payload: { response: 'INTERCEPT' },
+      } as const;
+      if (!tried.has(t.id)) {
+        tried.add(t.id);
+        sim.dispatch(order);
+      } else if (
+        !zoneTried &&
+        hostileTracks.has(t.id) &&
+        noKineticZoneAt(scenario.zones, t.pos.x, t.pos.z)
+      ) {
+        zoneTried = true;
+        sim.dispatch({ type: 'CLASSIFIED', trackId: t.id, payload: { class: 'QUAD_SMALL' } });
+        sim.dispatch({
+          type: 'AFFILIATION_SET',
+          trackId: t.id,
+          payload: { affiliation: 'HOSTILE' },
+        });
+        sim.dispatch(order);
+      }
+    }
+    for (const cmd of defender.step(st)) {
+      const onHostile =
+        'trackId' in cmd && cmd.trackId !== undefined && hostileTracks.has(cmd.trackId);
+      if (zoneTried || !onHostile) sim.dispatch(cmd);
     }
     sim.tick();
   }
@@ -105,5 +158,7 @@ export function recordFixtureLogs(): Record<string, readonly SimEvent[]> {
       presetWorld('URBAN_GENERIC'),
       'ASSESSMENT',
     ).getEvents(),
+    // Intercept attempts the sim blocks for the ROE and the no-kinetic town (decision 116).
+    s06_roe_attempts: playS06RoeAttempts().getEvents(),
   };
 }

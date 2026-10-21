@@ -1,4 +1,4 @@
-import type { ContactReport, SimEvent } from '@vyuh/shared';
+import type { ContactReport, Roe, SimEvent } from '@vyuh/shared';
 import type { CommsLine, CommsStatus } from '@/components/hud/primitives/comms-log';
 import { CLASS_LABEL, EFFECTOR_LABEL } from '@/lib/strings';
 import { EW_SECTOR_DEG, bearingDeg, formatBearing, formatKm } from './derive';
@@ -13,7 +13,17 @@ export interface CommsContext {
   trackPos(trackId: string): { x: number; z: number } | null;
   effectorPos(kind: 'EW_JAM' | 'EW_SPOOF'): { x: number; z: number } | null;
   assetName(assetId: string): string;
+  /** Scenario ROE, so a blocked intercept names the rule (decision 116). */
+  roe?: Roe;
+  /** The no-kinetic zone over a track's estimate, as "Z1 VILLAGE", or null. */
+  zoneAt?(trackId: string): string | null;
 }
+
+const ROE_BLOCK: Record<Roe, string> = {
+  WEAPONS_HOLD: 'ROE WEAPONS HOLD: NO INTERCEPTS',
+  WEAPONS_TIGHT: 'ROE WEAPONS TIGHT: THREAT TYPE AND HOSTILE CALL NEEDED',
+  WEAPONS_FREE: 'ROE',
+};
 
 const RESULT: Record<string, { text: string; status: CommsStatus }> = {
   NEUTRALISED: { text: 'NEUTRALISED', status: 'ok' },
@@ -87,6 +97,21 @@ export function eventLine(e: SimEvent, ctx: CommsContext): Omit<CommsLine, 'id'>
       return { tMs: t, text: reportText(e.payload) };
     case 'RESPONSE_OUTCOME': {
       const res = RESULT[e.payload.result] ?? { text: e.payload.result, status: 'info' };
+      if (e.payload.result === 'BLOCKED_BY_ROE' && ctx.roe) {
+        return {
+          tMs: t,
+          text: `${e.trackId} INTERCEPT  BLOCKED — ${ROE_BLOCK[ctx.roe]}`,
+          status: res.status,
+        };
+      }
+      const zone = e.payload.result === 'BLOCKED_NO_KINETIC' ? ctx.zoneAt?.(e.trackId) : null;
+      if (zone) {
+        return {
+          tMs: t,
+          text: `${e.trackId} INTERCEPT  BLOCKED — NO-KINETIC ZONE ${zone}`,
+          status: res.status,
+        };
+      }
       return {
         tMs: t,
         text: `${e.trackId} ${RESPONSE_NAME[e.payload.response] ?? e.payload.response}  ${res.text}`,

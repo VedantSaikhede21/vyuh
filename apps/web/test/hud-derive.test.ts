@@ -1,4 +1,6 @@
+import type { SimEvent, Zone } from '@vyuh/shared';
 import { describe, expect, it } from 'vitest';
+import { eventLine } from '@/lib/hud/comms';
 import {
   ACQ_AFTER_MS,
   actionStates,
@@ -186,5 +188,87 @@ describe('eoChip', () => {
     expect(eoChip('CUE', 1000, 1000 + ACQ_AFTER_MS - 50)).toBe('CUE');
     expect(eoChip('CUE', 1000, 1000 + ACQ_AFTER_MS)).toBe('ACQ');
     expect(eoChip('TRACK', 1000, 99_000)).toBe('TRK');
+  });
+});
+
+describe('ROE interlocks by mode (decision 116)', () => {
+  const int = {
+    view: { ...jammer, id: 'int1', kind: 'INTERCEPT' as const, ammo: 2, rangeM: 3000 },
+    x: 0,
+    z: 0,
+  };
+  const village: Zone = {
+    id: 'Z1',
+    kind: 'NO_KINETIC',
+    name: 'village',
+    polygon: [
+      [-500, 500],
+      [500, 500],
+      [500, 1500],
+      [-500, 1500],
+    ],
+  };
+
+  it('practice explains the ROE and the zone before the attempt', () => {
+    expect(actionStates(hud(), { INTERCEPT: int }, [], 'PRACTICE').INTERCEPT.reason).toMatch(
+      /^ROE: weapons tight/,
+    );
+    const hostile = hud({ tracks: [track({ affiliation: 'HOSTILE', classifiedAs: 'FPV' })] });
+    expect(actionStates(hostile, { INTERCEPT: int }, [village], 'PRACTICE').INTERCEPT.reason).toBe(
+      'No kinetic response over the village — zone Z1',
+    );
+  });
+
+  it('assessment allows the attempt: no ROE or zone reason, the sim decides', () => {
+    expect(actionStates(hud(), { INTERCEPT: int }, [village], 'ASSESSMENT').INTERCEPT).toEqual({
+      enabled: true,
+      reason: null,
+    });
+    expect(
+      actionStates(hud({ roe: 'WEAPONS_HOLD' }), { INTERCEPT: int }, [], 'ASSESSMENT').INTERCEPT
+        .enabled,
+    ).toBe(true);
+  });
+
+  it('assessment still disables for range, reload and rounds', () => {
+    const far = hud({ tracks: [track({ z: 3400, altitudeAglM: 0 })] });
+    expect(actionStates(far, { INTERCEPT: int }, [], 'ASSESSMENT').INTERCEPT.reason).toBe(
+      'Out of range — 3.40 km > 3.00 km',
+    );
+    const reloading = { ...int, view: { ...int.view, readyAtMs: 12_000 } };
+    expect(actionStates(hud(), { INTERCEPT: reloading }, [], 'ASSESSMENT').INTERCEPT.reason).toBe(
+      'Interceptor reloading — 2.0 s',
+    );
+    const empty = { ...int, view: { ...int.view, ammo: 0 } };
+    expect(actionStates(hud(), { INTERCEPT: empty }, [], 'ASSESSMENT').INTERCEPT.reason).toBe(
+      'No interceptor rounds left',
+    );
+  });
+
+  it('Comms names the rule when the sim blocks the attempt', () => {
+    const ctx = {
+      trackPos: () => null,
+      effectorPos: () => null,
+      assetName: () => 'Post',
+      roe: 'WEAPONS_TIGHT' as const,
+      zoneAt: () => 'Z1 VILLAGE',
+    };
+    const outcome = (result: 'BLOCKED_BY_ROE' | 'BLOCKED_NO_KINETIC'): SimEvent => ({
+      seq: 9,
+      tMs: 60_000,
+      type: 'RESPONSE_OUTCOME',
+      trackId: 'T004',
+      contactId: 'c04',
+      payload: { response: 'INTERCEPT', result },
+    });
+    expect(eventLine(outcome('BLOCKED_BY_ROE'), ctx)?.text).toBe(
+      'T004 INTERCEPT  BLOCKED — ROE WEAPONS TIGHT: THREAT TYPE AND HOSTILE CALL NEEDED',
+    );
+    expect(eventLine(outcome('BLOCKED_BY_ROE'), { ...ctx, roe: 'WEAPONS_HOLD' })?.text).toBe(
+      'T004 INTERCEPT  BLOCKED — ROE WEAPONS HOLD: NO INTERCEPTS',
+    );
+    expect(eventLine(outcome('BLOCKED_NO_KINETIC'), ctx)?.text).toBe(
+      'T004 INTERCEPT  BLOCKED — NO-KINETIC ZONE Z1 VILLAGE',
+    );
   });
 });
