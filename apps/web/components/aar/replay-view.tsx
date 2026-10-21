@@ -120,7 +120,13 @@ export function ReplayView({
         commands={commands}
         replay={{
           timeline: <ReplayTimeline controller={controller} markers={markers} seek={seek} />,
-          side: <KillChainPanel rows={data.killChain} onJump={seek} />,
+          side: (
+            <KillChainPanel
+              rows={data.killChain}
+              penalties={data.session.score?.penalties}
+              onJump={seek}
+            />
+          ),
           tacticalScene: <TruthAnchors />,
           tacticalOverlay: <TruthLabels runtime={rt} />,
           ppiOverlay,

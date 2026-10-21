@@ -5,16 +5,21 @@ import type {
   KillChainStage,
   KillChainStatus,
   KillChainStep,
+  Penalty,
 } from '@vyuh/shared';
+import { ChevronRight } from 'lucide-react';
+import { useState } from 'react';
 import { AffiliationSymbol, Panel, PanelHeader, StateChip } from '@/components/hud/primitives';
 import { humaniseFeedback } from '@/lib/hud/feedback';
+import { clearedLabel, groupRows } from '@/lib/replay/kill-chain-rows';
 import { useReplayStore } from '@/lib/replay/store';
 import { CLASS_LABEL, formatClock } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 
 // Kill-chain breakdown (Phase 4a Step 8, decision 110): one row per contact,
 // threats first, six stages each with a status word (never colour alone).
-// Choosing a stage jumps the replay to that moment.
+// Choosing a stage jumps the replay to that moment. Non-threats handled
+// correctly (every stage OK, no deduction) fold into one expandable row.
 
 export const STAGE_SHORT: Record<KillChainStage, string> = {
   DETECT: 'DET',
@@ -58,10 +63,60 @@ const STATUS_CLASS: Record<KillChainStatus, string> = {
   NOT_APPLICABLE: 'text-text-3',
 };
 
-export function sortedRows(rows: readonly ContactKillChain[]): ContactKillChain[] {
-  return [...rows].sort(
-    (a, b) => Number(b.isThreat) - Number(a.isThreat) || a.contactId.localeCompare(b.contactId),
+/** The row that folds the correctly handled non-threats away (spans the whole table). */
+function ClearedToggle({
+  count,
+  open,
+  colSpan,
+  onToggle,
+  tall,
+}: {
+  count: number;
+  open: boolean;
+  colSpan: number;
+  onToggle: () => void;
+  tall?: boolean;
+}) {
+  return (
+    <tr className="border-t border-line-1">
+      <td colSpan={colSpan} className="p-0">
+        <button
+          type="button"
+          aria-expanded={open}
+          data-testid="kc-cleared-toggle"
+          onClick={onToggle}
+          className={cn(
+            'flex w-full items-center gap-1 pl-2 text-left text-small text-text-2 transition-colors duration-150 ease-ui hover:bg-bg-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-select',
+            tall ? 'h-7' : 'h-6',
+          )}
+        >
+          <ChevronRight
+            aria-hidden
+            className={cn(
+              'size-3.5 shrink-0 transition-transform duration-150 ease-ui',
+              open && 'rotate-90',
+            )}
+          />
+          {clearedLabel(count)}
+          <span className="ml-1 font-mono text-ok">OK</span>
+        </button>
+      </td>
+    </tr>
   );
+}
+
+/** Rows to draw: the listed ones, the fold row, and (when open) the cleared ones. */
+function useGroupedRows(rows: readonly ContactKillChain[], penalties?: readonly Penalty[]) {
+  const [open, setOpen] = useState(false);
+  const { listed, cleared } = groupRows(rows, penalties);
+  return {
+    all: [...listed, ...cleared],
+    listed,
+    cleared,
+    shown: open ? cleared : [],
+    open,
+    toggle: () => setOpen((o) => !o),
+  };
 }
 
 function cellKey(row: ContactKillChain, step: KillChainStep): string {
@@ -96,14 +151,17 @@ function StepDetail({ row, step }: { row: ContactKillChain; step: KillChainStep 
 /** Compact panel for the replay's action-bar slot (320 px). */
 export function KillChainPanel({
   rows,
+  penalties,
   onJump,
 }: {
   rows: readonly ContactKillChain[];
+  penalties?: readonly Penalty[];
   onJump: (tMs: number) => void;
 }) {
   const focus = useReplayStore((s) => s.focusCell);
   const set = useReplayStore((s) => s.set);
-  const sorted = sortedRows(rows);
+  const g = useGroupedRows(rows, penalties);
+  const sorted = g.all;
   const stages = sorted[0]?.stages ?? [];
   const focused = sorted
     .flatMap((r) => r.stages.map((s) => ({ row: r, step: s })))
@@ -135,44 +193,56 @@ export function KillChainPanel({
             </tr>
           </thead>
           <tbody>
-            {sorted.map((row) => (
-              <tr key={row.contactId} className="border-t border-line-1">
-                <td
-                  className="h-6 max-w-[5.5rem] truncate pl-2 text-small"
-                  title={`${row.contactId} · ${CLASS_LABEL[row.trueClass]}`}
-                >
-                  <span className="inline-flex items-center gap-1">
-                    <AffiliationSymbol affiliation={row.trueAffiliation} size={12} />
-                    <span className="font-mono text-text-1">{row.contactId}</span>
-                  </span>
-                </td>
-                {row.stages.map((step) => {
-                  const key = cellKey(row, step);
-                  return (
-                    <td key={step.stage} className="p-0 text-center">
-                      <button
-                        type="button"
-                        data-testid={`kc-${key.replace(':', '-')}`}
-                        aria-label={`${row.contactId} ${STAGE_NAME[step.stage]}: ${STATUS_NAME[step.status]}. Jump to ${formatClock(step.jumpTMs)}`}
-                        onMouseEnter={() => set({ focusCell: key })}
-                        onFocus={() => set({ focusCell: key })}
-                        onClick={() => {
-                          set({ focusCell: key });
-                          onJump(step.jumpTMs);
-                        }}
-                        className={cn(
-                          'h-6 w-full font-mono text-[11px] leading-none transition-colors duration-150 ease-ui hover:bg-bg-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-select',
-                          STATUS_CLASS[step.status],
-                          focus === key && 'bg-bg-3',
-                        )}
-                      >
-                        {STATUS_TEXT[step.status]}
-                      </button>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+            {[...g.listed, null, ...g.shown].map((row) =>
+              row === null ? (
+                g.cleared.length > 0 && (
+                  <ClearedToggle
+                    key="cleared"
+                    count={g.cleared.length}
+                    open={g.open}
+                    colSpan={stages.length + 1}
+                    onToggle={g.toggle}
+                  />
+                )
+              ) : (
+                <tr key={row.contactId} className="border-t border-line-1">
+                  <td
+                    className="h-6 max-w-[5.5rem] truncate pl-2 text-small"
+                    title={`${row.contactId} · ${CLASS_LABEL[row.trueClass]}`}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      <AffiliationSymbol affiliation={row.trueAffiliation} size={12} />
+                      <span className="font-mono text-text-1">{row.contactId}</span>
+                    </span>
+                  </td>
+                  {row.stages.map((step) => {
+                    const key = cellKey(row, step);
+                    return (
+                      <td key={step.stage} className="p-0 text-center">
+                        <button
+                          type="button"
+                          data-testid={`kc-${key.replace(':', '-')}`}
+                          aria-label={`${row.contactId} ${STAGE_NAME[step.stage]}: ${STATUS_NAME[step.status]}. Jump to ${formatClock(step.jumpTMs)}`}
+                          onMouseEnter={() => set({ focusCell: key })}
+                          onFocus={() => set({ focusCell: key })}
+                          onClick={() => {
+                            set({ focusCell: key });
+                            onJump(step.jumpTMs);
+                          }}
+                          className={cn(
+                            'h-6 w-full font-mono text-[11px] leading-none transition-colors duration-150 ease-ui hover:bg-bg-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-select',
+                            STATUS_CLASS[step.status],
+                            focus === key && 'bg-bg-3',
+                          )}
+                        >
+                          {STATUS_TEXT[step.status]}
+                        </button>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ),
+            )}
           </tbody>
         </table>
       </div>
@@ -191,8 +261,15 @@ export function KillChainPanel({
 }
 
 /** Wide table for the event-timeline fallback (no replay). */
-export function KillChainTable({ rows }: { rows: readonly ContactKillChain[] }) {
-  const sorted = sortedRows(rows);
+export function KillChainTable({
+  rows,
+  penalties,
+}: {
+  rows: readonly ContactKillChain[];
+  penalties?: readonly Penalty[];
+}) {
+  const g = useGroupedRows(rows, penalties);
+  const sorted = g.all;
   const stages = sorted[0]?.stages.map((s) => s.stage) ?? [];
   return (
     <table
@@ -211,34 +288,47 @@ export function KillChainTable({ rows }: { rows: readonly ContactKillChain[] }) 
         </tr>
       </thead>
       <tbody>
-        {sorted.map((row) => (
-          <tr key={row.contactId} className="border-t border-line-1 align-top">
-            <td className="px-2 py-1.5 text-small">
-              <span className="inline-flex items-center gap-1.5">
-                <AffiliationSymbol affiliation={row.trueAffiliation} size={14} />
-                <span className="font-mono text-text-1">{row.contactId}</span>
-              </span>
-              <span className="block text-text-2">{CLASS_LABEL[row.trueClass]}</span>
-            </td>
-            {row.stages.map((step) => (
-              <td
-                key={step.stage}
-                className="px-2 py-1.5 text-small"
-                title={humaniseFeedback(step.feedback)}
-              >
-                <span className={cn('font-mono', STATUS_CLASS[step.status])}>
-                  {STATUS_NAME[step.status]}
+        {[...g.listed, null, ...g.shown].map((row) =>
+          row === null ? (
+            g.cleared.length > 0 && (
+              <ClearedToggle
+                key="cleared"
+                count={g.cleared.length}
+                open={g.open}
+                colSpan={stages.length + 1}
+                onToggle={g.toggle}
+                tall
+              />
+            )
+          ) : (
+            <tr key={row.contactId} className="border-t border-line-1 align-top">
+              <td className="px-2 py-1.5 text-small">
+                <span className="inline-flex items-center gap-1.5">
+                  <AffiliationSymbol affiliation={row.trueAffiliation} size={14} />
+                  <span className="font-mono text-text-1">{row.contactId}</span>
                 </span>
-                {step.actionTMs !== undefined && (
-                  <span className="font-mono text-text-3"> {formatClock(step.actionTMs)}</span>
-                )}
-                {step.action && (
-                  <span className="block text-text-2">{humaniseFeedback(step.action)}</span>
-                )}
+                <span className="block text-text-2">{CLASS_LABEL[row.trueClass]}</span>
               </td>
-            ))}
-          </tr>
-        ))}
+              {row.stages.map((step) => (
+                <td
+                  key={step.stage}
+                  className="px-2 py-1.5 text-small"
+                  title={humaniseFeedback(step.feedback)}
+                >
+                  <span className={cn('font-mono', STATUS_CLASS[step.status])}>
+                    {STATUS_NAME[step.status]}
+                  </span>
+                  {step.actionTMs !== undefined && (
+                    <span className="font-mono text-text-3"> {formatClock(step.actionTMs)}</span>
+                  )}
+                  {step.action && (
+                    <span className="block text-text-2">{humaniseFeedback(step.action)}</span>
+                  )}
+                </td>
+              ))}
+            </tr>
+          ),
+        )}
       </tbody>
     </table>
   );

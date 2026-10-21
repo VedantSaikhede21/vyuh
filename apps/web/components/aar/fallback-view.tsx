@@ -80,7 +80,7 @@ export function FallbackView({ data, why }: { data: AarSessionResponse; why: str
         <Panel>
           <PanelHeader title="Kill chain" />
           <div className="overflow-x-auto">
-            <KillChainTable rows={data.killChain} />
+            <KillChainTable rows={data.killChain} penalties={data.session.score?.penalties} />
           </div>
         </Panel>
       </div>

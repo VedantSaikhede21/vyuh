@@ -12,7 +12,7 @@ import { useSimRuntime } from '@/components/sim/sim-context';
 import { AFFILIATION_STYLE } from '@/lib/affiliation';
 import { useReplayStore } from '@/lib/replay/store';
 import type { SimRuntime } from '@/lib/sim/runtime';
-import { CLASS_LABEL } from '@/lib/strings';
+import { CLASS_CODE, CLASS_LABEL } from '@/lib/strings';
 import { UI } from '@/lib/theme/scene-colours';
 
 // Ground truth for the AAR ("what was really there", Phase 4a). Only the replay
@@ -79,7 +79,9 @@ export function truthColumn(rt: SimRuntime, on: boolean): TrackColumn | undefine
           data-testid={`truth-${trackId}`}
         >
           <AffiliationSymbol affiliation={t.affiliation} size={12} />
-          <span className="font-mono text-text-2">{contactId}</span>
+          {/* Below 1600 px the symbol and a short class code; id and full name in the tooltip. */}
+          <span className="hidden font-mono text-text-2 min-[1600px]:inline">{contactId}</span>
+          <span className="font-mono text-text-1 min-[1600px]:hidden">{CLASS_CODE[t.cls]}</span>
           <span className="hidden truncate min-[1600px]:inline">{CLASS_LABEL[t.cls]}</span>
         </span>
       );

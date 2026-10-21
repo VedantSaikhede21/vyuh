@@ -1,5 +1,12 @@
 import { readFileSync } from 'node:fs';
-import { Scenario, type Penalty, type Score, type SimEvent } from '@vyuh/shared';
+import {
+  Scenario,
+  type ContactKillChain,
+  type KillChainStatus,
+  type Penalty,
+  type Score,
+  type SimEvent,
+} from '@vyuh/shared';
 import {
   TICK_MS,
   createDefender,
@@ -16,6 +23,7 @@ import {
   timelineMarkers,
 } from '../lib/replay/gate';
 import { computeKeyframes } from '../lib/replay/keyframes';
+import { clearedLabel, groupRows } from '../lib/replay/kill-chain-rows';
 
 const S01 = Scenario.parse(
   JSON.parse(
@@ -184,5 +192,49 @@ describe('timeline markers', () => {
       penalties: [penalty({ code: 'NON_THREAT_IDENTIFIED', points: 5, contactId: 'c01' })],
     } as unknown as Score;
     expect(timelineMarkers(events, score, killChain).some((m) => m.kind === 'PENALTY')).toBe(false);
+  });
+});
+
+describe('kill-chain rows', () => {
+  const STAGES = ['DETECT', 'TRACK', 'IDENTIFY', 'DECIDE', 'RESPOND', 'ASSESS'] as const;
+  const row = (
+    contactId: string,
+    isThreat: boolean,
+    status: KillChainStatus = 'OK',
+  ): ContactKillChain => ({
+    contactId,
+    isThreat,
+    trueClass: isThreat ? 'QUAD_SMALL' : 'BIRD_SMALL',
+    trueAffiliation: isThreat ? 'HOSTILE' : 'NEUTRAL',
+    trackIds: [],
+    stages: STAGES.map((stage) => ({
+      stage,
+      status: stage === 'RESPOND' ? status : stage === 'ASSESS' ? 'NOT_APPLICABLE' : 'OK',
+      feedback: '',
+      jumpTMs: 0,
+    })),
+  });
+
+  it('lists threats first and folds non-threats handled correctly', () => {
+    const rows = [
+      row('c03', false),
+      row('c02', false, 'WRONG'),
+      row('c01', true),
+      row('c04', false),
+    ];
+    const penalties: Penalty[] = [
+      { code: 'NON_THREAT_IDENTIFIED', points: 5, contactId: 'c03', feedback: '' },
+      { code: 'BIRD_JAMMED', points: -2, contactId: 'c04', feedback: '' },
+    ];
+    const g = groupRows(rows, penalties);
+    // c02 has a wrong stage and c04 a deduction, so both stay as their own rows; a bonus does not.
+    expect(g.listed.map((r) => r.contactId)).toEqual(['c01', 'c02', 'c04']);
+    expect(g.cleared.map((r) => r.contactId)).toEqual(['c03']);
+    expect(clearedLabel(1)).toBe('1 non-threat correctly left alone');
+    expect(clearedLabel(7)).toBe('7 non-threats correctly left alone');
+  });
+
+  it('never folds a threat, even one handled perfectly', () => {
+    expect(groupRows([row('c01', true)]).cleared).toEqual([]);
   });
 });

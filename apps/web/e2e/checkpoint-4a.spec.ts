@@ -1,12 +1,12 @@
 import { exec } from 'node:child_process';
-import { readFileSync } from 'node:fs';
 import { promisify } from 'node:util';
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import {
   VIEWPORTS,
   beginSession,
   login,
   openBriefing,
+  sessionFromLog,
   selectTrack,
   stepTo,
   stepUntilTracked,
@@ -23,47 +23,7 @@ import {
 // The S06 test also prints peak browser memory while the replay loads and plays.
 
 const OUT = 'e2e/checkpoint';
-const API = process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
 const sh = promisify(exec);
-
-async function authHeaders(page: Page): Promise<Record<string, string>> {
-  const token = await page.evaluate(() => window.localStorage.getItem('vyuh.localToken'));
-  return { Authorization: `Bearer ${token}` };
-}
-
-/** A completed session from a committed sim log (apps/api/tests/fixtures), scored by the API. */
-async function sessionFromLog(
-  page: Page,
-  request: APIRequestContext,
-  code: string,
-  fixture: string,
-  simVersion: number,
-): Promise<string> {
-  const headers = await authHeaders(page);
-  const list = await (await request.get(`${API}/scenarios`, { headers })).json();
-  const scenario = list.items.find((s: { code: string }) => s.code === code);
-  const log = JSON.parse(
-    readFileSync(new URL(`../../api/tests/fixtures/${fixture}.json`, import.meta.url), 'utf8'),
-  ) as { tMs: number; payload: { mode?: string } }[];
-  const created = await (
-    await request.post(`${API}/sessions`, {
-      headers,
-      data: { scenarioId: scenario.id, mode: log[0]!.payload.mode, simVersion },
-    })
-  ).json();
-  const sid = created.sessionId as string;
-  const batch = await request.post(`${API}/sessions/${sid}/events`, {
-    headers,
-    data: { batchSeq: 0, events: log },
-  });
-  expect(batch.ok(), await batch.text()).toBe(true);
-  const done = await request.post(`${API}/sessions/${sid}/complete`, {
-    headers,
-    data: { endTMs: log.at(-1)!.tMs, clientMeta: {} },
-  });
-  expect(done.ok(), await done.text()).toBe(true);
-  return sid;
-}
 
 /** Working set and private bytes of the Playwright Chrome processes (Windows), MB. */
 async function chromeMemoryMb(): Promise<{ workingSet: number; private: number }> {
@@ -113,14 +73,14 @@ for (const vp of VIEWPORTS) {
       await shot(page, '01-S01-scrubber-markers-killchain');
     });
 
-    test('S06 replay: ground truth, kill chain, memory @checkpoint', async ({ page, request }) => {
+    test('S06 replay: ground truth, kill chain, memory @checkpoint', async ({ page }) => {
       test.setTimeout(300_000);
       const errors: string[] = [];
       page.on('console', (m) => {
         if (m.type() === 'error') errors.push(m.text().slice(0, 300));
       });
       await login(page, 'trainee1@demo');
-      const sid = await sessionFromLog(page, request, 'S06', 's06_trainee', 5);
+      const sid = await sessionFromLog(page, 'S06', 's06_trainee', 5);
 
       const before = await chromeMemoryMb();
       let peak = before;
@@ -166,6 +126,11 @@ for (const vp of VIEWPORTS) {
       await cell.click();
       await page.waitForTimeout(600);
       await shot(page, '04-S06-kill-chain-stage');
+      // Non-threats handled correctly fold into one row; opened here.
+      await page.getByTestId('kc-cleared-toggle').first().click();
+      await page.waitForTimeout(200);
+      await shot(page, '04b-S06-kill-chain-non-threats-open');
+      await page.getByTestId('kc-cleared-toggle').first().click();
 
       await page.keyboard.press('?');
       await page.waitForTimeout(200);
@@ -197,10 +162,10 @@ for (const vp of VIEWPORTS) {
       );
     });
 
-    test('fallback for an older simulator version @checkpoint', async ({ page, request }) => {
+    test('fallback for an older simulator version @checkpoint', async ({ page }) => {
       await login(page, 'trainee1@demo');
       // The S01 log, as if it had been recorded on SIM_VERSION 4.
-      const sid = await sessionFromLog(page, request, 'S01', 's01_defended', 4);
+      const sid = await sessionFromLog(page, 'S01', 's01_defended', 4);
       await page.goto(`/aar/session/${sid}`);
       await expect(page.getByTestId('replay-fallback')).toBeVisible({ timeout: 60_000 });
       await shot(page, '06-fallback');
