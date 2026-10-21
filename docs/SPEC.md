@@ -67,12 +67,16 @@
 
 ### 3.3 Trust boundary
 - The server trusts sensor events from the client for MVP but **validates plausibility**: monotonic `t_ms`, within session duration, contact ids exist in scenario, no sensor detection before contact spawn, no classification before detection, batch size ≤ 500, total events ≤ 20 000.
+- **Contact reports (Phase 4a, decisions 104, 110):** every `REPORT_SUBMITTED` must name only tracks already created, and must be followed at once (next `seq`, same `tMs`) by the sim's hidden `REPORT_TRUTH` for exactly the contacts behind those tracks, with positions inside the scenario bounds (`REPORT_TRUTH_MISSING` / `_MISMATCH` / `_OUT_OF_BOUNDS`). The server scores reports against that truth; it never re-runs the sim.
+- An empty batch is a **heartbeat** (the client sends one every 60 s while the page is open): it updates `last_batch_at` and writes no event rows (§4.5).
 - Scores are never accepted from the client.
 
 ### 3.4 Determinism contract
 - Same scenario JSON + same command log ⇒ identical sim state at every tick, in browser and in Node (vitest).
 - RNG: `mulberry32` seeded from scenario seed, with **separate named streams** (`rng.stream('sensors')`, `rng.stream('birds')`…) so adding a feature doesn't shift other random sequences.
 - Floating point: avoid order-dependent accumulation across entity lists (always iterate in id order).
+- **Engine-independent maths (Phase 4a, decision 111):** browsers and Node differ in the last bit of `Math.sin`, `cos`, `tan`, `atan`, `atan2`, `exp`, `log` and others. sim-core uses fdlibm ports from `packages/sim-core/src/dmath.ts` for every transcendental function (`sqrt`, `hypot` and basic arithmetic are exact in IEEE 754 and stay); an ESLint rule forbids the engine's versions in `packages/sim-core/src` (suncalc in `sun.ts` only feeds the night threshold).
+- **Replay (Phase 4a, decisions 107, 109):** the AAR re-runs the scenario with the logged commands. `sim.snapshot()` / `restore()` give keyframes every 10 s (built in a Web Worker), so seeking is a restore plus at most 10 s of ticks. Replay runs only when the session's stored `sim_version` equals `SIM_VERSION` and its `terrain_revision` equals the preset's `meta.revision` (null before Phase 4a: attempted); every replay re-generates the system events and compares them with the stored log. Any mismatch shows the event timeline instead, with the wording "This session used an older simulator version — showing the event timeline only, not a replay." and the reason.
 
 ---
 
@@ -145,7 +149,7 @@ Score { total, components{detection, classification, decision, report, efficienc
 - **Zones** may carry an optional `name` (e.g. "village", "border"); the HUD labels zones with their id and name and names the zone in disabled reasons ("No kinetic response over the village — zone Z3"). `SensorKind.ACOUSTIC` is not added until it is implemented.
 
 ### 4.1 Event types
-System: `SESSION_STARTED, CONTACT_SPAWNED, CONTACT_DESPAWNED, CONTACT_REACHED_ASSET, CONTACT_NEUTRALISED, CONTACT_DROPPED, SENSOR_TRACK_CREATED, SENSOR_TRACK_LOST, EO_IDENTIFIABLE (contact became identifiable in current EO pointing), RESPONSE_OUTCOME, SESSION_ENDED`
+System: `SESSION_STARTED, CONTACT_SPAWNED, CONTACT_DESPAWNED, CONTACT_REACHED_ASSET, CONTACT_NEUTRALISED, CONTACT_DROPPED, SENSOR_TRACK_CREATED, SENSOR_TRACK_LOST, EO_IDENTIFIABLE (contact became identifiable in current EO pointing), RESPONSE_OUTCOME, REPORT_TRUTH (hidden; Phase 4a), SESSION_ENDED`
 Trainee: `TRACK_SELECTED, CAMERA_SLEWED, MARKED_DETECTED, CLASSIFIED, AFFILIATION_SET, RESPONSE_ORDERED, REPORT_SUBMITTED, AI_SUGGESTION_SHOWN, AI_SUGGESTION_ACCEPTED, AI_SUGGESTION_REJECTED`
 
 ### 4.2 Event payloads
@@ -164,6 +168,7 @@ Trainee: `TRACK_SELECTED, CAMERA_SLEWED, MARKED_DETECTED, CLASSIFIED, AFFILIATIO
 | `RESPONSE_ORDERED` | trainee | `{ response: ResponseKind, effectorId? }` |
 | `RESPONSE_OUTCOME` | sim | `{ response, result: 'NEUTRALISED'\|'NO_EFFECT'\|'MISSED'\|'BLOCKED_BY_ROE'\|'BLOCKED_NO_KINETIC'\|'OUT_OF_RANGE'\|'COOLDOWN'\|'NO_AMMO', collateral?: {contactIds: string[]} }` — `collateral` lists every other contact the same response affected (e.g. all RF contacts in a jam sector) |
 | `REPORT_SUBMITTED` | trainee | `ContactReport` (§4.3) |
+| `REPORT_TRUTH` | sim | `{ reportSeq, contacts: [{ contactId, x, z, aglM, headingDeg, speedMps, activity }] }` — emitted right after each applied `REPORT_SUBMITTED` (`reportSeq` = its `seq`, same `tMs`): the true state of every contact behind the reported tracks, for server-side report scoring only (§9.5). Ground truth: never shown in the HUD, only in the AAR. `SIM_VERSION` 5 (decision 104) |
 | `AI_SUGGESTION_SHOWN` / `_ACCEPTED` / `_REJECTED` | sim / trainee | `{ suggestedClass, confidence }` |
 | `CONTACT_REACHED_ASSET` | sim | `{ assetId }` |
 | `CONTACT_NEUTRALISED` | sim | `{ by: ResponseKind }` |
@@ -187,6 +192,8 @@ ContactReport {
   activity: 'APPROACHING' | 'LOITERING' | 'DEPARTING' | 'HOVERING' | 'UNKNOWN'
 }
 ```
+
+**Report form (Phase 4a, decision 114):** `R` opens it over the action bar, prefilled with operator-known values only — location from the first track's sensor bearing and range, its estimated heading and height band (never truth; track height is a noisy radar estimate, decision 108), count = tracks in the report, class and affiliation from the trainee's own calls. Activity starts `UNKNOWN` and is set with keys 1–5; Enter sends, Esc cancels. Nearby active tracks (≤ 1.5 km from the first) can be added so a swarm is reported as one group.
 
 ### 4.4 Example scenario JSON (abbreviated)
 ```json
@@ -228,6 +235,8 @@ ContactReport {
 ### 4.5 Session lifecycle
 `CREATED` (POST /sessions) → `ACTIVE` (first event batch) → `COMPLETED` (POST complete) or `ABANDONED` (no batch for 15 min, or explicit abort). Completed sessions and their events are immutable. Only `ACTIVE` sessions accept events; only `COMPLETED` sessions have scores.
 
+**Abandonment (Phase 4a, decision 102):** every batch, including the empty 60 s heartbeat, sets `sessions.last_batch_at`. An `ACTIVE` session whose last batch is more than 15 min old becomes `ABANDONED` when it is next read and in a sweep at API startup. `CREATED` sessions (never started) are left as they are. The server also stores the end reason from the `SESSION_ENDED` event, so the result screen shows it after a reload (`SessionDetailResponse.ended`).
+
 ---
 
 ## §5. Simulation engine (`packages/sim-core`)
@@ -239,6 +248,7 @@ Modules: `rng.ts`, `clock.ts`, `coords.ts`, `terrain.ts` (heightmap sampling + L
 - **World:** `createSim(scenario, world)` takes a `World` = heightmap (heights relative to the preset origin elevation) + building footprints (100 m uniform grid index) + LOS helper. Passing a bare `Heightmap` still works (no buildings). `PROCEDURAL_HILLS` is a built-in preset; real presets are decoded from `heightmap.u16` + `meta.json` + `buildings.geojson` by a pure function (no I/O in sim-core).
 - **LOS:** raycast sensor→contact over heightmap at ~10 m step (fixed integer step count, endpoints excluded, 0.5 m tolerance) + building footprints (2D polygon test with height). Cache per sensor per tick.
 - **Tracks:** a radar track is created after **3 hits in 5 scans**, lost after 4 consecutive misses. Tracks get ids `T001…`, distinct from contact ids (trainee sees tracks, not truth). A LOS-masked contact counts as a miss but still consumes its fixed per-contact random draws; a track lost while every losing miss was masked reports reason `LOS`.
+- **Track height (Phase 4a, `SIM_VERSION` 5, decision 108):** each radar hit measures height above ground with seeded noise on its own stream `radar-height:<id>`, σ = 15 m + 0.005 × slant range (representative; `docs/realism-sources.md`), smoothed by an α-β filter like the 2D one. The track's altitude band, 3D marker height, EO cue aim and report prefill all use this estimate; nothing in the HUD reads true height (static test `no-truth-height.test.ts`).
 - **Sun:** suncalc at the preset origin; the instant is `Date.UTC(date time) − utcOffsetMin`, never the machine's timezone.
 
 ---
@@ -375,7 +385,9 @@ Outcomes are rolled with the seeded `effectors` RNG stream and emitted as `RESPO
 | WEAPONS_HOLD | never (EW still allowed) | `BLOCKED_BY_ROE` |
 | `NO_KINETIC` zone | the **track or intercept point** is outside every NO_KINETIC zone. Intercepts resolve instantly when ordered, so the intercept point coincides with the track position, and the sim tests the track's estimated (operator-known) position — equivalent to the rule, not a reduction of it. If intercept time-of-flight is ever modelled, the check must move to the predicted intercept point. A point on a zone edge counts as inside | `BLOCKED_NO_KINETIC` |
 
-ROE is checked first, then the zone, then cooldown and ammo; a blocked order spends nothing. EW is never ROE- or zone-gated. The HUD disables Intercept with the same reasons in the same order, naming what is missing ("ROE: weapons tight — classify as a threat type (C) and declare HOSTILE (H)") or the zone ("No kinetic response over the village — zone Z3").
+ROE is checked first, then the zone, then cooldown and ammo; a blocked order spends nothing. EW is never ROE- or zone-gated. In **Practice** the HUD disables Intercept with the same reasons in the same order, naming what is missing ("ROE: weapons tight — classify as a threat type (C) and declare HOSTILE (H)") or the zone ("No kinetic response over the village — zone Z3").
+
+**ROE interlocks in Assessment (Phase 4a, decision 116):** so that ROE judgement is tested, Assessment shows **no** ROE or zone reason before the attempt: Intercept (I, then Enter to confirm) can be ordered whatever the ROE or zone, the sim blocks it as above, and Comms names the rule ("T004 INTERCEPT  BLOCKED — ROE WEAPONS TIGHT: THREAT TYPE AND HOSTILE CALL NEEDED", "… BLOCKED — NO-KINETIC ZONE Z1 VILLAGE"). Range, reload and rounds still disable the button in both modes. `default_v4` deducts `ROE_VIOLATION_ATTEMPT` and `NO_KINETIC_VIOLATION_ATTEMPT` (−10 each, at most once per contact per rule, timed at the first attempt) with feedback naming the rule (§9.2).
 
 **EW rules (Phase 2B, decision 54):**
 - **Geometry:** EW_JAM and EW_SPOOF act on a **±10° sector** from the effector toward the ordered track's estimate, out to `rangeM` (range is checked to the ordered contact first: `OUT_OF_RANGE` spends nothing).
@@ -413,6 +425,7 @@ ROE is checked first, then the zone, then cooldown and ammo; a blocked order spe
   - Leaves may carry `excludeComponents` (e.g. `["decision"]`); each component is averaged over the threats not excluded for it (per-component denominators). `default_v1` scores are unchanged.
   - `default_v1` stays immutable (it has scored sessions); scenarios with sessions (S01, S03, S11, S12) keep it; new scenarios (S13, S14) use `default_v2`.
   - `default_v3` (Phase 3a, decision 72) = `default_v2` + payload drops: a threat that dropped its payload before it was neutralised is `LEAKED` (`DROP_BEFORE_NEUTRALISED`; neutralised only after the drop earns 15 decision points). Generated scenarios use it. `PerContactMetrics.droppedTMs` records the release time for the result screen.
+  - **`default_v4` (Phase 4a, decisions 115–116)** = `default_v3` plus contact reports and ROE attempts; components 25 / 25 / 30 / **report 10** / efficiency 0, so the total scales over 90. Engine extensions used only by v4: `roots` (subtrees walked for every contact after `root`: `reportRoot`, `roeRoot`), a leaf's `pointsMetric` (points from a metric, clamped to 0..`points`), `tMetric` (the metric that dates a session-level adjustment; stored as the penalty `tMs` and used for the result-screen link and the replay marker), and `if` branches that may be null. Threats get `REPORT_SCORED` (the best report's §9.5 points) or `REPORT_NONE` (0); every contact can get `ROE_VIOLATION_ATTEMPT` / `NO_KINETIC_VIOLATION_ATTEMPT` (−10). S04–S10, S15 and the generator (`GENERATOR_VERSION` 3) use v4, and their briefings say "Contact reports are expected: send one for every threat track (R)."; S01–S03 and S11–S14 keep their trees. v1–v3 scores are byte-identical (pinned goldens) and their penalties have no time: the AAR places them at the contact's kill-chain RESPOND moment.
 
 ### 9.3 Adaptive difficulty (Elo)
 User rating R (start 1000). Scenario rating D = 800 + 150 × difficulty. Expected E = 1 / (1 + 10^((D − R)/400)); actual A = total/100; R' = R + 32 × (A − E). Recommended next difficulty = the level whose D is closest to R + 50.
@@ -429,6 +442,16 @@ User rating R (start 1000). Scenario rating D = 800 + 150 × difficulty. Expecte
 | Location (1) | Within 300 m of true position at `tMs` |
 | Heading (1) | Within 30° of true heading |
 | Altitude band + activity (1) | Both correct (0.5 each) |
+
+Rules (Phase 4a, `default_v4`, `services/scoring/report.py`, decision 115):
+- **Only threats are scored.** Each threat is scored on the **best** report that names one of its tracks; a threat with no report scores 0 (`REPORT_NONE`). Reports that cover only non-threats are neither penalised nor credited.
+- Truth comes from the `REPORT_TRUTH` event logged with the report (§4.2), at the report's `tMs`.
+- **Timeliness** runs from the first `MARKED_DETECTED` on the reported tracks, or from `firstDetectableTMs` if none was marked.
+- **True count** = the size of the threat's swarm group (`groupId`), else 1; the swarm tolerance is max(±1, ±20 %).
+- **Location:** the reported bearing and range from the named sensor (range taken as horizontal; the slant difference is metres against the 300 m tolerance).
+- **Heading** counts as right whatever is reported while the contact hovers.
+- **Activity truth:** `HOVERING` below 1 m/s ground speed; `APPROACHING` / `DEPARTING` when more than 30 % of the horizontal velocity points toward / away from the nearest asset; otherwise `LOITERING`.
+- **Altitude band** truth uses the true AGL height with the §4.3 bands (`altitudeBandOf` in `packages/shared`, mirrored in Python).
 
 ### 9.6 Fairness rules
 - No penalty for missing a contact that was never detectable (no track, never EO-identifiable, always LOS-masked).
@@ -449,7 +472,7 @@ User rating R (start 1000). Scenario rating D = 800 + 150 × difficulty. Expecte
 | `terrain_presets` | code (pk), name, meta (jsonb), attribution |
 | `scenarios` | id, code (nullable unique, e.g. `S04`), name, kind (SCRIPTED/GENERATED/AUTHORED), seed, difficulty, tags (text[], e.g. `demo`, `tutorial`), request (jsonb), content (jsonb), schema_version, created_by, created_at |
 | `assignments` | id, scenario_id, unit_id (nullable), user_id (nullable), assigned_by, due_at, created_at |
-| `sessions` | id, user_id, scenario_id, mode (PRACTICE/ASSESSMENT), status (CREATED/ACTIVE/COMPLETED/ABANDONED), last_batch_seq, is_demo (bool), started_at, ended_at, client_meta (jsonb: fps, gpu, browser), sim_version (int, nullable: sim-core `SIM_VERSION` the session ran on; null before Phase 2B) |
+| `sessions` | id, user_id, scenario_id, mode (PRACTICE/ASSESSMENT), status (CREATED/ACTIVE/COMPLETED/ABANDONED), last_batch_seq, is_demo (bool), started_at, ended_at, client_meta (jsonb: fps, gpu, browser), sim_version (int, nullable: sim-core `SIM_VERSION` the session ran on; null before Phase 2B), terrain_revision (int, nullable: the preset's `meta.revision` at creation; null before Phase 4a, migration 0004), last_batch_at (timestamptz, nullable: last event batch or heartbeat; migration 0003) |
 | `session_events` | id (bigserial), session_id, seq (unique with session_id), t_ms, type, contact_id, track_id, payload (jsonb). Index (session_id, t_ms) |
 | `scores` | id, session_id (unique with tree_version), total, detection, classification, decision, report, efficiency, penalties (jsonb), per_contact (jsonb), metrics (jsonb), tree_version, created_at |
 | `debriefs` | session_id (pk), model, content (jsonb), created_at |
@@ -468,7 +491,7 @@ The API owns all DB access (Supabase service key stays server-side; no client-si
 | POST `/auth/guest` | public | Create guest user, return token (demo mode) |
 | GET `/threats` | any | Threat library |
 | GET `/terrain-presets` | any | Presets + meta |
-| GET `/scenarios` | any | List (filter: kind, difficulty, assigned) |
+| GET `/scenarios` | any | List (filter: kind, difficulty, assigned; `mine=true`: the caller's own generated scenarios, newest first, with best scores) |
 | GET `/scenarios/{id}` | any | Full scenario JSON |
 | POST `/scenarios/generate` | trainee+ | `GenerateRequest` → Scenario (trainee: terrain, time band, difficulty, seed only; rate-limited per user) |
 | POST `/scenarios` | instructor | Save scripted/edited scenario |
@@ -477,7 +500,7 @@ The API owns all DB access (Supabase service key stays server-side; no client-si
 | POST `/sessions/{id}/events` | owner | Append event batch |
 | POST `/sessions/{id}/complete` | owner | Validate, score, update Elo → Score |
 | GET `/sessions/{id}` | owner/instructor | Session + score |
-| GET `/aar/sessions/{id}` | owner/instructor | Scenario + events + score (for replay) |
+| GET `/aar/sessions/{id}` | owner/instructor | Scenario + events + score + kill chain (for replay); COMPLETED sessions only (else 409 `SESSION_NOT_ACTIVE`) |
 | POST `/aar/sessions/{id}/debrief` | owner/instructor | Generate/cache LLM debrief |
 | GET `/aar/users/{id}/trends` | self/instructor | Score + component trends, rating history, recurring mistakes (Assessment sessions only) |
 | GET `/aar/units/{id}` | instructor | Unit averages, leaderboard, weakest kill-chain stage, common mistakes |
@@ -568,7 +591,8 @@ All errors: `{ "error": { "code": "...", "message": "...", "details": {} } }`
 ### Phase 4 — AAR & instructor
 - Replay: re-run sim from events with timeline scrubber, event markers, ground-truth toggle ("what was really there").
 - Kill-chain stage breakdown per contact; trends (score, components, rating, latency) from **Assessment** sessions only (Practice allows pause and hints, so it is not comparable; `sessions.mode` is stored); recurring-mistake detection.
-- Replay must check `sessions.sim_version`: sessions recorded before `SIM_VERSION` 3 will not replay exactly.
+- Replay must check `sessions.sim_version` and `sessions.terrain_revision` (§3.4); sessions that cannot replay exactly show the event timeline with a worded reason.
+- **Status (Part 4a, 2026-10-21, `docs/plans/phase4a-plan.md`):** done — replay with keyframes, scrubber, markers, speeds, keyboard and ground-truth toggle; exact replay verified for S01, S06, S10 and a generated D5 across Node and Chrome; kill-chain breakdown per contact (`services/analytics/kill_chain.py`, stage → replay moment); structured contact report form and `default_v4` report scoring; ROE interlocks in Assessment; result-screen penalty links; abandonment and heartbeats; My generated scenarios. Part 4b (trends, unit dashboard, assignments, scenario builder, weight editing) follows.
 - Instructor: unit dashboard, assignments, scenario builder (form on top of ScenarioRequest + zone drawing on 2D map), weight editing.
 - Structured contact report form + scoring.
 **Done when:** an instructor can assign a scenario, 3 trainees play it, and the unit dashboard shows comparison + weakest stage; replay matches the original session exactly.
@@ -654,7 +678,7 @@ Visual and UX rules are defined in `docs/DESIGN.md` and are binding.
 | `C` then `1–9` | Classify (numbered class menu) |
 | `H` `F` `N` `U` | Set affiliation hostile / friendly / neutral / unknown |
 | `M` `J` `S` `I` | Monitor / jam / spoof / intercept (intercept asks `Enter` to confirm) |
-| `R` | Open contact report |
+| `R` | Open contact report (then 1–5 activity, Enter send, Esc cancel) |
 | `Y` / `X` | Accept / reject AI suggestion |
 | `Esc` | Cancel current action |
 | `P` | Pause (practice mode only) |
