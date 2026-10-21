@@ -1,5 +1,6 @@
 """FastAPI app factory. Run: `uv run uvicorn app.main:create_app --factory --reload`."""
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -7,15 +8,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.core.config import Settings, get_settings
+from app.core.config import Env, Settings, get_settings
 from app.core.db import make_engine, make_session_factory
 from app.core.errors import install_error_handlers
 from app.core.logging import REQUEST_ID_HEADER, configure_logging, request_id_middleware
 from app.routers import aar, auth, health, scenarios, sessions
+from app.seed.demo import seed_if_changed
 from app.services.ratelimit import RateLimiter
 from app.services.sessions import expire_stale_sessions
 
 API_PREFIX = "/api/v1"
+
+logger = logging.getLogger(__name__)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -27,6 +31,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         # Startup sweep: sessions left ACTIVE by closed tabs become ABANDONED (SPEC §4.5).
         with app.state.session_factory() as db:
             expire_stale_sessions(db)
+        # Dev only: re-seed when the seed files changed (decision 119). Elsewhere run
+        # `pnpm seed` after a deploy that changes seed data.
+        if settings.env is Env.DEV:
+            try:
+                summary = seed_if_changed(app.state.session_factory, settings)
+            except Exception:
+                logger.exception("Startup re-seed failed; run `pnpm seed` by hand")
+            else:
+                if summary:
+                    logger.info("Seed files changed: %s", summary)
         yield
 
     app = FastAPI(

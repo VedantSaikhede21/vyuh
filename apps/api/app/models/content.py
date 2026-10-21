@@ -1,4 +1,4 @@
-"""threat_types, terrain_presets, scenarios, assignments (SPEC §10)."""
+"""threat_types, terrain_presets, scenarios, assignments, seed_state (SPEC §10)."""
 
 import uuid
 from datetime import datetime
@@ -78,3 +78,13 @@ class Assignment(Base):
     )
     due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = created_at()
+
+
+class SeedState(Base):
+    """Fingerprint of the seed data files last applied (decision 119)."""
+
+    __tablename__ = "seed_state"
+
+    key: Mapped[str] = mapped_column(String(40), primary_key=True)
+    fingerprint: Mapped[str] = mapped_column(String(64))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

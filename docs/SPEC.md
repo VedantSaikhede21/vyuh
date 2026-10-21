@@ -477,6 +477,7 @@ Rules (Phase 4a, `default_v4`, `services/scoring/report.py`, decision 115):
 | `scores` | id, session_id (unique with tree_version), total, detection, classification, decision, report, efficiency, penalties (jsonb), per_contact (jsonb), metrics (jsonb), tree_version, created_at |
 | `debriefs` | session_id (pk), model, content (jsonb), created_at |
 | `rating_history` | id, user_id, session_id, before, after, created_at |
+| `seed_state` | key (pk, `demo`), fingerprint (SHA-256 of the seed data files last applied), updated_at — the dev API re-seeds at startup when it differs (decision 119) |
 
 The API owns all DB access (Supabase service key stays server-side; no client-side DB queries).
 
