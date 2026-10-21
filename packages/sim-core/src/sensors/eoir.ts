@@ -1,5 +1,6 @@
 import type { EoIrSensor, EoLevel, EoMode } from '@vyuh/shared';
 import type { Vec3 } from '../coords.ts';
+import { datan2, dcos, dsin, dtan } from '../dmath.ts';
 
 // EO/IR camera (SPEC §6.2). Pixels on target = size / (range × IFOV), Johnson
 // cycles = pixels / 2, scaled by the class's thermal contrast in IR mode.
@@ -118,10 +119,10 @@ export function pointingTo(
 ): { azDeg: number; elDeg: number } {
   const dx = to.x - from.x;
   const dz = to.z - from.z;
-  const az = (Math.atan2(dx, dz) * 180) / Math.PI;
+  const az = (datan2(dx, dz) * 180) / Math.PI;
   return {
     azDeg: az < 0 ? az + 360 : az,
-    elDeg: (Math.atan2(to.y - from.y, Math.hypot(dx, dz)) * 180) / Math.PI,
+    elDeg: (datan2(to.y - from.y, Math.hypot(dx, dz)) * 180) / Math.PI,
   };
 }
 
@@ -138,16 +139,16 @@ export function frameOffset(
   const az = (camera.azDeg * Math.PI) / 180;
   const el = (camera.elDeg * Math.PI) / 180;
   // Camera basis in (east, up, north).
-  const f = [Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)] as const;
-  const r = [Math.cos(az), 0, -Math.sin(az)] as const;
-  const u = [-Math.sin(el) * Math.sin(az), Math.cos(el), -Math.sin(el) * Math.cos(az)] as const;
+  const f = [dsin(az) * dcos(el), dsin(el), dcos(az) * dcos(el)] as const;
+  const r = [dcos(az), 0, -dsin(az)] as const;
+  const u = [-dsin(el) * dsin(az), dcos(el), -dsin(el) * dcos(az)] as const;
   const d = [to.x - from.x, to.y - from.y, to.z - from.z] as const;
   const fz = d[0] * f[0] + d[1] * f[1] + d[2] * f[2];
   if (fz <= 0) return null;
   const rx = d[0] * r[0] + d[1] * r[1] + d[2] * r[2];
   const uy = d[0] * u[0] + d[1] * u[1] + d[2] * u[2];
   const [w, h] = eoResolution(sensor, camera.mode);
-  const tanH = Math.tan((eoHfovDeg(sensor, camera.zoom) * Math.PI) / 360);
+  const tanH = dtan((eoHfovDeg(sensor, camera.zoom) * Math.PI) / 360);
   return [rx / fz / tanH, uy / fz / ((tanH * h) / w)];
 }
 
