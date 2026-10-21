@@ -221,7 +221,7 @@ Follow SPEC §15 layout. Specific rules:
 - The 3D tactical view is the canvas; HUD panels sit on a grid around it, never floating randomly.
 - Track list is the primary control surface: symbol, id, class (or `—`), range, bearing, altitude band, RF badge, state; keyboard focus follows selection.
 - EO/IR view: state chip MAN / CUE / ACQ / TRK, zoom readout, mode DAY/IR, reticle; cue box in `--cue`; off-screen arrow.
-- Action bar: grouped as *Identify* (mark, classify, affiliation) · *Respond* (monitor, jam, spoof, intercept) · *Report*. Each button shows shortcut, cooldown ring, ammo count; disabled reason on hover.
+- Action bar: grouped as *Identify* (mark, classify, affiliation) · *Respond* (monitor, report, jam / spoof, intercept). Each button shows shortcut, cooldown ring, ammo count; disabled reason on hover. Report sits in the Respond group's first row (Phase 4a, decision 114): a group of its own needs 32 px the bottom row does not have, and a report is one of the responses. `R` opens the report form over the action bar.
 - Comms log: last ~8 lines, timestamped, newest at bottom, colour only for outcome status.
 - Alerts: leak imminent / friendly in jam sector → a single banner line in the top bar with `--crit`/`--warn`, never a modal.
 
