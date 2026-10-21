@@ -1,9 +1,9 @@
 {
   "id": "S04",
   "schemaVersion": 1,
-  "generatorVersion": 2,
+  "generatorVersion": 3,
   "name": "Night Drop",
-  "briefing": "## Situation\nNight, clear. Depot Bravo sits a few kilometres from a border line. Heavy quadcopters have been crossing at night, hovering briefly and dropping packages before flying back. Birds and our own patrol drone are also up.\n## Mission\nDetect the crossing, identify it, and defeat it before it drops its payload near Depot Bravo. Leave birds and friendlies alone.\n## ROE\nWEAPONS TIGHT — intercept only tracks you have classified as a threat type and declared HOSTILE. No intercepts inside the marked no-kinetic zones (settlements).\n## Assets\n- Radar, EO/IR camera and RF detector on high ground near the asset\n- RF jammer, 2.0 km, ±10° sector, 10 s cycle\n- GNSS spoofer, 2.0 km, ±10° sector, 15 s cycle\n- Interceptor, 1.5 km, 2 rounds, 6 s reload\n## Intel\nCrossings expected from the south-east. The courier drone is RF-controlled: an RF bearing may come before a radar track. The day camera is blind at night; use IR to identify.",
+  "briefing": "## Situation\nNight, clear. Depot Bravo sits a few kilometres from a border line. Heavy quadcopters have been crossing at night, hovering briefly and dropping packages before flying back. Birds and our own patrol drone are also up.\n## Mission\nDetect the crossing, identify it, and defeat it before it drops its payload near Depot Bravo. Leave birds and friendlies alone. Contact reports are expected: send one for every threat track (R).\n## ROE\nWEAPONS TIGHT — intercept only tracks you have classified as a threat type and declared HOSTILE. No intercepts inside the marked no-kinetic zones (settlements).\n## Assets\n- Radar, EO/IR camera and RF detector on high ground near the asset\n- RF jammer, 2.0 km, ±10° sector, 10 s cycle\n- GNSS spoofer, 2.0 km, ±10° sector, 15 s cycle\n- Interceptor, 1.5 km, 2 rounds, 6 s reload\n## Intel\nCrossings expected from the south-east. The courier drone is RF-controlled: an RF bearing may come before a radar track. The day camera is blind at night; use IR to identify.",
   "seed": 40411,
   "difficulty": 3,
   "request": {
@@ -431,5 +431,5 @@
     }
   ],
   "durationS": 510,
-  "scoringTreeId": "default_v3"
+  "scoringTreeId": "default_v4"
 }

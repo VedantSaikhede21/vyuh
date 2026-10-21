@@ -8,6 +8,7 @@ from collections import defaultdict
 from typing import Any
 
 from app.schemas.generated import Scenario, ThreatClass
+from app.services.scoring.report import report_metrics
 
 THREAT_CLASSES = frozenset(c.value for c in ThreatClass)
 DETECTION_TYPES = frozenset({"SENSOR_TRACK_CREATED", "EO_IDENTIFIABLE"})
@@ -28,6 +29,14 @@ LINK_LABEL = {
     "NONE": "link-less",
 }
 BIRD_CLASSES = frozenset({"BIRD_SMALL", "BIRD_LARGE"})
+#: ROE wording for violation feedback (default_v4, decision 116).
+ROE_RULE = {
+    "WEAPONS_HOLD": "weapons hold — no intercepts",
+    "WEAPONS_TIGHT": (
+        "weapons tight — intercept only tracks classified as a threat type and declared HOSTILE"
+    ),
+    "WEAPONS_FREE": "weapons free",
+}
 #: Decision is UNAVOIDABLE when warning < max(shortest able cooldown, this) (SPEC §9.6).
 UNAVOIDABLE_FLOOR_S = 10.0
 
@@ -58,6 +67,15 @@ def classification_result(reported: str, truth: str) -> str:
     if (reported in THREAT_CLASSES) == (truth in THREAT_CLASSES):
         return "CATEGORY"
     return "WRONG"
+
+
+def no_kinetic_label(scenario: Scenario) -> str:
+    """How violation feedback names the no-kinetic zone (the log does not say which one)."""
+    zones = [z for z in scenario.zones if getattr(z.kind, "value", z.kind) == "NO_KINETIC"]
+    if len(zones) == 1:
+        z = zones[0]
+        return f"the {z.name} (zone {z.id})" if z.name else f"zone {z.id}"
+    return "a no-kinetic zone"
 
 
 def contact_metrics(scenario: Scenario, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -166,6 +184,25 @@ def contact_metrics(scenario: Scenario, events: list[dict[str, Any]]) -> list[di
             default=None,
         )
         affiliation_calls = [e for e in evs if e["type"] == "AFFILIATION_SET"]
+        # default_v4 (decisions 115, 116): first blocked attempt per rule, and the
+        # moment each session-level adjustment refers to (`tMetric`).
+        blocked_roe = next(
+            (e for e in own_outcomes if e["payload"]["result"] == "BLOCKED_BY_ROE"), None
+        )
+        blocked_zone = next(
+            (e for e in own_outcomes if e["payload"]["result"] == "BLOCKED_NO_KINETIC"), None
+        )
+        first_fired = next(
+            (
+                e["tMs"]
+                for e in own_outcomes
+                if e["payload"]["response"] == "INTERCEPT"
+                and e["payload"]["result"] in FIRED_RESULTS
+            ),
+            None,
+        )
+        first_ew = ew_outcomes[0]["tMs"] if ew_outcomes else None
+        jammed_t = next((e["tMs"] for e in neutralised if e["payload"]["by"] == "EW_JAM"), None)
         cooldown_min = able_cooldown_min_s(scenario, link)
 
         types = {e["type"] for e in evs}
@@ -263,6 +300,28 @@ def contact_metrics(scenario: Scenario, events: list[dict[str, Any]]) -> list[di
                     affiliation_calls[-1]["payload"]["affiliation"] if affiliation_calls else None
                 ),
                 "outcome": outcome,
+                "roeViolationTMs": blocked_roe["tMs"] if blocked_roe else None,
+                "roeViolationTrackId": blocked_roe.get("trackId") if blocked_roe else None,
+                "roeRule": ROE_RULE.get(scenario.roe.value, scenario.roe.value),
+                "noKineticViolationTMs": blocked_zone["tMs"] if blocked_zone else None,
+                "noKineticViolationTrackId": blocked_zone.get("trackId") if blocked_zone else None,
+                "noKineticZone": no_kinetic_label(scenario),
+                "firstFiredTMs": first_fired,
+                "firstEwTMs": first_ew,
+                "jammedTMs": jammed_t,
+                "wronglyEngagedTMs": min(
+                    (t for t in (first_fired, first_ew) if t is not None), default=None
+                ),
+                "classifiedTMs": classified[-1]["tMs"] if classified else None,
+                **report_metrics(
+                    scenario,
+                    events,
+                    contact_id=spec.id,
+                    track_ids=sorted(t for t, c in track_contact.items() if c == spec.id),
+                    first_detectable_t_ms=first_detectable,
+                    true_class=truth,
+                    threat_classes=THREAT_CLASSES,
+                ),
             }
         )
     return out

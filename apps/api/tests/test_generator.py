@@ -98,7 +98,7 @@ def test_output_is_valid_and_versioned(many: list[dict]) -> None:
         model = Scenario.model_validate(s)
         assert scenario_rule_violations(model) == []
         assert s["generatorVersion"] == GENERATOR_VERSION
-        assert s["scoringTreeId"] == "default_v3"
+        assert s["scoringTreeId"] == "default_v4"
         assert s["request"]["seed"] == s["seed"]
         assert [c["id"] for c in s["contacts"]] == [
             f"c{i:02d}" for i in range(1, len(s["contacts"]) + 1)

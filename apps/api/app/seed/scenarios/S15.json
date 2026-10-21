@@ -1,9 +1,9 @@
 {
   "id": "S15",
   "schemaVersion": 1,
-  "generatorVersion": 2,
+  "generatorVersion": 3,
   "name": "Birds or Drone?",
-  "briefing": "## Situation\nDaylight, clear. Depot Bravo is on open farmland. Flocks of birds are working the fields to the west, and the radar will track them. One small hostile quadcopter is expected from the same direction.\n## Mission\nFind the drone among the birds, identify it, and defeat it before it reaches Depot Bravo. Leave the birds alone.\n## ROE\nWEAPONS FREE — engage any track you assess as a threat. No intercepts inside the marked no-kinetic zones (settlements).\n## Assets\n- Radar, EO/IR camera and RF detector on high ground near the asset\n- RF jammer, 2.0 km, ±10° sector, 10 s cycle\n- Interceptor, 1.5 km, 2 rounds, 6 s reload\n## Intel\nBirds wander in height and heading and drift with the flock; a drone holds a steady course and speed toward the post, and is RF-linked. Put the camera on any contact you are unsure of.",
+  "briefing": "## Situation\nDaylight, clear. Depot Bravo is on open farmland. Flocks of birds are working the fields to the west, and the radar will track them. One small hostile quadcopter is expected from the same direction.\n## Mission\nFind the drone among the birds, identify it, and defeat it before it reaches Depot Bravo. Leave the birds alone. Contact reports are expected: send one for every threat track (R).\n## ROE\nWEAPONS FREE — engage any track you assess as a threat. No intercepts inside the marked no-kinetic zones (settlements).\n## Assets\n- Radar, EO/IR camera and RF detector on high ground near the asset\n- RF jammer, 2.0 km, ±10° sector, 10 s cycle\n- Interceptor, 1.5 km, 2 rounds, 6 s reload\n## Intel\nBirds wander in height and heading and drift with the flock; a drone holds a steady course and speed toward the post, and is RF-linked. Put the camera on any contact you are unsure of.",
   "seed": 15116,
   "difficulty": 2,
   "request": {
@@ -395,5 +395,5 @@
     }
   ],
   "durationS": 210,
-  "scoringTreeId": "default_v3"
+  "scoringTreeId": "default_v4"
 }

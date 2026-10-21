@@ -10,7 +10,7 @@
     "timeBand": "DAY",
     "weatherPreset": "FOG"
   },
-  "briefing": "## Situation\nMidday in January, dense fog over the plains: visibility about 800 m. The camera will not see anything beyond that, in daylight or thermal. Our own patrol drones are up, and birds are working the fields.\n## Mission\nDetect, identify and defeat hostile drones before they reach Post Alpha. Leave birds, civilians and friendlies alone.\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nThe radar and the RF detector are your eyes today. Use track behaviour (speed, height, heading toward the post) and RF to sort contacts early: by the time the camera can identify something, it is under a kilometre out.",
+  "briefing": "## Situation\nMidday in January, dense fog over the plains: visibility about 800 m. The camera will not see anything beyond that, in daylight or thermal. Our own patrol drones are up, and birds are working the fields.\n## Mission\nDetect, identify and defeat hostile drones before they reach Post Alpha. Leave birds, civilians and friendlies alone. Contact reports are expected: send one for every threat track (R).\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nThe radar and the RF detector are your eyes today. Use track behaviour (speed, height, heading toward the post) and RF to sort contacts early: by the time the camera can identify something, it is under a kilometre out.",
   "patch": {},
   "contacts": {}
 }

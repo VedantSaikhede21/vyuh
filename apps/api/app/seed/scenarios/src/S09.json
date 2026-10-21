@@ -12,7 +12,7 @@
     "swarmSize": 4,
     "seed": 90915
   },
-  "briefing": "## Situation\nDusk, the sun low in the west. Pump Station is on open farmland. A coordinated swarm attack is expected: two groups of four small drones arriving close together from different directions, with a high decoy to split your attention.\n## Mission\nDetect, identify and defeat every hostile before it reaches Pump Station. Leave birds, civilians and friendlies alone.\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nOne group is expected out of the setting sun, from the west-south-west, where the day camera looks into the glare; the other from the north. Rounds are limited: the jammer and the spoofer cover a whole sector at once.",
+  "briefing": "## Situation\nDusk, the sun low in the west. Pump Station is on open farmland. A coordinated swarm attack is expected: two groups of four small drones arriving close together from different directions, with a high decoy to split your attention.\n## Mission\nDetect, identify and defeat every hostile before it reaches Pump Station. Leave birds, civilians and friendlies alone. Contact reports are expected: send one for every threat track (R).\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nOne group is expected out of the setting sun, from the west-south-west, where the day camera looks into the glare; the other from the north. Rounds are limited: the jammer and the spoofer cover a whole sector at once.",
   "patch": {
     "effectors": [
       {

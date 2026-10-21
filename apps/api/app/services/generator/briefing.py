@@ -16,6 +16,8 @@ WEATHER_WORDS = {
     "RAIN": "rain, visibility about 5 km",
     "DUST": "dust, visibility about 2 km",
 }
+#: default_v4 scores contact reports, so the briefing says they are expected (decision 115).
+REPORT_LINE = "Contact reports are expected: send one for every threat track (R)."
 ROE_TEXT = {
     "WEAPONS_FREE": "WEAPONS FREE — engage any track you assess as a threat.",
     "WEAPONS_TIGHT": (
@@ -65,7 +67,7 @@ def briefing(
 
     mission = (
         f"Detect, identify and defeat hostile drones before they reach {asset_name} "
-        "or drop a payload. Leave birds, civilians and friendlies alone."
+        "or drop a payload. Leave birds, civilians and friendlies alone. " + REPORT_LINE
     )
     roe_text = ROE_TEXT[roe]
     if has_no_kinetic:

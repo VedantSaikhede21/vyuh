@@ -22,7 +22,7 @@ from app.schemas.generated import (
     ScoreComponents,
 )
 from app.services.scoring.metrics import contact_metrics
-from app.services.scoring.tree import Tree, evaluate, load_tree, render_feedback
+from app.services.scoring.tree import Tree, evaluate, leaf_points, load_tree, render_feedback
 
 COMPONENTS = ("detection", "classification", "decision", "report", "efficiency")
 
@@ -76,15 +76,19 @@ def score_session(
         adjust = 0.0
         for leaf in leaves:
             if leaf.component:
-                earned[leaf.component] += leaf.points
+                earned[leaf.component] += leaf_points(leaf, m)
             if leaf.adjust is not None:
                 adjust += leaf.adjust
+                t_ms = m.get(leaf.t_metric) if leaf.t_metric else None
                 penalties.append(
                     Penalty(
                         code=leaf.leaf,
                         points=leaf.adjust,
                         contact_id=m["contactId"],
                         feedback=render_feedback(leaf.feedback, m),
+                        # v4 only (decision 115): v1-v3 leaves have no tMetric, so
+                        # their penalties stay byte-identical.
+                        **({"t_ms": int(t_ms)} if t_ms is not None else {}),
                     )
                 )
         excluded = any(leaf.excluded for leaf in leaves)

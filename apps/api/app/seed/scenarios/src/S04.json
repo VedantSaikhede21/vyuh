@@ -10,7 +10,7 @@
     "timeBand": "NIGHT",
     "threatMix": { "QUAD_HEAVY": 1 }
   },
-  "briefing": "## Situation\nNight, clear. Depot Bravo sits a few kilometres from a border line. Heavy quadcopters have been crossing at night, hovering briefly and dropping packages before flying back. Birds and our own patrol drone are also up.\n## Mission\nDetect the crossing, identify it, and defeat it before it drops its payload near Depot Bravo. Leave birds and friendlies alone.\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nCrossings expected from the south-east. The courier drone is RF-controlled: an RF bearing may come before a radar track. The day camera is blind at night; use IR to identify.",
+  "briefing": "## Situation\nNight, clear. Depot Bravo sits a few kilometres from a border line. Heavy quadcopters have been crossing at night, hovering briefly and dropping packages before flying back. Birds and our own patrol drone are also up.\n## Mission\nDetect the crossing, identify it, and defeat it before it drops its payload near Depot Bravo. Leave birds and friendlies alone. Contact reports are expected: send one for every threat track (R).\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nCrossings expected from the south-east. The courier drone is RF-controlled: an RF bearing may come before a radar track. The day camera is blind at night; use IR to identify.",
   "patch": {},
   "contacts": {}
 }

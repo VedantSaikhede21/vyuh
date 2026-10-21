@@ -9,7 +9,7 @@
     "seed": 70701,
     "timeBand": "DUSK"
   },
-  "briefing": "## Situation\nDusk, clear. Post Alpha is on open farmland. Hostile drones have been using a loud, high decoy to draw attention while a second drone comes in low from another direction. Birds, civilian hobby drones and our own patrol drone are also up.\n## Mission\nDetect, identify and defeat every hostile before it reaches Post Alpha. Leave birds, civilians and friendlies alone.\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nExpect an RF-loud drone high to the north-east first. Do not let it hold your attention: the real threat may be low, fast and silent to the RF detector, and on the opposite side.",
+  "briefing": "## Situation\nDusk, clear. Post Alpha is on open farmland. Hostile drones have been using a loud, high decoy to draw attention while a second drone comes in low from another direction. Birds, civilian hobby drones and our own patrol drone are also up.\n## Mission\nDetect, identify and defeat every hostile before it reaches Post Alpha. Leave birds, civilians and friendlies alone. Contact reports are expected: send one for every threat track (R).\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nExpect an RF-loud drone high to the north-east first. Do not let it hold your attention: the real threat may be low, fast and silent to the RF detector, and on the opposite side.",
   "patch": {
     "effectors": [
       { "id": "jam1", "kind": "EW_JAM", "x": 0, "z": 300, "rangeM": 2000, "cooldownS": 10 },

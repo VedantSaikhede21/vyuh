@@ -15,7 +15,7 @@
     "falseContactDensity": "HIGH",
     "seed": 15116
   },
-  "briefing": "## Situation\nDaylight, clear. Depot Bravo is on open farmland. Flocks of birds are working the fields to the west, and the radar will track them. One small hostile quadcopter is expected from the same direction.\n## Mission\nFind the drone among the birds, identify it, and defeat it before it reaches Depot Bravo. Leave the birds alone.\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nBirds wander in height and heading and drift with the flock; a drone holds a steady course and speed toward the post, and is RF-linked. Put the camera on any contact you are unsure of.",
+  "briefing": "## Situation\nDaylight, clear. Depot Bravo is on open farmland. Flocks of birds are working the fields to the west, and the radar will track them. One small hostile quadcopter is expected from the same direction.\n## Mission\nFind the drone among the birds, identify it, and defeat it before it reaches Depot Bravo. Leave the birds alone. Contact reports are expected: send one for every threat track (R).\n## ROE\n{roe}\n## Assets\n{assets}\n## Intel\nBirds wander in height and heading and drift with the flock; a drone holds a steady course and speed toward the post, and is RF-linked. Put the camera on any contact you are unsure of.",
   "patch": {},
   "contacts": {
     "c02": {

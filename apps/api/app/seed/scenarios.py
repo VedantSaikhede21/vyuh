@@ -1,7 +1,8 @@
 """Seed the hand-written scripted scenarios (`seed/scenarios/*.json`). Idempotent by code.
 
 A scenario that already has sessions keeps its gameplay content (replay and scores depend
-on it); only its display fields (name, briefing, tags) may change. Any other edit needs a
+on it); only its display fields (name, briefing, tags), scoring tree and generator version
+may change. Any other edit needs a
 new code (decision 46).
 """
 
@@ -20,7 +21,10 @@ from app.services.scenarios import scenario_rule_violations
 
 logger = logging.getLogger(__name__)
 
-DISPLAY_FIELDS = ("name", "briefing")  # content keys a used scenario may still change
+#: Content keys a used scenario may still change: display text, and the scoring tree
+#: and generator version, which do not change what the sim does (stored scores keep
+#: their tree_version; replay needs only the sim content). Decision 115.
+DISPLAY_FIELDS = ("name", "briefing", "scoringTreeId", "generatorVersion")
 
 SCENARIO_DIR = Path(__file__).resolve().parent / "scenarios"
 #: Library sources (scripts/scenarios/build_scripted.py); their tags are seeded too.
@@ -82,7 +86,7 @@ def seed_scenarios(db: Session, directory: Path = SCENARIO_DIR) -> int:
                 continue
             row.name = scenario.name
             row.tags = tags
-            row.content = {**row.content, **{k: content[k] for k in DISPLAY_FIELDS}}
+            row.content = {**row.content, **{k: content[k] for k in DISPLAY_FIELDS if k in content}}
             written += 1
             continue
         row.name = scenario.name
