@@ -5,13 +5,13 @@ import { SIM_VERSION, type World } from '@vyuh/sim-core';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { FallbackView } from '@/components/aar/fallback-view';
 import { Panel, PanelBody, Skeleton } from '@/components/hud/primitives';
 import { RequireAuth } from '@/components/require-auth';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
-import { replayGate, type ReplayGate } from '@/lib/replay/gate';
+import { initialReplayTime, replayGate, type ReplayGate } from '@/lib/replay/gate';
 import { useKeyframes } from '@/lib/replay/use-keyframes';
 import { loadWorld } from '@/lib/terrain/load-world';
 
@@ -23,7 +23,14 @@ const ReplayView = dynamic(() => import('@/components/aar/replay-view').then((m)
 
 type Loaded = { data: AarSessionResponse; world: World; gate: ReplayGate };
 
-function AarSession({ sessionId, initialTMs }: { sessionId: string; initialTMs: number }) {
+function AarSession({
+  sessionId,
+  start,
+}: {
+  sessionId: string;
+  /** `?t=` (ms) or `?penalty=` (index into the score's penalties). */
+  start: { t: string | null; penalty: string | null };
+}) {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,7 +84,7 @@ function AarSession({ sessionId, initialTMs }: { sessionId: string; initialTMs: 
           data={data}
           world={world}
           keyframes={kf.result.keyframes}
-          initialTMs={initialTMs}
+          initialTMs={initialReplayTime(start, data.session.score, data.killChain)}
         />
       ) : (
         <FallbackView
@@ -90,8 +97,11 @@ function AarSession({ sessionId, initialTMs }: { sessionId: string; initialTMs: 
 
 function WithParams() {
   const { id } = useParams<{ id: string }>();
-  const t = Number(useSearchParams().get('t'));
-  return <AarSession sessionId={id} initialTMs={Number.isFinite(t) && t > 0 ? t : 0} />;
+  const q = useSearchParams();
+  const t = q.get('t');
+  const penalty = q.get('penalty');
+  const start = useMemo(() => ({ t, penalty }), [t, penalty]);
+  return <AarSession sessionId={id} start={start} />;
 }
 
 export default function AarSessionPage() {
