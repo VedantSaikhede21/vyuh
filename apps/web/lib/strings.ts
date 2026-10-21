@@ -23,6 +23,20 @@ export const CLASS_LABEL = Object.fromEntries(CLASS_MENU.map((c) => [c.cls, c.la
   string
 >;
 
+/** Three- or four-letter class codes for narrow columns; the full label goes in a tooltip. */
+export const CLASS_CODE: Record<ContactClass, string> = {
+  QUAD_SMALL: 'QDS',
+  QUAD_HEAVY: 'QDH',
+  FPV: 'FPV',
+  FIXED_WING_SMALL: 'FWS',
+  LOITERING_GENERIC: 'LOIT',
+  BIRD_SMALL: 'BRDS',
+  BIRD_LARGE: 'BRDL',
+  FRIENDLY_QUAD: 'FQD',
+  CIVILIAN_HOBBY: 'CIV',
+  HELICOPTER_FRIENDLY: 'HELO',
+};
+
 export const ROE_LABEL: Record<Roe, string> = {
   WEAPONS_FREE: 'WEAPONS FREE',
   WEAPONS_TIGHT: 'WEAPONS TIGHT',

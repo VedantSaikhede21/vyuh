@@ -1,44 +1,9 @@
-import { readFileSync } from 'node:fs';
-import { expect, test, type Page } from '@playwright/test';
-import { login } from './helpers';
+import { expect, test } from '@playwright/test';
+import { login, sessionFromLog } from './helpers';
 
 // AAR replay (Phase 4a): a log recorded by sim-core in Node replays exactly in
 // Chrome (decision 111) and can be scrubbed by keyboard; an older sim version
 // falls back to the event timeline (decision 109).
-
-const API = process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
-
-async function sessionFromLog(
-  page: Page,
-  code: string,
-  fixture: string,
-  simVersion: number,
-): Promise<string> {
-  const token = await page.evaluate(() => window.localStorage.getItem('vyuh.localToken'));
-  const headers = { Authorization: `Bearer ${token}` };
-  const list = await (await page.request.get(`${API}/scenarios`, { headers })).json();
-  const scenario = list.items.find((s: { code: string }) => s.code === code);
-  const log = JSON.parse(
-    readFileSync(new URL(`../../api/tests/fixtures/${fixture}.json`, import.meta.url), 'utf8'),
-  ) as { tMs: number; payload: { mode?: string } }[];
-  const created = await (
-    await page.request.post(`${API}/sessions`, {
-      headers,
-      data: { scenarioId: scenario.id, mode: log[0]!.payload.mode, simVersion },
-    })
-  ).json();
-  const sid = created.sessionId as string;
-  await page.request.post(`${API}/sessions/${sid}/events`, {
-    headers,
-    data: { batchSeq: 0, events: log },
-  });
-  const done = await page.request.post(`${API}/sessions/${sid}/complete`, {
-    headers,
-    data: { endTMs: log.at(-1)!.tMs, clientMeta: {} },
-  });
-  expect(done.ok(), await done.text()).toBe(true);
-  return sid;
-}
 
 test('a recorded session replays exactly and scrubs by keyboard', async ({ page }) => {
   test.setTimeout(180_000);

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, type Page } from '@playwright/test';
 
 // Shared steps for the E2E specs. They drive the console as a trainee does
@@ -87,5 +88,44 @@ export async function selectTrack(page: Page, trackId: string): Promise<void> {
  * so screenshots hide it (the radar PPI, a labelled 2D canvas, stays); every DOM
  * overlay — 3D labels, EO gate and chips — stays in the picture.
  */
+const API = process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
+
+/**
+ * A completed session from a committed sim log (apps/api/tests/fixtures), created
+ * as the logged-in user and scored by the API. The mode comes from the log.
+ */
+export async function sessionFromLog(
+  page: Page,
+  code: string,
+  fixture: string,
+  simVersion: number,
+): Promise<string> {
+  const token = await page.evaluate(() => window.localStorage.getItem('vyuh.localToken'));
+  const headers = { Authorization: `Bearer ${token}` };
+  const list = await (await page.request.get(`${API}/scenarios`, { headers })).json();
+  const scenario = list.items.find((s: { code: string }) => s.code === code);
+  const log = JSON.parse(
+    readFileSync(new URL(`../../api/tests/fixtures/${fixture}.json`, import.meta.url), 'utf8'),
+  ) as { tMs: number; payload: { mode?: string } }[];
+  const created = await (
+    await page.request.post(`${API}/sessions`, {
+      headers,
+      data: { scenarioId: scenario.id, mode: log[0]!.payload.mode, simVersion },
+    })
+  ).json();
+  const sid = created.sessionId as string;
+  const batch = await page.request.post(`${API}/sessions/${sid}/events`, {
+    headers,
+    data: { batchSeq: 0, events: log },
+  });
+  expect(batch.ok(), await batch.text()).toBe(true);
+  const done = await page.request.post(`${API}/sessions/${sid}/complete`, {
+    headers,
+    data: { endTMs: log.at(-1)!.tMs, clientMeta: {} },
+  });
+  expect(done.ok(), await done.text()).toBe(true);
+  return sid;
+}
+
 export const HIDE_WEBGL =
   '[data-testid=sim-player] canvas:not([aria-label]) { visibility: hidden !important; }';

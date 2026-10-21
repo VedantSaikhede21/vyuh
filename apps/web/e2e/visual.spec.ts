@@ -4,6 +4,7 @@ import {
   beginSession,
   login,
   openBriefing,
+  sessionFromLog,
   selectTrack,
   stepTo,
   stepUntilTracked,
@@ -57,6 +58,24 @@ for (const vp of VIEWPORTS) {
       const ended = await page.getByTestId('result-ended').textContent();
       await page.reload();
       await expect(page.getByTestId('result-ended')).toHaveText(ended ?? '');
+    });
+
+    test('AAR replay with ground truth', async ({ page }) => {
+      test.setTimeout(180_000);
+      // S06 from the committed sim log, at 03:00 with ground truth on: the truth
+      // column (short class codes below 1600 px) and the folded non-threat row.
+      await login(page, 'trainee1@demo');
+      const sid = await sessionFromLog(page, 'S06', 's06_trainee', 5);
+      await page.goto(`/aar/session/${sid}`);
+      await expect(page.getByTestId('replay-timeline')).toBeVisible({ timeout: 120_000 });
+      for (let i = 0; i < 18; i++) await page.keyboard.press('Shift+ArrowRight');
+      await expect(page.getByTestId('replay-clock')).toHaveText(/^03:00/);
+      await page.keyboard.press('g');
+      await expect(page.getByTestId('kc-cleared-toggle')).toHaveText(
+        /8 non-threats correctly left alone/,
+      );
+      await page.waitForTimeout(600);
+      await shot(page, 'aar-replay-truth');
     });
 
     test('console states', async ({ page }) => {
