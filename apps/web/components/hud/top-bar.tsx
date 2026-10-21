@@ -1,6 +1,7 @@
 'use client';
 
 import type { Affiliation } from '@vyuh/shared';
+import type { ReactNode } from 'react';
 import { Keyboard, Pause, Play } from 'lucide-react';
 import { AffiliationSymbol, Banner, Kbd, StateChip, Tooltip } from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
@@ -39,18 +40,18 @@ export function TopBar({
   runtime,
   upload,
   commands,
+  replay,
 }: {
   runtime: SimRuntime;
   upload: BatcherStatus | null | undefined;
   commands: Commands;
+  /** AAR replay: a REPLAY chip and these controls instead of pause / End session. */
+  replay?: ReactNode;
 }) {
   const hud = useHudStore((s) => s.hud);
-  const endArmed = useUiStore((s) => s.endArmed);
-  const setUi = useUiStore((s) => s.set);
   if (!hud) return null;
   const banner = pickBanner(runtime, hud, upload ?? null);
   const active = hud.tracks.filter((t) => t.status === 'ACTIVE');
-  const ended = hud.endReason !== null;
   return (
     <div className="flex h-10 shrink-0 items-center gap-3 border-b border-line-1 bg-bg-1 px-3">
       <span
@@ -65,6 +66,7 @@ export function TopBar({
       </span>
       <StateChip>{ROE_LABEL[hud.roe]}</StateChip>
       <StateChip tone="muted">{runtime.mode}</StateChip>
+      {replay !== undefined && <StateChip data-testid="replay-chip">Replay</StateChip>}
       {hud.paused && <StateChip tone="warn">Paused</StateChip>}
       <ul className="flex items-center gap-2" aria-label="Active tracks by your affiliation call">
         {AFFILIATIONS.map((a) => (
@@ -80,6 +82,20 @@ export function TopBar({
         {banner && <Banner tone={banner.tone}>{banner.text}</Banner>}
       </div>
       <Connection upload={upload} />
+      {replay !== undefined ? replay : <LiveControls runtime={runtime} commands={commands} />}
+    </div>
+  );
+}
+
+/** Pause (practice), the shortcut sheet and End session with its inline confirm. */
+function LiveControls({ runtime, commands }: { runtime: SimRuntime; commands: Commands }) {
+  const hud = useHudStore((s) => s.hud);
+  const endArmed = useUiStore((s) => s.endArmed);
+  const setUi = useUiStore((s) => s.set);
+  if (!hud) return null;
+  const ended = hud.endReason !== null;
+  return (
+    <>
       {runtime.mode === 'PRACTICE' && (
         <Tooltip content={hud.paused ? 'Resume' : 'Pause (practice only)'} shortcut="P" align="end">
           <Button
@@ -123,6 +139,6 @@ export function TopBar({
           </Button>
         </Tooltip>
       )}
-    </div>
+    </>
   );
 }

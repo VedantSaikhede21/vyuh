@@ -93,4 +93,13 @@ export class ReplayController {
     if (this.tMs >= this.endTMs) this.seek(0);
     this.playing = true;
   }
+
+  togglePlay(): void {
+    if (this.playing) this.playing = false;
+    else this.play();
+  }
+
+  setSpeed(speed: ReplaySpeed): void {
+    this.speed = speed;
+  }
 }

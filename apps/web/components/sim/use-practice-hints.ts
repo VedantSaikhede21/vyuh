@@ -11,9 +11,9 @@ import { useUiStore } from '@/lib/sim/ui-store';
  * Assessment. Reads only the HUD snapshot (tracks as reported), the trainee's
  * own selections from the event log and the EO camera state.
  */
-export function usePracticeHints(rt: SimRuntime): void {
+export function usePracticeHints(rt: SimRuntime, enabled = true): void {
   useEffect(() => {
-    if (rt.mode !== 'PRACTICE') return;
+    if (!enabled || rt.mode !== 'PRACTICE') return;
     const selectedEver = new Set<string>();
     let seen = 0;
     return useHudStore.subscribe((s) => {
@@ -29,5 +29,5 @@ export function usePracticeHints(rt: SimRuntime): void {
         if (!ui.hinted.includes(h.key)) ui.hint(hud.tMs, h.key, h.text);
       }
     });
-  }, [rt]);
+  }, [rt, enabled]);
 }

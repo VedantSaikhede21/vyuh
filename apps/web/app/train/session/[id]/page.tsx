@@ -84,6 +84,7 @@ function Session({ sessionId }: { sessionId: string }) {
     case 'result':
       return (
         <ResultScreen
+          sessionId={sessionId}
           score={phase.score}
           scenarioName={phase.scenarioName}
           scenarioId={phase.scenarioId}

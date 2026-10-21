@@ -122,6 +122,12 @@ export class CommsBuilder {
 
   update(events: readonly SimEvent[]): boolean {
     if (events.length === this.seen) return false;
+    if (events.length < this.seen) {
+      // The log went back in time (an AAR replay seek): rebuild from the start.
+      this.lines.length = 0;
+      this.seen = 0;
+      this.cuedTo = null;
+    }
     for (let i = this.seen; i < events.length; i++) {
       const e = events[i]!;
       if (e.type === 'CAMERA_SLEWED') {

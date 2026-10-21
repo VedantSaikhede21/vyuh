@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { AffiliationSymbol, StatusNotice } from '@/components/hud/primitives';
 import { ALTITUDE_BAND_LABEL, altitudeBand, formatBearing, formatKm } from '@/lib/hud/derive';
 import { rfBadgeText } from '@/lib/rf';
@@ -17,7 +17,13 @@ const CELL = 'h-8 px-2 whitespace-nowrap';
  * range, bearing, altitude band (never exact height), RF badge and state.
  * Keyboard focus follows the selection.
  */
-export function TrackList({ commands }: { commands: Commands }) {
+/** An extra column supplied by the AAR (ground truth); the HUD never computes it. */
+export interface TrackColumn {
+  header: string;
+  cell: (trackId: string) => ReactNode;
+}
+
+export function TrackList({ commands, column }: { commands: Commands; column?: TrackColumn }) {
   const hud = useHudStore((s) => s.hud);
   const rows = useRef(new Map<string, HTMLTableRowElement>());
   const selectedId = hud?.selectedTrackId ?? null;
@@ -51,6 +57,7 @@ export function TrackList({ commands }: { commands: Commands }) {
           <th className={HEAD}>Alt</th>
           <th className={HEAD}>RF</th>
           <th className={HEAD}>State</th>
+          {column && <th className={HEAD}>{column.header}</th>}
         </tr>
       </thead>
       <tbody>
@@ -103,6 +110,7 @@ export function TrackList({ commands }: { commands: Commands }) {
               <td className={cn(CELL, 'text-label')}>
                 {lost ? 'LOST' : t.markedDetected ? 'DETECTED' : 'NEW'}
               </td>
+              {column && <td className={cn(CELL, 'font-sans text-body')}>{column.cell(t.id)}</td>}
             </tr>
           );
         })}

@@ -84,12 +84,15 @@ function pickNext(
  * recommended next difficulty, and Retry / Next.
  */
 export function ResultScreen({
+  sessionId,
   score,
   scenarioName,
   scenarioId,
   mode,
   ended,
 }: {
+  /** For the Replay (AAR) link. */
+  sessionId: string;
   score: Score;
   scenarioName: string;
   scenarioId: string;
@@ -152,6 +155,9 @@ export function ResultScreen({
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="ghost" asChild>
             <Link href="/train">Back to training</Link>
+          </Button>
+          <Button asChild data-testid="open-replay">
+            <Link href={`/aar/session/${sessionId}`}>Replay (AAR)</Link>
           </Button>
           <Button
             disabled={busy !== null || !scenarioId}

@@ -73,4 +73,16 @@ describe('CommsBuilder', () => {
     b.update(LOG);
     expect(b.lines).toHaveLength(5);
   });
+
+  it('rebuilds when the log goes back in time (AAR replay seek)', () => {
+    const b = new CommsBuilder(ctx);
+    b.update(LOG);
+    b.update(LOG.slice(0, 4));
+    expect(b.lines.map((l) => l.text)).toEqual([
+      'NEW TRACK T004  BRG 032°  RNG 1.16 km',
+      'T004 SELECTED',
+    ]);
+    b.update(LOG);
+    expect(b.lines).toHaveLength(5);
+  });
 });

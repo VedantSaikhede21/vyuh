@@ -23,8 +23,27 @@ const PICK_PX = 14;
 const LABEL_H = 11;
 
 /** Radar PPI (SPEC §15): north-up, range rings every km, rotating sweep, track blips. */
-export function RadarScope({ runtime, commands }: { runtime: SimRuntime; commands: Commands }) {
+/** Drawn over the scope each frame (AAR ground truth); gets the metres → pixel mapping. */
+export type PpiOverlay = (
+  ctx: CanvasRenderingContext2D,
+  px: (x: number) => number,
+  py: (z: number) => number,
+) => void;
+
+export function RadarScope({
+  runtime,
+  commands,
+  overlay,
+}: {
+  runtime: SimRuntime;
+  commands: Commands;
+  overlay?: PpiOverlay;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef(overlay);
+  useEffect(() => {
+    overlayRef.current = overlay;
+  }, [overlay]);
   const radar = runtime.scenario.sensors.find((s) => s.kind === 'RADAR');
   const maxRangeM =
     Math.ceil(((radar?.kind === 'RADAR' ? radar.refRangeM : 3000) * 1.4) / 1000) * 1000;
@@ -319,6 +338,7 @@ export function RadarScope({ runtime, commands }: { runtime: SimRuntime; command
         ctx.fillText(`${style.letter} ${tr.id}`, p.x, p.y);
       }
       ctx.textBaseline = 'alphabetic';
+      overlayRef.current?.(ctx, px, py);
       raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw);
