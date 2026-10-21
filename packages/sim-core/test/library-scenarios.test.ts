@@ -146,7 +146,10 @@ describe('S04 contact report exercise (Phase 4a Step 13)', () => {
     const events = playTrainee(s, presetWorld(s.terrain.preset), 'ASSESSMENT').getEvents();
     const courierTracks = new Set(
       events
-        .filter((e) => e.type === 'SENSOR_TRACK_CREATED' && e.contactId === 'c01')
+        .filter(
+          (e): e is Extract<SimEvent, { type: 'SENSOR_TRACK_CREATED' }> =>
+            e.type === 'SENSOR_TRACK_CREATED' && e.contactId === 'c01',
+        )
         .map((e) => e.trackId),
     );
     const reports = events.filter(
