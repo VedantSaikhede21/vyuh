@@ -1,5 +1,6 @@
 'use client';
 
+import { noKineticZoneAt } from '@vyuh/sim-core';
 import { useMemo } from 'react';
 import { CommsLog, Panel, PanelHeader, type CommsLine } from '@/components/hud/primitives';
 import { CommsBuilder } from '@/lib/hud/comms';
@@ -22,6 +23,12 @@ export function CommsPanel({ runtime, className }: { runtime: SimRuntime; classN
         trackPos: (id) => useHudStore.getState().hud?.tracks.find((t) => t.id === id) ?? null,
         effectorPos: (kind) => runtime.scenario.effectors.find((e) => e.kind === kind) ?? null,
         assetName: (id) => runtime.scenario.assets.find((a) => a.id === id)?.name ?? 'asset',
+        roe: runtime.scenario.roe,
+        zoneAt: (id) => {
+          const t = useHudStore.getState().hud?.tracks.find((x) => x.id === id);
+          const z = t ? noKineticZoneAt(runtime.scenario.zones, t.x, t.z) : null;
+          return z ? `${z.id}${z.name ? ` ${z.name.toUpperCase()}` : ''}` : null;
+        },
       }),
     [runtime],
   );

@@ -4,6 +4,7 @@ import {
   type AltitudeBand,
   type Asset,
   type Roe,
+  type SessionMode,
   type Zone,
 } from '@vyuh/shared';
 import { noKineticZoneAt, type EoTrackMode } from '@vyuh/sim-core';
@@ -199,11 +200,18 @@ export function zoneBlocksIntercept(zones: readonly Zone[], track: TrackView): s
   return `No kinetic response over ${over} — zone ${zone.id}`;
 }
 
-/** Enabled state + disabled reason for every action on the selected track. */
+/**
+ * Enabled state + disabled reason for every action on the selected track.
+ * Practice explains the ROE and no-kinetic interlocks before the attempt;
+ * Assessment does not, so ROE judgement is tested: the attempt goes to the sim,
+ * which blocks it, and default_v4 scores it (decision 116). Range, cooldown and
+ * rounds disable the button in both modes.
+ */
 export function actionStates(
   hud: HudSnapshot,
   sites: Partial<Record<'EW_JAM' | 'EW_SPOOF' | 'INTERCEPT', EffectorSite>>,
   zones: readonly Zone[] = [],
+  mode: SessionMode = 'PRACTICE',
 ): Record<ActionId, ActionState> {
   const track = hud.tracks.find((t) => t.id === hud.selectedTrackId) ?? null;
   let common: ActionState = ok;
@@ -223,7 +231,10 @@ export function actionStates(
     };
   }
   // Same order as the sim: ROE first, then the NO_KINETIC zone (decision 69).
-  const roe = roeBlocksIntercept(hud.roe, track) ?? zoneBlocksIntercept(zones, track);
+  const roe =
+    mode === 'ASSESSMENT'
+      ? null
+      : (roeBlocksIntercept(hud.roe, track) ?? zoneBlocksIntercept(zones, track));
   return {
     MARK: track.markedDetected ? no(`${track.id} already marked detected`) : ok,
     CLASSIFY: ok,

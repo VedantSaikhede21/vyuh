@@ -91,7 +91,7 @@ export function useCommands(rt: SimRuntime | null) {
     const allowed = (action: ActionId): boolean => {
       const hud = snapshot(rt);
       if (pendingSelect) hud.selectedTrackId = pendingSelect;
-      const state = actionStates(hud, effectorSites(rt, hud), rt.scenario.zones)[action];
+      const state = actionStates(hud, effectorSites(rt, hud), rt.scenario.zones, rt.mode)[action];
       if (!state.enabled && state.reason) say(state.reason);
       // Practice: a refused intercept under WEAPONS_TIGHT also gets a hint (decision 82).
       const track = hud.tracks.find((t) => t.id === hud.selectedTrackId);

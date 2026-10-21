@@ -384,3 +384,40 @@ def test_s14_engaging_the_friendly_is_penalised(
     assert hostile["outcome"] == "NEUTRALISED"
     # Birds were tracked but never engaged: no penalty for them.
     assert all(not p["contactId"].startswith("b") for p in score["penalties"])
+
+
+def test_s06_assessment_roe_attempts_are_scored_once_per_contact(
+    client: TestClient,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    auth_header: Headers,
+    start_session: Callable[..., str],
+) -> None:
+    """Real S06 log (Assessment): intercepts blocked for the ROE and the town (decision 116)."""
+    user = make_user()
+    headers = auth_header(user)
+    sid = start_session(user, scenarios["S06"], "ASSESSMENT")
+    log = _play(client, sid, headers, "s06_roe_attempts")
+    response = _complete(client, sid, headers, log[-1]["tMs"])
+    assert response.status_code == 200, response.text
+    score = response.json()
+    assert score["treeVersion"] == "default_v4"
+    blocked = {
+        (e["contactId"], e["payload"]["result"]): e["tMs"]
+        for e in reversed(log)
+        if e["type"] == "RESPONSE_OUTCOME" and e["payload"]["result"].startswith("BLOCKED")
+    }
+    code = {
+        "BLOCKED_BY_ROE": "ROE_VIOLATION_ATTEMPT",
+        "BLOCKED_NO_KINETIC": "NO_KINETIC_VIOLATION_ATTEMPT",
+    }
+    expected = sorted((cid, code[r], -10, t) for (cid, r), t in blocked.items())
+    got = sorted(
+        (p["contactId"], p["code"], p["points"], p["tMs"])
+        for p in score["penalties"]
+        if p["code"].endswith("VIOLATION_ATTEMPT")
+    )
+    assert got == expected
+    assert len(got) == 10  # nine contacts tried against the ROE, the hostile once over the town
+    zone = next(p for p in score["penalties"] if p["code"] == "NO_KINETIC_VIOLATION_ATTEMPT")
+    assert "no kinetic response is allowed there" in zone["feedback"]
