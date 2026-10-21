@@ -10,8 +10,9 @@ import {
   wrapDeg,
   type Sim,
 } from '../src/index.ts';
-import { loadScripted } from './fixture-logs.ts';
+import { loadScripted, playDefender } from './fixture-logs.ts';
 import { presetWorld } from './fixtures.ts';
+import { playTrainee } from './trainee-policy.ts';
 
 // Phase 3b library guard tests (plan Step 8): every library scenario passes the
 // validator (D2–D3 include "the ground-truth defender wins"), and each one trains
@@ -128,6 +129,43 @@ describe('S04 Night Drop (PUNJAB_PLAINS, night)', () => {
     expect(strobed).toBe(true);
     expect(identifiedIds(lockOn(s, 'c01', 'DAY')).has('c01')).toBe(false);
     expect(identifiedIds(lockOn(s, 'c01', 'IR')).has('c01')).toBe(true);
+  }, 60_000);
+});
+
+describe('S04 contact report exercise (Phase 4a Step 13)', () => {
+  const s = loadScripted('S04');
+
+  it('is scored with default_v4 and its briefing asks for reports', () => {
+    expect(s.scoringTreeId).toBe('default_v4');
+    expect(s.briefing).toContain(
+      'Contact reports are expected: send one for every threat track (R).',
+    );
+  });
+
+  it('a report on the courier logs its hidden truth; a run without reports logs none', () => {
+    const events = playTrainee(s, presetWorld(s.terrain.preset), 'ASSESSMENT').getEvents();
+    const courierTracks = new Set(
+      events
+        .filter((e) => e.type === 'SENSOR_TRACK_CREATED' && e.contactId === 'c01')
+        .map((e) => e.trackId),
+    );
+    const reports = events.filter(
+      (e): e is Extract<SimEvent, { type: 'REPORT_SUBMITTED' }> =>
+        e.type === 'REPORT_SUBMITTED' && e.payload.trackIds.some((t) => courierTracks.has(t)),
+    );
+    expect(reports.length).toBeGreaterThan(0);
+    for (const r of reports) {
+      const truth = events.find(
+        (e): e is Extract<SimEvent, { type: 'REPORT_TRUTH' }> =>
+          e.type === 'REPORT_TRUTH' && e.payload.reportSeq === r.seq,
+      );
+      expect(truth?.tMs).toBe(r.tMs);
+      expect(truth?.payload.contacts.map((c) => c.contactId)).toEqual(['c01']);
+    }
+    const silent = playDefender(s, 'ASSESSMENT').getEvents();
+    expect(silent.some((e) => e.type === 'REPORT_SUBMITTED' || e.type === 'REPORT_TRUTH')).toBe(
+      false,
+    );
   }, 60_000);
 });
 
