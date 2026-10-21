@@ -24,6 +24,8 @@ export interface VyuhE2E {
   /** The EO tracker state shown on the chip (MANUAL / CUE / TRACK). */
   eoTrackMode(): string;
   ended(): boolean;
+  /** Types of the logged events, in order (to check what a UI action sent). */
+  eventTypes(): string[];
 }
 
 declare global {
@@ -60,6 +62,7 @@ export function installE2EHook(rt: SimRuntime): () => void {
     trackRange: (trackId) => rt.sim.getState().tracks.find((t) => t.id === trackId)?.rangeM ?? null,
     eoTrackMode: () => useUiStore.getState().eo.trackMode,
     ended: () => rt.ended,
+    eventTypes: () => rt.sim.getEvents().map((e) => e.type),
   };
   return () => {
     rt.advance = advance;

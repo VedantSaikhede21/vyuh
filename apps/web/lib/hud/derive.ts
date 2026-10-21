@@ -124,7 +124,7 @@ export function friendlyInJamSector(
 // ---- action availability ---------------------------------------------------------------
 
 export type ActionId =
-  'MARK' | 'CLASSIFY' | 'AFFILIATION' | 'MONITOR' | 'EW_JAM' | 'EW_SPOOF' | 'INTERCEPT';
+  'MARK' | 'CLASSIFY' | 'AFFILIATION' | 'MONITOR' | 'EW_JAM' | 'EW_SPOOF' | 'INTERCEPT' | 'REPORT';
 
 export interface ActionState {
   enabled: boolean;
@@ -219,6 +219,7 @@ export function actionStates(
       EW_JAM: common,
       EW_SPOOF: common,
       INTERCEPT: common,
+      REPORT: common,
     };
   }
   // Same order as the sim: ROE first, then the NO_KINETIC zone (decision 69).
@@ -235,6 +236,7 @@ export function actionStates(
         ? no(roe)
         : effectorState('INTERCEPT', sites.INTERCEPT, track, hud.tMs)
       : no('No interceptor in this scenario'),
+    REPORT: ok,
   };
 }
 

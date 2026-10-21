@@ -20,6 +20,7 @@ import { useHudStore, type EffectorView } from '@/lib/sim/store';
 import { useUiStore } from '@/lib/sim/ui-store';
 import { CLASS_MENU, EFFECTOR_LABEL } from '@/lib/strings';
 import { cn } from '@/lib/utils';
+import { ReportForm } from './report-form';
 import { useEffectorSites } from './use-hud-derived';
 
 const AFFILIATIONS: Affiliation[] = ['HOSTILE', 'FRIENDLY', 'NEUTRAL', 'UNKNOWN'];
@@ -161,6 +162,7 @@ export function ActionBar({ runtime, commands }: { runtime: SimRuntime; commands
         )}
       </PanelHeader>
       {classifyMenu && st.CLASSIFY.enabled && <ClassifyMenu commands={commands} />}
+      <ReportForm commands={commands} />
       <div className="flex min-h-0 flex-1 flex-col gap-2 p-2">
         <Group label="Identify">
           <div className="grid grid-cols-2 gap-1">
@@ -206,66 +208,85 @@ export function ActionBar({ runtime, commands }: { runtime: SimRuntime; commands
           </div>
         </Group>
         <Group label="Respond">
-          <div className="grid grid-cols-2 gap-1">
-            <Action
-              state={st.MONITOR}
-              hint="Keep tracking, no engagement"
-              keyName="M"
-              onClick={commands.monitor}
-              align="start"
-            >
-              Monitor <Kbd>M</Kbd>
-            </Action>
-            <Action
-              state={st.EW_JAM}
-              hint="Jam RF links in a ±10° sector toward the track — hits everything in it"
-              keyName="J"
-              onClick={commands.jam}
-              align="end"
-            >
-              <span className="flex items-center gap-1.5">{ring('EW_JAM')}Jam</span>
-              <Kbd>J</Kbd>
-            </Action>
-            <Action
-              state={st.EW_SPOOF}
-              hint="Spoof GNSS navigation in a ±10° sector toward the track"
-              keyName="S"
-              onClick={commands.spoof}
-              align="start"
-            >
-              <span className="flex items-center gap-1.5">{ring('EW_SPOOF')}Spoof</span>
-              <Kbd>S</Kbd>
-            </Action>
-            {interceptArmed && st.INTERCEPT.enabled ? (
+          <div className="grid grid-cols-6 gap-1">
+            <div className="col-span-2">
               <Action
-                state={st.INTERCEPT}
-                hint="Fire one interceptor round at the selected track"
-                keyName="Enter"
-                onClick={commands.confirmIntercept}
-                variant="danger"
-                align="end"
-                className="border-crit bg-crit text-bg-0 hover:bg-crit"
+                state={st.MONITOR}
+                hint="Keep tracking, no engagement"
+                keyName="M"
+                onClick={commands.monitor}
+                align="start"
               >
-                Confirm <Kbd className="border-bg-0 text-bg-0">Enter</Kbd>
+                Monitor <Kbd>M</Kbd>
               </Action>
-            ) : (
+            </div>
+            {/* A report is a response too (CLAUDE.md §2 rule 9); decision 114. */}
+            <div className="col-span-2">
               <Action
-                state={st.INTERCEPT}
-                hint="Intercept — asks for Enter to confirm"
-                keyName="I"
-                onClick={commands.armIntercept}
-                variant="danger"
+                state={st.REPORT}
+                hint="Send a contact report on the selected track (then 1–5, Enter)"
+                keyName="R"
+                onClick={commands.openReport}
+              >
+                Report <Kbd>R</Kbd>
+              </Action>
+            </div>
+            <div className="col-span-2">
+              <Action
+                state={st.EW_JAM}
+                hint="Jam RF links in a ±10° sector toward the track — hits everything in it"
+                keyName="J"
+                onClick={commands.jam}
                 align="end"
               >
-                <span className="flex items-center gap-1.5">
-                  {ring('INTERCEPT')}Intercept
-                  {ammo !== undefined && ammo !== null && (
-                    <span className="text-readout text-text-2">×{ammo}</span>
-                  )}
-                </span>
-                <Kbd>I</Kbd>
+                <span className="flex items-center gap-1.5">{ring('EW_JAM')}Jam</span>
+                <Kbd>J</Kbd>
               </Action>
-            )}
+            </div>
+            <div className="col-span-3">
+              <Action
+                state={st.EW_SPOOF}
+                hint="Spoof GNSS navigation in a ±10° sector toward the track"
+                keyName="S"
+                onClick={commands.spoof}
+                align="start"
+              >
+                <span className="flex items-center gap-1.5">{ring('EW_SPOOF')}Spoof</span>
+                <Kbd>S</Kbd>
+              </Action>
+            </div>
+            <div className="col-span-3">
+              {interceptArmed && st.INTERCEPT.enabled ? (
+                <Action
+                  state={st.INTERCEPT}
+                  hint="Fire one interceptor round at the selected track"
+                  keyName="Enter"
+                  onClick={commands.confirmIntercept}
+                  variant="danger"
+                  align="end"
+                  className="border-crit bg-crit text-bg-0 hover:bg-crit"
+                >
+                  Confirm <Kbd className="border-bg-0 text-bg-0">Enter</Kbd>
+                </Action>
+              ) : (
+                <Action
+                  state={st.INTERCEPT}
+                  hint="Intercept — asks for Enter to confirm"
+                  keyName="I"
+                  onClick={commands.armIntercept}
+                  variant="danger"
+                  align="end"
+                >
+                  <span className="flex items-center gap-1.5">
+                    {ring('INTERCEPT')}Intercept
+                    {ammo !== undefined && ammo !== null && (
+                      <span className="text-readout text-text-2">×{ammo}</span>
+                    )}
+                  </span>
+                  <Kbd>I</Kbd>
+                </Action>
+              )}
+            </div>
           </div>
         </Group>
         <div

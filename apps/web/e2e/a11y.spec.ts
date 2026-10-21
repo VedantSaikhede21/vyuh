@@ -185,6 +185,64 @@ test('every order is acknowledged in Comms within 100 ms', async ({ page }) => {
   }
 });
 
+test('a contact report by keyboard: R, activity, Enter — under 10 s, acknowledged in 100 ms', async ({
+  page,
+}) => {
+  await login(page, 'trainee1@demo');
+  await openBriefing(page, 'S01');
+  await beginSession(page);
+  const track = await stepUntilTracked(page, 'c01');
+  await page.locator(`tr[data-track-id="${track}"]`).click();
+  await page.evaluate(() => window.__vyuhE2E!.release());
+
+  const started = Date.now();
+  await page.keyboard.press('r');
+  const form = page.getByTestId('report-form');
+  await expect(form).toBeVisible();
+  // Prefilled from the track; focus is on the activity choice.
+  await expect(page.getByTestId('report-activity-UNKNOWN')).toBeFocused();
+  await page.keyboard.press('1');
+  await expect(page.getByTestId('report-activity-APPROACHING')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  // Time from the Enter keydown to the echo in the Comms log, measured in the page.
+  await page.evaluate(() => {
+    window.__ack = new Promise<number>((resolve) => {
+      let down = 0;
+      window.addEventListener('keydown', (e) => (down = e.timeStamp), {
+        capture: true,
+        once: true,
+      });
+      const obs = new MutationObserver(() => {
+        const echoed = [...document.querySelectorAll('ol[aria-label="Comms log"] li')].some((li) =>
+          li.textContent?.includes('REPORT SENT'),
+        );
+        if (!down || !echoed) return;
+        obs.disconnect();
+        resolve(performance.now() - down);
+      });
+      obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+    });
+  });
+  await page.keyboard.press('Enter');
+  const ackMs = await page.evaluate(() => window.__ack!);
+  const totalMs = Date.now() - started;
+  await expect(form).toBeHidden();
+  await expect(lastComms(page)).toContainText(`REPORT SENT  ${track}  1 × `);
+  await expect(lastComms(page)).toContainText('APPROACHING');
+  // The sim logged the report and its hidden truth right after it.
+  await expect
+    .poll(() => page.evaluate(() => window.__vyuhE2E!.eventTypes().slice(-40)))
+    .toEqual(expect.arrayContaining(['REPORT_SUBMITTED', 'REPORT_TRUTH']));
+  test.info().annotations.push({
+    type: 'report-ms',
+    description: JSON.stringify({ keys: 3, totalMs, ackMs }),
+  });
+  expect(totalMs).toBeLessThan(10_000);
+  expect(ackMs).toBeLessThanOrEqual(100);
+});
+
 test('colour-blind captures for review', async ({ page }) => {
   // Affiliation must read without colour (shape + letter): captured for the §13 review.
   await login(page, 'instructor@demo');

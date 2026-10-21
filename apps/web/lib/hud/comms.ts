@@ -1,4 +1,4 @@
-import type { SimEvent } from '@vyuh/shared';
+import type { ContactReport, SimEvent } from '@vyuh/shared';
 import type { CommsLine, CommsStatus } from '@/components/hud/primitives/comms-log';
 import { CLASS_LABEL, EFFECTOR_LABEL } from '@/lib/strings';
 import { EW_SECTOR_DEG, bearingDeg, formatBearing, formatKm } from './derive';
@@ -40,6 +40,12 @@ const END_REASON: Record<string, string> = {
   ABORTED: 'ENDED BY OPERATOR',
 };
 
+/** Comms line for a sent contact report (also the immediate echo). */
+export function reportText(r: ContactReport): string {
+  const cls = r.class === 'UNKNOWN' ? 'UNKNOWN TYPE' : CLASS_LABEL[r.class].toUpperCase();
+  return `REPORT SENT  ${r.trackIds.join(' ')}  ${r.count} × ${cls} · ${r.affiliation} · ${r.activity}`;
+}
+
 /** One event → at most one line; null for events the operator would not see. */
 export function eventLine(e: SimEvent, ctx: CommsContext): Omit<CommsLine, 'id'> | null {
   const t = e.tMs;
@@ -77,6 +83,8 @@ export function eventLine(e: SimEvent, ctx: CommsContext): Omit<CommsLine, 'id'>
       }
       return { tMs: t, text: `${RESPONSE_NAME[r] ?? r} ORDERED  ${e.trackId}` };
     }
+    case 'REPORT_SUBMITTED':
+      return { tMs: t, text: reportText(e.payload) };
     case 'RESPONSE_OUTCOME': {
       const res = RESULT[e.payload.result] ?? { text: e.payload.result, status: 'info' };
       return {

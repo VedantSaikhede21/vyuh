@@ -13,6 +13,7 @@ import type { HudSnapshot, TrackView } from '@/lib/sim/store';
 function track(over: Partial<TrackView> = {}): TrackView {
   return {
     id: 'T004',
+    sensorId: 'r1',
     status: 'ACTIVE',
     rangeM: 1000,
     bearingDeg: 0,

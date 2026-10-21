@@ -7,6 +7,8 @@ import type { SimRuntime } from './runtime';
 
 export interface TrackView {
   id: string;
+  /** Sensor that holds the track (its range and bearing are from there). */
+  sensorId: string;
   status: 'ACTIVE' | 'LOST';
   rangeM: number;
   bearingDeg: number;
@@ -97,6 +99,7 @@ export function snapshot(rt: SimRuntime): HudSnapshot {
     paused: rt.paused,
     tracks: s.tracks.map((t) => ({
       id: t.id,
+      sensorId: t.sensorId,
       status: t.status,
       rangeM: t.rangeM,
       bearingDeg: t.bearingDeg,

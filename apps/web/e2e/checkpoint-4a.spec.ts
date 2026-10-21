@@ -20,6 +20,7 @@ import {
 //  02–05  S06 (dense town) from a recorded sim log: ground truth on / off, a
 //      kill-chain stage chosen, the replay help
 //  06  the fallback for a session recorded on an older simulator version
+//  07–08  the contact report form (S10 swarm), then the Comms acknowledgement
 // The S06 test also prints peak browser memory while the replay loads and plays.
 
 const OUT = 'e2e/checkpoint';
@@ -160,6 +161,25 @@ for (const vp of VIEWPORTS) {
         `S06 live ${vp.name}: Chrome private bytes ${before.private.toFixed(0)} -> peak ` +
           `${peak.private.toFixed(0)} MB (working set ${peak.workingSet.toFixed(0)} MB)`,
       );
+    });
+
+    test('contact report form @checkpoint', async ({ page }) => {
+      test.setTimeout(180_000);
+      // S10 (swarm): the form prefilled from a track, with nearby tracks offered.
+      await login(page, 'trainee1@demo');
+      await openBriefing(page, 'S10');
+      await beginSession(page);
+      const track = await stepUntilTracked(page, 'c01');
+      await stepTo(page, (await tMs(page)) + 4000);
+      await selectTrack(page, track);
+      await page.keyboard.press('r');
+      await expect(page.getByTestId('report-form')).toBeVisible();
+      await page.keyboard.press('1');
+      await page.waitForTimeout(200);
+      await shot(page, '07-report-form');
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(200);
+      await shot(page, '08-report-sent');
     });
 
     test('fallback for an older simulator version @checkpoint', async ({ page }) => {

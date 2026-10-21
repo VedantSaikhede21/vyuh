@@ -13,6 +13,7 @@ import type { EffectorView, HudSnapshot, RfStrobeView, TrackView } from '@/lib/s
 function track(over: Partial<TrackView> = {}): TrackView {
   return {
     id: 'T001',
+    sensorId: 'r1',
     status: 'ACTIVE',
     rangeM: 1000,
     bearingDeg: 0,
