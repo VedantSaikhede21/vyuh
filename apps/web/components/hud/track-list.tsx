@@ -6,6 +6,7 @@ import { ALTITUDE_BAND_LABEL, altitudeBand, formatBearing, formatKm } from '@/li
 import { rfBadgeText } from '@/lib/rf';
 import type { Commands } from '@/lib/sim/commands';
 import { useHudStore } from '@/lib/sim/store';
+import { useUiStore } from '@/lib/sim/ui-store';
 import { CLASS_LABEL } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 
@@ -31,7 +32,10 @@ export function TrackList({ commands, column }: { commands: Commands; column?: T
   useEffect(() => {
     const row = selectedId ? rows.current.get(selectedId) : undefined;
     if (!row) return;
-    if (row.closest('[role=tabpanel]')) row.focus({ preventScroll: true });
+    // An open contact report keeps the keyboard (its selection may land a tick later).
+    if (row.closest('[role=tabpanel]') && !useUiStore.getState().report) {
+      row.focus({ preventScroll: true });
+    }
     row.scrollIntoView({ block: 'nearest' });
   }, [selectedId]);
 

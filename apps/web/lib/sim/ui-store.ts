@@ -2,6 +2,7 @@ import type { EoMode } from '@vyuh/shared';
 import type { EoTrackMode } from '@vyuh/sim-core';
 import { create } from 'zustand';
 import type { CommsLine, CommsStatus } from '@/components/hud/primitives/comms-log';
+import type { ReportDraft } from '@/lib/hud/report';
 
 // Operator UI state that is not sim state: EO pointing, open menus, and local
 // Comms log lines (command rejections and immediate echoes, DESIGN §9).
@@ -37,6 +38,8 @@ interface UiStore {
   interceptArmed: boolean;
   endArmed: boolean;
   cheatSheet: boolean;
+  /** Contact report being filled in (R), or null. */
+  report: ReportDraft | null;
   local: LocalLine[];
   /** Keys of practice hints already shown (each at most once, decision 82). */
   hinted: string[];
@@ -67,6 +70,7 @@ export const useUiStore = create<UiStore>((set) => ({
   interceptArmed: false,
   endArmed: false,
   cheatSheet: false,
+  report: null,
   local: [],
   hinted: [],
   setEo: (eo) => set((s) => ({ eo: { ...s.eo, ...eo } })),
@@ -101,6 +105,7 @@ export const useUiStore = create<UiStore>((set) => ({
       interceptArmed: false,
       endArmed: false,
       cheatSheet: false,
+      report: null,
       local: [],
       hinted: [],
     }),

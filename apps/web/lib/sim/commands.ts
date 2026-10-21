@@ -8,7 +8,9 @@ import { useMemo } from 'react';
 import type { SimRuntime } from './runtime';
 import { effectorSites } from '@/components/hud/use-hud-derived';
 import { actionStates, roeBlocksIntercept, type ActionId } from '@/lib/hud/derive';
+import { reportText } from '@/lib/hud/comms';
 import { weaponsTightHint } from '@/lib/hud/hints';
+import { prefillReport, reportPayload, type ReportDraft } from '@/lib/hud/report';
 import { snapshot, useHudStore } from './store';
 import { useUiStore } from './ui-store';
 
@@ -55,6 +57,8 @@ export function useCommands(rt: SimRuntime | null) {
             r === 'EW_JAM' || r === 'EW_SPOOF' || r === 'INTERCEPT' ? EFFECTOR_LABEL[r] : r;
           return `${name} ORDERED  ${cmd.trackId}`;
         }
+        case 'REPORT_SUBMITTED':
+          return reportText(cmd.payload);
         default:
           return null; // selection and camera moves are acknowledged visually
       }
@@ -200,7 +204,26 @@ export function useCommands(rt: SimRuntime | null) {
           interceptArmed: false,
           endArmed: false,
           cheatSheet: false,
+          report: null,
         });
+      },
+      /** Open the contact report form, prefilled from the selected track (R). */
+      openReport() {
+        const id = selected();
+        if (!id || !allowed('REPORT')) return;
+        const hud = snapshot(rt);
+        const draft = prefillReport(hud, [id]);
+        if (draft) ui().set({ report: draft, classifyMenu: false, interceptArmed: false });
+      },
+      updateReport(draft: ReportDraft) {
+        ui().set({ report: draft });
+      },
+      submitReport() {
+        const draft = ui().report;
+        if (!draft) return;
+        if (send({ type: 'REPORT_SUBMITTED', payload: reportPayload(draft, now()) })) {
+          ui().set({ report: null });
+        }
       },
       togglePause() {
         if (rt.mode !== 'PRACTICE') return say('Pause is only available in practice mode.');
