@@ -8,7 +8,7 @@ import type {
   Penalty,
 } from '@vyuh/shared';
 import { ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { AffiliationSymbol, Panel, PanelHeader, StateChip } from '@/components/hud/primitives';
 import { humaniseFeedback } from '@/lib/hud/feedback';
 import { clearedLabel, groupRows } from '@/lib/replay/kill-chain-rows';
@@ -108,7 +108,7 @@ function ClearedToggle({
 /** Rows to draw: the listed ones, the fold row, and (when open) the cleared ones. */
 function useGroupedRows(rows: readonly ContactKillChain[], penalties?: readonly Penalty[]) {
   const [open, setOpen] = useState(false);
-  const { listed, cleared } = groupRows(rows, penalties);
+  const { listed, cleared } = useMemo(() => groupRows(rows, penalties), [rows, penalties]);
   return {
     all: [...listed, ...cleared],
     listed,
@@ -149,7 +149,7 @@ function StepDetail({ row, step }: { row: ContactKillChain; step: KillChainStep 
 }
 
 /** Compact panel for the replay's action-bar slot (320 px). */
-export function KillChainPanel({
+export const KillChainPanel = memo(function KillChainPanel({
   rows,
   penalties,
   onJump,
@@ -258,7 +258,7 @@ export function KillChainPanel({
       </div>
     </Panel>
   );
-}
+});
 
 /** Wide table for the event-timeline fallback (no replay). */
 export function KillChainTable({

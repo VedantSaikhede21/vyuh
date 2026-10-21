@@ -87,13 +87,24 @@ export function ReplayView({
         dirty.current = false;
         publish(snapshot(rt));
         const cam = rt.sim.getState().camera;
-        useUiStore.getState().setEo({
-          azDeg: cam.azDeg,
-          elDeg: cam.elDeg,
-          hfovDeg: fovMax / cam.zoom,
-          mode: cam.mode,
-          lockTrackId: cam.lockTrackId,
-        });
+        const ui = useUiStore.getState();
+        const hfovDeg = fovMax / cam.zoom;
+        // Only when the camera moved: a new EO object re-renders every EO subscriber.
+        if (
+          ui.eo.azDeg !== cam.azDeg ||
+          ui.eo.elDeg !== cam.elDeg ||
+          ui.eo.hfovDeg !== hfovDeg ||
+          ui.eo.mode !== cam.mode ||
+          ui.eo.lockTrackId !== cam.lockTrackId
+        ) {
+          ui.setEo({
+            azDeg: cam.azDeg,
+            elDeg: cam.elDeg,
+            hfovDeg,
+            mode: cam.mode,
+            lockTrackId: cam.lockTrackId,
+          });
+        }
         const st = useReplayStore.getState();
         if (st.tMs !== controller.tMs || st.playing !== controller.playing) {
           st.set({ tMs: controller.tMs, playing: controller.playing });

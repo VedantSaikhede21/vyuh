@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { memo, useEffect, useMemo } from 'react';
 import { Kbd, Panel, PanelHeader, Tooltip } from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
 import { REPLAY_SPEEDS, type ReplayController } from '@/lib/replay/controller';
@@ -132,6 +132,45 @@ export function useReplayKeys(
   }, [controller, markers, seek]);
 }
 
+function pctOf(t: number, end: number): string {
+  return `${(Math.min(Math.max(t / end, 0), 1) * 100).toFixed(3)}%`;
+}
+
+/** The markers above the scrubber: fixed for a session, so not redrawn as time moves. */
+const MarkerStrip = memo(function MarkerStrip({
+  markers,
+  end,
+  seek,
+}: {
+  markers: readonly TimelineMarker[];
+  end: number;
+  seek: (tMs: number) => void;
+}) {
+  const fan = useMemo(() => fanOffsets(markers, end), [markers, end]);
+  return (
+    <div className="absolute inset-x-0 top-2 h-3" aria-hidden>
+      {markers.map((m, i) => (
+        <button
+          key={`${m.tMs}-${i}`}
+          type="button"
+          tabIndex={-1}
+          title={`${formatClock(m.tMs)} · ${MARKER_NAME[m.kind]} · ${m.text}`}
+          className="absolute top-0"
+          style={{
+            left: pctOf(m.tMs, end),
+            // Markers at (nearly) the same moment fan out side by side.
+            transform: `translateX(calc(-50% + ${fan[i] ?? 0}px))`,
+          }}
+          onClick={() => seek(m.tMs)}
+          data-marker={m.kind}
+        >
+          <MarkerGlyph kind={m.kind} />
+        </button>
+      ))}
+    </div>
+  );
+});
+
 export function ReplayTimeline({
   controller,
   markers,
@@ -147,8 +186,6 @@ export function ReplayTimeline({
   const truth = useReplayStore((s) => s.truth);
   const set = useReplayStore((s) => s.set);
   const end = Math.max(controller.endTMs, 1);
-  const pct = (t: number) => `${(Math.min(Math.max(t / end, 0), 1) * 100).toFixed(3)}%`;
-  const fan = useMemo(() => fanOffsets(markers, end), [markers, end]);
 
   return (
     <div
@@ -214,26 +251,7 @@ export function ReplayTimeline({
         <span className="text-text-3"> / {formatClock(end)}</span>
       </span>
       <div className="relative min-w-0 flex-1 self-stretch">
-        <div className="absolute inset-x-0 top-2 h-3" aria-hidden>
-          {markers.map((m, i) => (
-            <button
-              key={`${m.tMs}-${i}`}
-              type="button"
-              tabIndex={-1}
-              title={`${formatClock(m.tMs)} · ${MARKER_NAME[m.kind]} · ${m.text}`}
-              className="absolute top-0"
-              style={{
-                left: pct(m.tMs),
-                // Markers at (nearly) the same moment fan out side by side.
-                transform: `translateX(calc(-50% + ${fan[i] ?? 0}px))`,
-              }}
-              onClick={() => seek(m.tMs)}
-              data-marker={m.kind}
-            >
-              <MarkerGlyph kind={m.kind} />
-            </button>
-          ))}
-        </div>
+        <MarkerStrip markers={markers} end={end} seek={seek} />
         <input
           type="range"
           min={0}
