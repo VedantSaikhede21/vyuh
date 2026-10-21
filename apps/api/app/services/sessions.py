@@ -26,7 +26,13 @@ from app.schemas.generated import (
     SessionStatus,
     UserRole,
 )
-from app.services.plausibility import LogState, Violation, advance_state, check_batch
+from app.services.plausibility import (
+    LogState,
+    PendingReport,
+    Violation,
+    advance_state,
+    check_batch,
+)
 from app.services.recommendation import recommend_difficulty
 from app.services.scenarios import get_scenario_row, load_scenario
 from app.services.scoring.engine import score_session
@@ -128,17 +134,24 @@ def load_log_state(db: Session, session_id: uuid.UUID) -> LogState:
         ).where(where)
     ).one()
     ended = db.scalar(select(func.count()).where(where, SessionEvent.type == "SESSION_ENDED"))
-    tracks = db.scalars(
-        select(SessionEvent.track_id).where(
+    tracks = db.execute(
+        select(SessionEvent.track_id, SessionEvent.contact_id).where(
             where, SessionEvent.type == "SENSOR_TRACK_CREATED", SessionEvent.track_id.is_not(None)
         )
+    )
+    last = db.scalar(select(SessionEvent).where(where, SessionEvent.seq == last_seq))
+    pending = (
+        PendingReport(last.seq, last.t_ms, tuple(last.payload.get("trackIds", [])))
+        if last is not None and last.type == "REPORT_SUBMITTED"
+        else None
     )
     return LogState(
         last_seq=last_seq,
         last_t_ms=last_t,
         event_count=count,
         ended=bool(ended),
-        known_tracks={t for t in tracks if t is not None},
+        known_tracks={t: c or "" for t, c in tracks if t is not None},
+        pending_report=pending,
     )
 
 
@@ -192,7 +205,7 @@ def ingest_batch(
     return EventBatchResponse(accepted=len(events), last_seq=state.last_seq)
 
 
-def _stored_events(db: Session, session_id: uuid.UUID) -> list[dict[str, Any]]:
+def stored_events(db: Session, session_id: uuid.UUID) -> list[dict[str, Any]]:
     rows = db.scalars(
         select(SessionEvent).where(SessionEvent.session_id == session_id).order_by(SessionEvent.seq)
     )
@@ -217,7 +230,7 @@ def complete_session(
             ErrorCode.SESSION_NOT_ACTIVE, "Session is not active", {"status": row.status.value}
         )
     scenario = load_scenario(db.get_one(ScenarioRow, row.scenario_id))
-    events = _stored_events(db, row.id)
+    events = stored_events(db, row.id)
     violations = check_batch(scenario, LogState(), events, mode=row.mode.value)
     if not any(e["type"] == "SESSION_ENDED" for e in events):
         violations.append(Violation("NOT_ENDED", None, "The log has no SESSION_ENDED event"))

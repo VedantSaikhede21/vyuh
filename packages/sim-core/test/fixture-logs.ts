@@ -8,6 +8,7 @@ import {
   type Sim,
 } from '../src/index.ts';
 import { playScripted, presetWorld } from './fixtures.ts';
+import { playTrainee } from './trainee-policy.ts';
 
 // Real event logs used as API test fixtures (see scripts/export-api-fixtures.ts).
 
@@ -92,5 +93,11 @@ export function recordFixtureLogs(): Record<string, readonly SimEvent[]> {
     // The scripted player calls every track hostile and shoots it when in range: fratricide.
     s14_scripted: playScripted(s14, presetWorld(s14.terrain.preset), 'PRACTICE').getEvents(),
     s14_jam: playS14Jam().getEvents(),
+    // Camera locks, slews and contact reports (with REPORT_TRUTH), SIM_VERSION 5.
+    s04_reports: playTrainee(
+      loadScripted('S04'),
+      presetWorld('PUNJAB_PLAINS'),
+      'ASSESSMENT',
+    ).getEvents(),
   };
 }

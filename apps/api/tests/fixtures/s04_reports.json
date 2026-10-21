@@ -1,0 +1,456 @@
+[
+ {
+  "tMs": 0,
+  "type": "SESSION_STARTED",
+  "payload": {
+   "mode": "ASSESSMENT",
+   "scenarioId": "S04",
+   "seed": 40411
+  },
+  "seq": 0
+ },
+ {
+  "tMs": 11700,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "c06",
+  "payload": {},
+  "seq": 1
+ },
+ {
+  "tMs": 16000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "c06",
+  "trackId": "T001",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 1368.3962330625961,
+   "bearingDeg": 280.9036322016408
+  },
+  "seq": 2
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T001",
+  "payload": {},
+  "tMs": 16050,
+  "seq": 3
+ },
+ {
+  "type": "MARKED_DETECTED",
+  "trackId": "T001",
+  "payload": {},
+  "tMs": 16050,
+  "seq": 4
+ },
+ {
+  "type": "CLASSIFIED",
+  "trackId": "T001",
+  "payload": {
+   "class": "FRIENDLY_QUAD"
+  },
+  "tMs": 16050,
+  "seq": 5
+ },
+ {
+  "type": "AFFILIATION_SET",
+  "trackId": "T001",
+  "payload": {
+   "affiliation": "FRIENDLY"
+  },
+  "tMs": 16050,
+  "seq": 6
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T001",
+  "payload": {},
+  "tMs": 16050,
+  "seq": 7
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "trackId": "T001",
+  "payload": {
+   "azDeg": 280.9036322016408,
+   "elDeg": 2,
+   "zoom": 4,
+   "mode": "IR"
+  },
+  "tMs": 16050,
+  "seq": 8
+ },
+ {
+  "type": "REPORT_SUBMITTED",
+  "payload": {
+   "trackIds": [
+    "T001"
+   ],
+   "count": 1,
+   "class": "FRIENDLY_QUAD",
+   "affiliation": "FRIENDLY",
+   "location": {
+    "bearingDeg": 283.96661686657217,
+    "rangeM": 1382.2443709294641,
+    "fromSensorId": "rad1"
+   },
+   "headingDeg": 1.4295750727228573,
+   "altitudeBand": "LOW",
+   "activity": "UNKNOWN",
+   "tMs": 18000
+  },
+  "tMs": 18050,
+  "seq": 9
+ },
+ {
+  "tMs": 18050,
+  "type": "REPORT_TRUTH",
+  "payload": {
+   "reportSeq": 9,
+   "contacts": [
+    {
+     "contactId": "c06",
+     "x": -1189.0577558999764,
+     "z": -616.8486344982255,
+     "aglM": 60,
+     "headingDeg": 22.760510075669423,
+     "speedMps": 9.7,
+     "activity": "APPROACHING"
+    }
+   ]
+  },
+  "seq": 10
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 100,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 20000,
+  "seq": 11
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 200,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 40000,
+  "seq": 12
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 300,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 60000,
+  "seq": 13
+ },
+ {
+  "tMs": 79500,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "c01",
+  "payload": {},
+  "seq": 14
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 40,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 80000,
+  "seq": 15
+ },
+ {
+  "tMs": 84000,
+  "type": "SENSOR_TRACK_CREATED",
+  "contactId": "c01",
+  "trackId": "T002",
+  "payload": {
+   "sensorId": "rad1",
+   "sensorKind": "RADAR",
+   "rangeM": 3163.226540149987,
+   "bearingDeg": 144.18215950805052
+  },
+  "seq": 16
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T002",
+  "payload": {},
+  "tMs": 84050,
+  "seq": 17
+ },
+ {
+  "type": "MARKED_DETECTED",
+  "trackId": "T002",
+  "payload": {},
+  "tMs": 84050,
+  "seq": 18
+ },
+ {
+  "type": "CLASSIFIED",
+  "trackId": "T002",
+  "payload": {
+   "class": "QUAD_HEAVY"
+  },
+  "tMs": 84050,
+  "seq": 19
+ },
+ {
+  "type": "AFFILIATION_SET",
+  "trackId": "T002",
+  "payload": {
+   "affiliation": "HOSTILE"
+  },
+  "tMs": 84050,
+  "seq": 20
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T002",
+  "payload": {},
+  "tMs": 84050,
+  "seq": 21
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "trackId": "T002",
+  "payload": {
+   "azDeg": 144.18215950805052,
+   "elDeg": 2,
+   "zoom": 4,
+   "mode": "IR"
+  },
+  "tMs": 84050,
+  "seq": 22
+ },
+ {
+  "type": "REPORT_SUBMITTED",
+  "payload": {
+   "trackIds": [
+    "T002"
+   ],
+   "count": 1,
+   "class": "QUAD_HEAVY",
+   "affiliation": "HOSTILE",
+   "location": {
+    "bearingDeg": 143.02950298069624,
+    "rangeM": 3137.00706723544,
+    "fromSensorId": "rad1"
+   },
+   "headingDeg": 30.870497319315465,
+   "altitudeBand": "MEDIUM",
+   "activity": "UNKNOWN",
+   "tMs": 86000
+  },
+  "tMs": 86050,
+  "seq": 23
+ },
+ {
+  "tMs": 86050,
+  "type": "REPORT_TRUTH",
+  "payload": {
+   "reportSeq": 23,
+   "contacts": [
+    {
+     "contactId": "c01",
+     "x": 2002.2112949361558,
+     "z": -3483.206469061385,
+     "aglM": 44,
+     "headingDeg": 325.3144055759254,
+     "speedMps": 11,
+     "activity": "APPROACHING"
+    }
+   ]
+  },
+  "seq": 24
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 140,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 100000,
+  "seq": 25
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 240,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 120000,
+  "seq": 26
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 340,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 140000,
+  "seq": 27
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 80,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 160000,
+  "seq": 28
+ },
+ {
+  "tMs": 179700,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "c02",
+  "payload": {},
+  "seq": 29
+ },
+ {
+  "tMs": 179700,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "c03",
+  "payload": {},
+  "seq": 30
+ },
+ {
+  "tMs": 179700,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "c04",
+  "payload": {},
+  "seq": 31
+ },
+ {
+  "tMs": 179700,
+  "type": "CONTACT_SPAWNED",
+  "contactId": "c05",
+  "payload": {},
+  "seq": 32
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 180,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 180000,
+  "seq": 33
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 280,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 200000,
+  "seq": 34
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 20,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 220000,
+  "seq": 35
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 120,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 240000,
+  "seq": 36
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 220,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 260000,
+  "seq": 37
+ },
+ {
+  "type": "CAMERA_SLEWED",
+  "payload": {
+   "azDeg": 320,
+   "elDeg": 1,
+   "zoom": 1,
+   "mode": "DAY"
+  },
+  "tMs": 280000,
+  "seq": 38
+ },
+ {
+  "type": "RESPONSE_ORDERED",
+  "trackId": "T002",
+  "payload": {
+   "response": "EW_JAM",
+   "effectorId": "jam1"
+  },
+  "tMs": 288800,
+  "seq": 39
+ },
+ {
+  "tMs": 288800,
+  "type": "RESPONSE_OUTCOME",
+  "trackId": "T002",
+  "contactId": "c01",
+  "payload": {
+   "response": "EW_JAM",
+   "result": "NEUTRALISED"
+  },
+  "seq": 40
+ },
+ {
+  "tMs": 288800,
+  "type": "CONTACT_NEUTRALISED",
+  "contactId": "c01",
+  "payload": {
+   "by": "EW_JAM"
+  },
+  "seq": 41
+ },
+ {
+  "tMs": 288800,
+  "type": "SESSION_ENDED",
+  "payload": {
+   "reason": "ALL_RESOLVED"
+  },
+  "seq": 42
+ }
+]
