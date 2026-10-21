@@ -1,4 +1,5 @@
 import {
+  AarSessionResponse,
   CreateSessionResponse,
   ErrorEnvelope,
   EventBatchResponse,
@@ -124,6 +125,9 @@ export const api = {
       method: 'POST',
       body: { endTMs, clientMeta },
     }),
+  /** After-action review data of a completed session (scenario, events, kill chain). */
+  getAar: (sessionId: string, signal?: AbortSignal) =>
+    apiFetch(`/aar/sessions/${sessionId}`, AarSessionResponse, { signal }),
   getSession: (sessionId: string, signal?: AbortSignal) =>
     apiFetch(`/sessions/${sessionId}`, SessionDetailResponse, { signal }),
 };
