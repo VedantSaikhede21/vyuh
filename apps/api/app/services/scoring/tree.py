@@ -52,6 +52,9 @@ class TreeLeaf(_Strict):
     points_metric: Annotated[str | None, Field(alias="pointsMetric")] = None
     #: v4: the metric (ms) that dates this adjustment on the result screen and timeline.
     t_metric: Annotated[str | None, Field(alias="tMetric")] = None
+    #: Weight versions (decision 121): a `pointsMetric` value is multiplied by this
+    #: before the cap, so a re-weighted component scales instead of clipping.
+    points_scale: Annotated[float, Field(alias="pointsScale")] = 1.0
 
 
 class Condition(_Strict):
@@ -175,7 +178,7 @@ def leaf_points(leaf: TreeLeaf, metrics: dict[str, Any]) -> float:
     value = metrics.get(leaf.points_metric)
     if value is None:
         return 0.0
-    return min(max(float(value), 0.0), leaf.points)
+    return min(max(float(value) * leaf.points_scale, 0.0), leaf.points)
 
 
 def _walk(tree: Tree, root: str, metrics: dict[str, Any]) -> list[TreeLeaf]:

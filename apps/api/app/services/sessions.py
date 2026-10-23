@@ -36,7 +36,7 @@ from app.services.plausibility import (
 from app.services.recommendation import recommend_difficulty
 from app.services.scenarios import get_scenario_row, load_scenario
 from app.services.scoring.engine import score_session
-from app.services.scoring.tree import load_tree
+from app.services.scoring.versions import get_tree
 from app.services.terrain import preset_revision
 
 ACCEPTS_EVENTS = frozenset({SessionStatus.CREATED, SessionStatus.ACTIVE})
@@ -247,11 +247,21 @@ def complete_session(
             {"violations": [v.as_detail() for v in violations]},
         )
 
-    score = score_session(scenario, events)
+    score = score_session(scenario, events, get_tree(db, scenario.scoring_tree_id))
+    store_score(db, row.id, score)
+    row.status = SessionStatus.COMPLETED
+    row.ended_at = datetime.now(UTC)
+    row.client_meta = body.client_meta.model_dump(mode="json", by_alias=True, exclude_unset=True)
+    db.commit()
+    return with_derived_fields(score, scenario)
+
+
+def store_score(db: Session, session_id: uuid.UUID, score: Score) -> None:
+    """Add a score row (the caller commits)."""
     c = score.components
     db.add(
         ScoreRow(
-            session_id=row.id,
+            session_id=session_id,
             total=score.total,
             detection=c.detection,
             classification=c.classification,
@@ -270,11 +280,8 @@ def complete_session(
             tree_version=score.tree_version,
         )
     )
-    row.status = SessionStatus.COMPLETED
-    row.ended_at = datetime.now(UTC)
-    row.client_meta = body.client_meta.model_dump(mode="json", by_alias=True, exclude_unset=True)
-    db.commit()
-    return with_derived_fields(score, scenario)
+    # Re-scores must sort after the original even within one second (latest_score).
+    db.flush()
 
 
 def with_derived_fields(score: Score, scenario: Scenario) -> Score:
@@ -298,16 +305,19 @@ def with_derived_fields(score: Score, scenario: Scenario) -> Score:
     )
 
 
-def latest_score(db: Session, session_id: uuid.UUID) -> Score | None:
-    row = db.scalar(
+def latest_score_row(db: Session, session_id: uuid.UUID) -> ScoreRow | None:
+    """The newest score row: a re-score supersedes the original (SPEC §9.6)."""
+    return db.scalar(
         select(ScoreRow)
         .where(ScoreRow.session_id == session_id)
-        .order_by(ScoreRow.created_at.desc())
+        .order_by(ScoreRow.created_at.desc(), ScoreRow.id.desc())
         .limit(1)
     )
-    if row is None:
-        return None
-    score = Score.model_validate(
+
+
+def score_from_row(db: Session, row: ScoreRow) -> Score:
+    """The engine's Score as stored (no derived fields)."""
+    return Score.model_validate(
         {
             "total": row.total,
             "components": ScoreComponents(
@@ -317,14 +327,21 @@ def latest_score(db: Session, session_id: uuid.UUID) -> Score | None:
                 report=row.report,
                 efficiency=row.efficiency,
             ),
-            # Tree versions are immutable, so the max per component comes from the file.
-            "componentMax": load_tree(row.tree_version).component_max,
+            # Tree versions are immutable, so the max per component comes from the tree.
+            "componentMax": get_tree(db, row.tree_version).component_max,
             "penalties": row.penalties,
             "perContact": row.per_contact,
             "metrics": row.metrics,
             "treeVersion": row.tree_version,
         }
     )
+
+
+def latest_score(db: Session, session_id: uuid.UUID) -> Score | None:
+    row = latest_score_row(db, session_id)
+    if row is None:
+        return None
+    score = score_from_row(db, row)
     session = db.get_one(TrainingSession, session_id)
     return with_derived_fields(score, load_scenario(db.get_one(ScenarioRow, session.scenario_id)))
 
@@ -355,4 +372,5 @@ def session_detail(db: Session, row: TrainingSession) -> SessionDetailResponse:
         terrain_revision=row.terrain_revision,
         score=latest_score(db, row.id),
         ended=session_ended(db, row.id),
+        is_demo=row.is_demo,
     )

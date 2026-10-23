@@ -90,3 +90,7 @@ def require_role(*roles: UserRole) -> Callable[[User], User]:
         return user
 
     return check
+
+
+#: Instructor or admin (Phase 4b staff routes).
+StaffUser = Annotated[User, Depends(require_role(UserRole.INSTRUCTOR, UserRole.ADMIN))]

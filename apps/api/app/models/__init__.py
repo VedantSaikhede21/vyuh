@@ -1,7 +1,14 @@
 """SQLAlchemy ORM models for every table in SPEC §10. Import from here so Alembic sees them all."""
 
 from app.models.base import Base
-from app.models.content import Assignment, Scenario, SeedState, TerrainPreset, ThreatType
+from app.models.content import (
+    Assignment,
+    Scenario,
+    ScoringTreeRow,
+    SeedState,
+    TerrainPreset,
+    ThreatType,
+)
 from app.models.org import Unit, User
 from app.models.training import Debrief, RatingHistory, ScoreRow, SessionEvent, TrainingSession
 
@@ -12,6 +19,7 @@ __all__ = [
     "RatingHistory",
     "Scenario",
     "ScoreRow",
+    "ScoringTreeRow",
     "SeedState",
     "SessionEvent",
     "TerrainPreset",
