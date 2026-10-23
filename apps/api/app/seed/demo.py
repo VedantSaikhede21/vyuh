@@ -20,7 +20,7 @@ from app.core.security import local_auth_id
 from app.models import Unit, User
 from app.schemas.generated import UserRole
 from app.seed.demo_history import seed_demo_history
-from app.seed.e2e import seed_e2e_user
+from app.seed.e2e import E2E_UNIT, seed_e2e_user
 from app.seed.fingerprint import seed_fingerprint, store_fingerprint, stored_fingerprint
 from app.seed.scenarios import seed_scenarios
 from app.seed.threats import seed_threat_types
@@ -40,9 +40,9 @@ DEMO_USERS: list[tuple[str, str, UserRole, str]] = [
 ]
 
 
-def seed_units(db: Session) -> dict[str, Unit]:
+def seed_units(db: Session, names: list[str] = UNITS) -> dict[str, Unit]:
     units: dict[str, Unit] = {}
-    for name in UNITS:
+    for name in names:
         unit = db.scalar(select(Unit).where(Unit.name == name))
         if unit is None:
             unit = Unit(name=name)
@@ -76,7 +76,11 @@ def seed_all(factory: sessionmaker[Session], settings: Settings) -> str:
         scenarios = seed_scenarios(db)
         db.commit()
         # Fixed sessions for visual baselines; scored through the real session path.
-        e2e = seed_e2e_user(db, units[UNITS[0]]) if settings.auth_mode is AuthMode.LOCAL else 0
+        e2e = (
+            seed_e2e_user(db, seed_units(db, [E2E_UNIT])[E2E_UNIT])
+            if settings.auth_mode is AuthMode.LOCAL
+            else 0
+        )
         # Demo history for trends and the unit dashboard (SPEC §22, decision 125).
         history = seed_demo_history(db) if settings.auth_mode is AuthMode.LOCAL else 0
         store_fingerprint(db, fingerprint)

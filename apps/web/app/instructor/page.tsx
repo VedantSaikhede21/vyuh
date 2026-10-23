@@ -157,7 +157,14 @@ function Dashboard({
           {d.sessions} Assessment sessions · {d.leaderboard.length} trainees
         </span>
         {d.demoSessions > 0 && (
-          <DemoBadge label={`Demo data · ${d.demoSessions} of ${d.sessions}`} />
+          // A count only when real and demo sessions are mixed.
+          <DemoBadge
+            label={
+              d.demoSessions < d.sessions
+                ? `Demo data · ${d.demoSessions} of ${d.sessions}`
+                : 'Demo data'
+            }
+          />
         )}
       </div>
       <Panel>
