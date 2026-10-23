@@ -251,6 +251,7 @@ describe('Session detail / Score', () => {
     terrainRevision: null,
     score,
     ended: { reason: 'TIME_UP', tMs: 180000 },
+    isDemo: false,
   };
 
   it('accepts a completed session with a score, and an active one without', () => {

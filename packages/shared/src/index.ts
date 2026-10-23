@@ -10,3 +10,4 @@ export { schemaRegistry } from './registry.ts';
 export * from './terrain.ts';
 export * from './difficulty.ts';
 export * from './time-band.ts';
+export * from './instructor.ts';

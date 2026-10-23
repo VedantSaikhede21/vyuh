@@ -160,6 +160,8 @@ export const SessionDetailResponse = named(
     score: Score.nullable(),
     /** Null until the log holds a SESSION_ENDED event. */
     ended: SessionEnded.nullable(),
+    /** Seeded demo history (SPEC §22), shown with a "Demo data" badge. */
+    isDemo: z.boolean(),
   }),
 );
 export type SessionDetailResponse = z.infer<typeof SessionDetailResponse>;
