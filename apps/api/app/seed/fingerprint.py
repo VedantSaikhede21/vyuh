@@ -15,7 +15,13 @@ from app.models import SeedState
 
 SEED_DIR = Path(__file__).resolve().parent
 #: The data the demo seed reads (code changes are not hashed).
-SEED_GLOBS = ("scenarios/*.json", "scenarios/src/*.json", "e2e/*.json", "generated/*.json")
+SEED_GLOBS = (
+    "scenarios/*.json",
+    "scenarios/src/*.json",
+    "e2e/*.json",
+    "generated/*.json",
+    "demo_sessions/*.json",
+)
 SEED_KEY = "demo"
 
 

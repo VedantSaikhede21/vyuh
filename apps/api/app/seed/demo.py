@@ -19,6 +19,7 @@ from app.core.db import make_engine, make_session_factory
 from app.core.security import local_auth_id
 from app.models import Unit, User
 from app.schemas.generated import UserRole
+from app.seed.demo_history import seed_demo_history
 from app.seed.e2e import seed_e2e_user
 from app.seed.fingerprint import seed_fingerprint, store_fingerprint, stored_fingerprint
 from app.seed.scenarios import seed_scenarios
@@ -76,11 +77,14 @@ def seed_all(factory: sessionmaker[Session], settings: Settings) -> str:
         db.commit()
         # Fixed sessions for visual baselines; scored through the real session path.
         e2e = seed_e2e_user(db, units[UNITS[0]]) if settings.auth_mode is AuthMode.LOCAL else 0
+        # Demo history for trends and the unit dashboard (SPEC §22, decision 125).
+        history = seed_demo_history(db) if settings.auth_mode is AuthMode.LOCAL else 0
         store_fingerprint(db, fingerprint)
         db.commit()
     return (
         f"Seeded {len(units)} units, {created} new demo users (auth mode: {settings.auth_mode}), "
-        f"{threats} threat types, {scenarios} scenarios written, {e2e} e2e sessions rebuilt"
+        f"{threats} threat types, {scenarios} scenarios written, {e2e} e2e sessions rebuilt, "
+        f"{history} demo sessions rebuilt"
     )
 
 
