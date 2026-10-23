@@ -3,6 +3,7 @@
 import json
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -73,3 +74,18 @@ def test_list_best_scores_come_from_the_fixtures(
     assert set(best) == {"S01", "S04"}
     log = json.loads((e2e.E2E_DIR / "s04_assessment.json").read_text(encoding="utf-8"))
     assert log["mode"] == "ASSESSMENT"
+
+
+def test_seed_puts_e2e_user_in_its_own_unit(app: Any, settings: Any, db: Session) -> None:
+    """Decision 127: e2e@demo never appears on the demo units' dashboards."""
+    from app.seed.demo import UNITS, seed_all
+    from app.seed.e2e import E2E_UNIT
+
+    seed_all(app.state.session_factory, settings)
+    db.expire_all()
+    user = db.scalar(select(User).where(User.email == E2E_EMAIL))
+    assert user is not None and user.unit is not None
+    assert user.unit.name == E2E_UNIT and E2E_UNIT not in UNITS
+    demo_units = db.scalars(select(Unit).where(Unit.name.in_(UNITS))).all()
+    members = db.scalars(select(User.email).where(User.unit_id.in_([u.id for u in demo_units])))
+    assert E2E_EMAIL not in set(members)

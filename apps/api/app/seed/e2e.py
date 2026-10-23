@@ -30,6 +30,8 @@ from app.services import sessions
 
 E2E_EMAIL = "e2e@demo"
 E2E_NAME = "E2E Trainee"
+#: Its own unit, so it never shows on the demo units' dashboards (decision 127).
+E2E_UNIT = "E2E Test Unit"
 E2E_DIR = Path(__file__).resolve().parent / "e2e"
 #: Plausibility limit on events per batch (SPEC §3.3).
 BATCH = 500
