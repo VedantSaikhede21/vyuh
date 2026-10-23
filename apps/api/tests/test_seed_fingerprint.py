@@ -16,7 +16,7 @@ from tests.conftest import make_settings
 
 def _copy_seed(tmp: Path) -> Path:
     root = tmp / "seed"
-    for sub in ("scenarios", "e2e", "generated"):
+    for sub in ("scenarios", "e2e", "generated", "demo_sessions"):
         shutil.copytree(SEED_DIR / sub, root / sub, ignore=shutil.ignore_patterns("__pycache__"))
     return root
 
