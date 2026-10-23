@@ -478,6 +478,7 @@ Rules (Phase 4a, `default_v4`, `services/scoring/report.py`, decision 115):
 | `debriefs` | session_id (pk), model, content (jsonb), created_at |
 | `rating_history` | id, user_id, session_id, before, after, created_at |
 | `seed_state` | key (pk, `demo`), fingerprint (SHA-256 of the seed data files last applied), updated_at — the dev API re-seeds at startup when it differs (decision 119) |
+| `scoring_trees` | id (pk, `<base>_w<n>`), base_id, derived_from, content (jsonb, full tree), created_by, created_at — instructor weight versions, immutable; built-in trees stay files (decision 121, migration 0006) |
 
 The API owns all DB access (Supabase service key stays server-side; no client-side DB queries).
 
@@ -495,7 +496,7 @@ The API owns all DB access (Supabase service key stays server-side; no client-si
 | GET `/scenarios` | any | List (filter: kind, difficulty, assigned; `mine=true`: the caller's own generated scenarios, newest first, with best scores) |
 | GET `/scenarios/{id}` | any | Full scenario JSON |
 | POST `/scenarios/generate` | trainee+ | `GenerateRequest` → Scenario (trainee: terrain, time band, difficulty, seed only; rate-limited per user) |
-| POST `/scenarios` | instructor | Save scripted/edited scenario |
+| POST `/scenarios` | instructor | Save an authored scenario (`AuthorScenarioRequest` → kind AUTHORED, decision 124) |
 | POST `/scenarios/from-text` | instructor | Text → ScenarioRequest (LLM) → Scenario |
 | POST `/sessions` | trainee+ | Start session for scenario |
 | POST `/sessions/{id}/events` | owner | Append event batch |
@@ -506,8 +507,12 @@ The API owns all DB access (Supabase service key stays server-side; no client-si
 | GET `/aar/users/{id}/trends` | self/instructor | Score + component trends, rating history, recurring mistakes (Assessment sessions only) |
 | GET `/aar/units/{id}` | instructor | Unit averages, leaderboard, weakest kill-chain stage, common mistakes |
 | POST `/assignments` | instructor | Assign scenario to unit/users |
-| GET `/assignments/mine` | trainee | My assignments |
-| PATCH `/scoring/trees/{id}/weights` | instructor | Adjust weights |
+| GET `/assignments/mine` | trainee | My assignments (own and unit's), with completion (decision 120) |
+| GET `/assignments` | instructor | Latest assignments |
+| GET `/units` | instructor | Units with members |
+| POST `/scenarios/preview` | instructor | Scenario builder: the scenario that would be saved + static-check problems (decision 124) |
+| GET `/scoring/trees` | instructor | Built-in trees and weight versions |
+| PATCH `/scoring/trees/{id}/weights` | instructor | Adjust weights → new immutable version `<base>_w<n>` (decision 121) |
 | POST `/sessions/{id}/rescore` | instructor | Re-score with a newer tree version (new score row) |
 | GET `/weather/live?preset=&time=` | instructor | Cached Open-Meteo lookup (if enabled) |
 
@@ -594,6 +599,7 @@ All errors: `{ "error": { "code": "...", "message": "...", "details": {} } }`
 - Kill-chain stage breakdown per contact; trends (score, components, rating, latency) from **Assessment** sessions only (Practice allows pause and hints, so it is not comparable; `sessions.mode` is stored); recurring-mistake detection.
 - Replay must check `sessions.sim_version` and `sessions.terrain_revision` (§3.4); sessions that cannot replay exactly show the event timeline with a worded reason.
 - **Status (Part 4a, 2026-10-21, `docs/plans/phase4a-plan.md`):** done — replay with keyframes, scrubber, markers, speeds, keyboard and ground-truth toggle; exact replay verified for S01, S06, S10 and a generated D5 across Node and Chrome; kill-chain breakdown per contact (`services/analytics/kill_chain.py`, stage → replay moment); structured contact report form and `default_v4` report scoring; ROE interlocks in Assessment; result-screen penalty links; abandonment and heartbeats; My generated scenarios. Part 4b (trends, unit dashboard, assignments, scenario builder, weight editing) follows.
+- **Status (Part 4b, 2026-10-23):** done — assignments with completion (an Assessment run after the assignment) and list badges; trainee trends and unit dashboard over Assessment sessions with question-titled charts; scenario builder with asset / zone drawing and server static checks, saved as AUTHORED; weight versions and explicit re-score (reads use the latest score row); 42 replayable demo sessions (`is_demo`) from a skill-scaled policy; `pnpm seed:reset-demo`. Decisions 120–126. Instructors see all units (demo shortcut, decision 123).
 - Instructor: unit dashboard, assignments, scenario builder (form on top of ScenarioRequest + zone drawing on 2D map), weight editing.
 - Structured contact report form + scoring.
 **Done when:** an instructor can assign a scenario, 3 trainees play it, and the unit dashboard shows comparison + weakest stage; replay matches the original session exactly.
@@ -811,7 +817,7 @@ Pitch storyline: *problem (costly, too few reps) → our loop (realistic kill ch
 - **Users (local/offline + staging only):** `admin@demo`, `instructor@demo`, `trainee1..6@demo` (passwords from env, never hard-coded in the repo).
   - `users` has no password column. In `AUTH_MODE=local` the seed script creates DB rows (`auth_id = local:<email>`) and `POST /auth/dev-login` (disabled when `ENV=prod`) issues a token by email. In `AUTH_MODE=supabase` the demo users are created in the Supabase dashboard; their `users` row is auto-provisioned as TRAINEE on first request and roles are set in the DB, never taken from token claims.
 - **Content:** full threat library (§7), all terrain presets built so far, scripted scenarios S01–S10 as they are completed, scoring tree `default_v1`.
-- **Demo history:** a script generates ~40 synthetic completed sessions across demo trainees with a plausible improvement curve, so trends and the unit dashboard are not empty. These rows are flagged `is_demo = true`, shown with a "Demo data" badge, and excluded from any real study numbers.
+- **Demo history:** a script generates ~40 synthetic completed sessions across demo trainees with a plausible improvement curve, so trends and the unit dashboard are not empty. These rows are flagged `is_demo = true`, shown with a "Demo data" badge, and excluded from any real study numbers. Built in Part 4b (decision 125): 42 real sim logs from a skill-scaled trainee policy, scored by the server when seeded and replayable; `pnpm seed:reset-demo --yes` removes non-demo sessions from @demo accounts (decision 126).
 - **Guests:** created on demand, can only run scenarios tagged `demo`, cleaned up after `GUEST_TTL_HOURS`.
 
 ---
