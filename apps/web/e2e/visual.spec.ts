@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import {
   VIEWPORTS,
   beginSession,
@@ -19,8 +19,14 @@ for (const vp of VIEWPORTS) {
   test.describe(vp.name, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
-    const shot = async (page: Page, name: string, opts: { fullPage?: boolean } = {}) => {
+    const shot = async (
+      page: Page,
+      name: string,
+      opts: { fullPage?: boolean; mask?: Locator[] } = {},
+    ) => {
       await page.addStyleTag({ content: HIDE_WEBGL });
+      // The Next.js dev indicator is not part of the app (as in checkpoint-4b.spec.ts).
+      await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
       await expect(page).toHaveScreenshot(`${vp.name}-${name}.png`, opts);
     };
 
@@ -40,7 +46,12 @@ for (const vp of VIEWPORTS) {
       await login(page, 'e2e@demo');
       await expect(page.getByTestId('scenario-S01')).toBeVisible();
       await expect(page.getByTestId('own-generated')).toContainText('No generated scenarios yet');
-      await shot(page, 'training');
+      // The Generate panel starts with a random seed: masked in the picture, so
+      // check here that it renders a valid uint32 seed.
+      const seed = page.locator('#gen-seed');
+      await expect(seed).toHaveValue(/^\d{1,10}$/);
+      expect(Number(await seed.inputValue())).toBeLessThanOrEqual(0xffffffff);
+      await shot(page, 'training', { mask: [seed] });
       await login(page, 'trainee1@demo');
       await openBriefing(page, 'S01');
       // The shaded LOS coverage and the status text settle once it is computed.
