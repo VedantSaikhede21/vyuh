@@ -23,6 +23,11 @@ export interface VyuhE2E {
   trackRange(trackId: string): number | null;
   /** The EO tracker state shown on the chip (MANUAL / CUE / TRACK). */
   eoTrackMode(): string;
+  /**
+   * The EO tracker state in the sim itself. The chip copies it from the WebGL frame
+   * loop, so it can lag a step by a frame; tests that branch on it read this.
+   */
+  eoSimTrackMode(): string;
   ended(): boolean;
   /** Types of the logged events, in order (to check what a UI action sent). */
   eventTypes(): string[];
@@ -61,6 +66,7 @@ export function installE2EHook(rt: SimRuntime): () => void {
     },
     trackRange: (trackId) => rt.sim.getState().tracks.find((t) => t.id === trackId)?.rangeM ?? null,
     eoTrackMode: () => useUiStore.getState().eo.trackMode,
+    eoSimTrackMode: () => rt.sim.getState().camera.trackMode,
     ended: () => rt.ended,
     eventTypes: () => rt.sim.getEvents().map((e) => e.type),
   };
