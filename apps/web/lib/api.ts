@@ -1,5 +1,16 @@
 import {
   AarSessionResponse,
+  AssignmentListResponse,
+  AuthorPreviewResponse,
+  AuthorScenarioResponse,
+  ScoringTreeListResponse,
+  ScoringTreeSummary,
+  TraineeTrendsResponse,
+  UnitDashboardResponse,
+  UnitListResponse,
+  type AuthorScenarioRequest,
+  type CreateAssignmentRequest,
+  type ScoreComponents,
   CreateSessionResponse,
   ErrorEnvelope,
   EventBatchResponse,
@@ -130,4 +141,28 @@ export const api = {
     apiFetch(`/aar/sessions/${sessionId}`, AarSessionResponse, { signal }),
   getSession: (sessionId: string, signal?: AbortSignal) =>
     apiFetch(`/sessions/${sessionId}`, SessionDetailResponse, { signal }),
+
+  // Phase 4b: assignments, trends, unit dashboard, builder, scoring weights.
+  myAssignments: (signal?: AbortSignal) =>
+    apiFetch('/assignments/mine', AssignmentListResponse, { signal }),
+  createAssignment: (body: CreateAssignmentRequest) =>
+    apiFetch('/assignments', AssignmentListResponse, { method: 'POST', body }),
+  listUnits: (signal?: AbortSignal) => apiFetch('/units', UnitListResponse, { signal }),
+  trends: (userId: string, signal?: AbortSignal) =>
+    apiFetch(`/aar/users/${userId}/trends`, TraineeTrendsResponse, { signal }),
+  unitDashboard: (unitId: string, signal?: AbortSignal) =>
+    apiFetch(`/aar/units/${unitId}`, UnitDashboardResponse, { signal }),
+  previewAuthored: (body: AuthorScenarioRequest, signal?: AbortSignal) =>
+    apiFetch('/scenarios/preview', AuthorPreviewResponse, { method: 'POST', body, signal }),
+  saveAuthored: (body: AuthorScenarioRequest) =>
+    apiFetch('/scenarios', AuthorScenarioResponse, { method: 'POST', body }),
+  listTrees: (signal?: AbortSignal) =>
+    apiFetch('/scoring/trees', ScoringTreeListResponse, { signal }),
+  saveWeights: (treeId: string, componentMax: ScoreComponents, note?: string) =>
+    apiFetch(`/scoring/trees/${treeId}/weights`, ScoringTreeSummary, {
+      method: 'PATCH',
+      body: note ? { componentMax, note } : { componentMax },
+    }),
+  rescore: (sessionId: string, treeId: string) =>
+    apiFetch(`/sessions/${sessionId}/rescore`, Score, { method: 'POST', body: { treeId } }),
 };

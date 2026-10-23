@@ -2,6 +2,7 @@
 
 import type { AarSessionResponse } from '@vyuh/shared';
 import Link from 'next/link';
+import { DemoBadge } from '@/components/aar/demo-badge';
 import { useMemo } from 'react';
 import { Panel, PanelHeader, StatusNotice } from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
@@ -45,7 +46,10 @@ export function FallbackView({ data, why }: { data: AarSessionResponse; why: str
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
           <p className="text-label">After-action review · {data.session.mode.toLowerCase()}</p>
-          <h1 className="text-h1">{data.scenario.name}</h1>
+          <h1 className="text-h1">
+            {data.scenario.name}
+            {data.session.isDemo && <DemoBadge className="ml-3 align-middle" />}
+          </h1>
         </div>
         <div className="flex gap-2">
           <Button variant="ghost" asChild>
