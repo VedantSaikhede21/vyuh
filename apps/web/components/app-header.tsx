@@ -20,6 +20,22 @@ export function AppHeader() {
               <Link href="/train" className="text-label hover:text-text-1">
                 Train
               </Link>
+              <Link href="/aar/trends" className="text-label hover:text-text-1">
+                Trends
+              </Link>
+              {(user.role === 'INSTRUCTOR' || user.role === 'ADMIN') && (
+                <>
+                  <Link href="/instructor" className="text-label hover:text-text-1">
+                    Unit
+                  </Link>
+                  <Link href="/instructor/builder" className="text-label hover:text-text-1">
+                    Builder
+                  </Link>
+                  <Link href="/instructor/scoring" className="text-label hover:text-text-1">
+                    Scoring
+                  </Link>
+                </>
+              )}
               <span className="text-label hidden sm:inline">
                 {user.name} · {user.role}
               </span>

@@ -45,9 +45,17 @@ export interface ListFilters {
   terrain: string | null;
   time: TimeBandLabel | null;
   tag: string | null;
+  /** Only scenarios assigned to the trainee (Phase 4b). */
+  assigned: boolean;
 }
 
-export const NO_FILTERS: ListFilters = { difficulty: null, terrain: null, time: null, tag: null };
+export const NO_FILTERS: ListFilters = {
+  difficulty: null,
+  terrain: null,
+  time: null,
+  tag: null,
+  assigned: false,
+};
 
 export function readQuery(params: URLSearchParams): { filters: ListFilters; sort: SortKey } {
   const d = Number(params.get('difficulty'));
@@ -59,6 +67,7 @@ export function readQuery(params: URLSearchParams): { filters: ListFilters; sort
       terrain: params.get('terrain') || null,
       time: TIME_LABELS.find((t) => t === time) ?? null,
       tag: params.get('tag') || null,
+      assigned: params.get('assigned') === '1',
     },
     sort: SORT_KEYS.find((k) => k === sort) ?? 'difficulty',
   };
@@ -71,24 +80,30 @@ export function writeQuery(filters: ListFilters, sort: SortKey): string {
   if (filters.terrain) q.set('terrain', filters.terrain);
   if (filters.time) q.set('time', filters.time);
   if (filters.tag) q.set('tag', filters.tag);
+  if (filters.assigned) q.set('assigned', '1');
   if (sort !== 'difficulty') q.set('sort', sort);
   const s = q.toString();
   return s ? `?${s}` : '';
 }
 
-/** Filtered and sorted rows; `timeOf` gives a row's computed time-of-day label. */
+/**
+ * Filtered and sorted rows; `timeOf` gives a row's computed time-of-day label and
+ * `isAssigned` whether the trainee has an assignment for it.
+ */
 export function filterAndSort(
   items: readonly ScenarioListItem[],
   filters: ListFilters,
   sort: SortKey,
   timeOf: (item: ScenarioListItem) => TimeBandLabel,
+  isAssigned: (item: ScenarioListItem) => boolean = () => false,
 ): ScenarioListItem[] {
   const rows = items.filter(
     (s) =>
       (filters.difficulty === null || s.difficulty === filters.difficulty) &&
       (filters.terrain === null || s.terrainPreset === filters.terrain) &&
       (filters.time === null || timeOf(s) === filters.time) &&
-      (filters.tag === null || s.tags.includes(filters.tag)),
+      (filters.tag === null || s.tags.includes(filters.tag)) &&
+      (!filters.assigned || isAssigned(s)),
   );
   const code = (s: ScenarioListItem) => s.code ?? '~';
   const byDifficulty = (a: ScenarioListItem, b: ScenarioListItem) =>

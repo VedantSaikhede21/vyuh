@@ -46,6 +46,9 @@ export function BriefingMap({
   intelAxisDeg,
   altitude,
   onLegend,
+  onPick,
+  draft,
+  pending,
 }: {
   scenario: Scenario;
   sizeM: number;
@@ -55,6 +58,12 @@ export function BriefingMap({
   altitude: CoverageAltitude;
   /** Told whether the legend is shown (the page hides its caption then). */
   onLegend?: (shown: boolean) => void;
+  /** Scenario builder (Phase 4b): a click on the map, in scenario metres [x, z]. */
+  onPick?: (p: [number, number]) => void;
+  /** Scenario builder: the zone being drawn, outlined in --select. */
+  draft?: readonly (readonly [number, number])[];
+  /** Scenario builder: drawn zones not in the shown scenario (its checks failed), dashed --warn. */
+  pending?: readonly (readonly (readonly [number, number])[])[];
 }) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -264,7 +273,40 @@ export function BriefingMap({
     g.fillRect(16 + w - 1.5, px - 18, 1.5, 6);
     g.font = `500 11px ${mono}`;
     g.fillText(step >= 1000 ? `${step / 1000} km` : `${step} m`, 18, px - 20);
-  }, [px, image, scenario, sizeM, sites, coverage, intelAxisDeg]);
+
+    // Builder zones the shown scenario does not have yet (its checks failed).
+    for (const poly of pending ?? []) {
+      g.strokeStyle = UI.warn;
+      g.lineWidth = 1.5;
+      g.setLineDash([6, 4]);
+      g.beginPath();
+      poly.forEach(([x, zz], i) => (i ? g.lineTo(X(x), Y(zz)) : g.moveTo(X(x), Y(zz))));
+      g.closePath();
+      g.stroke();
+      g.setLineDash([]);
+    }
+
+    // Builder draft zone: vertices and edges in --select, closing edge dashed.
+    if (draft && draft.length > 0) {
+      g.strokeStyle = UI.select;
+      g.fillStyle = UI.select;
+      g.lineWidth = 1.5;
+      g.beginPath();
+      draft.forEach(([x, zz], i) => (i ? g.lineTo(X(x), Y(zz)) : g.moveTo(X(x), Y(zz))));
+      g.stroke();
+      if (draft.length > 2) {
+        const [fx, fz] = draft[0]!;
+        const [lx, lz] = draft[draft.length - 1]!;
+        g.setLineDash([4, 4]);
+        g.beginPath();
+        g.moveTo(X(lx), Y(lz));
+        g.lineTo(X(fx), Y(fz));
+        g.stroke();
+        g.setLineDash([]);
+      }
+      for (const [x, zz] of draft) g.fillRect(X(x) - 3, Y(zz) - 3, 6, 6);
+    }
+  }, [px, image, scenario, sizeM, sites, coverage, intelAxisDeg, draft, pending]);
 
   useEffect(() => onLegend?.(legend), [legend, onLegend]);
 
@@ -277,7 +319,20 @@ export function BriefingMap({
       <canvas
         ref={canvas}
         style={{ width: px, height: px }}
-        className="shrink-0"
+        onClick={
+          onPick
+            ? (e) => {
+                if (px === 0) return;
+                const r = e.currentTarget.getBoundingClientRect();
+                const k = sizeM / px;
+                onPick([
+                  Math.round((e.clientX - r.left) * k - sizeM / 2),
+                  Math.round(sizeM / 2 - (e.clientY - r.top) * k),
+                ]);
+              }
+            : undefined
+        }
+        className={onPick ? 'shrink-0 cursor-crosshair' : 'shrink-0'}
         role="img"
         aria-label="Briefing map: terrain, zones, defended asset, sensor site and coverage"
         data-testid="briefing-map"

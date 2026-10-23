@@ -1,6 +1,11 @@
 'use client';
 
-import type { ScenarioListItem, TerrainPresetMeta, TimeBandLabel } from '@vyuh/shared';
+import type {
+  AssignmentItem,
+  ScenarioListItem,
+  TerrainPresetMeta,
+  TimeBandLabel,
+} from '@vyuh/shared';
 import { timeOfDayAt } from '@vyuh/sim-core';
 import { Moon, Sun, Sunrise, Sunset } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -9,6 +14,7 @@ import { Panel, PanelHeader, Pips, Skeleton, StatusNotice } from '@/components/h
 import { Badge } from '@/components/ui/badge';
 import { Select } from '@/components/ui/select';
 import { api } from '@/lib/api';
+import { assignmentBadge, assignmentFor } from '@/lib/scenario/assignments';
 import {
   conditions,
   filterAndSort,
@@ -110,10 +116,13 @@ export function ScenarioRowsTable({
   testId,
   timeOf,
   label,
+  assignments = [],
 }: {
   rows: ScenarioListItem[];
   ariaLabel: string;
   testId: string;
+  /** The trainee's assignments, for the Assigned badge (Phase 4b). */
+  assignments?: readonly AssignmentItem[];
 } & ReturnType<typeof useTimeOfDay>) {
   const router = useRouter();
   const [opening, setOpening] = useState<string | null>(null);
@@ -167,6 +176,8 @@ export function ScenarioRowsTable({
           const tl = label(s);
           const Icon = TIME_ICON[tl];
           const cond = conditions(s.weather);
+          const assigned = assignmentFor(s.id, assignments);
+          const badge = assigned ? assignmentBadge(assigned) : null;
           return (
             <tr
               key={s.id}
@@ -198,6 +209,18 @@ export function ScenarioRowsTable({
               <td className={cn(TD, 'text-body')}>
                 {s.code && <span className="mr-2 text-readout text-text-2">{s.code}</span>}
                 <span className="text-text-1">{s.name}</span>
+                {badge && (
+                  <Badge
+                    className="ml-2"
+                    tone={
+                      badge.state === 'DONE' ? 'ok' : badge.state === 'OVERDUE' ? 'warn' : 'strong'
+                    }
+                    title={badge.title}
+                    data-testid="assigned-badge"
+                  >
+                    {badge.label}
+                  </Badge>
+                )}
                 {opening === s.id && (
                   <span className="ml-2 text-small text-text-2">Opening briefing…</span>
                 )}
@@ -259,7 +282,18 @@ export function ScenarioTable() {
     [params],
   );
   const [items, setItems] = useState<ScenarioListItem[] | null>(null);
+  const [assignments, setAssignments] = useState<AssignmentItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    // Badges only; the list still works if this fails.
+    api
+      .myAssignments(ctrl.signal)
+      .then((r) => setAssignments(r.items))
+      .catch(() => undefined);
+    return () => ctrl.abort();
+  }, []);
 
   const fetchList = useCallback((signal?: AbortSignal) => {
     api
@@ -279,8 +313,17 @@ export function ScenarioTable() {
   const { timeOf, label } = useTimeOfDay(items);
 
   const rows = useMemo(
-    () => (items ? filterAndSort(items, filters, sort, label) : []),
-    [items, filters, sort, label],
+    () =>
+      items
+        ? filterAndSort(
+            items,
+            filters,
+            sort,
+            label,
+            (s) => assignmentFor(s.id, assignments) !== null,
+          )
+        : [],
+    [items, filters, sort, label, assignments],
   );
 
   const setQuery = (next: Partial<ListFilters>, nextSort: SortKey = sort) => {
@@ -291,7 +334,13 @@ export function ScenarioTable() {
 
   const presets = [...new Set(items?.map((s) => s.terrainPreset) ?? [])].sort();
   const tags = [...new Set(items?.flatMap(shownTags) ?? [])].sort();
-  const filtered = filters.difficulty !== null || filters.terrain || filters.time || filters.tag;
+  const filtered =
+    filters.difficulty !== null ||
+    filters.terrain ||
+    filters.time ||
+    filters.tag ||
+    filters.assigned;
+  const openAssigned = assignments.filter((a) => !a.completed).length;
 
   return (
     <Panel>
@@ -340,6 +389,19 @@ export function ScenarioTable() {
           onChange={(v) => setQuery({ tag: v || null })}
           options={[{ value: '', label: 'All' }, ...tags.map((t) => ({ value: t, label: t }))]}
         />
+        <label className="flex items-center gap-2 text-label" htmlFor="f-assigned">
+          <input
+            id="f-assigned"
+            type="checkbox"
+            className="size-4 accent-select"
+            checked={filters.assigned}
+            onChange={(e) => setQuery({ assigned: e.target.checked })}
+          />
+          Assigned
+          <span className="text-readout text-text-2" data-testid="assigned-open">
+            {openAssigned}
+          </span>
+        </label>
         <FilterSelect
           id="f-sort"
           label="Sort"
@@ -378,7 +440,15 @@ export function ScenarioTable() {
             <button
               type="button"
               className="text-label hover:text-text-1"
-              onClick={() => setQuery({ difficulty: null, terrain: null, time: null, tag: null })}
+              onClick={() =>
+                setQuery({
+                  difficulty: null,
+                  terrain: null,
+                  time: null,
+                  tag: null,
+                  assigned: false,
+                })
+              }
             >
               Clear filters
             </button>
@@ -392,6 +462,7 @@ export function ScenarioTable() {
           testId="scenario-table"
           timeOf={timeOf}
           label={label}
+          assignments={assignments}
         />
       )}
       {filtered && rows.length > 0 && (

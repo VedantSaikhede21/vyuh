@@ -4,6 +4,7 @@ import type { AarSessionResponse } from '@vyuh/shared';
 import type { SimSnapshot, World } from '@vyuh/sim-core';
 import { CircleHelp } from 'lucide-react';
 import Link from 'next/link';
+import { DemoBadge } from '@/components/aar/demo-badge';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Tooltip } from '@/components/hud/primitives';
 import { SimPlayer } from '@/components/sim/player';
@@ -144,6 +145,7 @@ export function ReplayView({
           trackColumn,
           topBarExtra: (
             <>
+              {data.session.isDemo && <DemoBadge />}
               <Tooltip content="Replay controls and markers" shortcut="?" align="end" side="bottom">
                 <Button
                   size="hud"
