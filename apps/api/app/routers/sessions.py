@@ -2,17 +2,19 @@ import uuid
 
 from fastapi import APIRouter, status
 
-from app.core.auth import CurrentUser, DbDep
+from app.core.auth import CurrentUser, DbDep, StaffUser
 from app.schemas.generated import (
     CompleteSessionRequest,
     CreateSessionRequest,
     CreateSessionResponse,
     EventBatchRequest,
     EventBatchResponse,
+    RescoreRequest,
     Score,
     SessionDetailResponse,
 )
 from app.services import sessions
+from app.services.scoring import versions
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -51,3 +53,16 @@ def complete_session(
 )
 def get_session(session_id: uuid.UUID, user: CurrentUser, db: DbDep) -> SessionDetailResponse:
     return sessions.session_detail(db, sessions.get_viewable_session(db, user, session_id))
+
+
+@router.post(
+    "/{session_id}/rescore",
+    response_model=Score,
+    response_model_exclude_unset=True,
+    status_code=status.HTTP_201_CREATED,
+)
+def rescore_session(
+    session_id: uuid.UUID, body: RescoreRequest, user: StaffUser, db: DbDep
+) -> Score:
+    """Re-score with another version of the scenario's tree; writes a new score row."""
+    return versions.rescore(db, session_id, body.tree_id)

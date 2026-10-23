@@ -338,13 +338,20 @@ def _radar_site(terrain: Terrain, asset: Point) -> Point:
     return max(candidates, key=score)
 
 
-def site(rng: random.Random, terrain: Terrain, difficulty: int) -> Site:
+def site(
+    rng: random.Random, terrain: Terrain, difficulty: int, asset_xz: Point | None = None
+) -> Site:
+    """Asset, sensor site and settlement zones. `asset_xz` (scenario builder, decision 124)
+    fixes the asset instead of picking one; everything else follows from it as usual."""
     named: list[tuple[list[Point], str]]
     if len(terrain.buildings) >= DENSE_MIN_BUILDINGS:
         dense = dense_settlements(terrain)
         all_boxes = [b for b, _ in dense.zones] if difficulty >= 2 else []
-        sites = town_asset_candidates(terrain, dense, all_boxes) if dense.town_cells else []
-        ax, az = rng.choice(sites) if sites else pick_asset_xz(rng, terrain, all_boxes)
+        if asset_xz is not None:
+            ax, az = asset_xz
+        else:
+            sites = town_asset_candidates(terrain, dense, all_boxes) if dense.town_cells else []
+            ax, az = rng.choice(sites) if sites else pick_asset_xz(rng, terrain, all_boxes)
         named = (
             [zn for zn in dense.zones if _box_distance(zn[0], ax, az) <= ZONE_ASSET_RANGE_M]
             if difficulty >= 2
@@ -352,7 +359,7 @@ def site(rng: random.Random, terrain: Terrain, difficulty: int) -> Site:
         )
     else:
         boxes = settlement_boxes(terrain.buildings, (0.0, 0.0)) if difficulty >= 2 else []
-        ax, az = pick_asset_xz(rng, terrain, boxes)
+        ax, az = asset_xz if asset_xz is not None else pick_asset_xz(rng, terrain, boxes)
         named = [(b, "village") for b in boxes]
     rx, rz = radar_site(terrain, (ax, az))
     asset = {"id": "a1", "name": rng.choice(ASSET_NAMES), "x": ax, "z": az, "radiusM": 60}

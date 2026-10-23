@@ -12,7 +12,7 @@ from app.core.config import Env, Settings, get_settings
 from app.core.db import make_engine, make_session_factory
 from app.core.errors import install_error_handlers
 from app.core.logging import REQUEST_ID_HEADER, configure_logging, request_id_middleware
-from app.routers import aar, auth, health, scenarios, sessions
+from app.routers import aar, assignments, auth, health, scenarios, scoring, sessions, units
 from app.seed.demo import seed_if_changed
 from app.services.ratelimit import RateLimiter
 from app.services.sessions import expire_stale_sessions
@@ -70,4 +70,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(scenarios.router, prefix=API_PREFIX)
     app.include_router(sessions.router, prefix=API_PREFIX)
     app.include_router(aar.router, prefix=API_PREFIX)
+    app.include_router(assignments.router, prefix=API_PREFIX)
+    app.include_router(units.router, prefix=API_PREFIX)
+    app.include_router(scoring.router, prefix=API_PREFIX)
     return app

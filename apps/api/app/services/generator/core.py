@@ -943,8 +943,17 @@ def _round(value: Any, key: str = "") -> Any:
 # ---- entry point --------------------------------------------------------------
 
 
-def generate(req: GenerateRequest) -> dict:
-    """GenerateRequest → Scenario dict (camelCase, rounded, validated)."""
+def generate(
+    req: GenerateRequest,
+    *,
+    asset_xz: Point | None = None,
+    extra_no_kinetic: list[tuple[list[Point], str]] | None = None,
+) -> dict:
+    """GenerateRequest → Scenario dict (camelCase, rounded, validated).
+
+    The scenario builder (decision 124) may fix the asset position and add NO_KINETIC
+    zones; without them the output is unchanged.
+    """
     terrain = load_terrain(req.terrain_preset)
     level = LEVELS[req.difficulty]
     meta = terrain.meta
@@ -958,7 +967,10 @@ def generate(req: GenerateRequest) -> dict:
     weather = weather_for(env, weather_preset)
     is_night = sun_el < NIGHT_SUN_EL_DEG
 
-    where = site(stream(seed, "siting"), terrain, req.difficulty)
+    where = site(stream(seed, "siting"), terrain, req.difficulty, asset_xz)
+    for box, zone_name in extra_no_kinetic or []:
+        where.no_kinetic.append(box)
+        where.no_kinetic_names.append(zone_name)
     asset = (where.asset["x"], where.asset["z"])
     ctx = Ctx(
         req=req,

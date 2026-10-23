@@ -3,8 +3,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query, Request, status
 
-from app.core.auth import CurrentUser, DbDep
+from app.core.auth import CurrentUser, DbDep, StaffUser
 from app.schemas.generated import (
+    AuthorPreviewResponse,
+    AuthorScenarioRequest,
+    AuthorScenarioResponse,
     GenerateRequest,
     GenerateScenarioResponse,
     ScenarioDetailResponse,
@@ -12,7 +15,7 @@ from app.schemas.generated import (
     ScenarioListResponse,
     UserRole,
 )
-from app.services import scenarios
+from app.services import author, scenarios
 
 router = APIRouter(prefix="/scenarios", tags=["scenarios"])
 
@@ -50,6 +53,27 @@ def generate_scenario(
 ) -> GenerateScenarioResponse:
     request.app.state.generate_limiter.check(str(user.id))
     return scenarios.generate_scenario(db, user, body)
+
+
+@router.post("/preview", response_model=AuthorPreviewResponse, response_model_exclude_unset=True)
+def preview_authored(
+    body: AuthorScenarioRequest, user: StaffUser, db: DbDep
+) -> AuthorPreviewResponse:
+    """Scenario builder: the scenario that would be saved, or the checks it fails."""
+    return author.preview(db, body)
+
+
+@router.post(
+    "",
+    response_model=AuthorScenarioResponse,
+    response_model_exclude_unset=True,
+    status_code=status.HTTP_201_CREATED,
+)
+def save_authored(
+    body: AuthorScenarioRequest, user: StaffUser, db: DbDep
+) -> AuthorScenarioResponse:
+    """Scenario builder: save as AUTHORED (the same request again returns the same row)."""
+    return author.save(db, user, body)
 
 
 # exclude_unset: optional scenario fields are omitted, not sent as null (zod
