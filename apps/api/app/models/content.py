@@ -1,4 +1,4 @@
-"""threat_types, terrain_presets, scenarios, assignments, seed_state (SPEC §10)."""
+"""threat_types, terrain_presets, scenarios, assignments, seed_state, scoring_trees (SPEC §10)."""
 
 import uuid
 from datetime import datetime
@@ -88,3 +88,18 @@ class SeedState(Base):
     key: Mapped[str] = mapped_column(String(40), primary_key=True)
     fingerprint: Mapped[str] = mapped_column(String(64))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ScoringTreeRow(Base):
+    """An instructor-made weight version of a built-in tree (decision 121). Immutable."""
+
+    __tablename__ = "scoring_trees"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    base_id: Mapped[str] = mapped_column(String(32))
+    derived_from: Mapped[str] = mapped_column(String(32))
+    content: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL")
+    )
+    created_at: Mapped[datetime] = created_at()
