@@ -112,10 +112,14 @@ for (const vp of VIEWPORTS) {
 
       // Zoomed in, the video tracker locks once the quad is close enough to see.
       // A radar track can drop and restart under a new id, which ends the lock:
-      // then re-cue the threat's current track, as a trainee would.
+      // then re-cue the threat's current track, as a trainee would. The loop reads
+      // the sim's tracker state, not the chip: the chip follows it from the WebGL
+      // frame loop and can lag a step, which used to add steps or re-cues and move
+      // the screenshot to a different moment.
+      const simMode = () => page.evaluate(() => window.__vyuhE2E!.eoSimTrackMode());
       for (let i = 0; i < 4; i++) await page.keyboard.press('Equal');
-      for (let i = 0; i < 120 && (await chip.textContent()) !== 'TRK'; i++) {
-        if ((await chip.textContent()) === 'MAN') {
+      for (let i = 0; i < 120 && (await simMode()) !== 'TRACK'; i++) {
+        if ((await simMode()) === 'MANUAL') {
           const id = await page.evaluate(() => window.__vyuhE2E!.trackFor('c01'));
           if (id) {
             await selectTrack(page, id);
@@ -124,6 +128,7 @@ for (const vp of VIEWPORTS) {
         }
         await stepTo(page, (await tMs(page)) + 1000);
       }
+      // The sim is held, so waiting for the chip does not move the moment.
       await expect(chip).toHaveText('TRK');
       await shot(page, 'eo-trk');
 
