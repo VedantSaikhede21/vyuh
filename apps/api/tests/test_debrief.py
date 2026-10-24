@@ -1,0 +1,234 @@
+"""LLM debrief with template fallback (SPEC §13.1, decision 131). The LLM is mocked."""
+
+import json
+from collections.abc import Callable
+from typing import Any
+
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+
+from app.models import Debrief, Scenario, User
+from app.schemas.generated import UserRole
+from app.services.ai.llm import LlmClient
+from tests.conftest import assert_error, fixture_log, make_settings
+from tests.test_sessions import post_batch
+
+Headers = Callable[[User], dict[str, str]]
+
+
+def _completed(
+    client: TestClient,
+    start: Callable[..., str],
+    user: User,
+    headers: dict[str, str],
+    scen: Scenario,
+) -> str:
+    sid = start(user, scen, "ASSESSMENT")
+    log = fixture_log("s06_roe_attempts")
+    assert post_batch(client, sid, headers, 0, log).status_code == 200
+    r = client.post(
+        f"/api/v1/sessions/{sid}/complete",
+        json={"endTMs": log[-1]["tMs"], "clientMeta": {}},
+        headers=headers,
+    )
+    assert r.status_code == 200, r.text
+    return sid
+
+
+class FakeTransport:
+    """Records prompts; answers with queued replies (str = content, Exception = raise)."""
+
+    def __init__(self, *replies: str | Exception) -> None:
+        self.replies = list(replies)
+        self.calls: list[dict[str, Any]] = []
+
+    def __call__(self, url: str, headers: dict[str, str], body: bytes, timeout_s: float) -> str:
+        self.calls.append({"url": url, "body": json.loads(body), "timeout": timeout_s})
+        reply = self.replies.pop(0)
+        if isinstance(reply, Exception):
+            raise reply
+        return json.dumps({"choices": [{"message": {"content": reply}}]})
+
+
+def _llm_on(app: FastAPI, transport: FakeTransport) -> None:
+    app.state.llm = LlmClient(
+        make_settings(llm_enabled=True, openrouter_api_key="k", llm_model="test/model"),
+        transport,
+    )
+
+
+def _user_prompt(call: dict[str, Any]) -> dict[str, Any]:
+    text = call["body"]["messages"][1]["content"]
+    return json.loads(text.split("\n", 1)[1])
+
+
+@pytest.fixture
+def session_id(
+    client: TestClient,
+    scenarios: dict[str, Scenario],
+    make_user: Callable[..., User],
+    auth_header: Headers,
+    start_session: Callable[..., str],
+) -> tuple[str, User]:
+    user = make_user(email="rifleman@test")
+    return _completed(client, start_session, user, auth_header(user), scenarios["S06"]), user
+
+
+def test_template_when_llm_disabled(
+    client: TestClient, db: Session, auth_header: Headers, session_id: tuple[str, User]
+) -> None:
+    sid, user = session_id
+    r = client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=auth_header(user))
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert (body["source"], body["model"], body["fallbackReason"]) == (
+        "TEMPLATE",
+        "template",
+        "LLM_DISABLED",
+    )
+    content = body["content"]
+    assert content["summary"].startswith("Score ")
+    assert "S06" in content["summary"]
+    # Mistakes come from the scoring feedback, each with a sim time that links to the replay.
+    assert content["mistakes"], content
+    assert all(isinstance(m["tMs"], int) for m in content["mistakes"])
+    assert any("ROE" in m["what"] or "against" in m["what"] for m in content["mistakes"])
+    assert content["drill"]
+    # Cached: the second call returns the same row.
+    again = client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=auth_header(user)).json()
+    assert again["createdAt"] == body["createdAt"]
+    assert db.get(Debrief, __import__("uuid").UUID(sid)) is not None
+
+
+def test_llm_debrief_validated_and_cached(
+    app: FastAPI, client: TestClient, auth_header: Headers, session_id: tuple[str, User]
+) -> None:
+    sid, user = session_id
+    # First find a real time from the input, as the LLM would.
+    probe = FakeTransport("not json")
+    _llm_on(app, probe)
+    probe.replies.append("still not json")
+    client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=auth_header(user))
+    data = _user_prompt(probe.calls[0])
+    t = data["keyEvents"][0]["tMs"]
+
+    # Input holds no personal data and no raw log.
+    text = json.dumps(data)
+    assert "rifleman" not in text and "@test" not in text
+    assert len(data["keyEvents"]) <= 10
+    assert set(data) == {"scenario", "mode", "score", "contacts", "killChainIssues", "keyEvents"}
+
+    reply = {
+        "summary": "Two of three threats engaged in time.",
+        "strengths": ["Fast detection."],
+        "mistakes": [
+            {
+                "tMs": t,
+                "what": "Intercept tried against the ROE.",
+                "whyItMatters": "A breach.",
+                "doInstead": "Check the ROE chip.",
+            }
+        ],
+        "drill": "Run S06 in Practice.",
+    }
+    good = FakeTransport(json.dumps(reply))
+    _llm_on(app, good)
+    # The cached template (LLM was failing → INVALID_OUTPUT) is not transient: kept.
+    kept = client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=auth_header(user)).json()
+    assert kept["source"] == "TEMPLATE"
+    assert kept["fallbackReason"] == "INVALID_OUTPUT"
+    assert good.calls == []
+
+
+def test_llm_answer_used_and_timeout_retried(
+    app: FastAPI, client: TestClient, auth_header: Headers, session_id: tuple[str, User]
+) -> None:
+    sid, user = session_id
+    # Cache a template while the LLM is off, then turn it on: the template is replaced.
+    client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=auth_header(user))
+    holder: dict[str, Any] = {}
+
+    class Echo(FakeTransport):
+        def __call__(self, url: str, headers: dict[str, str], body: bytes, t: float) -> str:
+            if not self.calls:
+                self.calls.append({"body": json.loads(body)})
+                raise TimeoutError("slow")
+            self.calls.append({"body": json.loads(body)})
+            data = _user_prompt(self.calls[-1])
+            holder["data"] = data
+            mistake = {
+                "tMs": data["keyEvents"][-1]["tMs"],
+                "what": "Late intercept.",
+                "whyItMatters": "It reached the town.",
+                "doInstead": "Engage at the first IDENTIFY.",
+            }
+            content = {
+                "summary": "Mixed run.",
+                "strengths": [],
+                "mistakes": [mistake],
+                "drill": "Run S15.",
+            }
+            return json.dumps({"choices": [{"message": {"content": json.dumps(content)}}]})
+
+    echo = Echo()
+    _llm_on(app, echo)
+    body = client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=auth_header(user)).json()
+    assert len(echo.calls) == 2  # one timeout, one retry
+    assert echo.calls[0]["body"]["model"] == "test/model"
+    assert body["source"] == "LLM"
+    assert body["model"] == "test/model"
+    assert "fallbackReason" not in body
+    assert body["content"]["mistakes"][0]["tMs"] == holder["data"]["keyEvents"][-1]["tMs"]
+
+
+def test_invented_time_falls_back(
+    app: FastAPI, client: TestClient, auth_header: Headers, session_id: tuple[str, User]
+) -> None:
+    sid, user = session_id
+    bad = {
+        "summary": "x",
+        "strengths": [],
+        "mistakes": [{"tMs": 9_999_999, "what": "a", "whyItMatters": "b", "doInstead": "c"}],
+        "drill": "d",
+    }
+    t = FakeTransport(json.dumps(bad), json.dumps(bad))
+    _llm_on(app, t)
+    body = client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=auth_header(user)).json()
+    assert len(t.calls) == 2
+    assert (body["source"], body["fallbackReason"]) == ("TEMPLATE", "INVALID_OUTPUT")
+
+
+def test_debrief_rules(
+    client: TestClient,
+    scenarios: dict[str, Scenario],
+    make_user: Callable[..., User],
+    auth_header: Headers,
+    start_session: Callable[..., str],
+    session_id: tuple[str, User],
+) -> None:
+    sid, _ = session_id
+    other = make_user(email="other@test")
+    assert_error(
+        client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=auth_header(other)),
+        403,
+        "FORBIDDEN",
+    )
+    staff = make_user(UserRole.INSTRUCTOR, "instructor@test")
+    r = client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=auth_header(staff))
+    assert r.status_code == 200
+    active = start_session(other, scenarios["S01"])
+    assert_error(
+        client.post(f"/api/v1/aar/sessions/{active}/debrief", headers=auth_header(other)),
+        409,
+        "SESSION_NOT_ACTIVE",
+    )
+
+
+def test_ai_status(
+    client: TestClient, make_user: Callable[..., User], auth_header: Headers
+) -> None:
+    user = make_user()
+    r = client.get("/api/v1/ai/status", headers=auth_header(user))
+    assert r.json() == {"llmEnabled": False, "model": None}
