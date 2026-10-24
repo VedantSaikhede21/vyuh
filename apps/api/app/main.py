@@ -12,8 +12,9 @@ from app.core.config import Env, Settings, get_settings
 from app.core.db import make_engine, make_session_factory
 from app.core.errors import install_error_handlers
 from app.core.logging import REQUEST_ID_HEADER, configure_logging, request_id_middleware
-from app.routers import aar, assignments, auth, health, scenarios, scoring, sessions, units
+from app.routers import aar, ai, assignments, auth, health, scenarios, scoring, sessions, units
 from app.seed.demo import seed_if_changed
+from app.services.ai.llm import LlmClient
 from app.services.ratelimit import RateLimiter
 from app.services.sessions import expire_stale_sessions
 
@@ -53,6 +54,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.engine = make_engine(settings.database_url)
     app.state.session_factory = make_session_factory(app.state.engine)
     app.state.generate_limiter = RateLimiter(settings.generate_rate_limit_per_min)
+    app.state.llm = LlmClient(settings)
 
     install_error_handlers(app)
     app.middleware("http")(request_id_middleware)
@@ -73,4 +75,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(assignments.router, prefix=API_PREFIX)
     app.include_router(units.router, prefix=API_PREFIX)
     app.include_router(scoring.router, prefix=API_PREFIX)
+    app.include_router(ai.router, prefix=API_PREFIX)
     return app

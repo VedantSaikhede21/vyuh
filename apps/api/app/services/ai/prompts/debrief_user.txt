@@ -1,0 +1,2 @@
+Session data (JSON):
+{input_json}
