@@ -23,6 +23,10 @@ import { login, openBriefing } from './helpers';
 // three 10 s windows are sampled and the median window (by mean FPS) is
 // reported, with all three listed. For fully independent runs add
 // `--repeat-each 3`.
+//
+// FPS_SELECT=1 (Phase 6B): before measuring, select and mark three tracks
+// (Tab, D) so their 3D labels and the selected-track camera are part of the
+// frame; without it the spec measures as before.
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
 
@@ -253,6 +257,12 @@ for (const scale of SCALES) {
               await expect(page.getByTestId('sim-player')).toBeVisible({ timeout: 60_000 });
               await page.waitForTimeout(1500);
               await runTo(page, c.atMs);
+              if (process.env.FPS_SELECT === '1') {
+                for (let i = 0; i < 3; i++) {
+                  await page.keyboard.press('Tab');
+                  await page.keyboard.press('d');
+                }
+              }
             } else {
               const res = await page.goto(`/dev/hero?${c.hero}`);
               test.skip(res?.status() === 404, 'dev hero route is not in production builds');

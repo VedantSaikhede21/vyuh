@@ -18,6 +18,7 @@ import { useHudStore } from '@/lib/sim/store';
 import { cn } from '@/lib/utils';
 import { SimCanvas } from './sim-canvas';
 import { usePracticeHints } from './use-practice-hints';
+import { TrackLabels } from './track-labels';
 import { ZoneLabels } from './zone-labels';
 
 /** Bottom row height: 28 px header + a 16:9 EO picture 432 px wide (243 px) + border. */
@@ -136,6 +137,7 @@ export function SimPlayer({
           aria-label="Tactical view"
         >
           <ZoneLabels runtime={runtime} />
+          <TrackLabels />
           {replay?.tacticalOverlay}
         </div>
         <aside className="flex w-[320px] shrink-0 flex-col border-l border-line-1 bg-bg-1">
