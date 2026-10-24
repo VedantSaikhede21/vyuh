@@ -1,4 +1,5 @@
 import { exec } from 'node:child_process';
+import { SIM_VERSION } from '@vyuh/sim-core';
 import { promisify } from 'node:util';
 import { expect, test, type CDPSession, type Page } from '@playwright/test';
 import { login, openBriefing, sessionFromLog } from './helpers';
@@ -89,7 +90,7 @@ for (const vp of VIEWPORTS) {
     test(`S06 replay FPS and memory @fps-aar`, async ({ page }) => {
       test.setTimeout(300_000);
       await login(page, 'trainee1@demo');
-      const sid = await sessionFromLog(page, 'S06', 's06_trainee', 5);
+      const sid = await sessionFromLog(page, 'S06', 's06_trainee', SIM_VERSION);
       const cdp = await page.context().newCDPSession(page);
       await cdp.send('Performance.enable');
       const stop = sampleMemory(cdp);

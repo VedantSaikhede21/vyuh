@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { SIM_VERSION } from '@vyuh/sim-core';
 import {
   VIEWPORTS,
   beginSession,
@@ -27,6 +28,10 @@ for (const vp of VIEWPORTS) {
       await page.addStyleTag({ content: HIDE_WEBGL });
       // The Next.js dev indicator is not part of the app (as in checkpoint-4b.spec.ts).
       await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
+      // The shell's local clock changes every minute (Phase 6A).
+      await page.addStyleTag({
+        content: '[data-testid=local-time] { visibility: hidden !important; }',
+      });
       await expect(page).toHaveScreenshot(`${vp.name}-${name}.png`, opts);
     };
 
@@ -64,6 +69,11 @@ for (const vp of VIEWPORTS) {
       await beginSession(page);
       await stepTo(page, 3_600_000);
       await expect(page.getByTestId('result-screen')).toBeVisible({ timeout: 60_000 });
+      // The debrief is written by the LLM when it is on, so its text and height
+      // differ per run: wait for it, then leave it out of the picture
+      // (checkpoint-5.spec.ts captures it).
+      await expect(page.getByTestId('debrief-source')).toBeVisible({ timeout: 60_000 });
+      await page.addStyleTag({ content: '[data-testid=debrief] { display: none !important; }' });
       await shot(page, 'result', { fullPage: true });
       // After a reload the end reason comes from the stored SESSION_ENDED event.
       const ended = await page.getByTestId('result-ended').textContent();
@@ -76,7 +86,7 @@ for (const vp of VIEWPORTS) {
       // S06 from the committed sim log, at 03:00 with ground truth on: the truth
       // column (short class codes below 1600 px) and the folded non-threat row.
       await login(page, 'trainee1@demo');
-      const sid = await sessionFromLog(page, 'S06', 's06_trainee', 5);
+      const sid = await sessionFromLog(page, 'S06', 's06_trainee', SIM_VERSION);
       await page.goto(`/aar/session/${sid}`);
       await expect(page.getByTestId('replay-timeline')).toBeVisible({ timeout: 120_000 });
       for (let i = 0; i < 18; i++) await page.keyboard.press('Shift+ArrowRight');

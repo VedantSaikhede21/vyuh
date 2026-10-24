@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { SIM_VERSION } from '@vyuh/sim-core';
 import { login, sessionFromLog } from './helpers';
 
 // AAR replay (Phase 4a): a log recorded by sim-core in Node replays exactly in
@@ -9,7 +10,7 @@ test('a recorded session replays exactly and scrubs by keyboard', async ({ page 
   test.setTimeout(180_000);
   await login(page, 'trainee1@demo');
   // S04 on PUNJAB_PLAINS (terrain revision 2): reports, camera locks, a jam.
-  const sid = await sessionFromLog(page, 'S04', 's04_reports', 5);
+  const sid = await sessionFromLog(page, 'S04', 's04_reports', SIM_VERSION);
   await page.goto(`/aar/session/${sid}`);
   await expect(page.getByTestId('replay-timeline')).toBeVisible({ timeout: 120_000 });
   await expect(page.getByTestId('replay-chip')).toBeVisible();
@@ -48,7 +49,7 @@ test('result-screen penalties open the replay at their moment', async ({ page })
   test.setTimeout(180_000);
   await login(page, 'trainee1@demo');
   // S06 Assessment (default_v4): intercepts blocked for the ROE and the town, each timed.
-  const sid = await sessionFromLog(page, 'S06', 's06_roe_attempts', 5);
+  const sid = await sessionFromLog(page, 'S06', 's06_roe_attempts', SIM_VERSION);
   await page.goto(`/train/session/${sid}`);
   await expect(page.getByTestId('result-screen')).toBeVisible({ timeout: 60_000 });
   const link = page.getByTestId('penalty-link').first();
