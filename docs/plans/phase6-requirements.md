@@ -185,7 +185,8 @@ For each screen: training list, briefing, sim player, result, AAR replay, trends
    - CORS locked to the web origin; request size limits; rate limits on generate, from-text and debrief;
    - security headers (CSP, frame-ancestors, HSTS) on Vercel;
    - text-to-scenario output clamped and validated (prompt-injection safe);
-   - error responses leak no internals.
+   - error responses leak no internals;
+   - prove the `X-Vyuh-Test-Debrief` header is ignored on the deployed API (decision 148).
 5. **Offline build:** `docker compose up` brings up Postgres + API + web with `AUTH_MODE=local`, `LLM_ENABLED=false` and all presets bundled; one command; README section. Prove it on a machine with the network disabled.
 6. **Checkpoint G:** the hosted URL working end to end, plus offline-run evidence. Wait for OK.
 
