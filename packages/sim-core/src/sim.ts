@@ -49,6 +49,7 @@ import {
   pointingTo,
   type EoCameraState,
 } from './sensors/eoir.ts';
+import { DOPPLER_FAMILY } from './sensors/doppler.ts';
 import { gaussian, radarScan } from './sensors/radar.ts';
 import {
   RF_SCAN_MS,
@@ -570,6 +571,8 @@ export function createSim(
               altitudeAglM: Math.max(h0, 0),
               filter: createTrackFilter(m.x, m.z, tMs),
               heightFilter: createHeightFilter(h0, tMs),
+              snrDb: ret.snrDb ?? 0,
+              doppler: DOPPLER_FAMILY[specs.get(contact.id)?.class ?? 'QUAD_SMALL'],
               rf: null,
               headingDeg: null,
               speedMps: null,
@@ -597,6 +600,7 @@ export function createSim(
               },
             });
           } else if (live) {
+            live.snrDb = ret.snrDb ?? live.snrDb;
             updateTrackFromHit(
               live,
               radarPos,

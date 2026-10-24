@@ -8,6 +8,7 @@ import { Panel, PanelHeader } from '@/components/hud/primitives';
 import { RadarScope, ppiRangeKm, type PpiOverlay } from '@/components/hud/radar-scope';
 import { RfPanel } from '@/components/hud/rf-panel';
 import { CheatSheet, useShortcuts } from '@/components/hud/shortcuts';
+import { SpectrogramPanel } from '@/components/hud/spectrogram-panel';
 import { TopBar } from '@/components/hud/top-bar';
 import { TrackList, type TrackColumn } from '@/components/hud/track-list';
 import type { Commands } from '@/lib/sim/commands';
@@ -40,9 +41,9 @@ export interface ReplaySlots {
   topBarExtra?: ReactNode;
 }
 
-/** Track list and RF strobes as tabs in one panel (SPEC §15). */
+/** Track list, RF strobes and the spectrogram as tabs in one panel (SPEC §15). */
 function TrackTabs({ commands, column }: { commands: Commands; column?: TrackColumn }) {
-  const [tab, setTab] = useState<'TRACKS' | 'RF'>('TRACKS');
+  const [tab, setTab] = useState<'TRACKS' | 'RF' | 'SPECTRO'>('TRACKS');
   const nTracks = useHudStore(
     (s) => s.hud?.tracks.filter((t) => t.status === 'ACTIVE').length ?? 0,
   );
@@ -50,6 +51,7 @@ function TrackTabs({ commands, column }: { commands: Commands; column?: TrackCol
   const tabs = [
     { id: 'TRACKS' as const, label: 'Tracks', n: nTracks },
     { id: 'RF' as const, label: 'RF', n: nRf },
+    { id: 'SPECTRO' as const, label: 'Spectrogram', n: null },
   ];
   return (
     <Panel className="h-full border-0">
@@ -74,7 +76,7 @@ function TrackTabs({ commands, column }: { commands: Commands; column?: TrackCol
             )}
           >
             {t.label}
-            <span className="text-readout text-text-3">{t.n}</span>
+            {t.n !== null && <span className="text-readout text-text-3">{t.n}</span>}
           </button>
         ))}
       </div>
@@ -84,7 +86,13 @@ function TrackTabs({ commands, column }: { commands: Commands; column?: TrackCol
         aria-labelledby={`tab-${tab}`}
         className="min-h-0 flex-1 overflow-y-auto"
       >
-        {tab === 'TRACKS' ? <TrackList commands={commands} column={column} /> : <RfPanel />}
+        {tab === 'TRACKS' ? (
+          <TrackList commands={commands} column={column} />
+        ) : tab === 'RF' ? (
+          <RfPanel />
+        ) : (
+          <SpectrogramPanel />
+        )}
       </div>
     </Panel>
   );

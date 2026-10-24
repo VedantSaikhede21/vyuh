@@ -1,5 +1,6 @@
 import type { Affiliation, AiSuggestion, ContactClass, SensorKind } from '@vyuh/shared';
 import type { Vec3 } from './coords.ts';
+import type { DopplerFamily } from './sensors/doppler.ts';
 import type { RfBadge } from './sensors/rf.ts';
 
 // Track management (SPEC §5): a track is confirmed after 3 hits in the last 5
@@ -179,6 +180,10 @@ export interface TrackState {
   filter: TrackFilter;
   /** α-β filter state behind `altitudeAglM`. */
   heightFilter: HeightFilter;
+  /** Return strength of the last radar hit, dB over the reference (sensor data). */
+  snrDb: number;
+  /** Micro-Doppler family of the return (SPEC §6.4) — what the spectrogram shows. */
+  readonly doppler: DopplerFamily;
   /** RF strobe lined up with this track (band, friendly ID), or null. */
   rf: RfBadge | null;
   /** From the filter velocity; null until the second measurement. */

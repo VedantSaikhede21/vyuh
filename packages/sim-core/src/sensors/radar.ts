@@ -61,6 +61,8 @@ export interface RadarReturn {
   /** Noisy measurement; present only when hit. */
   readonly rangeM?: number;
   readonly bearingDeg?: number;
+  /** Return strength in dB over the reference (radar equation − rain loss); hits only. */
+  readonly snrDb?: number;
 }
 
 /**
@@ -83,8 +85,9 @@ export function radarScan(
     const spec = specs.get(c.id);
     if (spec === undefined) continue;
     const range = slantRange(radarPos, c.pos);
+    const rcs = CLASS_PROFILES[spec.class].rcsM2;
     const pd =
-      radarPd(radar.refRangeM, CLASS_PROFILES[spec.class].rcsM2, range, rainMmph) *
+      radarPd(radar.refRangeM, rcs, range, rainMmph) *
       clutterFactor(c.agl, horizontalRange(radarPos, c.pos));
     const roll = stream.next();
     const nRange = gaussian(stream);
@@ -97,6 +100,7 @@ export function radarScan(
         masked,
         rangeM: Math.max(0, range + nRange * RANGE_SIGMA_M),
         bearingDeg: wrapDeg(bearingDeg(radarPos, c.pos) + nBearing * BEARING_SIGMA_DEG),
+        snrDb: radarSnrDb(radar.refRangeM, rcs, range) - rainLossDb(rainMmph, range),
       });
     } else {
       out.push({ contactId: c.id, hit: false, masked });
