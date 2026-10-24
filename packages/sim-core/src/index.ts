@@ -72,6 +72,7 @@ export {
   rfScan,
 } from './sensors/rf.ts';
 export type { RfBadge, RfDetection, RfStrobe } from './sensors/rf.ts';
+export { DOPPLER_FAMILY, MICRO_DOPPLER_MIN_SNR_DB, type DopplerFamily } from './sensors/doppler.ts';
 export {
   CONFIRM_HITS,
   CONFIRM_WINDOW,

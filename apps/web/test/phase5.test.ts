@@ -87,3 +87,31 @@ describe('text-to-scenario parameters (SPEC §13.2)', () => {
     expect(get('Weather').auto).toBe(true);
   });
 });
+
+describe('spectrogram composition (SPEC §6.4)', () => {
+  it('noise falls with SNR and is render-only and repeatable', async () => {
+    const { composeFrame, noiseAmplitude } = await import('@/lib/hud/spectrogram');
+    expect(noiseAmplitude(8)).toBeGreaterThan(noiseAmplitude(20));
+    expect(noiseAmplitude(60)).toBe(0.05);
+    const w = 8;
+    const h = 4;
+    const tpl = new Uint8Array(w * h).map((_, i) => (i % w === 0 ? 255 : 0));
+    const frame = (snr: number, t: number) => {
+      const out = new Uint8ClampedArray(w * h * 4);
+      composeFrame(tpl, w, h, { timeSpanS: 0.4 }, snr, t, 7, out);
+      return out;
+    };
+    expect(frame(12, 1000)).toEqual(frame(12, 1000));
+    expect(frame(12, 1000)).not.toEqual(frame(12, 1050));
+    // Strong returns keep the template's contrast; weak ones drown in noise.
+    const contrast = (f: Uint8ClampedArray) => {
+      const vals = Array.from({ length: w * h }, (_, i) => f[i * 4]!);
+      const lit = vals.filter((_, i) => tpl[i] === 255);
+      const dark = vals.filter((_, i) => tpl[i] === 0);
+      return (
+        lit.reduce((a, b) => a + b, 0) / lit.length - dark.reduce((a, b) => a + b, 0) / dark.length
+      );
+    };
+    expect(contrast(frame(30, 0))).toBeGreaterThan(contrast(frame(8, 0)));
+  });
+});

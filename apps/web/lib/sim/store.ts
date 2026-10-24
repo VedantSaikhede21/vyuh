@@ -1,5 +1,6 @@
 import type { Affiliation, ContactClass, EffectorKind, Roe, SessionEndReason } from '@vyuh/shared';
 import { create } from 'zustand';
+import type { DopplerFamily } from '@vyuh/sim-core';
 import type { SimRuntime } from './runtime';
 
 // Read-only HUD snapshot of the sim, published at most once per tick. Track
@@ -24,6 +25,10 @@ export interface TrackView {
   affiliation: Affiliation;
   /** RF strobe lined up with the track (band, friendly ID), or null. */
   rf: { band: string | null; friendlyIdCode: string | null } | null;
+  /** Radar return strength of the last hit, dB over the reference (sensor data). */
+  snrDb: number;
+  /** Micro-Doppler family of the return (SPEC §6.4) — which spectrogram the radar sees. */
+  doppler: DopplerFamily;
   /** AI-assist suggestion once shown (first selection), with the trainee's answer. */
   ai: {
     suggestedClass: ContactClass;
@@ -119,6 +124,8 @@ export function snapshot(rt: SimRuntime): HudSnapshot {
       classifiedAs: t.classifiedAs,
       affiliation: t.affiliation,
       rf: t.rf && { band: t.rf.band, friendlyIdCode: t.rf.friendlyIdCode },
+      snrDb: t.snrDb,
+      doppler: t.doppler,
       ai: t.aiShown && t.aiSuggestion ? { ...t.aiSuggestion, decision: t.aiDecision } : null,
     })),
     rfStrobes: s.rfStrobes.map((r) => ({

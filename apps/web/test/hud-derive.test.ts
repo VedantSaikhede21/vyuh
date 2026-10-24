@@ -29,6 +29,8 @@ function track(over: Partial<TrackView> = {}): TrackView {
     classifiedAs: null,
     affiliation: 'UNKNOWN',
     rf: null,
+    snrDb: 10,
+    doppler: 'MULTIROTOR',
     ai: null,
     ...over,
   };
