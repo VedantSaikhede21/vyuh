@@ -25,7 +25,7 @@ import argparse
 import json
 import struct
 import zlib
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -183,7 +183,10 @@ def main() -> None:
         name = tpl.family.lower().replace("_", "-")
         write_png(args.out / f"{name}.png", spectrogram(tpl))
         meta[tpl.family] = {
-            **{k: v for k, v in asdict(tpl).items() if k != "family"},
+            "label": tpl.label,
+            "timeSpanS": tpl.time_span_s,
+            "dopplerMaxHz": tpl.doppler_max_hz,
+            "cue": tpl.cue,
             "file": f"{name}.png",
         }
         print(f"Wrote {name}.png")

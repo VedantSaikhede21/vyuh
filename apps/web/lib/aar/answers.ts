@@ -128,9 +128,9 @@ export function trustAnswer(t: AiTrustMetrics): string {
   const over = t.overTrust ?? 0;
   const under = t.underTrust ?? 0;
   const verdict =
-    over >= 0.5
+    over >= 1 / 3
       ? 'Over-trusting'
-      : under >= 0.5
+      : under >= 1 / 3
         ? 'Under-trusting'
         : over === 0 && under === 0
           ? 'Calibrated'

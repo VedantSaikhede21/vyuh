@@ -157,9 +157,12 @@ export function ActionBar({ runtime, commands }: { runtime: SimRuntime; commands
     <Panel className="relative h-full border-0">
       <PanelHeader title="Actions">
         {selected ? (
-          <span className="flex items-center gap-2">
+          <span className="flex min-w-0 items-center gap-2">
             <AiChip track={selected} commands={commands} />
-            <StateChip tone="active">{selected.id}</StateChip>
+            {/* While a suggestion waits for Y / X the id stays on the row and 3D label. */}
+            {(!selected.ai || selected.ai.decision) && (
+              <StateChip tone="active">{selected.id}</StateChip>
+            )}
           </span>
         ) : (
           <StateChip tone="muted">No track</StateChip>

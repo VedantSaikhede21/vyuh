@@ -300,16 +300,17 @@ def template_debrief(data: dict[str, Any]) -> DebriefContent:
         if "tMs" not in p:
             continue
         why, instead = PENALTY_ADVICE.get(p["code"], STAGE_ADVICE["RESPOND"])
-        same = next(
-            (
-                k
-                for k, c in candidates.items()
-                if k[0] == p.get("contactId") and abs(c["tMs"] - p["tMs"]) <= TIME_TOLERANCE_MS
-            ),
-            None,
-        )
-        stage = candidates[same]["stage"] if same else "RESPOND"
-        candidates[same or (p.get("contactId", ""), p["code"])] = {
+        # A penalty replaces the kill-chain line of the same contact at the same moment.
+        stage = "RESPOND"
+        for k, c in list(candidates.items()):
+            if (
+                k[0] == p.get("contactId")
+                and k[1] in STAGE_WORD
+                and abs(c["tMs"] - p["tMs"]) <= TIME_TOLERANCE_MS
+            ):
+                stage = c["stage"]
+                del candidates[k]
+        candidates[(p.get("contactId", ""), p["code"])] = {
             "weight": -p["points"],
             "stage": stage,
             "tMs": p["tMs"],

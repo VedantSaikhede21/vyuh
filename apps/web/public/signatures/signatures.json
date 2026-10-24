@@ -6,29 +6,29 @@
   "families": {
     "MULTIROTOR": {
       "label": "Multirotor",
-      "time_span_s": 0.08,
-      "doppler_max_hz": 5000,
+      "timeSpanS": 0.08,
+      "dopplerMaxHz": 5000,
       "cue": "Dense, regular vertical flashes from several rotors around a body line.",
       "file": "multirotor.png"
     },
     "FIXED_WING": {
       "label": "Fixed-wing / propeller",
-      "time_span_s": 0.08,
-      "doppler_max_hz": 6000,
+      "timeSpanS": 0.08,
+      "dopplerMaxHz": 6000,
       "cue": "A strong steady body line with fainter periodic propeller flashes.",
       "file": "fixed-wing.png"
     },
     "BIRD": {
       "label": "Bird",
-      "time_span_s": 1.0,
-      "doppler_max_hz": 800,
+      "timeSpanS": 1.0,
+      "dopplerMaxHz": 800,
       "cue": "A slow ripple (2-10 Hz wingbeat) close to the body line; no blade flashes.",
       "file": "bird.png"
     },
     "HELICOPTER": {
       "label": "Helicopter",
-      "time_span_s": 0.6,
-      "doppler_max_hz": 10000,
+      "timeSpanS": 0.6,
+      "dopplerMaxHz": 10000,
       "cue": "Few, very wide flashes from long main-rotor blades.",
       "file": "helicopter.png"
     }
