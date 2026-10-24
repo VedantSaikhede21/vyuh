@@ -230,9 +230,20 @@ export const SessionEndReason = named(
 );
 export type SessionEndReason = z.infer<typeof SessionEndReason>;
 
-/** How `Score.recommendedDifficulty` was derived (decision 64; Phase 5 Elo replaces RULE_V1). */
-export const RecommendationBasis = named('RecommendationBasis', z.enum(['RULE_V1']));
+/** How `Score.recommendedDifficulty` was derived: Elo rating (SPEC §9.3, decision 129). */
+export const RecommendationBasis = named('RecommendationBasis', z.enum(['ELO_V1']));
 export type RecommendationBasis = z.infer<typeof RecommendationBasis>;
+
+/** Who wrote a debrief: the LLM, or the template built from leaf feedback (SPEC §13.1). */
+export const DebriefSource = named('DebriefSource', z.enum(['LLM', 'TEMPLATE']));
+export type DebriefSource = z.infer<typeof DebriefSource>;
+
+/** Why a debrief fell back to the template. */
+export const DebriefFallbackReason = named(
+  'DebriefFallbackReason',
+  z.enum(['LLM_DISABLED', 'TIMEOUT', 'INVALID_OUTPUT', 'ERROR', 'RATE_LIMITED']),
+);
+export type DebriefFallbackReason = z.infer<typeof DebriefFallbackReason>;
 
 export const ClassificationResult = named(
   'ClassificationResult',

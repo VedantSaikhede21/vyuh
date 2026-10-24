@@ -66,6 +66,10 @@ export const ScenarioRequest = named(
     aiAssistAccuracy: z.number().min(0).max(1).optional(),
     durationS: z.int().min(30).max(3600),
     roe: Roe,
+    /** Main threat axis, degrees true from the asset (Phase 5 text-to-scenario). */
+    approachBearingDeg: z.number().min(0).lt(360).optional(),
+    /** Decoy count (Phase 5); default from the difficulty table. */
+    decoys: z.int().min(0).max(6).optional(),
   }),
 );
 export type ScenarioRequest = z.infer<typeof ScenarioRequest>;
@@ -89,6 +93,10 @@ export const GenerateRequest = named(
     swarmSize: z.int().min(1).max(50).optional(),
     falseContactDensity: FalseContactDensity.optional(),
     aiAssistAccuracy: z.number().min(0).max(1).optional(),
+    /** Main threat axis, degrees true from the asset; omitted = the generator picks. */
+    approachBearingDeg: z.number().min(0).lt(360).optional(),
+    /** Number of decoys; omitted = the difficulty table decides. */
+    decoys: z.int().min(0).max(6).optional(),
   }),
 );
 export type GenerateRequest = z.infer<typeof GenerateRequest>;

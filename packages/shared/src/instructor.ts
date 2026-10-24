@@ -3,6 +3,7 @@ import { ContactClass, Difficulty, KillChainStage, ScenarioKind, UserRole } from
 import { named } from './registry.ts';
 import { GenerateRequest, Point2, Scenario } from './scenario.ts';
 import { UnitRef } from './api.ts';
+import { AiTrustMetrics } from './ai.ts';
 import { ScoreComponents } from './score.ts';
 
 // Phase 4b (SPEC §11): assignments, trainee trends, unit dashboard, scenario
@@ -107,6 +108,12 @@ export const TrendPoint = named(
     /** Share of tracked contacts classified with the exact class, 0..1. */
     classificationAccuracy: z.number().min(0).max(1).nullable(),
     recommendedDifficulty: Difficulty,
+    /** Elo rating before / after this session; null for sessions scored before Phase 5. */
+    ratingBefore: z.int().nullable(),
+    ratingAfter: z.int().nullable(),
+    /** AI-assist over- / under-trust in this session (null when it does not apply). */
+    overTrust: z.number().min(0).max(1).nullable(),
+    underTrust: z.number().min(0).max(1).nullable(),
     treeVersion: z.string(),
     isDemo: z.boolean(),
   }),
@@ -153,9 +160,13 @@ export const TraineeTrendsResponse = named(
   'TraineeTrendsResponse',
   z.object({
     user: TrendUser,
+    /** Current Elo rating (SPEC §9.3). */
+    rating: z.int(),
     points: z.array(TrendPoint),
     mistakes: z.array(MistakeItem),
     stages: z.array(StageRate),
+    /** AI-assist trust over every Assessment session in the trend. */
+    aiTrust: AiTrustMetrics,
   }),
 );
 export type TraineeTrendsResponse = z.infer<typeof TraineeTrendsResponse>;
