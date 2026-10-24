@@ -232,3 +232,22 @@ def test_ai_status(
     user = make_user()
     r = client.get("/api/v1/ai/status", headers=auth_header(user))
     assert r.json() == {"llmEnabled": False, "model": None}
+
+
+def test_request_caps_tokens_and_client_errors_are_not_retried() -> None:
+    import urllib.error
+
+    calls: list[dict[str, Any]] = []
+
+    def transport(url: str, headers: dict[str, str], body: bytes, t: float) -> str:
+        calls.append(json.loads(body))
+        raise urllib.error.HTTPError(url, 402, "credits", {}, None)  # type: ignore[arg-type]
+
+    llm = LlmClient(make_settings(llm_enabled=True, openrouter_api_key="k"), transport)
+    with pytest.raises(Exception) as err:
+        llm.complete_json("u", "s", "x", lambda o: o, max_tokens=321)
+    assert getattr(err.value, "reason", None) == "ERROR"
+    assert len(calls) == 1  # a 402 cannot succeed on retry
+    assert calls[0]["max_tokens"] == 321
+    assert calls[0]["reasoning"] == {"effort": "low", "exclude": True}
+    assert llm.url == "https://openrouter.ai/api/v1/chat/completions"

@@ -163,6 +163,7 @@ def parse_text(llm: LlmClient, user_key: str, text: str) -> FromTextResponse:
             prompt("from_text_system.txt"),
             json.dumps({"text": text}),
             lambda obj: clamp_request(obj, text),
+            max_tokens=1000,
         )
     except LlmError as err:
         if err.reason == "RATE_LIMITED":

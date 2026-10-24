@@ -22,6 +22,9 @@ logger = logging.getLogger(__name__)
 
 PROMPTS = Path(__file__).resolve().parent / "prompts"
 ATTEMPTS = 2  # one retry
+DEFAULT_MAX_TOKENS = 1200
+#: Client errors a retry cannot fix (bad model id, no credit, …); 408 and 429 are retried.
+NO_RETRY_HTTP = frozenset(range(400, 500)) - {408, 429}
 
 T = TypeVar("T")
 
@@ -66,7 +69,12 @@ class LlmClient:
         return self.settings.llm_base_url.rstrip("/") + "/chat/completions"
 
     def complete_json(
-        self, user_key: str, system: str, user: str, parse: Callable[[dict[str, Any]], T]
+        self,
+        user_key: str,
+        system: str,
+        user: str,
+        parse: Callable[[dict[str, Any]], T],
+        max_tokens: int = DEFAULT_MAX_TOKENS,
     ) -> T:
         """Ask for one JSON object and return `parse(obj)`; raise LlmError when no
         attempt gives a valid one. `parse` raises ValueError on invalid output."""
@@ -85,6 +93,10 @@ class LlmClient:
                 ],
                 "response_format": {"type": "json_object"},
                 "temperature": 0.2,
+                # Without it the provider reserves the model's maximum output (credit check).
+                # Reasoning models spend part of it thinking: keep that short and unsent.
+                "max_tokens": max_tokens,
+                "reasoning": {"effort": "low", "exclude": True},
             }
         ).encode("utf-8")
         headers = {
@@ -99,6 +111,13 @@ class LlmClient:
             except TimeoutError as err:
                 reason, message = "TIMEOUT", f"LLM timed out after {self.settings.llm_timeout_s} s"
                 logger.warning("LLM attempt %d: %s (%s)", attempt, message, err)
+                continue
+            except urllib.error.HTTPError as err:
+                detail = err.read().decode("utf-8", "replace")[:300]
+                reason, message = "ERROR", f"LLM request failed: HTTP {err.code} {detail}"
+                logger.warning("LLM attempt %d: %s", attempt, message)
+                if err.code in NO_RETRY_HTTP:
+                    break
                 continue
             except (urllib.error.URLError, OSError) as err:
                 if isinstance(getattr(err, "reason", None), TimeoutError):
