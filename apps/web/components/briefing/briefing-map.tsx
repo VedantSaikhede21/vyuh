@@ -181,7 +181,7 @@ export function BriefingMap({
       g.arc(X(x), Y(z), r * k, 0, Math.PI * 2);
       g.stroke();
       g.setLineDash([]);
-      g.fillStyle = UI.text3;
+      g.fillStyle = UI.text2;
       g.font = `500 11px ${mono}`;
       g.fillText(label, X(x) + 3, Y(z) - r * k - 3);
     };

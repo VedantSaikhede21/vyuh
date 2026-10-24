@@ -135,7 +135,7 @@ function Summary({
             <span className="text-readout">{preview?.nonThreats ?? 0}</span>
           </li>
         </ul>
-        <p className="text-small text-text-3">
+        <p className="text-small text-text-2">
           {Math.round(scenario.durationS / 60)} min · {scenario.environment.date}{' '}
           {scenario.environment.time} · scoring {scenario.scoringTreeId}
         </p>
@@ -437,7 +437,7 @@ function Builder() {
             </Field>
             <Field label="Instructor note (briefing)">
               <textarea
-                className="min-h-14 w-full rounded-sm border border-line-2 bg-bg-3 px-2 py-1 text-small text-text-1 placeholder:text-text-3"
+                className="min-h-14 w-full rounded-sm border border-line-2 bg-bg-3 px-2 py-1 text-small text-text-1 placeholder:text-text-2"
                 maxLength={600}
                 placeholder="Shown to the trainee under the briefing"
                 value={form.note}
@@ -571,7 +571,7 @@ function Builder() {
                     <li key={i} className="flex items-center justify-between">
                       <span>
                         No kinetic · {z.name}{' '}
-                        <span className="text-text-3">({z.polygon.length} corners)</span>
+                        <span className="text-text-2">({z.polygon.length} corners)</span>
                       </span>
                       <button
                         type="button"

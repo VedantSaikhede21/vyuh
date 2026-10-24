@@ -79,7 +79,7 @@ function Editor({ tree, onSaved }: { tree: ScoringTreeSummary; onSaved: (id: str
                   <td className={`${TD} text-body`}>
                     {LABEL[k]}
                     {!editable && (
-                      <span className="ml-2 text-small text-text-3">not scored by this tree</span>
+                      <span className="ml-2 text-small text-text-2">not scored by this tree</span>
                     )}
                   </td>
                   <td className={`${TD} text-right text-readout text-text-2`}>
@@ -104,14 +104,14 @@ function Editor({ tree, onSaved }: { tree: ScoringTreeSummary; onSaved: (id: str
                   </td>
                   <td className={`${TD} text-right text-readout`}>
                     {total > 0 ? Math.round((100 * w[k]) / total) : 0}
-                    <span className="text-text-3"> %</span>
+                    <span className="text-text-2"> %</span>
                   </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
-        <p className="text-small text-text-3">
+        <p className="text-small text-text-2">
           Every leaf of a component scales with its weight; thresholds, penalties and the tree
           structure stay as in {tree.baseId}. Totals are still scaled to 100.
         </p>
@@ -226,9 +226,9 @@ function Scoring() {
                     <td className={`${TD} text-body`}>
                       <span className="text-readout">{t.id}</span>
                       {t.builtIn ? (
-                        <span className="ml-2 text-small text-text-3">built-in</span>
+                        <span className="ml-2 text-small text-text-2">built-in</span>
                       ) : (
-                        <span className="ml-2 text-small text-text-3">
+                        <span className="ml-2 text-small text-text-2">
                           from {t.derivedFrom} · {t.createdByName ?? '—'} ·{' '}
                           {t.createdAt?.slice(0, 10)}
                         </span>

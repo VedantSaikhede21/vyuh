@@ -123,7 +123,7 @@ const TrackRow = memo(
         onClick={() => !lost && commands.select(t.id)}
         className={cn(
           'border-t border-line-1 outline-none',
-          lost ? 'text-text-3' : 'cursor-pointer hover:bg-bg-2',
+          lost ? 'text-text-2' : 'cursor-pointer hover:bg-bg-2',
           selected && 'bg-bg-3 shadow-[inset_2px_0_0_var(--select)]',
         )}
       >
@@ -134,18 +134,18 @@ const TrackRow = memo(
             className={lost ? 'opacity-40' : undefined}
           />
         </td>
-        <td className={cn(CELL, 'text-text-1', lost && 'text-text-3 line-through')}>{t.id}</td>
+        <td className={cn(CELL, 'text-text-1', lost && 'text-text-2 line-through')}>{t.id}</td>
         <td className={cn(CELL, 'max-w-40 truncate font-sans text-body')}>
-          {t.classifiedAs ? CLASS_LABEL[t.classifiedAs] : <span className="text-text-3">—</span>}
+          {t.classifiedAs ? CLASS_LABEL[t.classifiedAs] : <span className="text-text-2">—</span>}
         </td>
         <td className={cn(CELL, 'text-right')}>
           {formatKm(t.rangeM)}
-          <span className="ml-1 text-text-3">km</span>
+          <span className="ml-1 text-text-2">km</span>
         </td>
         <td className={cn(CELL, 'text-right')}>{formatBearing(t.bearingDeg)}</td>
         <td className={CELL}>{ALTITUDE_BAND_LABEL[altitudeBand(t.altitudeAglM)]}</td>
         <td className={cn(CELL, 'text-text-2')}>
-          {t.rf ? `RF ${rfBadgeText(t.rf)}` : <span className="text-text-3">—</span>}
+          {t.rf ? `RF ${rfBadgeText(t.rf)}` : <span className="text-text-2">—</span>}
         </td>
         <td className={cn(CELL, 'text-label')}>
           {lost ? 'LOST' : t.markedDetected ? 'DETECTED' : 'NEW'}

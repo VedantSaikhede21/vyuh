@@ -60,7 +60,7 @@ function Rescore({
   const [state, setState] = useState<'idle' | 'busy' | string>('idle');
   if (options.length === 0)
     return (
-      <span className="text-small text-text-3" title="No other version of this tree yet">
+      <span className="text-small text-text-2" title="No other version of this tree yet">
         —
       </span>
     );
@@ -184,7 +184,7 @@ export function TrendsView({
                     {COMPONENT_LABEL[c]}
                     <span className="text-readout text-text-1">
                       {last === null ? '—' : Math.round(last)}
-                      <span className="text-text-3"> %</span>
+                      <span className="text-text-2"> %</span>
                     </span>
                   </p>
                   <SeriesChart
@@ -243,7 +243,7 @@ export function TrendsView({
           testId="mistakes"
         >
           {data.mistakes.length === 0 ? (
-            <p className="text-small text-text-3">Nothing recurring across sessions.</p>
+            <p className="text-small text-text-2">Nothing recurring across sessions.</p>
           ) : (
             <ul className="space-y-1">
               {data.mistakes.map((m) => (
@@ -251,7 +251,7 @@ export function TrendsView({
                   <span>{m.text}</span>
                   <span className="shrink-0 text-readout text-text-2">
                     {m.sessions}
-                    <span className="text-text-3"> of {points.length} sessions</span>
+                    <span className="text-text-2"> of {points.length} sessions</span>
                   </span>
                 </li>
               ))}
@@ -316,7 +316,7 @@ export function TrendsView({
             <tbody>
               {[...points].reverse().map((p, i) => (
                 <tr key={p.sessionId} className="border-t border-line-1 hover:bg-bg-2">
-                  <td className={`${TD} text-readout text-text-3`}>{points.length - i}</td>
+                  <td className={`${TD} text-readout text-text-2`}>{points.length - i}</td>
                   <td className={`${TD} text-readout text-text-2`}>{p.endedAt.slice(0, 10)}</td>
                   <td className={`${TD} text-body`}>
                     <Link
@@ -340,11 +340,11 @@ export function TrendsView({
                   <td className={`${TD} text-right text-readout`}>{Math.round(p.total)}</td>
                   <td className={`${TD} text-right text-readout`}>
                     {p.ratingAfter === null || p.ratingBefore === null ? (
-                      <span className="text-text-3">—</span>
+                      <span className="text-text-2">—</span>
                     ) : (
                       <>
                         {p.ratingAfter}
-                        <span className="text-text-3">
+                        <span className="text-text-2">
                           {' '}
                           {p.ratingAfter >= p.ratingBefore ? '+' : '−'}
                           {Math.abs(p.ratingAfter - p.ratingBefore)}

@@ -55,7 +55,7 @@ export interface SeriesPoint {
 }
 
 const AXIS = { stroke: UI.line2, tickLine: false } as const;
-const TICK = { fill: UI.text3, fontSize: 11, fontFamily: 'var(--font-mono)' } as const;
+const TICK = { fill: UI.text2, fontSize: 11, fontFamily: 'var(--font-mono)' } as const;
 
 function ChartTooltip({
   active,
@@ -78,7 +78,7 @@ function ChartTooltip({
       </p>
       <p className="text-readout">
         {point.value === null ? '—' : point.value.toFixed(digits)}
-        {unit && <span className="text-text-3"> {unit}</span>}
+        {unit && <span className="text-text-2"> {unit}</span>}
       </p>
     </div>
   );
@@ -175,12 +175,12 @@ export function StageBars({
             </span>
             <span className="text-right text-readout">
               {pct === null ? (
-                <span className="text-text-3">n/a</span>
+                <span className="text-text-2">n/a</span>
               ) : (
                 <>
                   {pct}
-                  <span className="text-text-3"> %</span>
-                  <span className="text-small text-text-3">
+                  <span className="text-text-2"> %</span>
+                  <span className="text-small text-text-2">
                     {' · '}
                     {s.ok}/{s.total}
                   </span>
@@ -206,11 +206,11 @@ export function PctBar({ label, value }: { label: string; value: number | null }
       </span>
       <span className="text-right text-readout">
         {value === null ? (
-          <span className="text-text-3">n/a</span>
+          <span className="text-text-2">n/a</span>
         ) : (
           <>
             {Math.round(value)}
-            <span className="text-text-3"> %</span>
+            <span className="text-text-2"> %</span>
           </>
         )}
       </span>

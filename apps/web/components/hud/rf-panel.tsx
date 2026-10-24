@@ -37,11 +37,11 @@ export function RfPanel() {
             <td className={cn(CELL, 'text-text-1')}>{s.id}</td>
             <td className={cn(CELL, 'text-text-2')}>{s.sensorId}</td>
             <td className={cn(CELL, 'text-right')}>{formatBearing(s.bearingDeg)}</td>
-            <td className={CELL}>{s.band ?? <span className="text-text-3">—</span>}</td>
-            <td className={CELL}>{s.friendlyIdCode ?? <span className="text-text-3">—</span>}</td>
+            <td className={CELL}>{s.band ?? <span className="text-text-2">—</span>}</td>
+            <td className={CELL}>{s.friendlyIdCode ?? <span className="text-text-2">—</span>}</td>
             <td className={cn(CELL, 'text-right')}>
               {Math.round(s.ageMs / 1000)}
-              <span className="ml-1 text-text-3">s</span>
+              <span className="ml-1 text-text-2">s</span>
             </td>
           </tr>
         ))}

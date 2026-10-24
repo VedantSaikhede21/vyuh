@@ -17,7 +17,9 @@
   --line-1: #26312c;
   --line-2: #34423b;
   --text-1: #dce4df;
+  --text-body: #c3cec8; /* long descriptions (Phase 6 amendment 3) */
   --text-2: #9aa9a1;
+  /* non-text only: borders, dividers, inactive marks — fails 4.5:1 for words */
   --text-3: #627069;
 
   /* 3.2 interaction */
@@ -56,6 +58,7 @@
   --color-line-1: var(--line-1);
   --color-line-2: var(--line-2);
   --color-text-1: var(--text-1);
+  --color-text-body: var(--text-body);
   --color-text-2: var(--text-2);
   --color-text-3: var(--text-3);
   --color-select: var(--select);
@@ -109,6 +112,16 @@
  * §4 type scale. One utility per role sets family, size, line height, weight
  * and case together, so a role can't be half-applied.
  */
+/* Public pages only, one headline per page (Phase 6 amendment 1). */
+@utility text-display-xl {
+  font-family: var(--font-cond);
+  font-size: clamp(44px, 9vw, 96px);
+  line-height: 0.92;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
 @utility text-display {
   font-family: var(--font-cond);
   font-size: 40px;
@@ -170,6 +183,21 @@
   font-weight: 500;
   font-variant-numeric: tabular-nums slashed-zero;
 }
+/* Mono metadata: reference lines, telemetry strips, sheet numbers (DESIGN §4 rhythm). */
+@utility text-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums slashed-zero;
+  color: var(--text-2);
+}
+/* Body measure: at most ~72 characters (DESIGN §4 rhythm). */
+@utility max-w-prose-ui {
+  max-width: 72ch;
+}
 /* Tabular figures for any number not already in a readout role. */
 @utility tnum {
   font-variant-numeric: tabular-nums slashed-zero;
@@ -197,6 +225,13 @@
   :focus-visible {
     outline: 2px solid var(--select);
     outline-offset: 2px;
+  }
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
   }
   ::selection {
     background: var(--bg-3);

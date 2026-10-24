@@ -65,7 +65,7 @@ export function CommsLog({
   }, [hasLines]);
 
   if (shown.length === 0) {
-    return <p className={cn('px-3 py-2 text-small text-text-3', className)}>{empty}</p>;
+    return <p className={cn('px-3 py-2 text-small text-text-2', className)}>{empty}</p>;
   }
   return (
     <ol
@@ -81,11 +81,11 @@ export function CommsLog({
     >
       {shown.map((l) => (
         <li key={l.id} className={cn('flex gap-3 py-0.5 text-readout', l.pending && 'opacity-60')}>
-          <span className="shrink-0 text-text-3">{formatClock(l.tMs)}</span>
+          <span className="shrink-0 text-text-2">{formatClock(l.tMs)}</span>
           <span className={cn('min-w-0 break-words', STATUS_CLASS[l.status ?? 'info'])}>
-            {l.tag && <span className="mr-2 text-label text-text-3">{l.tag}</span>}
+            {l.tag && <span className="mr-2 text-label text-text-2">{l.tag}</span>}
             {l.text}
-            {l.pending && <span className="text-text-3"> · QUEUED</span>}
+            {l.pending && <span className="text-text-2"> · QUEUED</span>}
           </span>
         </li>
       ))}

@@ -41,12 +41,12 @@ export function Readout({
         className={cn(
           'whitespace-nowrap',
           size === 'lg' ? 'text-readout-lg' : 'text-readout',
-          muted ? 'text-text-3' : 'text-text-1',
+          muted ? 'text-text-2' : 'text-text-1',
           flashKey > 0 && 'animate-value-flash',
         )}
       >
         {value}
-        {unit && <span className="ml-1 text-text-3">{unit}</span>}
+        {unit && <span className="ml-1 text-text-2">{unit}</span>}
       </span>
     </div>
   );

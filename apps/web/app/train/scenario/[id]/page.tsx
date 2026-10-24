@@ -57,7 +57,7 @@ function Num({ value, unit }: { value: ReactNode; unit?: string }) {
   return (
     <span className="text-readout">
       {value}
-      {unit && <span className="text-text-3"> {unit}</span>}
+      {unit && <span className="text-text-2"> {unit}</span>}
     </span>
   );
 }
@@ -354,7 +354,7 @@ function Briefing({ detail }: { detail: ScenarioDetailResponse }) {
                   )}
                 >
                   {a}
-                  <span className="text-text-3"> m</span>
+                  <span className="text-text-2"> m</span>
                 </button>
               ))}
             </div>

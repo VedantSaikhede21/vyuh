@@ -76,7 +76,7 @@ function TrackTabs({ commands, column }: { commands: Commands; column?: TrackCol
             )}
           >
             {t.label}
-            {t.n !== null && <span className="text-readout text-text-3">{t.n}</span>}
+            {t.n !== null && <span className="text-readout text-text-2">{t.n}</span>}
           </button>
         ))}
       </div>

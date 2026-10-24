@@ -76,7 +76,7 @@ export function FallbackView({ data, why }: { data: AarSessionResponse; why: str
                 key={l.key}
                 className="grid grid-cols-[3.5rem_3.5rem_1fr] gap-2 border-t border-line-1 px-3 py-1 text-small"
               >
-                <span className="font-mono text-text-3">{formatClock(l.tMs)}</span>
+                <span className="font-mono text-text-2">{formatClock(l.tMs)}</span>
                 <span className="text-label">{SOURCE_LABEL[l.source]}</span>
                 <span className={cn(l.penalty ? 'text-crit' : 'text-text-1')}>{l.text}</span>
               </li>

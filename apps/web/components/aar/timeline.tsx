@@ -248,7 +248,7 @@ export function ReplayTimeline({
       </div>
       <span className="w-[7.5rem] shrink-0 font-mono text-readout" data-testid="replay-clock">
         <span className="text-text-1">{formatClock(tMs)}</span>
-        <span className="text-text-3"> / {formatClock(end)}</span>
+        <span className="text-text-2"> / {formatClock(end)}</span>
       </span>
       <div className="relative min-w-0 flex-1 self-stretch">
         <MarkerStrip markers={markers} end={end} seek={seek} />

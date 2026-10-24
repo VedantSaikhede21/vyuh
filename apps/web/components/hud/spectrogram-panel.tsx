@@ -131,7 +131,7 @@ export function SpectrogramPanel() {
         <span className="text-text-1">{track.id}</span>
         <span>
           SNR <span className="font-mono tnum text-text-1">{Math.round(track.snrDb)}</span>
-          <span className="text-text-3"> dB</span>
+          <span className="text-text-2"> dB</span>
         </span>
         <span>
           Doppler <span className="font-mono tnum text-text-1">±{kHz(meta.dopplerMaxHz)}</span>
@@ -141,7 +141,7 @@ export function SpectrogramPanel() {
         </span>
       </p>
       <div className="grid min-h-0 flex-1 grid-cols-[2.75rem_1fr] grid-rows-[1fr_auto] gap-x-1">
-        <div className="flex flex-col justify-between py-0.5 text-right font-mono text-[11px] text-text-3">
+        <div className="flex flex-col justify-between py-0.5 text-right font-mono text-[11px] text-text-2">
           <span>+{kHz(meta.dopplerMaxHz)}</span>
           <span>0</span>
           <span>−{kHz(meta.dopplerMaxHz)}</span>
@@ -155,7 +155,7 @@ export function SpectrogramPanel() {
           aria-label={`Micro-Doppler spectrogram of ${track.id}, SNR ${Math.round(track.snrDb)} dB`}
         />
         <span />
-        <p className="flex justify-between font-mono text-[11px] text-text-3">
+        <p className="flex justify-between font-mono text-[11px] text-text-2">
           <span>time →</span>
           <span>{ms(meta.timeSpanS)}</span>
         </p>

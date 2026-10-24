@@ -98,7 +98,7 @@ export function Tooltip({
         {content}
         {shortcut && (
           <>
-            <span className="text-text-3"> · </span>
+            <span className="text-text-2"> · </span>
             <Kbd>{shortcut}</Kbd>
           </>
         )}

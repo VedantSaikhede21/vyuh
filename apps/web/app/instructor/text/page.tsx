@@ -114,7 +114,7 @@ function FromText() {
                 data-testid="from-text-input"
               />
             </label>
-            <p id="text-hint" className="text-small text-text-3">
+            <p id="text-hint" className="text-small text-text-2">
               Threats, numbers, direction, time of day, weather, terrain, ROE, difficulty.{' '}
               <span className="font-mono tnum">{text.length}</span> / 600
             </p>
@@ -195,10 +195,10 @@ function FromText() {
                         {r.label}
                       </th>
                       <td
-                        className={cn('h-8 text-readout', r.auto ? 'text-text-3' : 'text-text-1')}
+                        className={cn('h-8 text-readout', r.auto ? 'text-text-2' : 'text-text-1')}
                       >
                         {r.value}
-                        {r.unit && <span className="text-text-3"> {r.unit}</span>}
+                        {r.unit && <span className="text-text-2"> {r.unit}</span>}
                         {r.auto && <span className="ml-2 text-small">set by the generator</span>}
                       </td>
                     </tr>

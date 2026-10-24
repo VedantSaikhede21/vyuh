@@ -204,7 +204,7 @@ export function ReportForm({ commands }: { commands: Commands }) {
                 })
               }
               title={draft.headingKnown ? undefined : 'No heading estimate yet — enter one'}
-              className={cn(FIELD, 'font-mono', !draft.headingKnown && 'text-text-3')}
+              className={cn(FIELD, 'font-mono', !draft.headingKnown && 'text-text-2')}
             />
           </Field>
         </div>
@@ -212,7 +212,7 @@ export function ReportForm({ commands }: { commands: Commands }) {
           <span className="text-label">Location</span>{' '}
           <span className="font-mono text-text-1">
             {formatBearing(draft.bearingDeg)} · {formatKm(draft.rangeM)}
-            <span className="text-text-3"> km</span>
+            <span className="text-text-2"> km</span>
           </span>{' '}
           from {draft.fromSensorId}
         </p>

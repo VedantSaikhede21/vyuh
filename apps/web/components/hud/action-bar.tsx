@@ -100,12 +100,12 @@ function EffectorCell({ e, tMs }: { e: EffectorView; tMs: number }) {
       </div>
       <div className="flex items-baseline justify-between whitespace-nowrap text-readout">
         <span>
-          <span className="text-text-3">×</span>
+          <span className="text-text-2">×</span>
           {e.ammo === null ? '∞' : e.ammo}
         </span>
         <span>
           {formatKm(e.rangeM)}
-          <span className="ml-0.5 text-text-3">km</span>
+          <span className="ml-0.5 text-text-2">km</span>
         </span>
       </div>
     </div>

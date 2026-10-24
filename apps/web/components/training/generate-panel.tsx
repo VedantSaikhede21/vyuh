@@ -176,7 +176,7 @@ export function GeneratePanel({ role }: { role: UserRole }) {
             </Tooltip>
           )}
           {!staff && (
-            <p id="gen-weather-hint" className="text-small text-text-3">
+            <p id="gen-weather-hint" className="text-small text-text-2">
               {WEATHER_LOCKED}
             </p>
           )}
@@ -206,7 +206,7 @@ export function GeneratePanel({ role }: { role: UserRole }) {
               </Button>
             </Tooltip>
           </div>
-          <p className="text-small text-text-3">
+          <p className="text-small text-text-2">
             The same settings and seed give the same scenario.
           </p>
         </div>

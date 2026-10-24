@@ -61,8 +61,9 @@ If any of these appear, remove them.
 | `--line-1` | `#26312C` | Hairline borders, dividers |
 | `--line-2` | `#34423B` | Strong borders, focus-adjacent |
 | `--text-1` | `#DCE4DF` | Primary text, readouts |
-| `--text-2` | `#9AA9A1` | Secondary text, labels |
-| `--text-3` | `#627069` | Muted: units, hints, disabled |
+| `--text-body` | `#C3CEC8` | Long descriptions: briefings, debriefs, page context lines (Phase 6 amendment 3) |
+| `--text-2` | `#9AA9A1` | Secondary text, labels, units, hints, placeholders |
+| `--text-3` | `#627069` | **Non-text only:** empty checkbox borders, disabled outlines, dividers, inactive pips. It fails 4.5:1 for small text, so never use it for words or numbers. |
 
 ### 3.2 Interaction
 | Token | Hex | Use |
@@ -91,6 +92,7 @@ Rules:
 - No hex values in components — only tokens (CSS variables mapped into Tailwind).
 - Affiliation colours are never used for UI chrome, buttons or headings.
 - `--crit` appears only when something genuinely critical happens, so it keeps its meaning.
+- **Qualification state chips** (Phase 6 amendment 4): QUALIFIED `--ok`, IN PROGRESS `--warn`, LOCKED `--text-2` — always with the word, never colour alone.
 - Test every screen in a colour-blind simulator (deuteranopia, protanopia): affiliation must still be readable via shape + letter.
 - A light theme is out of scope; the print/briefing PDF export (later) uses a separate light print stylesheet.
 
@@ -106,6 +108,7 @@ Rules:
 ### Scale (px / line-height)
 | Role | Size | Font | Notes |
 |---|---|---|---|
+| Display XL (public pages only) | 72–96 / 0.92 | Plex Sans Condensed 600, UPPER | One headline per public page; `clamp()` so it scales down on phones (`text-display-xl`, Phase 6 amendment 1) |
 | Display (landing only) | 40 / 44 | Plex Sans Condensed 600 | Max once per page |
 | H1 | 24 / 30 | Plex Sans Condensed 600 | Page title |
 | H2 | 18 / 24 | Plex Sans Condensed 600 | Section |
@@ -118,6 +121,11 @@ Rules:
 
 Rules: maximum two weights per screen besides labels; no font sizes outside the scale; minimum 11 px for labels and 12 px for anything else in the HUD.
 
+**Rhythm (Phase 6A):**
+- H1 and H2 use `text-wrap: balance`; body paragraphs `text-wrap: pretty` and a measure of at most 72 characters (`max-w-prose-ui`).
+- Mono metadata in reference lines and telemetry strips is uppercase 11 / 14 Plex Mono with 0.06em tracking (`text-meta`), `--text-2`.
+- A label sits 4 px above its value; a heading sits 8 px above the content it introduces.
+
 ---
 
 ## 5. Layout, spacing, shape
@@ -127,8 +135,15 @@ Rules: maximum two weights per screen besides labels; no font sizes outside the 
 - **Borders:** 1 px `--line-1`; panels separated by borders, not gaps-with-shadows.
 - **Shadows:** none, except floating overlays (menus, modals): `0 8px 24px rgba(0,0,0,0.5)`.
 - **Density:** compact by default. Table rows 32 px; HUD controls 28–32 px tall; primary actions ≥ 36 px.
-- **Grid:** 12 columns on marketing/admin pages (max width 1280 px, left-aligned content); the sim player is a fixed full-viewport grid (SPEC §15).
-- **Minimum viewport:** 1366×768 with no horizontal scroll and no hidden critical controls. Below 1280 px width show a polite "use a larger screen" notice on the sim player (this is a desktop trainer).
+- **Grid:** 12 columns on marketing/admin pages (max width 1280 px, left-aligned content, 16 px side gutter); the sim player is a fixed full-viewport grid (SPEC §15).
+- **Vertical rhythm (Phase 6A):** page header to content 24 px; between page sections 24 px; between panels 16 px; panel body padding 12 px; inside a panel, groups 12 px apart. Nothing else.
+- **Ruled grids over gaps:** a grid of equal cells (facts, stages, readouts) is drawn as `gap-px` over a `--line-1` background, so the dividers are exact 1 px rules, not borders that double up.
+- **Minimum viewport:** signed-in pages: 1366×768 with no horizontal scroll and no hidden critical controls. Below 1280 px width the sim player, the AAR replay and the scenario builder show the polite "use a larger screen" notice with a way back (this is a desktop trainer). **Public pages** (landing, login, guest entry, sources) are responsive from 360 px to 1920 px with no horizontal scroll and touch targets ≥ 44 px (Phase 6 amendment 5).
+
+### Layout devices (Phase 6 amendment 2)
+- **Sheet framing:** a page (or a long public section) reads as a printed briefing pack. A mono reference line on top (`PS 26247 · MOD · DSSC`, `SHEET 02 / 06` right-aligned), a 1 px `--line-1` rule spanning the container between sections, the section number in the reference line. Use on the landing page, the briefing and the service record; not inside the HUD.
+- **Telemetry strips:** a single thin row of mono metadata (`text-meta`, `--text-2`, items separated by ` · ` or 1 px rules) directly above or below a key visual: preset, coordinates, sim time, ROE, sun. Facts only; never decoration or invented values.
+- **Page header:** mono reference line → H1 → one context line (`--text-body`) on the left; an optional fact strip (ruled label / value cells) on the right. Every signed-in page starts with it.
 
 ### Panel anatomy (the core building block)
 ```
@@ -162,7 +177,7 @@ Rules: maximum two weights per screen besides labels; no font sizes outside the 
 - **Military brevity:** short, imperative, specific. "Mark detected", "Jam T004", "Out of range — 1.8 km > 1.5 km".
 - **Correct terms, consistently:** *contact* (truth, never shown to trainee), *track* (what sensors report), *bearing*, *range*, *ROE*, *asset*, *effector*, *kill chain*. Never mix "target/enemy/object".
 - **HUD labels UPPERCASE; body text sentence case.** No Title Case For Everything.
-- **Numbers always with units**, units in `--text-3`: `1.82 km`, `045°`, `12 m/s`, `00:48`. Bearings 3-digit with degree sign. Time `mm:ss` in sessions, ISO date + local time elsewhere.
+- **Numbers always with units**, units in `--text-2` (Phase 6A; `--text-3` is non-text only): `1.82 km`, `045°`, `12 m/s`, `00:48`. Bearings 3-digit with degree sign. Time `mm:ss` in sessions, ISO date + local time elsewhere.
 - **No exclamation marks**, no "Oops!", no emoji, no jokes in the trainee flow.
 - Errors explain cause and next step: "Cannot intercept — ROE: no kinetic response over the village (zone Z2)."
 - Landing page copy states the problem and what the product does, plainly. Every claim is something the demo actually shows.
@@ -175,7 +190,8 @@ Rules: maximum two weights per screen besides labels; no font sizes outside the 
 - **Disabled controls explain why** in a tooltip (cooldown remaining, out of range, ROE, no ammo).
 - **Loading:** skeleton panels with labelled progress ("LOADING TERRAIN · JK_MOUNTAIN · 42%"). Never a bare spinner.
 - **Empty states:** say what will appear and how to get there ("No sessions yet — run a scenario from Training").
-- **Errors:** plain reason + retry; never raw stack traces. Network loss during a session: non-blocking banner "Connection lost — events queued (14)". 
+- **Errors:** plain reason + retry; never raw stack traces. API error codes map to plain copy in one place (`lib/strings`); a not-found is a neutral notice, not `--crit`.
+- **Control states (Phase 6A):** every control has default, hover, pressed (1 px downward offset), focus-visible (2 px `--select` ring), disabled and, where it starts work, loading (`aria-busy`, the label says what is happening). **Disabled never uses opacity:** it is a `--bg-1` surface, a `--line-1` border and a `--text-2` label, with the reason in a tooltip; a disabled danger control looks like any other disabled control — `--crit` only when it is armed. Network loss during a session: non-blocking banner "Connection lost — events queued (14)". 
 - **Confirmation** only for irreversible/high-cost actions (intercept, abandon session, delete). Use an inline confirm (button → "Confirm intercept · Enter") rather than a modal in the HUD.
 - **Toasts** are not used in the sim player (the Comms log replaces them). Elsewhere: max one at a time, bottom-left, auto-dismiss 4 s.
 
@@ -194,6 +210,13 @@ Rules: maximum two weights per screen besides labels; no font sizes outside the 
 ---
 
 ## 11. Screen-by-screen guidance
+
+### 11.0 Shared shell (signed-in pages, Phase 6A)
+- **Top bar (48 px, `--bg-1`, 1 px bottom rule):** wordmark → role-aware nav (Home · Training · Threat library · After-action · Service record; instructors add Unit · Builder). The active item has a 2 px `--select` underline and `--text-1`; others `--text-2`. A nav item appears only once its page exists.
+- **Right side:** role chip, notices count (when notices exist), local time (`HH:MM`, Plex Mono), user menu (Settings, Help & controls, Sign out; staff also Scoring weights).
+- **Breadcrumbs** on deep pages (AAR session, builder, a trainee's trends) in the page header's reference line.
+- A skip-to-content link is the first focusable element. Route loading uses a labelled skeleton; 404 and error pages use the same shell and never show a stack trace.
+- The sim player replaces the shell with its own full-viewport grid.
 
 ### 11.1 Landing (public)
 1. **Hero:** a real sim view (live canvas in demo mode or a short looped capture of a replay) on real terrain with tracks, PPI and EO inset visible. Left-aligned statement: what it is in one line ("Counter-drone decision training on real terrain, in a browser."), one sub-line naming PS 26247 / MoD, primary button "Try the demo", secondary "How scoring works".
@@ -237,7 +260,7 @@ Same panel system. Every chart has a title phrased as a question ("Is detection 
 
 - Tokens live in `apps/web/app/globals.css` as CSS variables and are mapped in the Tailwind theme (`bg-bg-1`, `text-text-2`, `border-line-1`, `text-aff-hostile`…). No raw hex or arbitrary Tailwind colour values in components.
 - shadcn/ui components are restyled once in `components/ui/` (radius, colours, sizes, focus ring). Feature code uses those, never raw Radix with ad-hoc styles.
-- Shared HUD primitives in `components/hud/primitives/`: `Panel`, `PanelHeader`, `Readout` (value + unit + label), `StateChip`, `Kbd`, `AffiliationSymbol`, `CooldownRing`, `CommsLog`, `Pips`, `Banner`.
+- Shared HUD primitives in `components/hud/primitives/`: `Panel`, `PanelHeader`, `Readout` (value + unit + label), `StateChip`, `Kbd`, `AffiliationSymbol`, `CooldownRing`, `CommsLog`, `Pips`, `Banner`, plus (Phase 6A) `PageHeader`, `FactStrip`, `SheetFrame`, `TelemetryStrip`, `StageStrip`, `QualificationChip`, `DemoBadge`, `ClassSilhouette`, `Breadcrumbs`, `EmptyState`, `ErrorState`, `LargerScreenNotice`. Interactive primitives in `components/ui/`: `Button`, `Input`, `Select`, `FieldError`, `Tabs`, `SegmentedControl`, `Table`, `Menu`, `Dialog`, `Tooltip`. Feature code never hand-builds a tablist, radiogroup, menu or dialog.
 - A dev-only **design gallery** route `/dev/ui` renders every primitive and state (default, hover, focus, disabled, loading, error). It is excluded from production builds.
 - Fonts via `next/font` (self-hosted). Icons via `lucide-react` only.
 - Visual changes are verified with Playwright screenshots at **1366×768** and **1920×1080** for each changed screen, saved under `apps/web/e2e/__screenshots__/` and attached (described) in the task summary.
