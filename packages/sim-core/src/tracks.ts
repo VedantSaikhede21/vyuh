@@ -1,4 +1,4 @@
-import type { Affiliation, ContactClass, SensorKind } from '@vyuh/shared';
+import type { Affiliation, AiSuggestion, ContactClass, SensorKind } from '@vyuh/shared';
 import type { Vec3 } from './coords.ts';
 import type { RfBadge } from './sensors/rf.ts';
 
@@ -188,4 +188,11 @@ export interface TrackState {
   markedDetected: boolean;
   classifiedAs: ContactClass | null;
   affiliation: Affiliation;
+  /**
+   * AI-assist suggestion pre-baked for the contact behind this track (SPEC §13.3), or
+   * null. Shown once the track is first selected (AI_SUGGESTION_SHOWN).
+   */
+  readonly aiSuggestion: AiSuggestion | null;
+  aiShown: boolean;
+  aiDecision: 'ACCEPTED' | 'REJECTED' | null;
 }

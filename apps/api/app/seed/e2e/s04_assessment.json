@@ -1,7 +1,7 @@
 {
  "scenarioCode": "S04",
  "mode": "ASSESSMENT",
- "simVersion": 5,
+ "simVersion": 6,
  "events": [
   {
    "tMs": 0,
@@ -41,11 +41,21 @@
    "seq": 3
   },
   {
+   "tMs": 16050,
+   "type": "AI_SUGGESTION_SHOWN",
+   "trackId": "T001",
+   "payload": {
+    "suggestedClass": "FRIENDLY_QUAD",
+    "confidence": 0.82
+   },
+   "seq": 4
+  },
+  {
    "type": "MARKED_DETECTED",
    "trackId": "T001",
    "payload": {},
    "tMs": 16050,
-   "seq": 4
+   "seq": 5
   },
   {
    "type": "CLASSIFIED",
@@ -54,7 +64,7 @@
     "class": "FRIENDLY_QUAD"
    },
    "tMs": 16050,
-   "seq": 5
+   "seq": 6
   },
   {
    "type": "AFFILIATION_SET",
@@ -63,14 +73,14 @@
     "affiliation": "FRIENDLY"
    },
    "tMs": 16050,
-   "seq": 6
+   "seq": 7
   },
   {
    "tMs": 79500,
    "type": "CONTACT_SPAWNED",
    "contactId": "c01",
    "payload": {},
-   "seq": 7
+   "seq": 8
   },
   {
    "tMs": 84000,
@@ -83,21 +93,31 @@
     "rangeM": 3163.226540149987,
     "bearingDeg": 144.18215950805052
    },
-   "seq": 8
+   "seq": 9
   },
   {
    "type": "TRACK_SELECTED",
    "trackId": "T002",
    "payload": {},
    "tMs": 84050,
-   "seq": 9
+   "seq": 10
+  },
+  {
+   "tMs": 84050,
+   "type": "AI_SUGGESTION_SHOWN",
+   "trackId": "T002",
+   "payload": {
+    "suggestedClass": "QUAD_HEAVY",
+    "confidence": 0.7
+   },
+   "seq": 11
   },
   {
    "type": "MARKED_DETECTED",
    "trackId": "T002",
    "payload": {},
    "tMs": 84050,
-   "seq": 10
+   "seq": 12
   },
   {
    "type": "CLASSIFIED",
@@ -106,7 +126,7 @@
     "class": "QUAD_HEAVY"
    },
    "tMs": 84050,
-   "seq": 11
+   "seq": 13
   },
   {
    "type": "AFFILIATION_SET",
@@ -115,35 +135,35 @@
     "affiliation": "HOSTILE"
    },
    "tMs": 84050,
-   "seq": 12
+   "seq": 14
   },
   {
    "tMs": 179700,
    "type": "CONTACT_SPAWNED",
    "contactId": "c02",
    "payload": {},
-   "seq": 13
+   "seq": 15
   },
   {
    "tMs": 179700,
    "type": "CONTACT_SPAWNED",
    "contactId": "c03",
    "payload": {},
-   "seq": 14
+   "seq": 16
   },
   {
    "tMs": 179700,
    "type": "CONTACT_SPAWNED",
    "contactId": "c04",
    "payload": {},
-   "seq": 15
+   "seq": 17
   },
   {
    "tMs": 179700,
    "type": "CONTACT_SPAWNED",
    "contactId": "c05",
    "payload": {},
-   "seq": 16
+   "seq": 18
   },
   {
    "type": "RESPONSE_ORDERED",
@@ -153,7 +173,7 @@
     "effectorId": "jam1"
    },
    "tMs": 288800,
-   "seq": 17
+   "seq": 19
   },
   {
    "tMs": 288800,
@@ -164,7 +184,7 @@
     "response": "EW_JAM",
     "result": "NEUTRALISED"
    },
-   "seq": 18
+   "seq": 20
   },
   {
    "tMs": 288800,
@@ -173,7 +193,7 @@
    "payload": {
     "by": "EW_JAM"
    },
-   "seq": 19
+   "seq": 21
   },
   {
    "tMs": 288800,
@@ -181,7 +201,7 @@
    "payload": {
     "reason": "ALL_RESOLVED"
    },
-   "seq": 20
+   "seq": 22
   }
  ]
 }

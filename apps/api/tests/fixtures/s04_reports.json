@@ -37,11 +37,21 @@
   "seq": 3
  },
  {
+  "tMs": 16050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T001",
+  "payload": {
+   "suggestedClass": "FRIENDLY_QUAD",
+   "confidence": 0.82
+  },
+  "seq": 4
+ },
+ {
   "type": "MARKED_DETECTED",
   "trackId": "T001",
   "payload": {},
   "tMs": 16050,
-  "seq": 4
+  "seq": 5
  },
  {
   "type": "CLASSIFIED",
@@ -50,7 +60,7 @@
    "class": "FRIENDLY_QUAD"
   },
   "tMs": 16050,
-  "seq": 5
+  "seq": 6
  },
  {
   "type": "AFFILIATION_SET",
@@ -59,14 +69,14 @@
    "affiliation": "FRIENDLY"
   },
   "tMs": 16050,
-  "seq": 6
+  "seq": 7
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T001",
   "payload": {},
   "tMs": 16050,
-  "seq": 7
+  "seq": 8
  },
  {
   "type": "CAMERA_SLEWED",
@@ -78,7 +88,7 @@
    "mode": "IR"
   },
   "tMs": 16050,
-  "seq": 8
+  "seq": 9
  },
  {
   "type": "REPORT_SUBMITTED",
@@ -100,13 +110,13 @@
    "tMs": 18000
   },
   "tMs": 18050,
-  "seq": 9
+  "seq": 10
  },
  {
   "tMs": 18050,
   "type": "REPORT_TRUTH",
   "payload": {
-   "reportSeq": 9,
+   "reportSeq": 10,
    "contacts": [
     {
      "contactId": "c06",
@@ -119,7 +129,7 @@
     }
    ]
   },
-  "seq": 10
+  "seq": 11
  },
  {
   "type": "CAMERA_SLEWED",
@@ -130,7 +140,7 @@
    "mode": "DAY"
   },
   "tMs": 20000,
-  "seq": 11
+  "seq": 12
  },
  {
   "type": "CAMERA_SLEWED",
@@ -141,7 +151,7 @@
    "mode": "DAY"
   },
   "tMs": 40000,
-  "seq": 12
+  "seq": 13
  },
  {
   "type": "CAMERA_SLEWED",
@@ -152,14 +162,14 @@
    "mode": "DAY"
   },
   "tMs": 60000,
-  "seq": 13
+  "seq": 14
  },
  {
   "tMs": 79500,
   "type": "CONTACT_SPAWNED",
   "contactId": "c01",
   "payload": {},
-  "seq": 14
+  "seq": 15
  },
  {
   "type": "CAMERA_SLEWED",
@@ -170,7 +180,7 @@
    "mode": "DAY"
   },
   "tMs": 80000,
-  "seq": 15
+  "seq": 16
  },
  {
   "tMs": 84000,
@@ -183,21 +193,31 @@
    "rangeM": 3163.226540149987,
    "bearingDeg": 144.18215950805052
   },
-  "seq": 16
+  "seq": 17
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T002",
   "payload": {},
   "tMs": 84050,
-  "seq": 17
+  "seq": 18
+ },
+ {
+  "tMs": 84050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T002",
+  "payload": {
+   "suggestedClass": "QUAD_HEAVY",
+   "confidence": 0.7
+  },
+  "seq": 19
  },
  {
   "type": "MARKED_DETECTED",
   "trackId": "T002",
   "payload": {},
   "tMs": 84050,
-  "seq": 18
+  "seq": 20
  },
  {
   "type": "CLASSIFIED",
@@ -206,7 +226,7 @@
    "class": "QUAD_HEAVY"
   },
   "tMs": 84050,
-  "seq": 19
+  "seq": 21
  },
  {
   "type": "AFFILIATION_SET",
@@ -215,14 +235,14 @@
    "affiliation": "HOSTILE"
   },
   "tMs": 84050,
-  "seq": 20
+  "seq": 22
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T002",
   "payload": {},
   "tMs": 84050,
-  "seq": 21
+  "seq": 23
  },
  {
   "type": "CAMERA_SLEWED",
@@ -234,7 +254,7 @@
    "mode": "IR"
   },
   "tMs": 84050,
-  "seq": 22
+  "seq": 24
  },
  {
   "type": "REPORT_SUBMITTED",
@@ -256,13 +276,13 @@
    "tMs": 86000
   },
   "tMs": 86050,
-  "seq": 23
+  "seq": 25
  },
  {
   "tMs": 86050,
   "type": "REPORT_TRUTH",
   "payload": {
-   "reportSeq": 23,
+   "reportSeq": 25,
    "contacts": [
     {
      "contactId": "c01",
@@ -275,7 +295,7 @@
     }
    ]
   },
-  "seq": 24
+  "seq": 26
  },
  {
   "type": "CAMERA_SLEWED",
@@ -286,7 +306,7 @@
    "mode": "DAY"
   },
   "tMs": 100000,
-  "seq": 25
+  "seq": 27
  },
  {
   "type": "CAMERA_SLEWED",
@@ -297,7 +317,7 @@
    "mode": "DAY"
   },
   "tMs": 120000,
-  "seq": 26
+  "seq": 28
  },
  {
   "type": "CAMERA_SLEWED",
@@ -308,7 +328,7 @@
    "mode": "DAY"
   },
   "tMs": 140000,
-  "seq": 27
+  "seq": 29
  },
  {
   "type": "CAMERA_SLEWED",
@@ -319,35 +339,35 @@
    "mode": "DAY"
   },
   "tMs": 160000,
-  "seq": 28
+  "seq": 30
  },
  {
   "tMs": 179700,
   "type": "CONTACT_SPAWNED",
   "contactId": "c02",
   "payload": {},
-  "seq": 29
+  "seq": 31
  },
  {
   "tMs": 179700,
   "type": "CONTACT_SPAWNED",
   "contactId": "c03",
   "payload": {},
-  "seq": 30
+  "seq": 32
  },
  {
   "tMs": 179700,
   "type": "CONTACT_SPAWNED",
   "contactId": "c04",
   "payload": {},
-  "seq": 31
+  "seq": 33
  },
  {
   "tMs": 179700,
   "type": "CONTACT_SPAWNED",
   "contactId": "c05",
   "payload": {},
-  "seq": 32
+  "seq": 34
  },
  {
   "type": "CAMERA_SLEWED",
@@ -358,7 +378,7 @@
    "mode": "DAY"
   },
   "tMs": 180000,
-  "seq": 33
+  "seq": 35
  },
  {
   "type": "CAMERA_SLEWED",
@@ -369,7 +389,7 @@
    "mode": "DAY"
   },
   "tMs": 200000,
-  "seq": 34
+  "seq": 36
  },
  {
   "type": "CAMERA_SLEWED",
@@ -380,7 +400,7 @@
    "mode": "DAY"
   },
   "tMs": 220000,
-  "seq": 35
+  "seq": 37
  },
  {
   "type": "CAMERA_SLEWED",
@@ -391,7 +411,7 @@
    "mode": "DAY"
   },
   "tMs": 240000,
-  "seq": 36
+  "seq": 38
  },
  {
   "type": "CAMERA_SLEWED",
@@ -402,7 +422,7 @@
    "mode": "DAY"
   },
   "tMs": 260000,
-  "seq": 37
+  "seq": 39
  },
  {
   "type": "CAMERA_SLEWED",
@@ -413,7 +433,7 @@
    "mode": "DAY"
   },
   "tMs": 280000,
-  "seq": 38
+  "seq": 40
  },
  {
   "type": "RESPONSE_ORDERED",
@@ -423,7 +443,7 @@
    "effectorId": "jam1"
   },
   "tMs": 288800,
-  "seq": 39
+  "seq": 41
  },
  {
   "tMs": 288800,
@@ -434,7 +454,7 @@
    "response": "EW_JAM",
    "result": "NEUTRALISED"
   },
-  "seq": 40
+  "seq": 42
  },
  {
   "tMs": 288800,
@@ -443,7 +463,7 @@
   "payload": {
    "by": "EW_JAM"
   },
-  "seq": 41
+  "seq": 43
  },
  {
   "tMs": 288800,
@@ -451,6 +471,6 @@
   "payload": {
    "reason": "ALL_RESOLVED"
   },
-  "seq": 42
+  "seq": 44
  }
 ]

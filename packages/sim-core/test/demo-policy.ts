@@ -60,6 +60,12 @@ const EW_FOR_LINK: Partial<Record<ControlLink, EffectorKind>> = {
   AUTONOMOUS_GNSS: 'EW_SPOOF',
 };
 
+/** The affiliation an operator declares for a class they believe in. */
+function affiliationFor(cls: ContactClass): Affiliation {
+  if (THREAT_CLASSES.has(cls)) return 'HOSTILE';
+  return cls === 'FRIENDLY_QUAD' || cls === 'HELICOPTER_FRIENDLY' ? 'FRIENDLY' : 'NEUTRAL';
+}
+
 interface TrackPlan {
   markAt: number | null;
   classifyAt: number;
@@ -185,6 +191,8 @@ export function playDemoTrainee(
 ): Sim {
   const sim = createSim(scenario, world, { mode: 'ASSESSMENT' });
   const rng = createRng(seed).stream('demo-trainee');
+  // Own stream, so the AI choices do not shift the rest of the policy's draws.
+  const aiRng = createRng(seed).stream('demo-trainee-ai');
   const plans = new Map<string, TrackPlan>();
   const tried = new Set<string>();
   const zones = noKineticPolygons(scenario.zones);
@@ -206,6 +214,22 @@ export function playDemoTrainee(
       }
       if (p.marked && !p.classified && tMs >= p.classifyAt) {
         p.classified = true;
+        const ai = t.aiShown ? t.aiSuggestion : null;
+        if (ai) {
+          // AI assist (SPEC §13.3): a new operator takes the chip on trust, a practised
+          // one accepts it only when it agrees with what they see (decision 133).
+          const blind = aiRng.chance(lerp(0.75, 0.15, skill));
+          const accept = blind || ai.suggestedClass === p.cls;
+          sim.dispatch({
+            type: accept ? 'AI_SUGGESTION_ACCEPTED' : 'AI_SUGGESTION_REJECTED',
+            trackId: t.id,
+            payload: { ...ai },
+          });
+          if (accept && ai.suggestedClass !== p.cls) {
+            p.cls = ai.suggestedClass;
+            p.affiliation = affiliationFor(p.cls);
+          }
+        }
         sim.dispatch({ type: 'CLASSIFIED', trackId: t.id, payload: { class: p.cls } });
         sim.dispatch({
           type: 'AFFILIATION_SET',
