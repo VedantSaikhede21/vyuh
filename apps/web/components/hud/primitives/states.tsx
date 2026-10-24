@@ -40,11 +40,14 @@ export function ErrorState({
   subject,
   title,
   children,
+  tone,
   onRetry,
   action,
   className,
 }: {
   error?: unknown;
+  /** Overrides the tone the error code implies (a 404 page has no API error). */
+  tone?: 'neutral' | 'error';
   /** What was being loaded: "scenario", "session". */
   subject?: string;
   title?: string;
@@ -54,7 +57,7 @@ export function ErrorState({
   className?: string;
 }) {
   const copy = errorCopy(error instanceof ApiError ? error.code : undefined, subject);
-  const crit = copy.tone === 'error';
+  const crit = (tone ?? copy.tone) === 'error';
   return (
     <div
       role={crit ? 'alert' : 'status'}
