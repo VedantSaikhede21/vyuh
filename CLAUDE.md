@@ -185,6 +185,7 @@ cd apps/api && uv run pytest
 cd apps/api && uv run alembic upgrade head
 pnpm e2e                 # Playwright
 pnpm sweep:generator     # generate 50 scenarios per difficulty + sim-core validator (≤ 2 % fail)
+cd scripts/signatures && uv run python gen_spectrograms.py   # micro-Doppler templates → apps/web/public/signatures
 pnpm --filter @vyuh/sim-core validate <file|dir> [--max-fail-pct N] [--json]
 docker compose up        # offline full stack
 ```
@@ -253,6 +254,7 @@ docker compose up        # offline full stack
 | `CORS_ORIGINS` | Comma-separated web origins |
 | `LLM_ENABLED` | `false` disables all LLM calls (templates used) |
 | `LLM_PROVIDER`, `LLM_MODEL`, `OPENROUTER_API_KEY` | LLM config |
+| `LLM_BASE_URL` | OpenAI-compatible chat API root (default OpenRouter; a local server works offline) |
 | `LLM_TIMEOUT_S`, `LLM_RATE_LIMIT_PER_MIN` | LLM safety limits |
 | `OPEN_METEO_ENABLED` | Live weather toggle (cached; off in offline) |
 | `GUEST_MODE_ENABLED`, `GUEST_TTL_HOURS` | Demo guests and cleanup window |

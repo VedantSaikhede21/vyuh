@@ -105,6 +105,8 @@ ScenarioRequest {
   threatMix?: Partial<Record<ThreatClass, number>>; swarmSize?: number;
   falseContactDensity?: 'LOW'|'MED'|'HIGH'; aiAssistAccuracy?: 0..1;
   durationS: number; roe: 'WEAPONS_FREE'|'WEAPONS_TIGHT'|'WEAPONS_HOLD';
+  approachBearingDeg?: 0..<360;   // Phase 5: main threat axis from the asset (decision 134)
+  decoys?: 0..6;                  // Phase 5: decoy count, overrides the difficulty table
 }
 
 Scenario {
@@ -145,6 +147,8 @@ Score { total, components{detection, classification, decision, report, efficienc
 - **Preset meta is authoritative:** `terrain.origin` in a scenario is informational; the preset's `meta.json` origin (and `utcOffsetMin`) is used for sun position and geo-referencing.
 - **`environment.isNight` is computed** (sun elevation < −6° from suncalc at the preset origin, scenario date/time and preset `utcOffsetMin`) and overrides any stored value. `sunAzEl` is likewise computed.
 
+**Phase 5 additions (additive):** `GenerateRequest` and `ScenarioRequest` take optional `approachBearingDeg` (the main axis — swarms, decoy offsets, the first single — searched ±20° for radar exposure) and `decoys` (0–6); without them the generator output is unchanged (decision 134). Radar tracks (sim state, not events) carry `snrDb` of the last hit and their micro-Doppler family. `Score.rating` (`RatingChange`) is derived on read like `recommendedDifficulty`.
+
 **Additional enums** (all in `packages/shared/src/enums.ts`): `Roe`, `UserRole` (TRAINEE / INSTRUCTOR / ADMIN), `ScenarioKind`, `SessionMode`, `SessionStatus`, `EventType`, `ResponseResult`, `TrackLostReason`, `EoLevel`, `AltitudeBand`, `Activity`, `WaypointAction`, `FalseContactDensity`, `SessionEndReason`, `TimeBand` (DAY / DUSK / NIGHT) and `WeatherPreset` (CLEAR / HAZE / FOG / RAIN / DUST) for the generator (§7.1).
 - **Zones** may carry an optional `name` (e.g. "village", "border"); the HUD labels zones with their id and name and names the zone in disabled reasons ("No kinetic response over the village — zone Z3"). `SensorKind.ACOUSTIC` is not added until it is implemented.
 
@@ -169,7 +173,7 @@ Trainee: `TRACK_SELECTED, CAMERA_SLEWED, MARKED_DETECTED, CLASSIFIED, AFFILIATIO
 | `RESPONSE_OUTCOME` | sim | `{ response, result: 'NEUTRALISED'\|'NO_EFFECT'\|'MISSED'\|'BLOCKED_BY_ROE'\|'BLOCKED_NO_KINETIC'\|'OUT_OF_RANGE'\|'COOLDOWN'\|'NO_AMMO', collateral?: {contactIds: string[]} }` — `collateral` lists every other contact the same response affected (e.g. all RF contacts in a jam sector) |
 | `REPORT_SUBMITTED` | trainee | `ContactReport` (§4.3) |
 | `REPORT_TRUTH` | sim | `{ reportSeq, contacts: [{ contactId, x, z, aglM, headingDeg, speedMps, activity }] }` — emitted right after each applied `REPORT_SUBMITTED` (`reportSeq` = its `seq`, same `tMs`): the true state of every contact behind the reported tracks, for server-side report scoring only (§9.5). Ground truth: never shown in the HUD, only in the AAR. `SIM_VERSION` 5 (decision 104) |
-| `AI_SUGGESTION_SHOWN` / `_ACCEPTED` / `_REJECTED` | sim / trainee | `{ suggestedClass, confidence }` |
+| `AI_SUGGESTION_SHOWN` / `_ACCEPTED` / `_REJECTED` | sim / trainee | `{ suggestedClass, confidence }` + top-level `trackId`. SHOWN is emitted by the sim on the track's first `TRACK_SELECTED`; ACCEPTED / REJECTED are refused unless shown, unanswered and equal to the scenario's suggestion. Accepting does not classify — the HUD sends `CLASSIFIED` with it. `SIM_VERSION` 6 (decision 132) |
 | `CONTACT_REACHED_ASSET` | sim | `{ assetId }` |
 | `CONTACT_NEUTRALISED` | sim | `{ by: ResponseKind }` |
 | `CONTACT_DROPPED` | sim | `{ x, z }` + top-level `contactId`, and top-level `trackId` **only** when the EO tracker was in TRACK on that contact's track at the release (the operator saw it; Comms then shows `<trackId> PAYLOAD RELEASE OBSERVED`). Emitted once, when a `DROP` waypoint's hold ends (or on arrival without a hold), never after an EW defeat (decisions 70, 72) |
@@ -290,6 +294,7 @@ Modules: `rng.ts`, `clock.ts`, `coords.ts`, `terrain.ts` (heightmap sampling + L
 - Shown for the selected radar track when SNR is high enough.
 - Templates generated offline by `scripts/signatures/gen_spectrograms.py` (numpy/scipy): multirotor = strong periodic blade-flash sidebands; fixed-wing = single prop line + sidebands; bird = low-frequency (2–10 Hz) wingbeat modulation, no blade flashes; helicopter = strong low-frequency main-rotor flashes.
 - Client composes template + seeded noise scaled by SNR.
+- **Built (Phase 5, decision 135):** numpy-only script (STFT in numpy), templates in `apps/web/public/signatures/` with `signatures.json` (time span, Doppler range per family). HUD tab "Spectrogram" beside Tracks / RF for the selected radar track; shown at SNR ≥ 8 dB (the track's measured SNR), otherwise a worded reason. The noise is render-only (its own generator keyed to track id and sim tick), never the sim RNG, so logs and replays are unaffected. Families: multirotor (quads, FPV, civilian, friendly), fixed-wing (fixed-wing, loitering), bird, helicopter.
 
 ---
 
@@ -429,9 +434,11 @@ ROE is checked first, then the zone, then cooldown and ammo; a blocked order spe
 
 ### 9.3 Adaptive difficulty (Elo)
 User rating R (start 1000). Scenario rating D = 800 + 150 × difficulty. Expected E = 1 / (1 + 10^((D − R)/400)); actual A = total/100; R' = R + 32 × (A − E). Recommended next difficulty = the level whose D is closest to R + 50.
+- **Built (Phase 5, decision 129):** R' is rounded to an integer; ties in the recommendation go to the easier level (a new trainee at 1000 → D2). Updated on **Assessment completion only**, with a `rating_history` row; Practice never changes the rating and a re-score never moves it. `recommendationBasis` is `ELO_V1`: Assessment sessions recommend from their own new rating, Practice sessions from the current rating. Shown on the result screen (new rating, change, tooltip with D and E) and in trends.
 
 ### 9.4 AI over-trust metrics
 `overTrust = acceptedWrong / shownWrong`, `underTrust = rejectedCorrect / shownCorrect`. Shown in AAR, not part of total score (flagged as an insight).
+- **Built (decision 133):** counted per contact whose suggestion was shown; the response is the last accept / reject on any of its tracks (none = ignored). `AarSessionResponse.aiTrust`, `TraineeTrendsResponse.aiTrust` (totals) and per-session `TrendPoint.overTrust / underTrust`; computed from events in `services/analytics/ai_trust.py`, never by the scoring tree.
 
 ### 9.5 Contact report scoring (10 points)
 | Field | Full credit when |
@@ -497,13 +504,14 @@ The API owns all DB access (Supabase service key stays server-side; no client-si
 | GET `/scenarios/{id}` | any | Full scenario JSON |
 | POST `/scenarios/generate` | trainee+ | `GenerateRequest` → Scenario (trainee: terrain, time band, difficulty, seed only; rate-limited per user) |
 | POST `/scenarios` | instructor | Save an authored scenario (`AuthorScenarioRequest` → kind AUTHORED, decision 124) |
-| POST `/scenarios/from-text` | instructor | Text → ScenarioRequest (LLM) → Scenario |
+| POST `/scenarios/from-text` | instructor | Text → parsed, clamped generator parameters only (`FromTextResponse {request, notes, model}`); the client calls POST `/scenarios/generate` after the instructor confirms (decision 134). 503 `LLM_UNAVAILABLE` when the LLM is off |
 | POST `/sessions` | trainee+ | Start session for scenario |
 | POST `/sessions/{id}/events` | owner | Append event batch |
 | POST `/sessions/{id}/complete` | owner | Validate, score, update Elo → Score |
 | GET `/sessions/{id}` | owner/instructor | Session + score |
 | GET `/aar/sessions/{id}` | owner/instructor | Scenario + events + score + kill chain (for replay); COMPLETED sessions only (else 409 `SESSION_NOT_ACTIVE`) |
-| POST `/aar/sessions/{id}/debrief` | owner/instructor | Generate/cache LLM debrief |
+| POST `/aar/sessions/{id}/debrief` | owner/instructor | Generate/cache LLM debrief (`DebriefResponse {source LLM / TEMPLATE, model, fallbackReason?, content}`); COMPLETED sessions only |
+| GET `/ai/status` | any | `{llmEnabled, model}` so the UI can word disabled LLM controls |
 | GET `/aar/users/{id}/trends` | self/instructor | Score + component trends, rating history, recurring mistakes (Assessment sessions only) |
 | GET `/aar/units/{id}` | instructor | Unit averages, leaderboard, weakest kill-chain stage, common mistakes |
 | POST `/assignments` | instructor | Assign scenario to unit/users |
@@ -611,6 +619,7 @@ All errors: `{ "error": { "code": "...", "message": "...", "details": {} } }`
 - AI-assist panel with pre-baked, seed-determined suggestions; accuracy degrades with conditions; over/under-trust metrics in AAR.
 - Micro-Doppler spectrogram view.
 **Done when:** debrief references actual mistakes with timestamps; text "night swarm of 8 from the north with 2 decoys, hard" produces a matching scenario; AI-assist metrics appear in AAR.
+- **Status (2026-10-24, `feat/phase5`):** built — Elo (§9.3), LLM debrief with template fallback (§13.1), AI-assist chip and trust metrics (`SIM_VERSION` 6, §13.3, §9.4), text-to-scenario (§13.2), micro-Doppler spectrogram (§6.4). Decisions 129–137.
 
 ### Phase 6 — Polish & deploy
 - Performance pass to budget (§16). Guest demo mode + guided tour + curated demo scenarios.
@@ -628,17 +637,21 @@ All errors: `{ "error": { "code": "...", "message": "...", "details": {} } }`
 - Input: score breakdown + per-contact metrics + top 10 key events (never raw logs, never PII).
 - Output JSON: `{ summary, strengths[], mistakes[{tMs, what, whyItMatters, doInstead}], drill }`. Validate with Pydantic; one retry; else template built from leaf `feedback` strings.
 - Tone: concise instructor debrief.
+- **Built (decision 131):** the input also lists the kill-chain stages that went wrong; every mistake's `tMs` must match (±1.5 s) a penalty, stage or key-event time from the input, else the output is invalid. The template ranks mistakes by cost and adds stage-specific "why it matters" / "do instead" and a drill. Cached per session in `debriefs`; a template cached because the LLM was off or failed is regenerated once it is on. Shown on the result screen and as an AAR tab, always labelled LLM (model) or TEMPLATE (reason); mistake times open / seek the replay.
 
 ### 13.2 Text-to-scenario
 - LLM outputs a **ScenarioRequest** (parameters), not a full scenario. The deterministic generator builds the scenario. This keeps output valid and reproducible.
 - Clamp all values to schema bounds; show the parsed parameters to the instructor to confirm before generating.
+- **Built (decision 134):** `/instructor/text`. The LLM may set terrain, difficulty, time band, weather, swarm size, decoys, approach bearing, threat mix, false-contact density, ROE, duration and AI accuracy; anything else is ignored with a note. Seed = hash of the normalised text. Disabled with the reason when `LLM_ENABLED=false`.
 
 ### 13.3 AI-assist panel
 - For a selected track, shows a suggested class + confidence. Suggestions are pre-baked into the scenario by the generator using the seed and `aiAssistAccuracy`, lower in degraded conditions. Deterministic and replayable.
 - Trainee can accept / reject / ignore → events → over-trust metrics.
+- **Built (decisions 132–134):** chip "AI SUGGESTS · QDS · 74%" in the action-bar header and under the selected track's 3D label, Y accept (and classify), X reject, Comms lines. The generator has baked suggestions since 3a (`GENERATOR_VERSION` stays 3); S01–S03 and S11–S14 have none; S15's bird c06 carries a deliberately wrong one.
 
 ### 13.4 Model config
 - `LLM_PROVIDER=openrouter`, `LLM_MODEL` env (default a Gemini Flash model), `LLM_ENABLED=false` for offline. Timeouts 20 s. Rate limit per user.
+- **Built (decision 130):** standard-library HTTP, JSON response format, one retry, prompts as files in `services/ai/prompts/`. `LLM_BASE_URL` (default OpenRouter) points at any OpenAI-compatible server.
 
 ---
 
@@ -774,11 +787,11 @@ Rules: one branch per feature; **`packages/shared` changes go through one owner 
 A judge should get through this in about 5 minutes without help:
 1. **Landing:** one-screen problem statement, the kill chain diagram, "Try demo" button.
 2. **Guided tour** of the sim player (6–8 steps: tactical view, radar, EO/IR, track list, actions, report, AI assist).
-3. **Pick S15 "Birds or Drone?"** in the training list, read its briefing (map, coverage, ROE), and play it in practice mode (≈ 3 min) — shows false contacts and EO identification (the spectrogram view arrives in Phase 5). S06 "Crowded Skies" is the urban follow-up (civilian drones, no-kinetic town).
-4. **Result screen:** score breakdown, feedback lines, LLM debrief, recommended next difficulty.
-5. **AAR replay** with the ground-truth toggle — "here is what was really there".
+3. **Pick S15 "Birds or Drone?"** in the training list, read its briefing (map, coverage, ROE), and play it in practice mode (≈ 3 min) — shows false contacts, EO identification, the **Spectrogram tab** (blade flashes on the quad, a slow wingbeat ripple on the large birds) and the **AI chip** (one bird is wrongly suggested as a small quad: accepting it shows up as over-trust in the AAR). S06 "Crowded Skies" is the urban follow-up (civilian drones, no-kinetic town).
+4. **Result screen:** score breakdown, feedback lines, rating change, LLM debrief (template when the LLM is off, labelled), recommended next difficulty from the rating.
+5. **AAR replay** with the ground-truth toggle — "here is what was really there" — and the Debrief and AI trust tabs.
 6. **Trends and unit dashboard** using labelled demo data (§22) to show progress over sessions.
-7. **Instructor:** type a scenario in plain text → see parsed parameters → generate → preview briefing. (Phase 3b already has the form version: the Generate panel opens the generated scenario's briefing.)
+7. **Instructor:** From text → type a scenario in plain text → check the parsed parameters → Generate and open briefing (needs the LLM; the Builder form is the offline route).
 8. **Realism Sources page:** every model, dataset and incident inspiration, cited.
 
 Pitch storyline: *problem (costly, too few reps) → our loop (realistic kill chain) → realism (terrain, night, silent drones, false contacts, ROE) → measurement (decision-tree scoring, AAR, over-trust) → evidence (user study improvement) → deployability (browser, low-end PCs, offline build, near-zero cost).*
