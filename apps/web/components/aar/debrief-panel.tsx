@@ -35,7 +35,6 @@ export function useDebrief(sessionId: string) {
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     const ctrl = new AbortController();
-    setState({ kind: 'loading' });
     api
       .debrief(sessionId, ctrl.signal)
       .then((data) => setState({ kind: 'ok', data }))
@@ -48,7 +47,10 @@ export function useDebrief(sessionId: string) {
       });
     return () => ctrl.abort();
   }, [sessionId, attempt]);
-  const retry = useCallback(() => setAttempt((a) => a + 1), []);
+  const retry = useCallback(() => {
+    setState({ kind: 'loading' });
+    setAttempt((a) => a + 1);
+  }, []);
   return { state, retry };
 }
 
