@@ -10,7 +10,7 @@ const chipVariants = cva(
     variants: {
       tone: {
         neutral: 'border-line-2 text-text-1',
-        muted: 'border-line-1 text-text-3',
+        muted: 'border-line-1 text-text-2',
         active: 'border-select bg-bg-3 text-select',
         cue: 'border-cue text-cue',
         ok: 'border-ok text-ok',

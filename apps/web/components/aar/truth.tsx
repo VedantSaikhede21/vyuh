@@ -71,7 +71,7 @@ export function truthColumn(rt: SimRuntime, on: boolean): TrackColumn | undefine
     cell: (trackId) => {
       const contactId = rt.sim.getState().tracks.find((t) => t.id === trackId)?.contactId;
       const t = contactId ? truth.get(contactId) : undefined;
-      if (!contactId || !t) return <span className="text-text-3">—</span>;
+      if (!contactId || !t) return <span className="text-text-2">—</span>;
       return (
         <span
           className="inline-flex max-w-[12rem] items-center gap-1.5"

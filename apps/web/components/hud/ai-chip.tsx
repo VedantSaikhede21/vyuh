@@ -74,7 +74,7 @@ export function AiLabelLine({ ai }: { ai: NonNullable<TrackView['ai']> }) {
     <div
       className={cn(
         'mt-px whitespace-nowrap border bg-bg-1 px-1 text-[11px] leading-4 font-mono',
-        ai.decision ? 'border-line-1 text-text-3' : 'border-line-2 text-text-1',
+        ai.decision ? 'border-line-1 text-text-2' : 'border-line-2 text-text-1',
       )}
       data-testid="ai-label"
     >

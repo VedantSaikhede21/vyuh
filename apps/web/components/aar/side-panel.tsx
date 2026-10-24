@@ -43,7 +43,7 @@ export function AarSidePanel({
             onClick={() => setTab(t.id)}
             className={cn(
               'h-full flex-1 border-r border-line-1 px-2 text-label font-medium last:border-r-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-select',
-              tab === t.id ? 'bg-bg-1 text-text-1' : 'text-text-3 hover:text-text-2',
+              tab === t.id ? 'bg-bg-1 text-text-1' : 'text-text-2 hover:text-text-2',
             )}
           >
             {t.label}

@@ -177,15 +177,15 @@ export function BriefingLegend({
             Masked at{' '}
             {COVERAGE_ALTITUDES.map((a, i) => (
               <span key={a}>
-                {i > 0 && <span className="text-text-3"> · </span>}
+                {i > 0 && <span className="text-text-2"> · </span>}
                 <span
-                  className={cn('text-readout', a === altitude ? 'text-text-1' : 'text-text-3')}
+                  className={cn('text-readout', a === altitude ? 'text-text-1' : 'text-text-2')}
                 >
                   {a}
                 </span>
               </span>
             ))}
-            <span className="text-text-3"> m AGL</span>
+            <span className="text-text-2"> m AGL</span>
           </span>
         </Item>
         <Item
@@ -201,7 +201,7 @@ export function BriefingLegend({
           <span className="text-readout text-text-1">
             {scaleStepM >= 1000 ? scaleStepM / 1000 : scaleStepM}
           </span>
-          <span className="text-text-3"> {scaleStepM >= 1000 ? 'km' : 'm'}</span>
+          <span className="text-text-2"> {scaleStepM >= 1000 ? 'km' : 'm'}</span>
         </Item>
       </ul>
     </section>

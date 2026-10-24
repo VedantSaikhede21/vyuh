@@ -42,7 +42,7 @@ export function withAlpha(hex: string, alpha: number): string {
 export const PPI = {
   background: UI.bg0,
   rings: UI.line2,
-  ringLabels: UI.text3,
+  ringLabels: UI.text2,
   north: UI.text2,
   assetRing: UI.text2,
   sweep: UI.text1,

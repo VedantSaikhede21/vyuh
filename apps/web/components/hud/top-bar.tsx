@@ -62,7 +62,7 @@ export function TopBar({
       </span>
       <span className="flex items-baseline gap-2" aria-label="Session clock">
         <span className="text-readout-lg text-text-1">{formatClock(hud.tMs)}</span>
-        <span className="text-readout text-text-3">−{formatClock(hud.durationMs - hud.tMs)}</span>
+        <span className="text-readout text-text-2">−{formatClock(hud.durationMs - hud.tMs)}</span>
       </span>
       <StateChip>{ROE_LABEL[hud.roe]}</StateChip>
       <StateChip tone="muted">{runtime.mode}</StateChip>

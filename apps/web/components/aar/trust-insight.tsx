@@ -64,7 +64,7 @@ export function TrustInsight({
           </tr>
         </tbody>
       </table>
-      <p className="text-small text-text-3">
+      <p className="text-small text-text-2">
         Insight only, not part of the score. Over-trust = wrong suggestions accepted; under-trust =
         right suggestions rejected.
       </p>

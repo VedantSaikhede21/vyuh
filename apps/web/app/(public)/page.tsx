@@ -164,7 +164,7 @@ export default function LandingPage() {
         </div>
         <figure className="space-y-2">
           <HeroVideo />
-          <figcaption className="text-small text-text-3">
+          <figcaption className="text-small text-text-2">
             Recorded from the simulator: scenario S14 Mixed Sky, played by the scripted defender.
           </figcaption>
         </figure>
@@ -180,7 +180,7 @@ export default function LandingPage() {
           {CHAIN.map((c) => (
             <li key={c.n} className="flex flex-col gap-2">
               <p className="flex items-baseline gap-2">
-                <span className="text-readout text-text-3">{c.n}</span>
+                <span className="text-readout text-text-2">{c.n}</span>
                 <span className="text-panel-title text-text-1">{c.stage}</span>
               </p>
               <div className="flex min-h-48 items-start bg-bg-1">
@@ -202,7 +202,7 @@ export default function LandingPage() {
               <figcaption className="space-y-1">
                 <p className="text-h2">{r.title}</p>
                 <p className="text-body text-text-2">{r.body}</p>
-                <p className="text-small text-text-3">Source: {r.source}</p>
+                <p className="text-small text-text-2">Source: {r.source}</p>
               </figcaption>
             </figure>
           ))}
@@ -229,7 +229,7 @@ export default function LandingPage() {
               }}
               sizes="(min-width: 1024px) 700px, 100vw"
             />
-            <figcaption className="text-small text-text-3">
+            <figcaption className="text-small text-text-2">
               Demo data: scenario S01 played by the scripted defender and scored by the API.
             </figcaption>
           </figure>
@@ -240,7 +240,7 @@ export default function LandingPage() {
               'Penalties mark the costly errors (firing on a friendly, jamming one) and every line explains itself. A threat nobody could have stopped in time is not held against you.',
             ].map((line, i) => (
               <li key={i} className="flex gap-3">
-                <span className="text-readout text-text-3">{i + 1}</span>
+                <span className="text-readout text-text-2">{i + 1}</span>
                 <p className="text-body">{line}</p>
               </li>
             ))}

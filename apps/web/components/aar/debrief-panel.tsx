@@ -172,7 +172,7 @@ export function SourceChip({ data }: { data: DebriefResponse }) {
     <Tooltip content={detail} align="end">
       <span className="flex items-center gap-2" data-testid="debrief-source" tabIndex={0}>
         <StateChip tone={data.source === 'LLM' ? 'neutral' : 'muted'}>{chip}</StateChip>
-        <span className="hidden text-small text-text-3 sm:inline">{detail}</span>
+        <span className="hidden text-small text-text-2 sm:inline">{detail}</span>
       </span>
     </Tooltip>
   );

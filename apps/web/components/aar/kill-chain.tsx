@@ -60,7 +60,7 @@ const STATUS_CLASS: Record<KillChainStatus, string> = {
   LATE: 'text-warn',
   WRONG: 'text-crit',
   MISSED: 'text-crit',
-  NOT_APPLICABLE: 'text-text-3',
+  NOT_APPLICABLE: 'text-text-2',
 };
 
 /** The row that folds the correctly handled non-threats away (spans the whole table). */
@@ -130,16 +130,16 @@ function StepDetail({ row, step }: { row: ContactKillChain; step: KillChainStep 
         <span className="text-label">{STAGE_NAME[step.stage]}</span>{' '}
         <span className="font-mono">{row.contactId}</span>{' '}
         <span className={STATUS_CLASS[step.status]}>{STATUS_NAME[step.status]}</span>
-        <span className="font-mono text-text-3"> · {formatClock(step.jumpTMs)}</span>
+        <span className="font-mono text-text-2"> · {formatClock(step.jumpTMs)}</span>
         {step.latencyS !== undefined && (
-          <span className="font-mono text-text-3"> · {step.latencyS.toFixed(0)} s</span>
+          <span className="font-mono text-text-2"> · {step.latencyS.toFixed(0)} s</span>
         )}
       </p>
       {(step.action || step.truth) && (
         <p className="truncate text-text-2">
           {step.action ? humaniseFeedback(step.action) : 'No action'}
           {step.truth && (
-            <span className="text-text-3"> · truth: {humaniseFeedback(step.truth)}</span>
+            <span className="text-text-2"> · truth: {humaniseFeedback(step.truth)}</span>
           )}
         </p>
       )}
@@ -250,7 +250,7 @@ export const KillChainPanel = memo(function KillChainPanel({
         {focused ? (
           <StepDetail row={focused.row} step={focused.step} />
         ) : (
-          <p className="text-small text-text-3">
+          <p className="text-small text-text-2">
             Point at a stage for what you did against what was there; select it to jump the replay
             there.
           </p>
@@ -319,7 +319,7 @@ export function KillChainTable({
                     {STATUS_NAME[step.status]}
                   </span>
                   {step.actionTMs !== undefined && (
-                    <span className="font-mono text-text-3"> {formatClock(step.actionTMs)}</span>
+                    <span className="font-mono text-text-2"> {formatClock(step.actionTMs)}</span>
                   )}
                   {step.action && (
                     <span className="block text-text-2">{humaniseFeedback(step.action)}</span>

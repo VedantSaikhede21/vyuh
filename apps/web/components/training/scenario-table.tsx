@@ -243,7 +243,7 @@ export function ScenarioRowsTable({
                   {' '}
                   {visibilityKm(s.weather.visibilityM)}
                 </span>
-                <span className="text-text-3"> km</span>
+                <span className="text-text-2"> km</span>
               </td>
               <td className={TD}>
                 <span className="flex gap-1">
@@ -256,11 +256,11 @@ export function ScenarioRowsTable({
               </td>
               <td className={cn(TD, 'text-right text-readout')}>
                 {Math.round(s.durationS / 60)}
-                <span className="text-text-3"> min</span>
+                <span className="text-text-2"> min</span>
               </td>
               <td className={cn(TD, 'text-right text-readout')} data-testid="best-score">
                 {s.bestScore === null ? (
-                  <span className="text-text-3">—</span>
+                  <span className="text-text-2">—</span>
                 ) : (
                   Math.round(s.bestScore)
                 )}
@@ -466,7 +466,7 @@ export function ScenarioTable() {
         />
       )}
       {filtered && rows.length > 0 && (
-        <p className="border-t border-line-1 px-3 py-1.5 text-small text-text-3">
+        <p className="border-t border-line-1 px-3 py-1.5 text-small text-text-2">
           Filtered: {rows.length} of {items?.length ?? 0} scenarios shown.
         </p>
       )}

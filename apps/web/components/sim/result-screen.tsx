@@ -250,7 +250,7 @@ export function ResultScreen({
                     <Pips value={score.recommendedDifficulty} />
                     <span className="text-readout">{score.recommendedDifficulty}</span>
                     {current && (
-                      <span className="text-small text-text-3">
+                      <span className="text-small text-text-2">
                         {score.recommendedDifficulty > current.difficulty
                           ? `up from ${current.difficulty}`
                           : score.recommendedDifficulty < current.difficulty
@@ -281,7 +281,7 @@ export function ResultScreen({
                     </div>
                     <span className="text-right text-readout">
                       {score.components[c].toFixed(1)}
-                      <span className="text-text-3"> / {score.componentMax[c]}</span>
+                      <span className="text-text-2"> / {score.componentMax[c]}</span>
                     </span>
                   </div>
                 );
@@ -329,7 +329,7 @@ export function ResultScreen({
                         TD,
                         'text-right text-readout',
                         p.unavoidable
-                          ? 'text-text-3'
+                          ? 'text-text-2'
                           : p.points < 0
                             ? 'text-crit'
                             : p.points > 0
@@ -343,7 +343,7 @@ export function ResultScreen({
                     <td className={cn(TD, 'text-body')}>
                       {humaniseFeedback(p.feedback)}
                       {p.unavoidable && (
-                        <span className="text-small text-text-3"> · not counted (unavoidable)</span>
+                        <span className="text-small text-text-2"> · not counted (unavoidable)</span>
                       )}
                     </td>
                   </tr>
@@ -404,7 +404,7 @@ export function ResultScreen({
                     ) : (
                       <>
                         {c.detectionLatencyS.toFixed(1)}
-                        <span className="text-text-3"> s</span>
+                        <span className="text-text-2"> s</span>
                       </>
                     )}
                   </td>
@@ -478,7 +478,7 @@ function RatingReadout({ score, mode }: { score: Score; mode: SessionMode }) {
             {delta > 0 ? '+' : delta < 0 ? '−' : '±'}
             {Math.abs(delta)}
           </span>
-          <span className="text-small text-text-3">from {r.before}</span>
+          <span className="text-small text-text-2">from {r.before}</span>
         </span>
       </div>
     </Tooltip>

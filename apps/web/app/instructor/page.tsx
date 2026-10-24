@@ -37,7 +37,7 @@ const TH = 'h-7 bg-bg-2 px-2 text-left text-label font-medium whitespace-nowrap'
 const TD = 'h-8 px-2 whitespace-nowrap';
 
 function signed(v: number | null) {
-  if (v === null) return <span className="text-text-3">—</span>;
+  if (v === null) return <span className="text-text-2">—</span>;
   const r = Math.round(v);
   return <span className={r <= -5 ? 'text-warn' : undefined}>{r > 0 ? `+${r}` : r}</span>;
 }
@@ -131,7 +131,7 @@ function AssignForm({ unit, onDone }: { unit: UnitSummary; onDone: () => void })
               </span>
             )}
           </div>
-          <p className="text-small text-text-3">
+          <p className="text-small text-text-2">
             Completed when the trainee finishes it in Assessment mode.
           </p>
         </form>
@@ -239,14 +239,14 @@ function Dashboard({
                   <td className={`${TD} text-right text-readout`}>{r.sessions}</td>
                   <td className={`${TD} text-right text-readout`}>
                     {r.avgTotal === null ? (
-                      <span className="text-text-3">—</span>
+                      <span className="text-text-2">—</span>
                     ) : (
                       Math.round(r.avgTotal)
                     )}
                   </td>
                   <td className={`${TD} text-right text-readout`}>
                     {r.lastTotal === null ? (
-                      <span className="text-text-3">—</span>
+                      <span className="text-text-2">—</span>
                     ) : (
                       Math.round(r.lastTotal)
                     )}
@@ -254,21 +254,21 @@ function Dashboard({
                   <td className={`${TD} text-right text-readout`}>{signed(r.change)}</td>
                   <td className={`${TD} text-right text-readout`}>
                     {r.detectionLatencyS === null ? (
-                      <span className="text-text-3">—</span>
+                      <span className="text-text-2">—</span>
                     ) : (
                       <>
                         {r.detectionLatencyS.toFixed(1)}
-                        <span className="text-text-3"> s</span>
+                        <span className="text-text-2"> s</span>
                       </>
                     )}
                   </td>
                   <td className={`${TD} text-right text-readout`}>
                     {r.classificationAccuracy === null ? (
-                      <span className="text-text-3">—</span>
+                      <span className="text-text-2">—</span>
                     ) : (
                       <>
                         {Math.round(r.classificationAccuracy * 100)}
-                        <span className="text-text-3"> %</span>
+                        <span className="text-text-2"> %</span>
                       </>
                     )}
                   </td>
@@ -332,7 +332,7 @@ function Dashboard({
           testId="unit-assignments"
         >
           {d.assignments.length === 0 ? (
-            <p className="text-small text-text-3">Assign a scenario with the form on the right.</p>
+            <p className="text-small text-text-2">Assign a scenario with the form on the right.</p>
           ) : (
             <table className="w-full border-collapse">
               <thead>
@@ -357,7 +357,7 @@ function Dashboard({
                     </td>
                     <td className={`${TD} text-right text-readout`}>
                       {a.completed}
-                      <span className="text-text-3"> / {a.assigned}</span>
+                      <span className="text-text-2"> / {a.assigned}</span>
                     </td>
                     <td className="px-2 py-1 text-small whitespace-nowrap text-text-2">
                       {a.pending.join(', ') || '—'}
