@@ -145,6 +145,7 @@ export function ActionBar({ runtime, commands }: { runtime: SimRuntime; commands
   if (!hud) return null;
   const st = actionStates(hud, sites, runtime.scenario.zones, runtime.mode);
   const selected = hud.tracks.find((t) => t.id === hud.selectedTrackId) ?? null;
+  const aiPending = selected?.ai != null && selected.ai.decision === null;
   const ring = (kind: 'EW_JAM' | 'EW_SPOOF' | 'INTERCEPT') => {
     const e = sites[kind]?.view;
     if (!e) return null;
@@ -155,14 +156,14 @@ export function ActionBar({ runtime, commands }: { runtime: SimRuntime; commands
 
   return (
     <Panel className="relative h-full border-0">
-      <PanelHeader title="Actions">
+      {/* At 1366 px the AI chip needs the title's width while it waits for Y / X:
+          the title stays for screen readers only, never truncated. */}
+      <PanelHeader title={<span className={aiPending ? 'sr-only' : undefined}>Actions</span>}>
         {selected ? (
           <span className="flex min-w-0 items-center gap-2">
             <AiChip track={selected} commands={commands} />
             {/* While a suggestion waits for Y / X the id stays on the row and 3D label. */}
-            {(!selected.ai || selected.ai.decision) && (
-              <StateChip tone="active">{selected.id}</StateChip>
-            )}
+            {!aiPending && <StateChip tone="active">{selected.id}</StateChip>}
           </span>
         ) : (
           <StateChip tone="muted">No track</StateChip>
