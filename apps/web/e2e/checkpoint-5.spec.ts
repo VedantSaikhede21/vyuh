@@ -27,6 +27,8 @@ import {
 
 const OUT = 'e2e/checkpoint';
 test.use({ viewport: { width: 1366, height: 768 } });
+// This spec captures the real LLM debrief (@cp5-on): no forced template (decision 148).
+test.use({ extraHTTPHeaders: {} });
 
 async function shot(page: Page, name: string, full = false) {
   await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });

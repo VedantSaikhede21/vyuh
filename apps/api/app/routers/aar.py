@@ -2,7 +2,8 @@ import uuid
 
 from fastapi import APIRouter, Request
 
-from app.core.auth import CurrentUser, DbDep, StaffUser
+from app.core.auth import CurrentUser, DbDep, SettingsDep, StaffUser
+from app.core.logging import TEST_DEBRIEF_HEADER
 from app.schemas.generated import (
     AarSessionResponse,
     DebriefResponse,
@@ -31,10 +32,19 @@ def aar_session(session_id: uuid.UUID, user: CurrentUser, db: DbDep) -> AarSessi
     response_model_exclude_unset=True,
 )
 def session_debrief(
-    session_id: uuid.UUID, request: Request, user: CurrentUser, db: DbDep
+    session_id: uuid.UUID,
+    request: Request,
+    user: CurrentUser,
+    db: DbDep,
+    settings: SettingsDep,
 ) -> DebriefResponse:
     """LLM debrief with a template fallback, generated once and cached (SPEC §13.1)."""
-    return debrief.session_debrief(db, request.app.state.llm, user, session_id)
+    force_template = (
+        settings.dev_login_enabled and request.headers.get(TEST_DEBRIEF_HEADER) == "template"
+    )
+    return debrief.session_debrief(
+        db, request.app.state.llm, user, session_id, force_template=force_template
+    )
 
 
 @router.get("/users/{user_id}/trends", response_model=TraineeTrendsResponse)

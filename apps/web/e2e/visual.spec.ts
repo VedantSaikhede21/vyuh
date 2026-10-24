@@ -69,11 +69,11 @@ for (const vp of VIEWPORTS) {
       await beginSession(page);
       await stepTo(page, 3_600_000);
       await expect(page.getByTestId('result-screen')).toBeVisible({ timeout: 60_000 });
-      // The debrief is written by the LLM when it is on, so its text and height
-      // differ per run: wait for it, then leave it out of the picture
-      // (checkpoint-5.spec.ts captures it).
-      await expect(page.getByTestId('debrief-source')).toBeVisible({ timeout: 60_000 });
-      await page.addStyleTag({ content: '[data-testid=debrief] { display: none !important; }' });
+      // e2e runs force the template debrief (playwright.config.ts, decision 148), so
+      // its text is the same every run: wait for it and keep it in the picture.
+      await expect(page.getByTestId('debrief-source')).toContainText('TEMPLATE', {
+        timeout: 60_000,
+      });
       await shot(page, 'result', { fullPage: true });
       // After a reload the end reason comes from the stored SESSION_ENDED event.
       const ended = await page.getByTestId('result-ended').textContent();
