@@ -1,5 +1,6 @@
 'use client';
 
+import type { UserRole } from '@vyuh/shared';
 import { ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -58,12 +59,20 @@ function HelpDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
-/** Shared shell top bar for signed-in pages (DESIGN §11.0, UI-PREP §3). */
-function ShellTopBar() {
-  const { user, logout } = useAuth();
-  const path = usePathname() ?? '/';
+/**
+ * Shared shell top bar for signed-in pages (DESIGN §11.0, UI-PREP §3).
+ * Presentational, so the design gallery can show it for each role.
+ */
+export function ShellTopBar({
+  user,
+  path,
+  onSignOut,
+}: {
+  user: { name: string; role: UserRole };
+  path: string;
+  onSignOut: () => void;
+}) {
   const [help, setHelp] = useState(false);
-  if (!user) return null;
   const staff = isStaff(user.role);
   const items: MenuItem[] = [
     {
@@ -83,7 +92,7 @@ function ShellTopBar() {
         ]
       : []),
     { kind: 'separator' },
-    { kind: 'action', label: 'Sign out', onSelect: () => void logout(), testId: 'menu-sign-out' },
+    { kind: 'action', label: 'Sign out', onSelect: onSignOut, testId: 'menu-sign-out' },
   ];
   return (
     <header className="relative z-10 border-b border-line-1 bg-bg-1" data-testid="shell-top-bar">
@@ -168,10 +177,10 @@ function PublicHeader() {
 }
 
 export function AppHeader() {
-  const { status } = useAuth();
+  const { status, user, logout } = useAuth();
   const path = usePathname() ?? '/';
-  if (PUBLIC_PATHS.includes(path) || status !== 'authenticated') return <PublicHeader />;
-  return <ShellTopBar />;
+  if (PUBLIC_PATHS.includes(path) || status !== 'authenticated' || !user) return <PublicHeader />;
+  return <ShellTopBar user={user} path={path} onSignOut={() => void logout()} />;
 }
 
 /** First focusable element on every page (DESIGN §11.0). */

@@ -22,6 +22,7 @@ export function Menu({
   align = 'end',
   buttonClassName,
   buttonTestId,
+  defaultOpen = false,
   'aria-label': ariaLabel,
 }: {
   /** Button content. */
@@ -30,18 +31,25 @@ export function Menu({
   align?: 'start' | 'end';
   buttonClassName?: string;
   buttonTestId?: string;
+  /** Start open without taking focus (design gallery / screenshots). */
+  defaultOpen?: boolean;
   'aria-label'?: string;
 }) {
   const id = useId();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
+  /** Focus moves into the menu only when the user opened it. */
+  const takeFocus = useRef(!defaultOpen);
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const itemRefs = useRef<(HTMLElement | null)[]>([]);
   const focusable = items.flatMap((it, i) => (it.kind === 'separator' ? [] : [i]));
 
   useEffect(() => {
-    if (!open) return;
-    itemRefs.current[focusable[0] ?? -1]?.focus();
+    if (!open) {
+      takeFocus.current = true;
+      return;
+    }
+    if (takeFocus.current) itemRefs.current[focusable[0] ?? -1]?.focus();
     const onDown = (e: PointerEvent) => {
       if (!root.current?.contains(e.target as Node)) setOpen(false);
     };
