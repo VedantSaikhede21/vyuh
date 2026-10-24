@@ -282,7 +282,6 @@ export function ActionBar({ runtime, commands }: { runtime: SimRuntime; commands
                   hint="Intercept — asks for Enter to confirm"
                   keyName="I"
                   onClick={commands.armIntercept}
-                  variant="danger"
                   align="end"
                 >
                   <span className="flex items-center gap-1.5">

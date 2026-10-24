@@ -1,4 +1,4 @@
-import type { ContactClass, EffectorKind, Roe } from '@vyuh/shared';
+import type { ContactClass, EffectorKind, ErrorCode, Roe } from '@vyuh/shared';
 import type { EoTrackMode } from '@vyuh/sim-core';
 
 // User-facing strings for the sim player, kept in one file so they can be
@@ -100,3 +100,90 @@ export const EFFECTOR_LABEL: Readonly<Record<EffectorKind, string>> = {
   EW_JAM: 'JAM',
   EW_SPOOF: 'SPF',
 };
+
+/** What a failed API call means to the user (DESIGN §8–§9): cause and next step, never raw API wording. */
+export interface ErrorCopy {
+  title: string;
+  detail: string;
+  /** A not-found or a permission notice is not an alarm: neutral tone, no --crit. */
+  tone: 'neutral' | 'error';
+  /** Trying again can help. */
+  retry: boolean;
+}
+
+/**
+ * One map from API error codes to plain copy (audit P1-8). `subject` names the
+ * thing that was being loaded ("scenario", "session"); it defaults to "page".
+ */
+export function errorCopy(
+  code: ErrorCode | 'NETWORK' | 'BAD_RESPONSE' | undefined,
+  subject = 'page',
+): ErrorCopy {
+  switch (code) {
+    case 'NOT_FOUND':
+      return {
+        title: `This ${subject} does not exist.`,
+        detail:
+          'The link may be out of date, or the item was deleted. Go back and choose it again.',
+        tone: 'neutral',
+        retry: false,
+      };
+    case 'VALIDATION_ERROR':
+      return {
+        title: `This ${subject} could not be opened.`,
+        detail: 'The address or the request is not valid. Go back and open it from the list.',
+        tone: 'neutral',
+        retry: false,
+      };
+    case 'UNAUTHORIZED':
+      return {
+        title: 'Your sign-in has expired.',
+        detail: 'Sign in again to continue.',
+        tone: 'neutral',
+        retry: false,
+      };
+    case 'FORBIDDEN':
+      return {
+        title: `You do not have access to this ${subject}.`,
+        detail: 'It belongs to another trainee or needs an instructor account.',
+        tone: 'neutral',
+        retry: false,
+      };
+    case 'RATE_LIMITED':
+      return {
+        title: 'Too many requests.',
+        detail: 'Wait a minute, then try again.',
+        tone: 'error',
+        retry: true,
+      };
+    case 'SESSION_NOT_ACTIVE':
+      return {
+        title: 'This session has already ended.',
+        detail: 'Open its after-action review, or start a new run from Training.',
+        tone: 'neutral',
+        retry: false,
+      };
+    case 'LLM_UNAVAILABLE':
+      return {
+        title: 'The language model is not available.',
+        detail: 'The template version is used instead; nothing is lost.',
+        tone: 'neutral',
+        retry: true,
+      };
+    case 'NETWORK':
+      return {
+        title: 'The server did not answer.',
+        detail: 'Check the network connection, then try again.',
+        tone: 'error',
+        retry: true,
+      };
+    default:
+      return {
+        title: `The ${subject} could not be loaded.`,
+        detail:
+          'The server reported an internal error. Try again; if it repeats, tell your instructor.',
+        tone: 'error',
+        retry: true,
+      };
+  }
+}

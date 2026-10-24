@@ -4,7 +4,7 @@ import type { AarSessionResponse } from '@vyuh/shared';
 import type { SimSnapshot, World } from '@vyuh/sim-core';
 import { CircleHelp } from 'lucide-react';
 import Link from 'next/link';
-import { DemoBadge } from '@/components/aar/demo-badge';
+import { DemoBadge } from '@/components/hud/primitives';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Tooltip } from '@/components/hud/primitives';
 import { SimPlayer } from '@/components/sim/player';

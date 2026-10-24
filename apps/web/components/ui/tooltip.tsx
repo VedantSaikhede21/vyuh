@@ -14,6 +14,9 @@ import { Kbd } from '@/components/hud/primitives/kbd';
 import { cn } from '@/lib/utils';
 
 const OPEN_DELAY_MS = 300;
+/** Moving from one control to the next while a tooltip was just open: no delay. */
+const FOLLOW_ON_MS = 500;
+let lastClosedAt = -Infinity;
 
 const SIDE = { top: 'bottom-full mb-1', bottom: 'top-full mt-1' } as const;
 const ALIGN = {
@@ -62,12 +65,15 @@ export function Tooltip({
   }
   const show = (immediate: boolean) => {
     clear();
-    if (immediate) setOpen(true);
+    if (immediate || performance.now() - lastClosedAt < FOLLOW_ON_MS) setOpen(true);
     else timer.current = setTimeout(() => setOpen(true), OPEN_DELAY_MS);
   };
   const hide = () => {
     clear();
-    setOpen(false);
+    setOpen((was) => {
+      if (was) lastClosedAt = performance.now();
+      return false;
+    });
   };
 
   const child = disabled ? children : cloneElement(children, { 'aria-describedby': id });
