@@ -19,12 +19,15 @@ import {
   difficultyAnswer,
   latencyAnswer,
   mistakesAnswer,
+  ratingAnswer,
   scoreAnswer,
+  trustAnswer,
   weakestStageAnswer,
 } from '@/lib/aar/answers';
 import { api } from '@/lib/api';
 import { DemoBadge } from '@/components/aar/demo-badge';
 import { QuestionPanel, SeriesChart, StageBars, type SeriesPoint } from './charts';
+import { TrustInsight } from './trust-insight';
 
 // Trainee trends (SPEC §12 Phase 4, DESIGN §11.7): Assessment sessions only, each
 // chart a question with its one-line answer, then the sessions with links to their
@@ -256,8 +259,28 @@ export function TrendsView({
           )}
         </QuestionPanel>
         <QuestionPanel
+          question="Is my rating rising?"
+          answer={ratingAnswer(points, data.rating)}
+          testId="chart-rating"
+        >
+          <SeriesChart
+            data={series(points, (p) => p.ratingAfter)}
+            domain={['auto', 'auto']}
+            yWidth={38}
+            height={120}
+            ariaLabel="Elo rating after each rated Assessment session"
+          />
+        </QuestionPanel>
+        <QuestionPanel
+          question="Do I trust the AI assist too much?"
+          answer={trustAnswer(data.aiTrust)}
+          testId="trust-insight"
+        >
+          <TrustInsight trust={data.aiTrust} />
+        </QuestionPanel>
+        <QuestionPanel
           question="What difficulty should I train at next?"
-          answer={difficultyAnswer(points)}
+          answer={difficultyAnswer(points, data.rating)}
           testId="chart-difficulty"
           className="lg:col-span-2"
         >
@@ -284,6 +307,7 @@ export function TrendsView({
                 <th className={`${TH} w-full`}>Scenario</th>
                 <th className={TH}>Difficulty</th>
                 <th className={`${TH} text-right`}>Total</th>
+                <th className={`${TH} text-right`}>Rating</th>
                 <th className={TH}>Tree</th>
                 <th className={TH}>Next</th>
                 {staff && <th className={TH}>Re-score</th>}
@@ -314,6 +338,20 @@ export function TrendsView({
                     <Pips value={p.difficulty} />
                   </td>
                   <td className={`${TD} text-right text-readout`}>{Math.round(p.total)}</td>
+                  <td className={`${TD} text-right text-readout`}>
+                    {p.ratingAfter === null || p.ratingBefore === null ? (
+                      <span className="text-text-3">—</span>
+                    ) : (
+                      <>
+                        {p.ratingAfter}
+                        <span className="text-text-3">
+                          {' '}
+                          {p.ratingAfter >= p.ratingBefore ? '+' : '−'}
+                          {Math.abs(p.ratingAfter - p.ratingBefore)}
+                        </span>
+                      </>
+                    )}
+                  </td>
                   <td className={`${TD} text-readout text-text-2`}>{p.treeVersion}</td>
                   <td className={`${TD} text-readout`}>D{p.recommendedDifficulty}</td>
                   {staff && (

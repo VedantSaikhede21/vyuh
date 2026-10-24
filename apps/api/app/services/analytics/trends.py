@@ -18,12 +18,14 @@ from app.core.errors import ApiError
 from app.models import Scenario as ScenarioRow
 from app.models import TrainingSession, Unit, User
 from app.schemas.generated import (
+    AiTrustMetrics,
     AssignmentCompletion,
     ComponentPct,
     ErrorCode,
     KillChainStage,
     KillChainStatus,
     MistakeItem,
+    RatingChange,
     Scenario,
     SessionMode,
     SessionStatus,
@@ -37,11 +39,17 @@ from app.schemas.generated import (
     UnitTraineeRow,
     UserRole,
 )
+from app.services.analytics.ai_trust import ai_trust, combine
 from app.services.analytics.kill_chain import kill_chain
 from app.services.assignments import completed_session, unit_assignments
 from app.services.recommendation import recommend_difficulty
 from app.services.scenarios import load_scenario
-from app.services.sessions import latest_score_row, score_from_row, stored_events
+from app.services.sessions import (
+    latest_score_row,
+    rating_change,
+    score_from_row,
+    stored_events,
+)
 
 PCT_COMPONENTS = ("detection", "classification", "decision", "report")
 
@@ -80,6 +88,8 @@ class SessionFacts:
     latency_s: float | None
     accuracy: float | None
     tree_version: str
+    rating: RatingChange | None
+    trust: AiTrustMetrics
     mistakes: Counter[str] = field(default_factory=Counter)
     stage_ok: Counter[str] = field(default_factory=Counter)
     stage_total: Counter[str] = field(default_factory=Counter)
@@ -110,6 +120,7 @@ def _facts(db: Session, row: TrainingSession, scenarios: dict[uuid.UUID, tuple])
     exact = [
         p for p in tracked if p.classification_correct and p.classification_correct.value == "EXACT"
     ]
+    events = stored_events(db, row.id)
     facts = SessionFacts(
         row=row,
         scenario_row=srow,
@@ -119,12 +130,14 @@ def _facts(db: Session, row: TrainingSession, scenarios: dict[uuid.UUID, tuple])
         latency_s=round(mean(latencies), 1) if latencies else None,
         accuracy=round(len(exact) / len(tracked), 3) if tracked else None,
         tree_version=score.tree_version,
+        rating=rating_change(db, row, scenario.difficulty),
+        trust=ai_trust(scenario, events),
     )
     for p in score.per_contact:
         for leaf in {getattr(x, "root", x) for x in p.leaves}:
             if leaf in MISTAKES:
                 facts.mistakes[leaf] += 1
-    for chain in kill_chain(scenario, stored_events(db, row.id)):
+    for chain in kill_chain(scenario, events):
         for step in chain.stages:
             if step.status is KillChainStatus.NOT_APPLICABLE:
                 continue
@@ -204,8 +217,8 @@ def mistake_items(facts: list[SessionFacts], *, min_sessions: int = 1) -> list[M
     return items[:8]
 
 
-def _point(f: SessionFacts) -> TrendPoint:
-    nxt, _ = recommend_difficulty(f.total, f.scenario.difficulty)
+def _point(f: SessionFacts, current_rating: int) -> TrendPoint:
+    nxt, _ = recommend_difficulty(f.rating.after if f.rating else current_rating)
     return TrendPoint(
         session_id=f.row.id,
         scenario_id=f.scenario_row.id,
@@ -218,6 +231,11 @@ def _point(f: SessionFacts) -> TrendPoint:
         detection_latency_s=f.latency_s,
         classification_accuracy=f.accuracy,
         recommended_difficulty=nxt,
+        rating_before=f.rating.before if f.rating else None,
+        rating_after=f.rating.after if f.rating else None,
+        # Generated root models: pass the floats.
+        over_trust=getattr(f.trust.over_trust, "root", f.trust.over_trust),
+        under_trust=getattr(f.trust.under_trust, "root", f.trust.under_trust),
         tree_version=f.tree_version,
         is_demo=f.row.is_demo,
     )
@@ -233,10 +251,12 @@ def trainee_trends(db: Session, viewer: User, user_id: uuid.UUID) -> TraineeTren
     facts = assessment_facts(db, [user.id])
     return TraineeTrendsResponse(
         user=TrendUser(id=user.id, name=user.name, unit_name=user.unit.name if user.unit else None),
-        points=[_point(f) for f in facts],
+        rating=user.rating,
+        points=[_point(f, user.rating) for f in facts],
         # "Recurring": seen in at least two sessions.
         mistakes=mistake_items(facts, min_sessions=2),
         stages=stage_rates(facts),
+        ai_trust=combine(f.trust for f in facts),
     )
 
 

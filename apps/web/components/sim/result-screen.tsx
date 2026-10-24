@@ -260,6 +260,7 @@ export function ResultScreen({
                   </span>
                 </div>
               )}
+              <RatingReadout score={score} mode={mode} />
             </div>
             <div className="space-y-2">
               {scored.map((c) => {
@@ -443,5 +444,40 @@ export function ResultScreen({
         </div>
       </Panel>
     </div>
+  );
+}
+
+/** Elo change (SPEC §9.3): Assessment only; Practice says the rating did not move. */
+function RatingReadout({ score, mode }: { score: Score; mode: SessionMode }) {
+  const r = score.rating;
+  if (!r) {
+    return (
+      <div className="flex flex-col gap-1" data-testid="rating-change">
+        <span className="text-label">Rating</span>
+        <span className="text-small text-text-2">
+          {mode === 'PRACTICE' ? 'Practice — rating unchanged' : 'Not rated'}
+        </span>
+      </div>
+    );
+  }
+  const delta = r.after - r.before;
+  return (
+    <Tooltip
+      content={`Elo: scenario rating ${r.scenarioRating}, expected result ${Math.round(
+        r.expected * 100,
+      )} %, actual ${score.total.toFixed(0)} %. Change = 32 × (actual − expected).`}
+    >
+      <div className="flex flex-col gap-1" data-testid="rating-change" tabIndex={0}>
+        <span className="text-label">Rating</span>
+        <span className="flex items-baseline gap-2">
+          <span className="text-readout">{r.after}</span>
+          <span className="text-readout text-text-2">
+            {delta > 0 ? '+' : delta < 0 ? '−' : '±'}
+            {Math.abs(delta)}
+          </span>
+          <span className="text-small text-text-3">from {r.before}</span>
+        </span>
+      </div>
+    </Tooltip>
   );
 }

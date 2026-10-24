@@ -55,7 +55,7 @@ def test_aar_for_owner_and_staff_after_completion_only(
     log = fixture_log("s01_defended")
     _complete(client, sid, headers, log)
     body = client.get(url, headers=headers).json()
-    assert set(body) == {"session", "scenario", "events", "killChain"}
+    assert set(body) == {"session", "scenario", "events", "killChain", "aiTrust"}
     assert body["session"]["status"] == "COMPLETED"
     assert body["session"]["terrainRevision"] == 1
     assert body["scenario"] == scenarios["S01"].content

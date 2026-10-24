@@ -1,22 +1,49 @@
-"""Recommended next difficulty after a scored session (decision 64).
+"""Elo rating and recommended next difficulty (SPEC §9.3, decision 129).
 
-RULE_V1 is a placeholder until Phase 5 Elo, which replaces it in the same place.
+R starts at 1000. Scenario rating D = 800 + 150 * difficulty. Expected
+E = 1 / (1 + 10^((D - R) / 400)); actual A = total / 100; R' = R + 32 * (A - E),
+rounded to an integer. The recommended next difficulty is the level whose D is
+closest to R + 50 (ties: the easier level).
 """
+
+from dataclasses import dataclass
 
 from app.schemas.generated import RecommendationBasis
 
 MIN_DIFFICULTY = 1
 MAX_DIFFICULTY = 5
-STEP_UP_AT = 80.0
-STEP_DOWN_BELOW = 50.0
+START_RATING = 1000
+K_FACTOR = 32
+#: Train slightly above the current rating.
+STRETCH = 50
 
 
-def recommend_difficulty(total: float, difficulty: int) -> tuple[int, RecommendationBasis]:
-    """Total ≥ 80 → one harder, < 50 → one easier, otherwise the same; clamped to 1-5."""
-    if total >= STEP_UP_AT:
-        nxt = difficulty + 1
-    elif total < STEP_DOWN_BELOW:
-        nxt = difficulty - 1
-    else:
-        nxt = difficulty
-    return max(MIN_DIFFICULTY, min(MAX_DIFFICULTY, nxt)), RecommendationBasis.RULE_V1
+def scenario_rating(difficulty: int) -> int:
+    return 800 + 150 * difficulty
+
+
+def expected_result(rating: float, difficulty: int) -> float:
+    return 1 / (1 + 10 ** ((scenario_rating(difficulty) - rating) / 400))
+
+
+@dataclass(frozen=True)
+class EloUpdate:
+    before: int
+    after: int
+    scenario_rating: int
+    expected: float
+
+
+def elo_update(rating: int, difficulty: int, total: float) -> EloUpdate:
+    expected = expected_result(rating, difficulty)
+    after = round(rating + K_FACTOR * (total / 100 - expected))
+    return EloUpdate(rating, after, scenario_rating(difficulty), round(expected, 4))
+
+
+def recommend_difficulty(rating: float) -> tuple[int, RecommendationBasis]:
+    target = rating + STRETCH
+    best = min(
+        range(MIN_DIFFICULTY, MAX_DIFFICULTY + 1),
+        key=lambda d: (abs(scenario_rating(d) - target), d),
+    )
+    return best, RecommendationBasis.ELO_V1

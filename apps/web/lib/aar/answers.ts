@@ -1,4 +1,5 @@
 import type {
+  AiTrustMetrics,
   ComponentPct,
   KillChainStage,
   MistakeItem,
@@ -93,10 +94,48 @@ export function componentAnswer(points: readonly TrendPoint[]): string {
   return `${COMPONENT_LABEL[low.c]} loses the most: ${Math.round(low.v)} % of its maximum over the last ${sessions(recent.length)}; ${COMPONENT_LABEL[high.c].toLowerCase()} is strongest at ${Math.round(high.v)} %.`;
 }
 
-export function difficultyAnswer(points: readonly TrendPoint[]): string {
+export function difficultyAnswer(points: readonly TrendPoint[], rating?: number): string {
   const last = points.at(-1);
   if (!last) return 'No Assessment session yet: the recommendation follows your first score.';
-  return `Difficulty ${last.recommendedDifficulty} next: your last score was ${Math.round(last.total)} at difficulty ${last.difficulty} (step up at 80, down below 50).`;
+  const r = last.ratingAfter ?? rating;
+  return r === undefined || r === null
+    ? `Difficulty ${last.recommendedDifficulty} next.`
+    : `Difficulty ${last.recommendedDifficulty} next: the level closest to your rating ${r} + 50 (D1 = 950, each level + 150).`;
+}
+
+/** Elo rating over the rated sessions (SPEC §9.3). */
+export function ratingAnswer(points: readonly TrendPoint[], rating: number): string {
+  const rated = points.filter((p) => p.ratingAfter !== null);
+  const first = rated[0];
+  if (!first || first.ratingBefore === null)
+    return `Rating ${rating}: no rated Assessment session yet.`;
+  const d = rating - first.ratingBefore;
+  const span = `${rating} now, from ${first.ratingBefore} over ${sessions(rated.length)}`;
+  if (rated.length < 2) return `Rating ${span}; complete another Assessment to see a trend.`;
+  if (d >= 10) return `Yes: ${span}.`;
+  if (d <= -10) return `No, falling: ${span}.`;
+  return `Holding steady: ${span}.`;
+}
+
+/** AI-assist over- and under-trust (SPEC §9.4): an insight, not part of the score. */
+export function trustAnswer(t: AiTrustMetrics): string {
+  if (t.shown === 0) return 'No AI suggestion shown yet: select a track with an AI chip in a run.';
+  const parts: string[] = [];
+  if (t.overTrust !== null)
+    parts.push(`accepted ${t.acceptedWrong} of ${t.shownWrong} wrong suggestions`);
+  if (t.underTrust !== null)
+    parts.push(`rejected ${t.rejectedCorrect} of ${t.shownCorrect} correct ones`);
+  const over = t.overTrust ?? 0;
+  const under = t.underTrust ?? 0;
+  const verdict =
+    over >= 0.5
+      ? 'Over-trusting'
+      : under >= 0.5
+        ? 'Under-trusting'
+        : over === 0 && under === 0
+          ? 'Calibrated'
+          : 'Mostly calibrated';
+  return `${verdict}: ${parts.join(', ')}. Check the camera before you accept.`;
 }
 
 export function mistakesAnswer(mistakes: readonly MistakeItem[], total: number): string {
