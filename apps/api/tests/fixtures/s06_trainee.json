@@ -95,11 +95,21 @@
   "seq": 9
  },
  {
+  "tMs": 94050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T001",
+  "payload": {
+   "suggestedClass": "CIVILIAN_HOBBY",
+   "confidence": 0.62
+  },
+  "seq": 10
+ },
+ {
   "type": "MARKED_DETECTED",
   "trackId": "T001",
   "payload": {},
   "tMs": 94050,
-  "seq": 10
+  "seq": 11
  },
  {
   "type": "CLASSIFIED",
@@ -108,7 +118,7 @@
    "class": "CIVILIAN_HOBBY"
   },
   "tMs": 94050,
-  "seq": 11
+  "seq": 12
  },
  {
   "type": "AFFILIATION_SET",
@@ -117,14 +127,14 @@
    "affiliation": "NEUTRAL"
   },
   "tMs": 94050,
-  "seq": 12
+  "seq": 13
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T001",
   "payload": {},
   "tMs": 94050,
-  "seq": 13
+  "seq": 14
  },
  {
   "type": "CAMERA_SLEWED",
@@ -136,7 +146,7 @@
    "mode": "DAY"
   },
   "tMs": 94050,
-  "seq": 14
+  "seq": 15
  },
  {
   "type": "REPORT_SUBMITTED",
@@ -158,13 +168,13 @@
    "tMs": 96000
   },
   "tMs": 96050,
-  "seq": 15
+  "seq": 16
  },
  {
   "tMs": 96050,
   "type": "REPORT_TRUTH",
   "payload": {
-   "reportSeq": 15,
+   "reportSeq": 16,
    "contacts": [
     {
      "contactId": "c04",
@@ -177,7 +187,7 @@
     }
    ]
   },
-  "seq": 16
+  "seq": 17
  },
  {
   "type": "CAMERA_SLEWED",
@@ -188,7 +198,7 @@
    "mode": "DAY"
   },
   "tMs": 100000,
-  "seq": 17
+  "seq": 18
  },
  {
   "type": "CAMERA_SLEWED",
@@ -199,7 +209,7 @@
    "mode": "DAY"
   },
   "tMs": 120000,
-  "seq": 18
+  "seq": 19
  },
  {
   "type": "CAMERA_SLEWED",
@@ -210,14 +220,14 @@
    "mode": "DAY"
   },
   "tMs": 140000,
-  "seq": 19
+  "seq": 20
  },
  {
   "tMs": 150000,
   "type": "CONTACT_SPAWNED",
   "contactId": "c02",
   "payload": {},
-  "seq": 20
+  "seq": 21
  },
  {
   "tMs": 154000,
@@ -230,21 +240,31 @@
    "rangeM": 1765.7437288311112,
    "bearingDeg": 331.5355609234024
   },
-  "seq": 21
+  "seq": 22
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T002",
   "payload": {},
   "tMs": 154050,
-  "seq": 22
+  "seq": 23
+ },
+ {
+  "tMs": 154050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T002",
+  "payload": {
+   "suggestedClass": "CIVILIAN_HOBBY",
+   "confidence": 0.83
+  },
+  "seq": 24
  },
  {
   "type": "MARKED_DETECTED",
   "trackId": "T002",
   "payload": {},
   "tMs": 154050,
-  "seq": 23
+  "seq": 25
  },
  {
   "type": "CLASSIFIED",
@@ -253,7 +273,7 @@
    "class": "CIVILIAN_HOBBY"
   },
   "tMs": 154050,
-  "seq": 24
+  "seq": 26
  },
  {
   "type": "AFFILIATION_SET",
@@ -262,14 +282,14 @@
    "affiliation": "NEUTRAL"
   },
   "tMs": 154050,
-  "seq": 25
+  "seq": 27
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T002",
   "payload": {},
   "tMs": 154050,
-  "seq": 26
+  "seq": 28
  },
  {
   "type": "CAMERA_SLEWED",
@@ -281,42 +301,42 @@
    "mode": "DAY"
   },
   "tMs": 154050,
-  "seq": 27
+  "seq": 29
  },
  {
   "tMs": 154900,
   "type": "CONTACT_SPAWNED",
   "contactId": "c05",
   "payload": {},
-  "seq": 28
+  "seq": 30
  },
  {
   "tMs": 154900,
   "type": "CONTACT_SPAWNED",
   "contactId": "c06",
   "payload": {},
-  "seq": 29
+  "seq": 31
  },
  {
   "tMs": 154900,
   "type": "CONTACT_SPAWNED",
   "contactId": "c07",
   "payload": {},
-  "seq": 30
+  "seq": 32
  },
  {
   "tMs": 154900,
   "type": "CONTACT_SPAWNED",
   "contactId": "c08",
   "payload": {},
-  "seq": 31
+  "seq": 33
  },
  {
   "tMs": 154900,
   "type": "CONTACT_SPAWNED",
   "contactId": "c09",
   "payload": {},
-  "seq": 32
+  "seq": 34
  },
  {
   "type": "REPORT_SUBMITTED",
@@ -338,13 +358,13 @@
    "tMs": 156000
   },
   "tMs": 156050,
-  "seq": 33
+  "seq": 35
  },
  {
   "tMs": 156050,
   "type": "REPORT_TRUTH",
   "payload": {
-   "reportSeq": 33,
+   "reportSeq": 35,
    "contacts": [
     {
      "contactId": "c02",
@@ -357,7 +377,7 @@
     }
    ]
   },
-  "seq": 34
+  "seq": 36
  },
  {
   "tMs": 158000,
@@ -370,21 +390,31 @@
    "rangeM": 3050.9110321714343,
    "bearingDeg": 346.1019507555494
   },
-  "seq": 35
+  "seq": 37
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T003",
   "payload": {},
   "tMs": 158050,
-  "seq": 36
+  "seq": 38
+ },
+ {
+  "tMs": 158050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T003",
+  "payload": {
+   "suggestedClass": "QUAD_SMALL",
+   "confidence": 0.75
+  },
+  "seq": 39
  },
  {
   "type": "MARKED_DETECTED",
   "trackId": "T003",
   "payload": {},
   "tMs": 158050,
-  "seq": 37
+  "seq": 40
  },
  {
   "type": "CLASSIFIED",
@@ -393,7 +423,7 @@
    "class": "QUAD_SMALL"
   },
   "tMs": 158050,
-  "seq": 38
+  "seq": 41
  },
  {
   "type": "AFFILIATION_SET",
@@ -402,14 +432,14 @@
    "affiliation": "HOSTILE"
   },
   "tMs": 158050,
-  "seq": 39
+  "seq": 42
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T003",
   "payload": {},
   "tMs": 158050,
-  "seq": 40
+  "seq": 43
  },
  {
   "type": "CAMERA_SLEWED",
@@ -421,7 +451,7 @@
    "mode": "DAY"
   },
   "tMs": 158050,
-  "seq": 41
+  "seq": 44
  },
  {
   "type": "CAMERA_SLEWED",
@@ -432,7 +462,7 @@
    "mode": "DAY"
   },
   "tMs": 160000,
-  "seq": 42
+  "seq": 45
  },
  {
   "tMs": 160000,
@@ -445,7 +475,7 @@
    "rangeM": 2136.0842322407516,
    "bearingDeg": 97.09612360510633
   },
-  "seq": 43
+  "seq": 46
  },
  {
   "tMs": 160000,
@@ -458,7 +488,7 @@
    "rangeM": 2139.3588000805726,
    "bearingDeg": 94.38144449363153
   },
-  "seq": 44
+  "seq": 47
  },
  {
   "tMs": 160000,
@@ -471,7 +501,7 @@
    "rangeM": 2110.3162048241356,
    "bearingDeg": 94.8249855989514
   },
-  "seq": 45
+  "seq": 48
  },
  {
   "tMs": 160000,
@@ -484,57 +514,35 @@
    "rangeM": 2151.6726751697784,
    "bearingDeg": 94.92715346522338
   },
-  "seq": 46
+  "seq": 49
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T004",
   "payload": {},
-  "tMs": 160050,
-  "seq": 47
- },
- {
-  "type": "MARKED_DETECTED",
-  "trackId": "T004",
-  "payload": {},
-  "tMs": 160050,
-  "seq": 48
- },
- {
-  "type": "CLASSIFIED",
-  "trackId": "T004",
-  "payload": {
-   "class": "BIRD_LARGE"
-  },
-  "tMs": 160050,
-  "seq": 49
- },
- {
-  "type": "AFFILIATION_SET",
-  "trackId": "T004",
-  "payload": {
-   "affiliation": "NEUTRAL"
-  },
   "tMs": 160050,
   "seq": 50
  },
  {
-  "type": "TRACK_SELECTED",
-  "trackId": "T005",
-  "payload": {},
   "tMs": 160050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T004",
+  "payload": {
+   "suggestedClass": "BIRD_LARGE",
+   "confidence": 0.68
+  },
   "seq": 51
  },
  {
   "type": "MARKED_DETECTED",
-  "trackId": "T005",
+  "trackId": "T004",
   "payload": {},
   "tMs": 160050,
   "seq": 52
  },
  {
   "type": "CLASSIFIED",
-  "trackId": "T005",
+  "trackId": "T004",
   "payload": {
    "class": "BIRD_LARGE"
   },
@@ -543,7 +551,7 @@
  },
  {
   "type": "AFFILIATION_SET",
-  "trackId": "T005",
+  "trackId": "T004",
   "payload": {
    "affiliation": "NEUTRAL"
   },
@@ -552,17 +560,69 @@
  },
  {
   "type": "TRACK_SELECTED",
-  "trackId": "T006",
+  "trackId": "T005",
   "payload": {},
   "tMs": 160050,
   "seq": 55
+ },
+ {
+  "tMs": 160050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T005",
+  "payload": {
+   "suggestedClass": "QUAD_SMALL",
+   "confidence": 0.54
+  },
+  "seq": 56
+ },
+ {
+  "type": "MARKED_DETECTED",
+  "trackId": "T005",
+  "payload": {},
+  "tMs": 160050,
+  "seq": 57
+ },
+ {
+  "type": "CLASSIFIED",
+  "trackId": "T005",
+  "payload": {
+   "class": "BIRD_LARGE"
+  },
+  "tMs": 160050,
+  "seq": 58
+ },
+ {
+  "type": "AFFILIATION_SET",
+  "trackId": "T005",
+  "payload": {
+   "affiliation": "NEUTRAL"
+  },
+  "tMs": 160050,
+  "seq": 59
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T006",
+  "payload": {},
+  "tMs": 160050,
+  "seq": 60
+ },
+ {
+  "tMs": 160050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T006",
+  "payload": {
+   "suggestedClass": "BIRD_LARGE",
+   "confidence": 0.77
+  },
+  "seq": 61
  },
  {
   "type": "MARKED_DETECTED",
   "trackId": "T006",
   "payload": {},
   "tMs": 160050,
-  "seq": 56
+  "seq": 62
  },
  {
   "type": "CLASSIFIED",
@@ -571,7 +631,7 @@
    "class": "BIRD_LARGE"
   },
   "tMs": 160050,
-  "seq": 57
+  "seq": 63
  },
  {
   "type": "AFFILIATION_SET",
@@ -580,21 +640,31 @@
    "affiliation": "NEUTRAL"
   },
   "tMs": 160050,
-  "seq": 58
+  "seq": 64
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T007",
   "payload": {},
   "tMs": 160050,
-  "seq": 59
+  "seq": 65
+ },
+ {
+  "tMs": 160050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T007",
+  "payload": {
+   "suggestedClass": "BIRD_LARGE",
+   "confidence": 0.94
+  },
+  "seq": 66
  },
  {
   "type": "MARKED_DETECTED",
   "trackId": "T007",
   "payload": {},
   "tMs": 160050,
-  "seq": 60
+  "seq": 67
  },
  {
   "type": "CLASSIFIED",
@@ -603,7 +673,7 @@
    "class": "BIRD_LARGE"
   },
   "tMs": 160050,
-  "seq": 61
+  "seq": 68
  },
  {
   "type": "AFFILIATION_SET",
@@ -612,7 +682,7 @@
    "affiliation": "NEUTRAL"
   },
   "tMs": 160050,
-  "seq": 62
+  "seq": 69
  },
  {
   "type": "REPORT_SUBMITTED",
@@ -634,13 +704,13 @@
    "tMs": 160000
   },
   "tMs": 160050,
-  "seq": 63
+  "seq": 70
  },
  {
   "tMs": 160050,
   "type": "REPORT_TRUTH",
   "payload": {
-   "reportSeq": 63,
+   "reportSeq": 70,
    "contacts": [
     {
      "contactId": "c01",
@@ -653,14 +723,14 @@
     }
    ]
   },
-  "seq": 64
+  "seq": 71
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T004",
   "payload": {},
   "tMs": 160050,
-  "seq": 65
+  "seq": 72
  },
  {
   "type": "CAMERA_SLEWED",
@@ -672,14 +742,14 @@
    "mode": "DAY"
   },
   "tMs": 160050,
-  "seq": 66
+  "seq": 73
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T005",
   "payload": {},
   "tMs": 160050,
-  "seq": 67
+  "seq": 74
  },
  {
   "type": "CAMERA_SLEWED",
@@ -691,14 +761,14 @@
    "mode": "DAY"
   },
   "tMs": 160050,
-  "seq": 68
+  "seq": 75
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T006",
   "payload": {},
   "tMs": 160050,
-  "seq": 69
+  "seq": 76
  },
  {
   "type": "CAMERA_SLEWED",
@@ -710,14 +780,14 @@
    "mode": "DAY"
   },
   "tMs": 160050,
-  "seq": 70
+  "seq": 77
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T007",
   "payload": {},
   "tMs": 160050,
-  "seq": 71
+  "seq": 78
  },
  {
   "type": "CAMERA_SLEWED",
@@ -729,7 +799,7 @@
    "mode": "DAY"
   },
   "tMs": 160050,
-  "seq": 72
+  "seq": 79
  },
  {
   "tMs": 160050,
@@ -740,7 +810,7 @@
    "level": "DETECT",
    "rangeM": 2159.4698979303353
   },
-  "seq": 73
+  "seq": 80
  },
  {
   "tMs": 160050,
@@ -751,7 +821,7 @@
    "level": "DETECT",
    "rangeM": 2135.3747260561663
   },
-  "seq": 74
+  "seq": 81
  },
  {
   "tMs": 160050,
@@ -762,7 +832,7 @@
    "level": "DETECT",
    "rangeM": 2114.7397016009286
   },
-  "seq": 75
+  "seq": 82
  },
  {
   "tMs": 160050,
@@ -773,7 +843,7 @@
    "level": "DETECT",
    "rangeM": 2147.7987314225315
   },
-  "seq": 76
+  "seq": 83
  },
  {
   "tMs": 160050,
@@ -783,7 +853,7 @@
    "level": "DETECT",
    "rangeM": 2138.2912622948256
   },
-  "seq": 77
+  "seq": 84
  },
  {
   "tMs": 162000,
@@ -796,21 +866,31 @@
    "rangeM": 2149.3148179446703,
    "bearingDeg": 95.01317992705806
   },
-  "seq": 78
+  "seq": 85
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T008",
   "payload": {},
   "tMs": 162050,
-  "seq": 79
+  "seq": 86
+ },
+ {
+  "tMs": 162050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T008",
+  "payload": {
+   "suggestedClass": "BIRD_LARGE",
+   "confidence": 0.84
+  },
+  "seq": 87
  },
  {
   "type": "MARKED_DETECTED",
   "trackId": "T008",
   "payload": {},
   "tMs": 162050,
-  "seq": 80
+  "seq": 88
  },
  {
   "type": "CLASSIFIED",
@@ -819,7 +899,7 @@
    "class": "BIRD_LARGE"
   },
   "tMs": 162050,
-  "seq": 81
+  "seq": 89
  },
  {
   "type": "AFFILIATION_SET",
@@ -828,7 +908,7 @@
    "affiliation": "NEUTRAL"
   },
   "tMs": 162050,
-  "seq": 82
+  "seq": 90
  },
  {
   "type": "REPORT_SUBMITTED",
@@ -850,13 +930,13 @@
    "tMs": 162000
   },
   "tMs": 162050,
-  "seq": 83
+  "seq": 91
  },
  {
   "tMs": 162050,
   "type": "REPORT_TRUTH",
   "payload": {
-   "reportSeq": 83,
+   "reportSeq": 91,
    "contacts": [
     {
      "contactId": "c05",
@@ -869,7 +949,7 @@
     }
    ]
   },
-  "seq": 84
+  "seq": 92
  },
  {
   "type": "REPORT_SUBMITTED",
@@ -891,13 +971,13 @@
    "tMs": 162000
   },
   "tMs": 162050,
-  "seq": 85
+  "seq": 93
  },
  {
   "tMs": 162050,
   "type": "REPORT_TRUTH",
   "payload": {
-   "reportSeq": 85,
+   "reportSeq": 93,
    "contacts": [
     {
      "contactId": "c06",
@@ -910,7 +990,7 @@
     }
    ]
   },
-  "seq": 86
+  "seq": 94
  },
  {
   "type": "REPORT_SUBMITTED",
@@ -932,13 +1012,13 @@
    "tMs": 162000
   },
   "tMs": 162050,
-  "seq": 87
+  "seq": 95
  },
  {
   "tMs": 162050,
   "type": "REPORT_TRUTH",
   "payload": {
-   "reportSeq": 87,
+   "reportSeq": 95,
    "contacts": [
     {
      "contactId": "c07",
@@ -951,7 +1031,7 @@
     }
    ]
   },
-  "seq": 88
+  "seq": 96
  },
  {
   "type": "REPORT_SUBMITTED",
@@ -973,13 +1053,13 @@
    "tMs": 162000
   },
   "tMs": 162050,
-  "seq": 89
+  "seq": 97
  },
  {
   "tMs": 162050,
   "type": "REPORT_TRUTH",
   "payload": {
-   "reportSeq": 89,
+   "reportSeq": 97,
    "contacts": [
     {
      "contactId": "c08",
@@ -992,14 +1072,14 @@
     }
    ]
   },
-  "seq": 90
+  "seq": 98
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T008",
   "payload": {},
   "tMs": 162050,
-  "seq": 91
+  "seq": 99
  },
  {
   "type": "CAMERA_SLEWED",
@@ -1011,7 +1091,7 @@
    "mode": "DAY"
   },
   "tMs": 162050,
-  "seq": 92
+  "seq": 100
  },
  {
   "type": "REPORT_SUBMITTED",
@@ -1033,13 +1113,13 @@
    "tMs": 164000
   },
   "tMs": 164050,
-  "seq": 93
+  "seq": 101
  },
  {
   "tMs": 164050,
   "type": "REPORT_TRUTH",
   "payload": {
-   "reportSeq": 93,
+   "reportSeq": 101,
    "contacts": [
     {
      "contactId": "c09",
@@ -1052,7 +1132,7 @@
     }
    ]
   },
-  "seq": 94
+  "seq": 102
  },
  {
   "tMs": 176000,
@@ -1065,21 +1145,31 @@
    "rangeM": 3453.3968818704593,
    "bearingDeg": 73.93593234339646
   },
-  "seq": 95
+  "seq": 103
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T009",
   "payload": {},
   "tMs": 176050,
-  "seq": 96
+  "seq": 104
+ },
+ {
+  "tMs": 176050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T009",
+  "payload": {
+   "suggestedClass": "CIVILIAN_HOBBY",
+   "confidence": 0.85
+  },
+  "seq": 105
  },
  {
   "type": "MARKED_DETECTED",
   "trackId": "T009",
   "payload": {},
   "tMs": 176050,
-  "seq": 97
+  "seq": 106
  },
  {
   "type": "CLASSIFIED",
@@ -1088,7 +1178,7 @@
    "class": "CIVILIAN_HOBBY"
   },
   "tMs": 176050,
-  "seq": 98
+  "seq": 107
  },
  {
   "type": "AFFILIATION_SET",
@@ -1097,14 +1187,14 @@
    "affiliation": "NEUTRAL"
   },
   "tMs": 176050,
-  "seq": 99
+  "seq": 108
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T009",
   "payload": {},
   "tMs": 176050,
-  "seq": 100
+  "seq": 109
  },
  {
   "type": "CAMERA_SLEWED",
@@ -1116,7 +1206,7 @@
    "mode": "DAY"
   },
   "tMs": 176050,
-  "seq": 101
+  "seq": 110
  },
  {
   "type": "CAMERA_SLEWED",
@@ -1127,7 +1217,7 @@
    "mode": "DAY"
   },
   "tMs": 180000,
-  "seq": 102
+  "seq": 111
  },
  {
   "type": "REPORT_SUBMITTED",
@@ -1149,13 +1239,13 @@
    "tMs": 180000
   },
   "tMs": 180050,
-  "seq": 103
+  "seq": 112
  },
  {
   "tMs": 180050,
   "type": "REPORT_TRUTH",
   "payload": {
-   "reportSeq": 103,
+   "reportSeq": 112,
    "contacts": [
     {
      "contactId": "c03",
@@ -1168,7 +1258,7 @@
     }
    ]
   },
-  "seq": 104
+  "seq": 113
  },
  {
   "type": "CAMERA_SLEWED",
@@ -1179,7 +1269,7 @@
    "mode": "DAY"
   },
   "tMs": 200000,
-  "seq": 105
+  "seq": 114
  },
  {
   "tMs": 200000,
@@ -1189,7 +1279,7 @@
   "payload": {
    "reason": "MISSES"
   },
-  "seq": 106
+  "seq": 115
  },
  {
   "type": "CAMERA_SLEWED",
@@ -1200,7 +1290,7 @@
    "mode": "DAY"
   },
   "tMs": 220000,
-  "seq": 107
+  "seq": 116
  },
  {
   "type": "RESPONSE_ORDERED",
@@ -1210,7 +1300,7 @@
    "effectorId": "jam1"
   },
   "tMs": 237250,
-  "seq": 108
+  "seq": 117
  },
  {
   "tMs": 237250,
@@ -1221,7 +1311,7 @@
    "response": "EW_JAM",
    "result": "NEUTRALISED"
   },
-  "seq": 109
+  "seq": 118
  },
  {
   "tMs": 237250,
@@ -1230,7 +1320,7 @@
   "payload": {
    "by": "EW_JAM"
   },
-  "seq": 110
+  "seq": 119
  },
  {
   "tMs": 237250,
@@ -1238,6 +1328,6 @@
   "payload": {
    "reason": "ALL_RESOLVED"
   },
-  "seq": 111
+  "seq": 120
  }
 ]

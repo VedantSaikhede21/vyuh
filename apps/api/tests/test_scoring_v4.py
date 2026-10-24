@@ -455,6 +455,8 @@ def test_v1_to_v3_rescore_byte_identical_on_every_fixture_log() -> None:
     for key, expected in golden.items():
         log, tree = key.split(":")
         events = json.loads((FIXTURES / f"{log}.json").read_text(encoding="utf-8"))
+        # The goldens predate SIM_VERSION 6: those logs had no AI-assist events.
+        events = [e for e in events if not e["type"].startswith("AI_SUGGESTION_")]
         code = {"s01": "S01", "s14": "S14", "s04": "S04", "s06": "S06"}[log[:3]]
         score = score_session(scenario(code, scoringTreeId=tree), events)
         dumped = score.model_dump(mode="json")

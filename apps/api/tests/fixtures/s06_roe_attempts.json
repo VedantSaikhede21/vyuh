@@ -71,11 +71,21 @@
   "seq": 7
  },
  {
+  "tMs": 94050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T001",
+  "payload": {
+   "suggestedClass": "CIVILIAN_HOBBY",
+   "confidence": 0.62
+  },
+  "seq": 8
+ },
+ {
   "type": "MARKED_DETECTED",
   "trackId": "T001",
   "payload": {},
   "tMs": 94050,
-  "seq": 8
+  "seq": 9
  },
  {
   "type": "CLASSIFIED",
@@ -84,7 +94,7 @@
    "class": "CIVILIAN_HOBBY"
   },
   "tMs": 94050,
-  "seq": 9
+  "seq": 10
  },
  {
   "type": "AFFILIATION_SET",
@@ -93,14 +103,14 @@
    "affiliation": "NEUTRAL"
   },
   "tMs": 94050,
-  "seq": 10
+  "seq": 11
  },
  {
   "tMs": 150000,
   "type": "CONTACT_SPAWNED",
   "contactId": "c02",
   "payload": {},
-  "seq": 11
+  "seq": 12
  },
  {
   "tMs": 154000,
@@ -113,7 +123,7 @@
    "rangeM": 1765.7437288311112,
    "bearingDeg": 331.5355609234024
   },
-  "seq": 12
+  "seq": 13
  },
  {
   "type": "RESPONSE_ORDERED",
@@ -122,7 +132,7 @@
    "response": "INTERCEPT"
   },
   "tMs": 154050,
-  "seq": 13
+  "seq": 14
  },
  {
   "tMs": 154050,
@@ -133,21 +143,31 @@
    "response": "INTERCEPT",
    "result": "BLOCKED_BY_ROE"
   },
-  "seq": 14
+  "seq": 15
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T002",
   "payload": {},
   "tMs": 154050,
-  "seq": 15
+  "seq": 16
+ },
+ {
+  "tMs": 154050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T002",
+  "payload": {
+   "suggestedClass": "CIVILIAN_HOBBY",
+   "confidence": 0.83
+  },
+  "seq": 17
  },
  {
   "type": "MARKED_DETECTED",
   "trackId": "T002",
   "payload": {},
   "tMs": 154050,
-  "seq": 16
+  "seq": 18
  },
  {
   "type": "CLASSIFIED",
@@ -156,7 +176,7 @@
    "class": "CIVILIAN_HOBBY"
   },
   "tMs": 154050,
-  "seq": 17
+  "seq": 19
  },
  {
   "type": "AFFILIATION_SET",
@@ -165,42 +185,42 @@
    "affiliation": "NEUTRAL"
   },
   "tMs": 154050,
-  "seq": 18
+  "seq": 20
  },
  {
   "tMs": 154900,
   "type": "CONTACT_SPAWNED",
   "contactId": "c05",
   "payload": {},
-  "seq": 19
+  "seq": 21
  },
  {
   "tMs": 154900,
   "type": "CONTACT_SPAWNED",
   "contactId": "c06",
   "payload": {},
-  "seq": 20
+  "seq": 22
  },
  {
   "tMs": 154900,
   "type": "CONTACT_SPAWNED",
   "contactId": "c07",
   "payload": {},
-  "seq": 21
+  "seq": 23
  },
  {
   "tMs": 154900,
   "type": "CONTACT_SPAWNED",
   "contactId": "c08",
   "payload": {},
-  "seq": 22
+  "seq": 24
  },
  {
   "tMs": 154900,
   "type": "CONTACT_SPAWNED",
   "contactId": "c09",
   "payload": {},
-  "seq": 23
+  "seq": 25
  },
  {
   "tMs": 158000,
@@ -213,7 +233,7 @@
    "rangeM": 3050.9110321714343,
    "bearingDeg": 346.1019507555494
   },
-  "seq": 24
+  "seq": 26
  },
  {
   "type": "RESPONSE_ORDERED",
@@ -222,7 +242,7 @@
    "response": "INTERCEPT"
   },
   "tMs": 158050,
-  "seq": 25
+  "seq": 27
  },
  {
   "tMs": 158050,
@@ -233,7 +253,7 @@
    "response": "INTERCEPT",
    "result": "BLOCKED_BY_ROE"
   },
-  "seq": 26
+  "seq": 28
  },
  {
   "type": "CLASSIFIED",
@@ -242,7 +262,7 @@
    "class": "QUAD_SMALL"
   },
   "tMs": 158100,
-  "seq": 27
+  "seq": 29
  },
  {
   "type": "AFFILIATION_SET",
@@ -251,7 +271,7 @@
    "affiliation": "HOSTILE"
   },
   "tMs": 158100,
-  "seq": 28
+  "seq": 30
  },
  {
   "type": "RESPONSE_ORDERED",
@@ -260,7 +280,7 @@
    "response": "INTERCEPT"
   },
   "tMs": 158100,
-  "seq": 29
+  "seq": 31
  },
  {
   "tMs": 158100,
@@ -271,7 +291,7 @@
    "response": "INTERCEPT",
    "result": "BLOCKED_NO_KINETIC"
   },
-  "seq": 30
+  "seq": 32
  },
  {
   "tMs": 160000,
@@ -284,7 +304,7 @@
    "rangeM": 2136.0842322407516,
    "bearingDeg": 97.09612360510633
   },
-  "seq": 31
+  "seq": 33
  },
  {
   "tMs": 160000,
@@ -297,7 +317,7 @@
    "rangeM": 2139.3588000805726,
    "bearingDeg": 94.38144449363153
   },
-  "seq": 32
+  "seq": 34
  },
  {
   "tMs": 160000,
@@ -310,7 +330,7 @@
    "rangeM": 2110.3162048241356,
    "bearingDeg": 94.8249855989514
   },
-  "seq": 33
+  "seq": 35
  },
  {
   "tMs": 160000,
@@ -323,7 +343,7 @@
    "rangeM": 2151.6726751697784,
    "bearingDeg": 94.92715346522338
   },
-  "seq": 34
+  "seq": 36
  },
  {
   "type": "RESPONSE_ORDERED",
@@ -332,7 +352,7 @@
    "response": "INTERCEPT"
   },
   "tMs": 160050,
-  "seq": 35
+  "seq": 37
  },
  {
   "tMs": 160050,
@@ -343,7 +363,7 @@
    "response": "INTERCEPT",
    "result": "BLOCKED_BY_ROE"
   },
-  "seq": 36
+  "seq": 38
  },
  {
   "type": "RESPONSE_ORDERED",
@@ -352,7 +372,7 @@
    "response": "INTERCEPT"
   },
   "tMs": 160050,
-  "seq": 37
+  "seq": 39
  },
  {
   "tMs": 160050,
@@ -363,7 +383,7 @@
    "response": "INTERCEPT",
    "result": "BLOCKED_BY_ROE"
   },
-  "seq": 38
+  "seq": 40
  },
  {
   "type": "RESPONSE_ORDERED",
@@ -372,7 +392,7 @@
    "response": "INTERCEPT"
   },
   "tMs": 160050,
-  "seq": 39
+  "seq": 41
  },
  {
   "tMs": 160050,
@@ -383,7 +403,7 @@
    "response": "INTERCEPT",
    "result": "BLOCKED_BY_ROE"
   },
-  "seq": 40
+  "seq": 42
  },
  {
   "type": "RESPONSE_ORDERED",
@@ -392,7 +412,7 @@
    "response": "INTERCEPT"
   },
   "tMs": 160050,
-  "seq": 41
+  "seq": 43
  },
  {
   "tMs": 160050,
@@ -403,89 +423,77 @@
    "response": "INTERCEPT",
    "result": "BLOCKED_BY_ROE"
   },
-  "seq": 42
+  "seq": 44
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T004",
   "payload": {},
-  "tMs": 160050,
-  "seq": 43
- },
- {
-  "type": "MARKED_DETECTED",
-  "trackId": "T004",
-  "payload": {},
-  "tMs": 160050,
-  "seq": 44
- },
- {
-  "type": "CLASSIFIED",
-  "trackId": "T004",
-  "payload": {
-   "class": "BIRD_LARGE"
-  },
   "tMs": 160050,
   "seq": 45
  },
  {
-  "type": "AFFILIATION_SET",
+  "tMs": 160050,
+  "type": "AI_SUGGESTION_SHOWN",
   "trackId": "T004",
   "payload": {
-   "affiliation": "NEUTRAL"
+   "suggestedClass": "BIRD_LARGE",
+   "confidence": 0.68
   },
-  "tMs": 160050,
   "seq": 46
  },
  {
-  "type": "TRACK_SELECTED",
-  "trackId": "T005",
+  "type": "MARKED_DETECTED",
+  "trackId": "T004",
   "payload": {},
   "tMs": 160050,
   "seq": 47
  },
  {
-  "type": "MARKED_DETECTED",
-  "trackId": "T005",
-  "payload": {},
+  "type": "CLASSIFIED",
+  "trackId": "T004",
+  "payload": {
+   "class": "BIRD_LARGE"
+  },
   "tMs": 160050,
   "seq": 48
  },
  {
-  "type": "CLASSIFIED",
-  "trackId": "T005",
+  "type": "AFFILIATION_SET",
+  "trackId": "T004",
   "payload": {
-   "class": "BIRD_LARGE"
+   "affiliation": "NEUTRAL"
   },
   "tMs": 160050,
   "seq": 49
  },
  {
-  "type": "AFFILIATION_SET",
+  "type": "TRACK_SELECTED",
   "trackId": "T005",
-  "payload": {
-   "affiliation": "NEUTRAL"
-  },
+  "payload": {},
   "tMs": 160050,
   "seq": 50
  },
  {
-  "type": "TRACK_SELECTED",
-  "trackId": "T006",
-  "payload": {},
   "tMs": 160050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T005",
+  "payload": {
+   "suggestedClass": "QUAD_SMALL",
+   "confidence": 0.54
+  },
   "seq": 51
  },
  {
   "type": "MARKED_DETECTED",
-  "trackId": "T006",
+  "trackId": "T005",
   "payload": {},
   "tMs": 160050,
   "seq": 52
  },
  {
   "type": "CLASSIFIED",
-  "trackId": "T006",
+  "trackId": "T005",
   "payload": {
    "class": "BIRD_LARGE"
   },
@@ -494,7 +502,7 @@
  },
  {
   "type": "AFFILIATION_SET",
-  "trackId": "T006",
+  "trackId": "T005",
   "payload": {
    "affiliation": "NEUTRAL"
   },
@@ -503,17 +511,69 @@
  },
  {
   "type": "TRACK_SELECTED",
-  "trackId": "T007",
+  "trackId": "T006",
   "payload": {},
   "tMs": 160050,
   "seq": 55
+ },
+ {
+  "tMs": 160050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T006",
+  "payload": {
+   "suggestedClass": "BIRD_LARGE",
+   "confidence": 0.77
+  },
+  "seq": 56
+ },
+ {
+  "type": "MARKED_DETECTED",
+  "trackId": "T006",
+  "payload": {},
+  "tMs": 160050,
+  "seq": 57
+ },
+ {
+  "type": "CLASSIFIED",
+  "trackId": "T006",
+  "payload": {
+   "class": "BIRD_LARGE"
+  },
+  "tMs": 160050,
+  "seq": 58
+ },
+ {
+  "type": "AFFILIATION_SET",
+  "trackId": "T006",
+  "payload": {
+   "affiliation": "NEUTRAL"
+  },
+  "tMs": 160050,
+  "seq": 59
+ },
+ {
+  "type": "TRACK_SELECTED",
+  "trackId": "T007",
+  "payload": {},
+  "tMs": 160050,
+  "seq": 60
+ },
+ {
+  "tMs": 160050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T007",
+  "payload": {
+   "suggestedClass": "BIRD_LARGE",
+   "confidence": 0.94
+  },
+  "seq": 61
  },
  {
   "type": "MARKED_DETECTED",
   "trackId": "T007",
   "payload": {},
   "tMs": 160050,
-  "seq": 56
+  "seq": 62
  },
  {
   "type": "CLASSIFIED",
@@ -522,7 +582,7 @@
    "class": "BIRD_LARGE"
   },
   "tMs": 160050,
-  "seq": 57
+  "seq": 63
  },
  {
   "type": "AFFILIATION_SET",
@@ -531,7 +591,7 @@
    "affiliation": "NEUTRAL"
   },
   "tMs": 160050,
-  "seq": 58
+  "seq": 64
  },
  {
   "tMs": 162000,
@@ -544,7 +604,7 @@
    "rangeM": 2149.3148179446703,
    "bearingDeg": 95.01317992705806
   },
-  "seq": 59
+  "seq": 65
  },
  {
   "type": "RESPONSE_ORDERED",
@@ -553,7 +613,7 @@
    "response": "INTERCEPT"
   },
   "tMs": 162050,
-  "seq": 60
+  "seq": 66
  },
  {
   "tMs": 162050,
@@ -564,21 +624,31 @@
    "response": "INTERCEPT",
    "result": "BLOCKED_BY_ROE"
   },
-  "seq": 61
+  "seq": 67
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T008",
   "payload": {},
   "tMs": 162050,
-  "seq": 62
+  "seq": 68
+ },
+ {
+  "tMs": 162050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T008",
+  "payload": {
+   "suggestedClass": "BIRD_LARGE",
+   "confidence": 0.84
+  },
+  "seq": 69
  },
  {
   "type": "MARKED_DETECTED",
   "trackId": "T008",
   "payload": {},
   "tMs": 162050,
-  "seq": 63
+  "seq": 70
  },
  {
   "type": "CLASSIFIED",
@@ -587,7 +657,7 @@
    "class": "BIRD_LARGE"
   },
   "tMs": 162050,
-  "seq": 64
+  "seq": 71
  },
  {
   "type": "AFFILIATION_SET",
@@ -596,7 +666,7 @@
    "affiliation": "NEUTRAL"
   },
   "tMs": 162050,
-  "seq": 65
+  "seq": 72
  },
  {
   "tMs": 176000,
@@ -609,7 +679,7 @@
    "rangeM": 3453.3968818704593,
    "bearingDeg": 73.93593234339646
   },
-  "seq": 66
+  "seq": 73
  },
  {
   "type": "RESPONSE_ORDERED",
@@ -618,7 +688,7 @@
    "response": "INTERCEPT"
   },
   "tMs": 176050,
-  "seq": 67
+  "seq": 74
  },
  {
   "tMs": 176050,
@@ -629,21 +699,31 @@
    "response": "INTERCEPT",
    "result": "BLOCKED_BY_ROE"
   },
-  "seq": 68
+  "seq": 75
  },
  {
   "type": "TRACK_SELECTED",
   "trackId": "T009",
   "payload": {},
   "tMs": 176050,
-  "seq": 69
+  "seq": 76
+ },
+ {
+  "tMs": 176050,
+  "type": "AI_SUGGESTION_SHOWN",
+  "trackId": "T009",
+  "payload": {
+   "suggestedClass": "CIVILIAN_HOBBY",
+   "confidence": 0.85
+  },
+  "seq": 77
  },
  {
   "type": "MARKED_DETECTED",
   "trackId": "T009",
   "payload": {},
   "tMs": 176050,
-  "seq": 70
+  "seq": 78
  },
  {
   "type": "CLASSIFIED",
@@ -652,7 +732,7 @@
    "class": "CIVILIAN_HOBBY"
   },
   "tMs": 176050,
-  "seq": 71
+  "seq": 79
  },
  {
   "type": "AFFILIATION_SET",
@@ -661,7 +741,7 @@
    "affiliation": "NEUTRAL"
   },
   "tMs": 176050,
-  "seq": 72
+  "seq": 80
  },
  {
   "tMs": 200000,
@@ -671,7 +751,7 @@
   "payload": {
    "reason": "MISSES"
   },
-  "seq": 73
+  "seq": 81
  },
  {
   "type": "RESPONSE_ORDERED",
@@ -681,7 +761,7 @@
    "effectorId": "jam1"
   },
   "tMs": 237250,
-  "seq": 74
+  "seq": 82
  },
  {
   "tMs": 237250,
@@ -692,7 +772,7 @@
    "response": "EW_JAM",
    "result": "NEUTRALISED"
   },
-  "seq": 75
+  "seq": 83
  },
  {
   "tMs": 237250,
@@ -701,7 +781,7 @@
   "payload": {
    "by": "EW_JAM"
   },
-  "seq": 76
+  "seq": 84
  },
  {
   "tMs": 237250,
@@ -709,6 +789,6 @@
   "payload": {
    "reason": "ALL_RESOLVED"
   },
-  "seq": 77
+  "seq": 85
  }
 ]

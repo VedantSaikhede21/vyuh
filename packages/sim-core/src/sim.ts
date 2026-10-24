@@ -259,6 +259,10 @@ export function createSim(
     camera: { azDeg: 0, elDeg: 0, zoom: 1, mode: 'DAY', lockTrackId: null, trackMode: 'MANUAL' },
   };
   const contactsById = new Map(state.contacts.map((c) => [c.id, c]));
+  /** AI-assist suggestions pre-baked in the scenario (SPEC §13.3), by contact id. */
+  const aiSuggestions = new Map(
+    scenario.contacts.flatMap((c) => (c.aiSuggestion ? [[c.id, c.aiSuggestion] as const] : [])),
+  );
   const flocks = createFlocks([...scenario.contacts].sort(byId), rng);
   for (const f of flocks) {
     for (const id of f.followerIds) {
@@ -290,6 +294,18 @@ export function createSim(
     if (cmd.type === 'REPORT_SUBMITTED') {
       const unknown = cmd.payload.trackIds.find((id) => !tracksById.has(id));
       if (unknown !== undefined) return `Unknown track ${unknown}`;
+    }
+    if (cmd.type === 'AI_SUGGESTION_ACCEPTED' || cmd.type === 'AI_SUGGESTION_REJECTED') {
+      const t = tracksById.get(cmd.trackId);
+      const ai = t?.aiSuggestion;
+      if (!t || !ai || !t.aiShown) return `No AI suggestion shown for ${cmd.trackId}`;
+      if (t.aiDecision !== null) return `AI suggestion for ${cmd.trackId} already answered`;
+      if (
+        ai.suggestedClass !== cmd.payload.suggestedClass ||
+        ai.confidence !== cmd.payload.confidence
+      ) {
+        return `AI suggestion for ${cmd.trackId} does not match`;
+      }
     }
     if (cmd.type === 'RESPONSE_ORDERED') {
       const { response, effectorId } = cmd.payload;
@@ -400,6 +416,16 @@ export function createSim(
     switch (cmd.type) {
       case 'TRACK_SELECTED':
         state.selectedTrackId = cmd.trackId;
+        // First selection shows the AI-assist chip (SIM_VERSION 6).
+        if (track?.aiSuggestion && !track.aiShown) {
+          track.aiShown = true;
+          emit({
+            tMs,
+            type: 'AI_SUGGESTION_SHOWN',
+            trackId: track.id,
+            payload: { ...track.aiSuggestion },
+          });
+        }
         break;
       case 'CAMERA_SLEWED':
         if (state.camera.trackMode === 'TRACK' && cmd.trackId === state.camera.lockTrackId) {
@@ -438,8 +464,14 @@ export function createSim(
           payload: { reportSeq: logged.seq, contacts: reportTruth(cmd.payload.trackIds) },
         });
         break;
+      case 'AI_SUGGESTION_ACCEPTED':
+      case 'AI_SUGGESTION_REJECTED':
+        // Accepting does not classify: the HUD sends its own CLASSIFIED with it.
+        if (track)
+          track.aiDecision = cmd.type === 'AI_SUGGESTION_ACCEPTED' ? 'ACCEPTED' : 'REJECTED';
+        break;
       default:
-        break; // AI_SUGGESTION_*: logged only
+        break;
     }
   }
 
@@ -544,6 +576,9 @@ export function createSim(
               markedDetected: false,
               classifiedAs: null,
               affiliation: 'UNKNOWN',
+              aiSuggestion: aiSuggestions.get(contact.id) ?? null,
+              aiShown: false,
+              aiDecision: null,
             };
             history.trackId = track.id;
             state.tracks.push(track);

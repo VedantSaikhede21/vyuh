@@ -15,7 +15,7 @@ from app.schemas.generated import Scenario
 MAX_EVENTS_PER_SESSION = 20_000
 
 DETECTION_TYPES = frozenset({"SENSOR_TRACK_CREATED", "EO_IDENTIFIABLE"})
-# Trainee events about a track; the track must already exist.
+# Events about a track (trainee commands and AI_SUGGESTION_SHOWN); the track must exist.
 TRACK_COMMAND_TYPES = frozenset(
     {
         "TRACK_SELECTED",
@@ -25,8 +25,11 @@ TRACK_COMMAND_TYPES = frozenset(
         "RESPONSE_ORDERED",
         "AI_SUGGESTION_ACCEPTED",
         "AI_SUGGESTION_REJECTED",
+        "AI_SUGGESTION_SHOWN",
     }
 )
+
+AI_TYPES = frozenset({"AI_SUGGESTION_SHOWN", "AI_SUGGESTION_ACCEPTED", "AI_SUGGESTION_REJECTED"})
 
 # Events whose trackId is optional; when present, the track must already exist.
 OPTIONAL_TRACK_TYPES = frozenset({"CAMERA_SLEWED", "CONTACT_DROPPED"})
@@ -81,6 +84,11 @@ def check_batch(
     last_seq, last_t, ended = state.last_seq, state.last_t_ms, state.ended
     tracks = dict(state.known_tracks)
     pending = state.pending_report
+    suggestions = {
+        c.id: (c.ai_suggestion.suggested_class.value, c.ai_suggestion.confidence)
+        for c in scenario.contacts
+        if c.ai_suggestion is not None
+    }
 
     for ev in events:
         seq, t, kind = ev["seq"], ev["tMs"], ev["type"]
@@ -127,6 +135,12 @@ def check_batch(
             for rule, message in _truth_problems(ev, pending, tracks, spawn):
                 bad(rule, message)
             pending = None
+        if kind in AI_TYPES and track in tracks:
+            # The suggestion must be the one pre-baked for the contact (SPEC §13.3).
+            want = suggestions.get(tracks[track])
+            got = ev.get("payload", {})
+            if want is None or (got.get("suggestedClass"), got.get("confidence")) != want:
+                bad("AI_SUGGESTION_MISMATCH", f"{kind} on {track} is not the scenario's suggestion")
         if kind == "SENSOR_TRACK_CREATED" and track is not None:
             if track in tracks:
                 bad("DUPLICATE_TRACK", f"Track {track} created twice")
