@@ -62,6 +62,8 @@ export function useShortcuts(commands: Commands | null): void {
       else if (k === 's') commands.spoof();
       else if (k === 'i') commands.armIntercept();
       else if (k === 'r') commands.openReport();
+      else if (k === 'y') commands.acceptAi();
+      else if (k === 'x') commands.rejectAi();
       else if (k === 'p') commands.togglePause();
       else if (k === 't') commands.toggleEoMode();
       else handled = false;

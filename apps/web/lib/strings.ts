@@ -72,6 +72,7 @@ export const SHORTCUTS: { keys: string; action: string }[] = [
   { keys: 'J / S', action: 'EW jam / spoof (sector toward the track; hits everything in it)' },
   { keys: 'I then Enter', action: 'Intercept (confirm)' },
   { keys: 'R, 1–5, Enter', action: 'Contact report: open, activity, send' },
+  { keys: 'Y / X', action: 'Accept / reject the AI suggestion (it can be wrong)' },
   { keys: 'Enter', action: 'Confirm End session once armed' },
   { keys: 'Esc', action: 'Cancel current action' },
   { keys: 'P', action: 'Pause (practice only)' },

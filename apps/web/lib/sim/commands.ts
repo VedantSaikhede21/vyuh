@@ -168,6 +168,24 @@ export function useCommands(rt: SimRuntime | null) {
         ui().set({ classifyMenu: false });
         if (id) send({ type: 'CLASSIFIED', trackId: id, payload: { class: cls } });
       },
+      /** Y: accept the AI suggestion — logs the answer and classifies as suggested. */
+      acceptAi() {
+        const id = selected();
+        const ai = id ? rt.sim.getState().tracks.find((t) => t.id === id) : undefined;
+        if (!id || !ai?.aiShown || !ai.aiSuggestion) return say('No AI suggestion on this track.');
+        if (ai.aiDecision) return say(`AI suggestion already ${ai.aiDecision.toLowerCase()}.`);
+        const payload = { ...ai.aiSuggestion };
+        if (send({ type: 'AI_SUGGESTION_ACCEPTED', trackId: id, payload }))
+          send({ type: 'CLASSIFIED', trackId: id, payload: { class: payload.suggestedClass } });
+      },
+      /** X: reject the AI suggestion (the track keeps its own classification). */
+      rejectAi() {
+        const id = selected();
+        const ai = id ? rt.sim.getState().tracks.find((t) => t.id === id) : undefined;
+        if (!id || !ai?.aiShown || !ai.aiSuggestion) return say('No AI suggestion on this track.');
+        if (ai.aiDecision) return say(`AI suggestion already ${ai.aiDecision.toLowerCase()}.`);
+        send({ type: 'AI_SUGGESTION_REJECTED', trackId: id, payload: { ...ai.aiSuggestion } });
+      },
       setAffiliation(affiliation: Affiliation) {
         const id = selected();
         if (id) send({ type: 'AFFILIATION_SET', trackId: id, payload: { affiliation } });

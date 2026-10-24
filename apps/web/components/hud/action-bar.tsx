@@ -2,6 +2,7 @@
 
 import type { Affiliation } from '@vyuh/shared';
 import type { ReactNode } from 'react';
+import { AiChip } from '@/components/hud/ai-chip';
 import {
   AffiliationSymbol,
   CooldownRing,
@@ -156,7 +157,10 @@ export function ActionBar({ runtime, commands }: { runtime: SimRuntime; commands
     <Panel className="relative h-full border-0">
       <PanelHeader title="Actions">
         {selected ? (
-          <StateChip tone="active">{selected.id}</StateChip>
+          <span className="flex items-center gap-2">
+            <AiChip track={selected} commands={commands} />
+            <StateChip tone="active">{selected.id}</StateChip>
+          </span>
         ) : (
           <StateChip tone="muted">No track</StateChip>
         )}

@@ -29,6 +29,7 @@ function track(over: Partial<TrackView> = {}): TrackView {
     classifiedAs: null,
     affiliation: 'UNKNOWN',
     rf: null,
+    ai: null,
     ...over,
   };
 }

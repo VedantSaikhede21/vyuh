@@ -12,6 +12,8 @@ export function readOnlyCommands(): Commands {
     cycle: noop,
     markDetected: noop,
     classify: noop,
+    acceptAi: noop,
+    rejectAi: noop,
     setAffiliation: noop,
     monitor: noop,
     jam: noop,

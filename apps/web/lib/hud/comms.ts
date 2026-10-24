@@ -80,6 +80,18 @@ export function eventLine(e: SimEvent, ctx: CommsContext): Omit<CommsLine, 'id'>
         tMs: t,
         text: `${e.trackId} CLASSIFIED  ${CLASS_LABEL[e.payload.class].toUpperCase()}`,
       };
+    case 'AI_SUGGESTION_SHOWN':
+      return {
+        tMs: t,
+        text: `${e.trackId} AI SUGGESTS  ${CLASS_LABEL[e.payload.suggestedClass].toUpperCase()} · ${Math.round(e.payload.confidence * 100)} %  (Y ACCEPT · X REJECT)`,
+      };
+    case 'AI_SUGGESTION_ACCEPTED':
+      return {
+        tMs: t,
+        text: `${e.trackId} AI SUGGESTION ACCEPTED  ${CLASS_LABEL[e.payload.suggestedClass].toUpperCase()}`,
+      };
+    case 'AI_SUGGESTION_REJECTED':
+      return { tMs: t, text: `${e.trackId} AI SUGGESTION REJECTED` };
     case 'AFFILIATION_SET':
       return { tMs: t, text: `${e.trackId} AFFILIATION  ${e.payload.affiliation}` };
     case 'RESPONSE_ORDERED': {
