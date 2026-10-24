@@ -2,6 +2,8 @@
 
 import type { AarSessionResponse } from '@vyuh/shared';
 import Link from 'next/link';
+import { DebriefPanel } from '@/components/aar/debrief-panel';
+import { TrustInsight } from '@/components/aar/trust-insight';
 import { DemoBadge } from '@/components/aar/demo-badge';
 import { useMemo } from 'react';
 import { Panel, PanelHeader, StatusNotice } from '@/components/hud/primitives';
@@ -85,6 +87,15 @@ export function FallbackView({ data, why }: { data: AarSessionResponse; why: str
           <PanelHeader title="Kill chain" />
           <div className="overflow-x-auto">
             <KillChainTable rows={data.killChain} penalties={data.session.score?.penalties} />
+          </div>
+        </Panel>
+      </div>
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <DebriefPanel sessionId={data.session.id} />
+        <Panel data-testid="trust-insight">
+          <PanelHeader title="Did you trust the AI assist too much?" />
+          <div className="p-3">
+            <TrustInsight trust={data.aiTrust} compact />
           </div>
         </Panel>
       </div>

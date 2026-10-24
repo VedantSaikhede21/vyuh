@@ -1,18 +1,27 @@
 import type { AiTrustMetrics } from '@vyuh/shared';
 import { Readout } from '@/components/hud/primitives';
+import { trustAnswer } from '@/lib/aar/answers';
 
 // AI-assist over- and under-trust (SPEC §9.4): an insight next to the score, never in it.
 
 const pct = (v: number | null) => (v === null ? '—' : String(Math.round(v * 100)));
 
-export function TrustInsight({ trust }: { trust: AiTrustMetrics }) {
+export function TrustInsight({
+  trust,
+  compact = false,
+}: {
+  trust: AiTrustMetrics;
+  /** The 320 px AAR side panel. */
+  compact?: boolean;
+}) {
   const ignoredWrong = trust.shownWrong - trust.acceptedWrong - trust.rejectedWrong;
   const ignoredRight = trust.shownCorrect - trust.acceptedCorrect - trust.rejectedCorrect;
   const TH = 'h-6 px-2 text-left text-label font-medium';
   const TD = 'h-7 px-2 text-right text-readout';
   return (
     <div className="space-y-2" data-testid="trust-metrics">
-      <div className="flex flex-wrap gap-8">
+      {compact && <p className="text-small text-text-1">{trustAnswer(trust)}</p>}
+      <div className={compact ? 'flex flex-wrap gap-4' : 'flex flex-wrap gap-8'}>
         <Readout
           label="Over-trust"
           value={pct(trust.overTrust)}
@@ -25,7 +34,11 @@ export function TrustInsight({ trust }: { trust: AiTrustMetrics }) {
           unit={trust.underTrust === null ? undefined : '%'}
           flash={false}
         />
-        <Readout label="Suggestions shown" value={trust.shown} flash={false} />
+        <Readout
+          label={compact ? 'Shown' : 'Suggestions shown'}
+          value={trust.shown}
+          flash={false}
+        />
       </div>
       <table className="w-full max-w-md border-collapse" aria-label="AI suggestions by outcome">
         <thead>

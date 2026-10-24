@@ -1,5 +1,8 @@
 import {
   AarSessionResponse,
+  AiStatusResponse,
+  DebriefResponse,
+  FromTextResponse,
   AssignmentListResponse,
   AuthorPreviewResponse,
   AuthorScenarioResponse,
@@ -165,4 +168,17 @@ export const api = {
     }),
   rescore: (sessionId: string, treeId: string) =>
     apiFetch(`/sessions/${sessionId}/rescore`, Score, { method: 'POST', body: { treeId } }),
+
+  // Phase 5: AI layer.
+  aiStatus: (signal?: AbortSignal) => apiFetch('/ai/status', AiStatusResponse, { signal }),
+  /** Generated once (LLM or template), then cached on the server. */
+  debrief: (sessionId: string, signal?: AbortSignal) =>
+    apiFetch(`/aar/sessions/${sessionId}/debrief`, DebriefResponse, { method: 'POST', signal }),
+  /** Text → parsed generator parameters (instructors; nothing is generated yet). */
+  scenarioFromText: (text: string, signal?: AbortSignal) =>
+    apiFetch('/scenarios/from-text', FromTextResponse, {
+      method: 'POST',
+      body: { text },
+      signal,
+    }),
 };
