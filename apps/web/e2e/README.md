@@ -33,6 +33,11 @@ locally before merging UI work. After an intended UI change, regenerate with
 `pnpm --filter @vyuh/web e2e:update`, then look at every changed PNG in the diff
 before committing it.
 
+## Test data and the LLM (decision 148)
+
+- `e2e/global-setup.ts` runs before every Playwright run against a local API: `pnpm seed` (rebuilds `e2e@demo` from its fixtures) and `pnpm seed:reset-demo --yes` (deletes non-demo sessions on the other @demo accounts and re-derives ratings). Anything played by hand on a @demo account is removed. Set `E2E_SKIP_DEMO_RESET=1` to skip it. It also requests the main routes once so a freshly started dev server has compiled them.
+- Every request carries `X-Vyuh-Test-Debrief: template`, so result screens and AARs get the template debrief whatever `LLM_ENABLED` says; the API honours it only where dev login is enabled (local auth, not prod). `checkpoint-5.spec.ts` clears it to capture a real LLM debrief.
+
 ## Determinism
 
 - The console specs control sim time through `window.__vyuhE2E`

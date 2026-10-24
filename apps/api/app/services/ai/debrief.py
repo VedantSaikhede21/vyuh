@@ -484,12 +484,19 @@ def _response(row: Debrief) -> DebriefResponse:
 
 
 def session_debrief(
-    db: Session, llm: LlmClient, user: User, session_id: uuid.UUID
+    db: Session,
+    llm: LlmClient,
+    user: User,
+    session_id: uuid.UUID,
+    *,
+    force_template: bool = False,
 ) -> DebriefResponse:
     """The cached debrief, or a new one (LLM or template) stored for next time.
 
     A template cached because the LLM was off or failed is replaced once the LLM is on.
+    `force_template` (e2e test hook, decision 148) acts as if the LLM were off.
     """
+    llm_on = llm.enabled and not force_template
     row = get_viewable_session(db, user, session_id)
     if row.status is not SessionStatus.COMPLETED:
         raise ApiError(
@@ -499,7 +506,7 @@ def session_debrief(
         )
     cached = db.get(Debrief, row.id)
     if cached is not None:
-        if not (llm.enabled and cached.content.get("fallbackReason") in TRANSIENT):
+        if not (llm_on and cached.content.get("fallbackReason") in TRANSIENT):
             return _response(cached)
         db.delete(cached)
         db.flush()
@@ -508,7 +515,10 @@ def session_debrief(
         raise ApiError(ErrorCode.NOT_FOUND, "Session has no score")
     scenario = load_scenario(db.get_one(ScenarioRow, row.scenario_id))
     data = debrief_input(scenario, row.mode.value, score, stored_events(db, row.id))
-    content, model, reason = build_debrief(llm, str(user.id), data)
+    if llm_on:
+        content, model, reason = build_debrief(llm, str(user.id), data)
+    else:
+        content, model, reason = template_debrief(data), TEMPLATE_MODEL, "LLM_DISABLED"
     stored = Debrief(
         session_id=row.id,
         model=model,

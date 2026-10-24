@@ -11,7 +11,12 @@ from app import __version__
 from app.core.config import Env, Settings, get_settings
 from app.core.db import make_engine, make_session_factory
 from app.core.errors import install_error_handlers
-from app.core.logging import REQUEST_ID_HEADER, configure_logging, request_id_middleware
+from app.core.logging import (
+    REQUEST_ID_HEADER,
+    TEST_DEBRIEF_HEADER,
+    configure_logging,
+    request_id_middleware,
+)
 from app.routers import aar, ai, assignments, auth, health, scenarios, scoring, sessions, units
 from app.seed.demo import seed_if_changed
 from app.services.ai.llm import LlmClient
@@ -63,7 +68,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_origins=settings.cors_origins,
         allow_credentials=False,
         allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", REQUEST_ID_HEADER],
+        allow_headers=["Authorization", "Content-Type", REQUEST_ID_HEADER, TEST_DEBRIEF_HEADER],
         expose_headers=[REQUEST_ID_HEADER],
     )
 

@@ -301,3 +301,39 @@ def test_google_provider_fields_key_and_busy_retry() -> None:
     assert llm.url == "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
     # The old variable alone still works.
     assert make_settings(openrouter_api_key="old-key").llm_key == "old-key"
+
+
+def test_test_header_forces_the_template_even_with_the_llm_on(
+    app: FastAPI, client: TestClient, auth_header: Headers, session_id: tuple[str, User]
+) -> None:
+    """e2e hook (decision 148): the header skips the LLM entirely and the cached template
+    is kept on later forced calls, so test runs never spend or depend on the LLM."""
+    sid, user = session_id
+    transport = FakeTransport()
+    _llm_on(app, transport)
+    forced = {**auth_header(user), "X-Vyuh-Test-Debrief": "template"}
+    body = client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=forced).json()
+    assert (body["source"], body["fallbackReason"]) == ("TEMPLATE", "LLM_DISABLED")
+    again = client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=forced).json()
+    assert again["createdAt"] == body["createdAt"]
+    assert transport.calls == []
+
+
+def test_test_header_is_ignored_where_dev_login_is_off(
+    app: FastAPI,
+    client: TestClient,
+    auth_header: Headers,
+    session_id: tuple[str, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.core.config import Settings
+
+    monkeypatch.setattr(Settings, "dev_login_enabled", property(lambda _self: False))
+    sid, user = session_id
+    reply = {"summary": "Fine.", "strengths": [], "mistakes": [], "drill": "Run S06 again."}
+    transport = FakeTransport(json.dumps(reply))
+    _llm_on(app, transport)
+    forced = {**auth_header(user), "X-Vyuh-Test-Debrief": "template"}
+    body = client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=forced).json()
+    assert body["source"] == "LLM"
+    assert len(transport.calls) == 1

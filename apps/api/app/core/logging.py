@@ -14,6 +14,9 @@ from fastapi import Request, Response
 request_id_ctx: ContextVar[str | None] = ContextVar("request_id", default=None)
 
 REQUEST_ID_HEADER = "X-Request-ID"
+#: Test hook (decision 148): `template` forces the template debrief so e2e runs never
+#: depend on (or spend) the LLM. Honoured only where dev login is (local auth, not prod).
+TEST_DEBRIEF_HEADER = "X-Vyuh-Test-Debrief"
 _MAX_REQUEST_ID_LEN = 64
 
 logger = logging.getLogger("app.request")
