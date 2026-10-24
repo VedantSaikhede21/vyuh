@@ -2,8 +2,9 @@
 
 A scenario that already has sessions keeps its gameplay content (replay and scores depend
 on it); only its display fields (name, briefing, tags), scoring tree and generator version
-may change. Any other edit needs a
-new code (decision 46).
+may change. AI-assist suggestions may also change while no session on the scenario ran
+on SIM_VERSION 6 or later, the first that shows them (decision 132). Any other edit needs
+a new code (decision 46).
 """
 
 import json
@@ -11,12 +12,12 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import exists, select
+from sqlalchemy import exists, func, select
 from sqlalchemy.orm import Session
 
 from app.models import Scenario as ScenarioRow
 from app.models import TrainingSession
-from app.schemas.generated import Scenario, ScenarioKind
+from app.schemas.generated import Scenario, ScenarioKind, SessionStatus
 from app.services.scenarios import scenario_rule_violations
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,9 @@ logger = logging.getLogger(__name__)
 #: and generator version, which do not change what the sim does (stored scores keep
 #: their tree_version; replay needs only the sim content). Decision 115.
 DISPLAY_FIELDS = ("name", "briefing", "scoringTreeId", "generatorVersion")
+
+#: The first sim version that reads `aiSuggestion` (AI_SUGGESTION_SHOWN).
+AI_SUGGESTION_SIM_VERSION = 6
 
 SCENARIO_DIR = Path(__file__).resolve().parent / "scenarios"
 #: Library sources (scripts/scenarios/build_scripted.py); their tags are seeded too.
@@ -68,6 +72,25 @@ def gameplay_content(content: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in content.items() if k not in DISPLAY_FIELDS}
 
 
+def _without_ai(content: dict[str, Any]) -> dict[str, Any]:
+    contacts = [
+        {k: v for k, v in c.items() if k != "aiSuggestion"} for c in content.get("contacts", [])
+    ]
+    return {**gameplay_content(content), "contacts": contacts}
+
+
+def _suggestions_unused(db: Session, row: ScenarioRow) -> bool:
+    """No started session on this scenario ran on a sim that shows AI suggestions (a
+    CREATED session has no events, so nothing in it depends on the content)."""
+    newest = db.scalar(
+        select(func.max(TrainingSession.sim_version)).where(
+            TrainingSession.scenario_id == row.id,
+            TrainingSession.status != SessionStatus.CREATED,
+        )
+    )
+    return newest is None or newest < AI_SUGGESTION_SIM_VERSION
+
+
 def seed_scenarios(db: Session, directory: Path = SCENARIO_DIR) -> int:
     """Insert new scripted scenarios, update unused ones; returns the number written."""
     written = 0
@@ -81,12 +104,20 @@ def seed_scenarios(db: Session, directory: Path = SCENARIO_DIR) -> int:
         elif row.content == content and list(row.tags) == tags:
             continue
         elif db.scalar(select(exists().where(TrainingSession.scenario_id == row.id))):
+            keep = dict(row.content)
             if gameplay_content(row.content) != gameplay_content(content):
-                logger.warning("Scenario %s has sessions; not updating its content", scenario.id)
-                continue
+                if not (
+                    _without_ai(row.content) == _without_ai(content)
+                    and _suggestions_unused(db, row)
+                ):
+                    logger.warning(
+                        "Scenario %s has sessions; not updating its content", scenario.id
+                    )
+                    continue
+                keep["contacts"] = content["contacts"]
             row.name = scenario.name
             row.tags = tags
-            row.content = {**row.content, **{k: content[k] for k in DISPLAY_FIELDS if k in content}}
+            row.content = {**keep, **{k: content[k] for k in DISPLAY_FIELDS if k in content}}
             written += 1
             continue
         row.name = scenario.name

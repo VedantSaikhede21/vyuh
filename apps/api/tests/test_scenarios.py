@@ -166,6 +166,36 @@ def test_seed_does_not_change_gameplay_of_scenarios_with_sessions(
     assert json.dumps(row.content, sort_keys=True) == before
 
 
+def test_seed_updates_ai_suggestions_only_before_sim_version_6(
+    db: Session,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    start_session: Callable[..., str],
+    tmp_path: Path,
+) -> None:
+    """Decision 132: suggestions were never read before SIM_VERSION 6."""
+    row = scenarios["S01"]
+    sid = start_session(make_user(), row)  # simVersion 1
+    edited = json.loads(json.dumps(S01))
+    edited["contacts"][0]["aiSuggestion"] = {"suggestedClass": "BIRD_SMALL", "confidence": 0.7}
+    (tmp_path / "S01.json").write_text(json.dumps(edited), encoding="utf-8")
+    assert seed_scenarios(db, tmp_path) == 1
+    db.commit()
+    db.refresh(row)
+    assert row.content["contacts"][0]["aiSuggestion"]["suggestedClass"] == "BIRD_SMALL"
+
+    # Once a session ran on a sim that shows suggestions, they are frozen too.
+    session = db.get(TrainingSession, uuid.UUID(sid))
+    session.sim_version = 6
+    session.status = SessionStatus.ACTIVE
+    db.commit()
+    edited["contacts"][0]["aiSuggestion"] = {"suggestedClass": "FPV", "confidence": 0.9}
+    (tmp_path / "S01.json").write_text(json.dumps(edited), encoding="utf-8")
+    assert seed_scenarios(db, tmp_path) == 0
+    db.refresh(row)
+    assert row.content["contacts"][0]["aiSuggestion"]["suggestedClass"] == "BIRD_SMALL"
+
+
 def test_list_scenarios(
     client: TestClient,
     scenarios: dict[str, ScenarioRow],
