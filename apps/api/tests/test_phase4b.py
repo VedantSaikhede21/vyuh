@@ -267,7 +267,8 @@ def test_weight_versions_are_new_rows_and_rescore_is_explicit(
     # Trends read the latest score row; the original row is kept.
     trend = client.get(f"/api/v1/aar/users/{trainees[0].id}/trends", headers=sh).json()
     assert [p["treeVersion"] for p in trend["points"]] == ["default_v4_w1"]
-    assert trend["points"][0]["total"] == after["total"]
+    # Trends send the display value (decision 149); the session sends both.
+    assert trend["points"][0]["total"] == after["display"]["total"]
     kept = db.scalars(select(ScoreRow.tree_version).where(ScoreRow.session_id == sid)).all()
     assert sorted(kept) == ["default_v4", "default_v4_w1"]
     assert_error(

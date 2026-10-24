@@ -31,6 +31,7 @@ from app.schemas.generated import (
 )
 from app.services.ai.llm import LlmClient, LlmError, prompt
 from app.services.analytics.kill_chain import kill_chain
+from app.services.display import display_int
 from app.services.scenarios import load_scenario
 from app.services.sessions import get_viewable_session, latest_score, stored_events
 
@@ -306,7 +307,8 @@ def llm_payload(data: dict[str, Any]) -> dict[str, Any]:
         "scenario": data["scenario"],
         "mode": data["mode"],
         "score": {
-            "total": s["total"],
+            # The value every screen shows (decision 149), so the LLM quotes it.
+            "total": display_int(s["total"]),
             "got": {k: v for k, v in s["components"].items() if s["componentMax"][k] > 0},
             "max": {k: v for k, v in s["componentMax"].items() if v > 0},
         },
@@ -405,7 +407,7 @@ def template_debrief(data: dict[str, Any]) -> DebriefContent:
     weakest = max(cost, key=lambda k: (cost[k], -order.index(k)), default=None)
 
     summary = (
-        f"Score {s['total']:.0f} / 100 on {sc['code']} {sc['name']} "
+        f"Score {display_int(s['total'])} / 100 on {sc['code']} {sc['name']} "
         f"(difficulty {sc['difficulty']}, {data['mode'].lower()}). "
         f"{neutralised} of {len(threats)} threats neutralised"
         + (f", {leaked} leaked" if leaked else "")

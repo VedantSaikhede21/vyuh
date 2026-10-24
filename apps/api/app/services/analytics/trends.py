@@ -42,6 +42,7 @@ from app.schemas.generated import (
 from app.services.analytics.ai_trust import ai_trust, combine
 from app.services.analytics.kill_chain import kill_chain
 from app.services.assignments import completed_session, unit_assignments
+from app.services.display import display_int, display_opt
 from app.services.recommendation import recommend_difficulty
 from app.services.scenarios import load_scenario
 from app.services.sessions import (
@@ -164,6 +165,11 @@ def assessment_facts(db: Session, user_ids: list[uuid.UUID]) -> list[SessionFact
     return [_facts(db, r, cache) for r in rows]
 
 
+def _avg_int(values: list[float]) -> int | None:
+    """Mean score or percentage as its display value (decision 149)."""
+    return display_opt(mean(values)) if values else None
+
+
 def _avg(values: list[float | None], digits: int = 1) -> float | None:
     present = [v for v in values if v is not None]
     return round(mean(present), digits) if present else None
@@ -226,8 +232,8 @@ def _point(f: SessionFacts, current_rating: int) -> TrendPoint:
         scenario_name=f.scenario_row.name,
         difficulty=f.scenario.difficulty,
         ended_at=f.ended_at,
-        total=f.total,
-        components=ComponentPct(**f.components),
+        total=display_int(f.total),
+        components=ComponentPct(**{c: display_opt(v) for c, v in f.components.items()}),
         detection_latency_s=f.latency_s,
         classification_accuracy=f.accuracy,
         recommended_difficulty=nxt,
@@ -264,7 +270,7 @@ def _change(totals: list[float]) -> float | None:
     if len(totals) < 2:
         return None
     k = min(3, len(totals) // 2)
-    return round(mean(totals[-k:]) - mean(totals[:k]), 1)
+    return display_int(mean(totals[-k:]) - mean(totals[:k]))
 
 
 def unit_dashboard(db: Session, unit_id: uuid.UUID) -> UnitDashboardResponse:
@@ -292,17 +298,21 @@ def unit_dashboard(db: Session, unit_id: uuid.UUID) -> UnitDashboardResponse:
                 user_id=t.id,
                 name=t.name,
                 sessions=len(mine),
-                avg_total=_avg(totals),
-                last_total=totals[-1] if totals else None,
-                best_total=max(totals) if totals else None,
+                avg_total=_avg_int(totals),
+                last_total=display_opt(totals[-1]) if totals else None,
+                best_total=display_opt(max(totals)) if totals else None,
                 change=_change(totals),
                 detection_latency_s=_avg([f.latency_s for f in mine]),
                 classification_accuracy=_avg([f.accuracy for f in mine], 3),
                 weakest_stage=weakest(stage_rates(mine)),
             )
         )
-    # Leaderboard: average total, trainees without sessions last.
-    board.sort(key=lambda r: (r.avg_total is None, -(r.avg_total or 0), r.name))
+    # Leaderboard: average total (unrounded, so display ties keep their real order),
+    # trainees without sessions last.
+    raw_avg = {
+        t.id: (mean(f.total for f in by_user[t.id]) if by_user[t.id] else None) for t in trainees
+    }
+    board.sort(key=lambda r: (raw_avg[r.user_id] is None, -(raw_avg[r.user_id] or 0), r.name))
 
     completion = []
     member_names = {t.id: t.name for t in trainees}
@@ -330,9 +340,12 @@ def unit_dashboard(db: Session, unit_id: uuid.UUID) -> UnitDashboardResponse:
         unit=UnitRef(id=unit.id, name=unit.name),
         sessions=len(facts),
         demo_sessions=sum(f.row.is_demo for f in facts),
-        avg_total=_avg([f.total for f in facts]),
+        avg_total=_avg_int([f.total for f in facts]),
         components=ComponentPct(
-            **{c: _avg([f.components[c] for f in facts]) for c in PCT_COMPONENTS}
+            **{
+                c: _avg_int([v for f in facts if (v := f.components[c]) is not None])
+                for c in PCT_COMPONENTS
+            }
         ),
         detection_latency_s=_avg([f.latency_s for f in facts]),
         classification_accuracy=_avg([f.accuracy for f in facts], 3),
@@ -350,7 +363,7 @@ def unit_dashboard(db: Session, unit_id: uuid.UUID) -> UnitDashboardResponse:
                 scenario_name=f.scenario_row.name,
                 difficulty=f.scenario.difficulty,
                 ended_at=f.ended_at,
-                total=f.total,
+                total=display_int(f.total),
                 tree_version=f.tree_version,
                 is_demo=f.row.is_demo,
             )

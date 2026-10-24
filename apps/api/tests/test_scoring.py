@@ -418,7 +418,15 @@ def test_penalties_are_listed_and_clamped() -> None:
 # Optional fields added to Score after the goldens were generated (decision 64). Only these
 # are ignored, and only when unset, so any other field turning None still fails the test.
 _ADDED_OPTIONALS = frozenset(
-    {"true_class", "recommended_difficulty", "recommendation_basis", "dropped_t_ms", "rating"}
+    {
+        "true_class",
+        "recommended_difficulty",
+        "recommendation_basis",
+        "dropped_t_ms",
+        "rating",
+        "recommendation_rating",
+        "display",
+    }
 )
 
 

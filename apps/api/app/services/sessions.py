@@ -22,12 +22,14 @@ from app.schemas.generated import (
     Scenario,
     Score,
     ScoreComponents,
+    ScoreDisplay,
     SessionDetailResponse,
     SessionEnded,
     SessionMode,
     SessionStatus,
     UserRole,
 )
+from app.services.display import display_int, display_round
 from app.services.plausibility import (
     LogState,
     PendingReport,
@@ -339,6 +341,15 @@ def rating_change(db: Session, row: TrainingSession, difficulty: int) -> RatingC
     )
 
 
+def score_display(score: Score) -> ScoreDisplay:
+    """What the screens show (decision 149): total whole, components one decimal, half up."""
+    comps = score.components.model_dump()
+    return ScoreDisplay(
+        total=display_int(score.total),
+        components=ScoreComponents(**{c: display_round(v, 1) for c, v in comps.items()}),
+    )
+
+
 def with_derived_fields(
     db: Session, score: Score, scenario: Scenario, row: TrainingSession
 ) -> Score:
@@ -364,6 +375,8 @@ def with_derived_fields(
         "per_contact": per_contact,
         "recommended_difficulty": nxt,
         "recommendation_basis": basis,
+        "recommendation_rating": int(basis_rating),
+        "display": score_display(score),
     }
     if rating is not None:
         update["rating"] = rating

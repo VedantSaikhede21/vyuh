@@ -83,6 +83,20 @@ export const RatingChange = named(
 );
 export type RatingChange = z.infer<typeof RatingChange>;
 
+/**
+ * Display values of a score (decision 149): rounded once by the API, half up —
+ * the total to a whole number, components to one decimal. Clients show these
+ * and never round a score themselves.
+ */
+export const ScoreDisplay = named(
+  'ScoreDisplay',
+  z.object({
+    total: z.int().min(0).max(100),
+    components: ScoreComponents,
+  }),
+);
+export type ScoreDisplay = z.infer<typeof ScoreDisplay>;
+
 export const Score = named(
   'Score',
   z.object({
@@ -99,6 +113,10 @@ export const Score = named(
     recommendationBasis: RecommendationBasis.optional(),
     /** Added by the API for Assessment sessions that changed the rating. */
     rating: RatingChange.optional(),
+    /** The rating `recommendedDifficulty` was derived from (after this session, or current). */
+    recommendationRating: z.int().optional(),
+    /** Added by the API on every read: what to show (decision 149). */
+    display: ScoreDisplay.optional(),
   }),
 );
 export type Score = z.infer<typeof Score>;

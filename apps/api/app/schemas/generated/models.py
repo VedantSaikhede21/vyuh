@@ -203,20 +203,20 @@ class CompleteSessionRequest(BaseModel):
     client_meta: Annotated[ClientMeta, Field(alias="clientMeta")]
 
 
-class Detection(RootModel[float]):
-    root: Annotated[float, Field(ge=0.0, le=100.0)]
+class Detection(RootModel[int]):
+    root: Annotated[int, Field(ge=0, le=100)]
 
 
-class Classification(RootModel[float]):
-    root: Annotated[float, Field(ge=0.0, le=100.0)]
+class Classification(RootModel[int]):
+    root: Annotated[int, Field(ge=0, le=100)]
 
 
-class Decision(RootModel[float]):
-    root: Annotated[float, Field(ge=0.0, le=100.0)]
+class Decision(RootModel[int]):
+    root: Annotated[int, Field(ge=0, le=100)]
 
 
-class Report(RootModel[float]):
-    root: Annotated[float, Field(ge=0.0, le=100.0)]
+class Report(RootModel[int]):
+    root: Annotated[int, Field(ge=0, le=100)]
 
 
 class ComponentPct(BaseModel):
@@ -691,6 +691,14 @@ class ScoreComponents(BaseModel):
     efficiency: float
 
 
+class ScoreDisplay(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    total: Annotated[int, Field(ge=0, le=100)]
+    components: ScoreComponents
+
+
 class EditableEnum(StrEnum):
     DETECTION = "detection"
     CLASSIFICATION = "classification"
@@ -946,7 +954,7 @@ class TrendPoint(BaseModel):
     scenario_name: Annotated[str, Field(alias="scenarioName")]
     difficulty: Annotated[int, Field(ge=1, le=5)]
     ended_at: Annotated[AwareDatetime, Field(alias="endedAt")]
-    total: Annotated[float, Field(ge=0.0, le=100.0)]
+    total: Annotated[int, Field(ge=0, le=100)]
     components: ComponentPct
     detection_latency_s: Annotated[DetectionLatencyS | None, Field(alias="detectionLatencyS")]
     classification_accuracy: Annotated[
@@ -970,6 +978,10 @@ class TrendUser(BaseModel):
     unit_name: Annotated[str | None, Field(alias="unitName")]
 
 
+class AvgTotal(RootModel[int]):
+    root: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+
+
 class UnitRef(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -989,9 +1001,21 @@ class UnitSessionRow(BaseModel):
     scenario_name: Annotated[str, Field(alias="scenarioName")]
     difficulty: Annotated[int, Field(ge=1, le=5)]
     ended_at: Annotated[AwareDatetime, Field(alias="endedAt")]
-    total: float
+    total: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
     tree_version: Annotated[str, Field(alias="treeVersion")]
     is_demo: Annotated[bool, Field(alias="isDemo")]
+
+
+class LastTotal(RootModel[int]):
+    root: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+
+
+class BestTotal(RootModel[int]):
+    root: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+
+
+class Change(RootModel[int]):
+    root: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
 
 
 class UnitTraineeRow(BaseModel):
@@ -1001,10 +1025,10 @@ class UnitTraineeRow(BaseModel):
     user_id: Annotated[UUID, Field(alias="userId")]
     name: str
     sessions: Annotated[int, Field(ge=0, le=9007199254740991)]
-    avg_total: Annotated[float | None, Field(alias="avgTotal")]
-    last_total: Annotated[float | None, Field(alias="lastTotal")]
-    best_total: Annotated[float | None, Field(alias="bestTotal")]
-    change: float | None
+    avg_total: Annotated[AvgTotal | None, Field(alias="avgTotal")]
+    last_total: Annotated[LastTotal | None, Field(alias="lastTotal")]
+    best_total: Annotated[BestTotal | None, Field(alias="bestTotal")]
+    change: Change | None
     detection_latency_s: Annotated[float | None, Field(alias="detectionLatencyS")]
     classification_accuracy: Annotated[
         ClassificationAccuracy | None, Field(alias="classificationAccuracy")
@@ -1499,6 +1523,10 @@ class Score(BaseModel):
         RecommendationBasis | None, Field(alias="recommendationBasis")
     ] = None
     rating: RatingChange | None = None
+    recommendation_rating: Annotated[
+        int | None, Field(alias="recommendationRating", ge=-9007199254740991, le=9007199254740991)
+    ] = None
+    display: ScoreDisplay | None = None
 
 
 class ScoringTreeListResponse(BaseModel):
@@ -1584,7 +1612,7 @@ class UnitDashboardResponse(BaseModel):
     unit: UnitRef
     sessions: Annotated[int, Field(ge=0, le=9007199254740991)]
     demo_sessions: Annotated[int, Field(alias="demoSessions", ge=0, le=9007199254740991)]
-    avg_total: Annotated[float | None, Field(alias="avgTotal")]
+    avg_total: Annotated[AvgTotal | None, Field(alias="avgTotal")]
     components: ComponentPct
     detection_latency_s: Annotated[float | None, Field(alias="detectionLatencyS")]
     classification_accuracy: Annotated[

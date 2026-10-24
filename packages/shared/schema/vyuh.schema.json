@@ -945,7 +945,7 @@
         "detection": {
           "anyOf": [
             {
-              "type": "number",
+              "type": "integer",
               "minimum": 0,
               "maximum": 100
             },
@@ -957,7 +957,7 @@
         "classification": {
           "anyOf": [
             {
-              "type": "number",
+              "type": "integer",
               "minimum": 0,
               "maximum": 100
             },
@@ -969,7 +969,7 @@
         "decision": {
           "anyOf": [
             {
-              "type": "number",
+              "type": "integer",
               "minimum": 0,
               "maximum": 100
             },
@@ -981,7 +981,7 @@
         "report": {
           "anyOf": [
             {
-              "type": "number",
+              "type": "integer",
               "minimum": 0,
               "maximum": 100
             },
@@ -3273,6 +3273,14 @@
         },
         "rating": {
           "$ref": "#/$defs/RatingChange"
+        },
+        "recommendationRating": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "display": {
+          "$ref": "#/$defs/ScoreDisplay"
         }
       },
       "required": [
@@ -3310,6 +3318,23 @@
         "decision",
         "report",
         "efficiency"
+      ]
+    },
+    "ScoreDisplay": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "components": {
+          "$ref": "#/$defs/ScoreComponents"
+        }
+      },
+      "required": [
+        "total",
+        "components"
       ]
     },
     "ScoringTreeListResponse": {
@@ -4252,7 +4277,7 @@
           "format": "date-time"
         },
         "total": {
-          "type": "number",
+          "type": "integer",
           "minimum": 0,
           "maximum": 100
         },
@@ -4400,9 +4425,15 @@
           "maximum": 9007199254740991
         },
         "avgTotal": {
-          "type": [
-            "number",
-            "null"
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "components": {
@@ -4564,7 +4595,9 @@
           "format": "date-time"
         },
         "total": {
-          "type": "number"
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
         },
         "treeVersion": {
           "type": "string"
@@ -4625,27 +4658,51 @@
           "maximum": 9007199254740991
         },
         "avgTotal": {
-          "type": [
-            "number",
-            "null"
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "lastTotal": {
-          "type": [
-            "number",
-            "null"
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "bestTotal": {
-          "type": [
-            "number",
-            "null"
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "change": {
-          "type": [
-            "number",
-            "null"
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "detectionLatencyS": {

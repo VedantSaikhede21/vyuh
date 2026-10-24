@@ -209,7 +209,7 @@ export function PctBar({ label, value }: { label: string; value: number | null }
           <span className="text-text-2">n/a</span>
         ) : (
           <>
-            {Math.round(value)}
+            {value}
             <span className="text-text-2"> %</span>
           </>
         )}
