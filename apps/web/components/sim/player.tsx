@@ -4,7 +4,7 @@ import { useRef, useState, type ReactNode } from 'react';
 import { ActionBar } from '@/components/hud/action-bar';
 import { CommsPanel } from '@/components/hud/comms-panel';
 import { EoPanel } from '@/components/hud/eo-view';
-import { Panel, PanelHeader } from '@/components/hud/primitives';
+import { LargerScreenNotice, Panel, PanelHeader } from '@/components/hud/primitives';
 import { RadarScope, ppiRangeKm, type PpiOverlay } from '@/components/hud/radar-scope';
 import { RfPanel } from '@/components/hud/rf-panel';
 import { CheatSheet, useShortcuts } from '@/components/hud/shortcuts';
@@ -172,12 +172,19 @@ export function SimPlayer({
         tacticalExtra={replay?.tacticalScene}
       />
       {!replay && <CheatSheet />}
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg-0 p-6 min-[1280px]:hidden">
-        <p className="max-w-md text-body text-text-1">
-          The sim player needs a window at least 1280 px wide. Enlarge the window or use a desktop
-          screen; the session keeps running.
-        </p>
-      </div>
+      {replay ? (
+        <LargerScreenNotice
+          what="The after-action replay"
+          backHref="/aar/trends"
+          backLabel="Back to after-action"
+        />
+      ) : (
+        <LargerScreenNotice
+          what="The sim player"
+          note="The session keeps running."
+          backHref={null}
+        />
+      )}
     </div>
   );
 }

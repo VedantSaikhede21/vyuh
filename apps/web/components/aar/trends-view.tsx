@@ -8,7 +8,7 @@ import type {
 } from '@vyuh/shared';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { Panel, PanelHeader, Pips, StatusNotice } from '@/components/hud/primitives';
+import { DemoBadge, Panel, PanelHeader, Pips, StatusNotice } from '@/components/hud/primitives';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
@@ -25,7 +25,6 @@ import {
   weakestStageAnswer,
 } from '@/lib/aar/answers';
 import { api } from '@/lib/api';
-import { DemoBadge } from '@/components/hud/primitives';
 import { QuestionPanel, SeriesChart, StageBars, type SeriesPoint } from './charts';
 import { TrustInsight } from './trust-insight';
 

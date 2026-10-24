@@ -6,6 +6,8 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState, type FormEvent } from 'react';
 import { PctBar, QuestionPanel, StageBars } from '@/components/aar/charts';
 import {
+  DemoBadge,
+  PageHeader,
   Panel,
   PanelBody,
   PanelHeader,
@@ -27,7 +29,6 @@ import {
   weakestStageAnswer,
 } from '@/lib/aar/answers';
 import { api } from '@/lib/api';
-import { DemoBadge } from '@/components/hud/primitives';
 
 // Unit dashboard (SPEC §12 Phase 4, DESIGN §11.7): unit averages, leaderboard,
 // weakest kill-chain stage, common mistakes, assignment completion; rows drill
@@ -461,32 +462,38 @@ function UnitPage() {
   }, [unitId, attempt]);
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="space-y-1">
-          <p className="text-label">Instructor / Unit dashboard</p>
-          <h1 className="text-h1">{unit?.name ?? 'Unit'}</h1>
-        </div>
-        {units && units.length > 1 && (
-          <label className="flex items-center gap-2">
-            <span className="text-label">Unit</span>
-            <Select
-              className="h-7 w-auto py-0 pr-7 text-small"
-              value={unitId ?? ''}
-              onChange={(e) => {
-                setData(null);
-                router.replace(`${pathname}?unit=${e.target.value}`, { scroll: false });
-              }}
-            >
-              {units.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </Select>
-          </label>
-        )}
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        reference="Unit · Assessment sessions only"
+        title={unit?.name ?? 'Unit'}
+        context="Compare trainees, see the weakest kill-chain stage and assign scenarios."
+        actions={
+          <div className="flex items-center gap-3">
+            {units && units.length > 1 && (
+              <label className="flex items-center gap-2">
+                <span className="text-label">Unit</span>
+                <Select
+                  className="h-7 w-auto py-0 pr-7 text-small"
+                  value={unitId ?? ''}
+                  onChange={(e) => {
+                    setData(null);
+                    router.replace(`${pathname}?unit=${e.target.value}`, { scroll: false });
+                  }}
+                >
+                  {units.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </Select>
+              </label>
+            )}
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/instructor/scoring">Scoring weights</Link>
+            </Button>
+          </div>
+        }
+      />
       {error && (
         <Panel>
           <StatusNotice

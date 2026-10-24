@@ -15,6 +15,8 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BriefingMap } from '@/components/briefing/briefing-map';
 import {
+  LargerScreenNotice,
+  PageHeader,
   Kbd,
   Panel,
   PanelBody,
@@ -23,6 +25,7 @@ import {
   Skeleton,
   StateChip,
 } from '@/components/hud/primitives';
+import { BuilderNav } from '@/components/builder-nav';
 import { RequireStaff } from '@/components/require-staff';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -287,23 +290,29 @@ function Builder() {
         : 'Checks passed';
 
   return (
-    <div className="space-y-3" data-testid="builder">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="space-y-1">
-          <p className="text-label">Instructor / Scenario builder</p>
-          <h1 className="text-h1">{form.name || 'Untitled'}</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <Pips value={form.difficulty} />
-          <StateChip tone="muted">{terrainLabel(form.terrainPreset)}</StateChip>
-          <StateChip
-            tone={problems.length || netError ? 'warn' : loading ? 'muted' : 'ok'}
-            data-testid="builder-status"
-          >
-            {status}
-          </StateChip>
-        </div>
-      </div>
+    <div className="space-y-4" data-testid="builder">
+      <LargerScreenNotice
+        what="The scenario builder"
+        backHref="/instructor"
+        backLabel="Back to unit"
+      />
+      <PageHeader
+        crumbs={[{ label: 'Unit', href: '/instructor' }, { label: 'Scenario builder' }]}
+        title={form.name || 'Untitled'}
+        actions={
+          <div className="flex items-center gap-3">
+            <Pips value={form.difficulty} />
+            <StateChip tone="muted">{terrainLabel(form.terrainPreset)}</StateChip>
+            <StateChip
+              tone={problems.length || netError ? 'warn' : loading ? 'muted' : 'ok'}
+              data-testid="builder-status"
+            >
+              {status}
+            </StateChip>
+          </div>
+        }
+      />
+      <BuilderNav />
       <div className="grid gap-3 lg:grid-cols-[17rem_minmax(0,1fr)] xl:grid-cols-[17rem_minmax(0,1fr)_18rem]">
         <Panel>
           <PanelHeader title="Request" />
