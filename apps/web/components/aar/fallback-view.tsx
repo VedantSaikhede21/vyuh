@@ -4,7 +4,7 @@ import type { AarSessionResponse } from '@vyuh/shared';
 import Link from 'next/link';
 import { DebriefPanel } from '@/components/aar/debrief-panel';
 import { TrustInsight } from '@/components/aar/trust-insight';
-import { DemoBadge } from '@/components/aar/demo-badge';
+import { DemoBadge } from '@/components/hud/primitives';
 import { useMemo } from 'react';
 import { Panel, PanelHeader, StatusNotice } from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';

@@ -25,7 +25,7 @@ import {
   weakestStageAnswer,
 } from '@/lib/aar/answers';
 import { api } from '@/lib/api';
-import { DemoBadge } from '@/components/aar/demo-badge';
+import { DemoBadge } from '@/components/hud/primitives';
 import { QuestionPanel, SeriesChart, StageBars, type SeriesPoint } from './charts';
 import { TrustInsight } from './trust-insight';
 

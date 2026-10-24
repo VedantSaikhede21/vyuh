@@ -27,7 +27,7 @@ import {
   weakestStageAnswer,
 } from '@/lib/aar/answers';
 import { api } from '@/lib/api';
-import { DemoBadge } from '@/components/aar/demo-badge';
+import { DemoBadge } from '@/components/hud/primitives';
 
 // Unit dashboard (SPEC §12 Phase 4, DESIGN §11.7): unit averages, leaderboard,
 // weakest kill-chain stage, common mistakes, assignment completion; rows drill
