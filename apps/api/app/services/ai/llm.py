@@ -8,6 +8,7 @@ makes no network call at all. Prompts are files in `prompts/`.
 
 import json
 import logging
+import time
 import urllib.error
 import urllib.request
 from collections.abc import Callable
@@ -22,7 +23,14 @@ logger = logging.getLogger(__name__)
 
 PROMPTS = Path(__file__).resolve().parent / "prompts"
 ATTEMPTS = 2  # one retry
+RETRY_PAUSE_S = 1.0
 DEFAULT_MAX_TOKENS = 1200
+#: Reasoning models spend part of max_tokens thinking: ask for little, in each provider's
+#: own field (Google rejects OpenRouter's `reasoning` object with HTTP 400; decision 138).
+REASONING: dict[str, dict[str, Any]] = {
+    "openrouter": {"reasoning": {"effort": "low", "exclude": True}},
+    "google": {"reasoning_effort": "low"},
+}
 #: Client errors a retry cannot fix (bad model id, no credit, …); 408 and 429 are retried.
 NO_RETRY_HTTP = frozenset(range(400, 500)) - {408, 429}
 
@@ -55,6 +63,7 @@ class LlmClient:
         self.settings = settings
         self.transport: Transport = transport or urllib_transport
         self.limiter = RateLimiter(settings.llm_rate_limit_per_min)
+        self.pause: Callable[[float], None] = time.sleep
 
     @property
     def enabled(self) -> bool:
@@ -94,16 +103,16 @@ class LlmClient:
                 "response_format": {"type": "json_object"},
                 "temperature": 0.2,
                 # Without it the provider reserves the model's maximum output (credit check).
-                # Reasoning models spend part of it thinking: keep that short and unsent.
                 "max_tokens": max_tokens,
-                "reasoning": {"effort": "low", "exclude": True},
+                **REASONING.get(self.settings.llm_provider.lower(), {}),
             }
         ).encode("utf-8")
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.settings.openrouter_api_key.get_secret_value()}",
-            "X-Title": "VYUH trainer",
+            "Authorization": f"Bearer {self.settings.llm_key}",
         }
+        if self.settings.llm_provider.lower() == "openrouter":
+            headers["X-Title"] = "VYUH trainer"
         reason, message = "ERROR", "no attempt made"
         for attempt in range(1, ATTEMPTS + 1):
             try:
@@ -118,6 +127,8 @@ class LlmClient:
                 logger.warning("LLM attempt %d: %s", attempt, message)
                 if err.code in NO_RETRY_HTTP:
                     break
+                if attempt < ATTEMPTS:
+                    self.pause(RETRY_PAUSE_S)  # busy or rate-limited: give it a moment
                 continue
             except (urllib.error.URLError, OSError) as err:
                 if isinstance(getattr(err, "reason", None), TimeoutError):

@@ -251,3 +251,40 @@ def test_request_caps_tokens_and_client_errors_are_not_retried() -> None:
     assert calls[0]["max_tokens"] == 321
     assert calls[0]["reasoning"] == {"effort": "low", "exclude": True}
     assert llm.url == "https://openrouter.ai/api/v1/chat/completions"
+
+
+def test_google_provider_fields_key_and_busy_retry() -> None:
+    import urllib.error
+
+    calls: list[tuple[dict[str, str], dict[str, Any]]] = []
+    replies: list[Any] = [
+        urllib.error.HTTPError("u", 503, "busy", {}, None),  # type: ignore[arg-type]
+        json.dumps({"choices": [{"message": {"content": '{"ok": true}'}}]}),
+    ]
+
+    def transport(url: str, headers: dict[str, str], body: bytes, t: float) -> str:
+        calls.append((headers, json.loads(body)))
+        r = replies.pop(0)
+        if isinstance(r, Exception):
+            raise r
+        return r
+
+    settings = make_settings(
+        llm_enabled=True,
+        llm_provider="google",
+        llm_base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        llm_api_key="g-key",
+        openrouter_api_key="old-key",
+    )
+    llm = LlmClient(settings, transport)
+    paused: list[float] = []
+    llm.pause = paused.append
+    assert llm.complete_json("u", "s", "x", lambda o: o) == {"ok": True}
+    assert paused == [1.0]  # a 503 is retried once, after a pause
+    headers, body = calls[0]
+    assert headers["Authorization"] == "Bearer g-key"  # LLM_API_KEY wins over the old name
+    assert "X-Title" not in headers
+    assert body["reasoning_effort"] == "low" and "reasoning" not in body
+    assert llm.url == "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+    # The old variable alone still works.
+    assert make_settings(openrouter_api_key="old-key").llm_key == "old-key"

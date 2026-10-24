@@ -651,7 +651,7 @@ All errors: `{ "error": { "code": "...", "message": "...", "details": {} } }`
 
 ### 13.4 Model config
 - `LLM_PROVIDER=openrouter`, `LLM_MODEL` env (default a Gemini Flash model), `LLM_ENABLED=false` for offline. Timeouts 20 s. Rate limit per user.
-- **Built (decision 130):** standard-library HTTP, JSON response format, one retry, prompts as files in `services/ai/prompts/`. `LLM_BASE_URL` (default OpenRouter) points at any OpenAI-compatible server. Default model `google/gemini-3.8-flash` (pinned); requests cap `max_tokens` (debrief 4,000, text 1,000) with low reasoning effort; 4xx other than 408 / 429 is not retried (decision 137).
+- **Built (decision 130):** standard-library HTTP, JSON response format, one retry, prompts as files in `services/ai/prompts/`. `LLM_BASE_URL` (default OpenRouter) points at any OpenAI-compatible server. Default model `google/gemini-3.8-flash` (pinned); requests cap `max_tokens` (debrief 4,000, text 1,000) with low reasoning effort; 4xx other than 408 / 429 is not retried, 429 / 5xx retried once after 1 s (decision 137). `LLM_PROVIDER` (`openrouter` / `google` / `openai`) selects provider-specific fields; key in `LLM_API_KEY` (decision 138).
 
 ---
 
