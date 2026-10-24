@@ -4,9 +4,14 @@ import type { AarSessionResponse } from '@vyuh/shared';
 import Link from 'next/link';
 import { DebriefPanel } from '@/components/aar/debrief-panel';
 import { TrustInsight } from '@/components/aar/trust-insight';
-import { DemoBadge } from '@/components/hud/primitives';
 import { useMemo } from 'react';
-import { Panel, PanelHeader, StatusNotice } from '@/components/hud/primitives';
+import {
+  DemoBadge,
+  PageHeader,
+  Panel,
+  PanelHeader,
+  StatusNotice,
+} from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
 import { humaniseFeedback } from '@/lib/hud/feedback';
 import { aarEventLine } from '@/lib/replay/event-text';
@@ -45,23 +50,28 @@ export function FallbackView({ data, why }: { data: AarSessionResponse; why: str
 
   return (
     <div className="space-y-4" data-testid="replay-fallback">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="space-y-1">
-          <p className="text-label">After-action review · {data.session.mode.toLowerCase()}</p>
-          <h1 className="text-h1">
+      <PageHeader
+        crumbs={[
+          { label: 'After-action', href: '/aar/trends' },
+          { label: `Session · ${data.session.mode.toLowerCase()}` },
+        ]}
+        title={
+          <>
             {data.scenario.name}
             {data.session.isDemo && <DemoBadge className="ml-3 align-middle" />}
-          </h1>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="ghost" asChild>
-            <Link href="/train">Back to training</Link>
-          </Button>
-          <Button asChild>
-            <Link href={`/train/session/${data.session.id}`}>Back to debrief</Link>
-          </Button>
-        </div>
-      </header>
+          </>
+        }
+        actions={
+          <div className="flex gap-2">
+            <Button variant="ghost" asChild>
+              <Link href="/train">Back to training</Link>
+            </Button>
+            <Button asChild>
+              <Link href={`/train/session/${data.session.id}`}>Back to debrief</Link>
+            </Button>
+          </div>
+        }
+      />
       <Panel>
         <StatusNotice title={REPLAY_FALLBACK_TEXT}>{why}</StatusNotice>
       </Panel>

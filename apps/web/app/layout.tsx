@@ -1,14 +1,21 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { AppHeader } from '@/components/app-header';
+import { AppHeader, SkipLink } from '@/components/app-header';
 import { AuthProvider } from '@/lib/auth';
 import { UI } from '@/lib/theme/scene-colours';
 import { plexCondensed, plexMono, plexSans } from './fonts';
 import './globals.css';
 
+const TITLE = 'VYUH — Counter-Drone Threat Trainer';
+const DESCRIPTION =
+  'Counter-drone decision training on real terrain, in a browser. SIH 2026 problem statement 26247, Ministry of Defence.';
+
+// Judges may paste the link into a chat: title and description travel with it (audit P2-7).
 export const metadata: Metadata = {
-  title: 'VYUH — Counter-Drone Threat Trainer',
-  description: 'Browser-based drone and counter-drone threat simulation trainer.',
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: { title: TITLE, description: DESCRIPTION, type: 'website', siteName: 'VYUH' },
+  twitter: { card: 'summary', title: TITLE, description: DESCRIPTION },
 };
 
 export const viewport: Viewport = { themeColor: UI.bg0, colorScheme: 'dark' };
@@ -20,9 +27,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`dark ${plexSans.variable} ${plexCondensed.variable} ${plexMono.variable}`}
     >
       <body className="min-h-screen">
+        <SkipLink />
         <AuthProvider>
           <AppHeader />
-          <main className="mx-auto w-full max-w-6xl px-4 py-6">{children}</main>
+          <main
+            id="main"
+            tabIndex={-1}
+            className="mx-auto w-full max-w-[1280px] px-4 py-6 outline-none"
+          >
+            {children}
+          </main>
         </AuthProvider>
       </body>
     </html>

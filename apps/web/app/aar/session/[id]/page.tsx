@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { FallbackView } from '@/components/aar/fallback-view';
-import { Panel, PanelBody, Skeleton } from '@/components/hud/primitives';
+import { ErrorState, Panel, Skeleton } from '@/components/hud/primitives';
 import { RequireAuth } from '@/components/require-auth';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
@@ -32,7 +32,7 @@ function AarSession({
   start: { t: string | null; penalty: string | null };
 }) {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -43,22 +43,25 @@ function AarSession({
       const gate = replayGate(data.session, SIM_VERSION, world.meta?.revision ?? 1);
       setLoaded({ data, world, gate });
     })().catch((err: unknown) => {
-      if (!ctrl.signal.aborted) setError(err instanceof Error ? err.message : 'Network error');
+      if (!ctrl.signal.aborted) setError(err);
     });
     return () => ctrl.abort();
   }, [sessionId]);
 
   const kf = useKeyframes(loaded?.gate.ok ? loaded.data : null);
 
-  if (error) {
+  if (error !== null) {
     return (
-      <Panel className="mx-auto max-w-xl">
-        <PanelBody className="space-y-3 pt-4 text-body">
-          <p className="text-crit">Could not open the after-action review: {error}</p>
-          <Button asChild>
-            <Link href="/train">Back to training</Link>
-          </Button>
-        </PanelBody>
+      <Panel className="max-w-xl">
+        <ErrorState
+          error={error}
+          subject="after-action review"
+          action={
+            <Button asChild variant="secondary" size="sm">
+              <Link href="/aar/trends">Open after-action</Link>
+            </Button>
+          }
+        />
       </Panel>
     );
   }

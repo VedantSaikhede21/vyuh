@@ -1,7 +1,14 @@
 'use client';
 
 import { Suspense } from 'react';
-import { Panel, PanelBody, PanelHeader, Readout, Skeleton } from '@/components/hud/primitives';
+import {
+  PageHeader,
+  Panel,
+  PanelBody,
+  PanelHeader,
+  Readout,
+  Skeleton,
+} from '@/components/hud/primitives';
 import { RequireAuth } from '@/components/require-auth';
 import { GeneratePanel } from '@/components/training/generate-panel';
 import { OwnGeneratedTable } from '@/components/training/own-generated';
@@ -44,13 +51,12 @@ function GenerateForUser() {
 export default function TrainPage() {
   return (
     <RequireAuth>
-      <div className="space-y-4">
-        <div className="space-y-1">
-          <h1 className="text-h1">Training</h1>
-          <p className="text-body text-text-2">
-            Choose a scenario to open its briefing, or generate a new one.
-          </p>
-        </div>
+      <div className="space-y-6">
+        <PageHeader
+          reference="Training · scenarios and briefings"
+          title="Training"
+          context="Choose a scenario to open its briefing, or generate a new one."
+        />
         <div className="grid items-start gap-4 lg:grid-cols-[17rem_minmax(0,1fr)]">
           <div className="space-y-4">
             <OperatorPanel />

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
+  PageHeader,
   Panel,
   PanelBody,
   PanelHeader,
@@ -12,6 +13,7 @@ import {
   StatusNotice,
   Tooltip,
 } from '@/components/hud/primitives';
+import { BuilderNav } from '@/components/builder-nav';
 import { RequireStaff } from '@/components/require-staff';
 import { Button } from '@/components/ui/button';
 import { FIELD_CLASS } from '@/components/ui/input';
@@ -81,15 +83,13 @@ function FromText() {
   const stale = parse.kind === 'ok' && parse.text !== text.trim();
 
   return (
-    <div className="mx-auto max-w-[1280px] space-y-4" data-testid="from-text">
-      <header className="space-y-1">
-        <p className="text-label">Instructor</p>
-        <h1 className="text-h1">Scenario from text</h1>
-        <p className="text-small text-text-2">
-          Describe the scenario. The LLM reads it into generator parameters only; you check them,
-          then the generator builds the scenario from them, the same way every time.
-        </p>
-      </header>
+    <div className="space-y-4" data-testid="from-text">
+      <PageHeader
+        crumbs={[{ label: 'Unit', href: '/instructor' }, { label: 'Scenario builder' }]}
+        title="Scenario from text"
+        context="Describe the scenario. The LLM reads it into generator parameters only; you check them, then the generator builds the scenario from them, the same way every time."
+      />
+      <BuilderNav />
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <Panel>
           <PanelHeader title="Describe the scenario">

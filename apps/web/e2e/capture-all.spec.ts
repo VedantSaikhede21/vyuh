@@ -321,8 +321,9 @@ test('journey judge @capture', async ({ page }) => {
   await page.waitForLoadState('networkidle');
   j.mark('trends');
   // Unit dashboard needs an instructor: sign out, sign in as instructor@demo.
-  await page.getByRole('button', { name: 'Log out' }).click();
-  j.clicks++;
+  await page.getByTestId('user-menu').click();
+  await page.getByTestId('menu-sign-out').click();
+  j.clicks += 2;
   await page.goto('/login');
   await page.selectOption('#email', 'instructor@demo');
   j.clicks += 2;
@@ -333,8 +334,9 @@ test('journey judge @capture', async ({ page }) => {
   j.clicks++;
   await expect(page.getByTestId('unit-dashboard')).toBeVisible({ timeout: 60_000 });
   j.mark('unit dashboard');
+  await page.getByTestId('nav-builder').click();
   await page.getByRole('link', { name: 'From text' }).click();
-  j.clicks++;
+  j.clicks += 2;
   await expect(page.getByTestId('from-text')).toBeVisible({ timeout: 60_000 });
   j.mark('from text (LLM off in audit stack)');
   await page.goto('/');

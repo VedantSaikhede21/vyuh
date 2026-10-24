@@ -87,13 +87,17 @@ export function ErrorState({
  */
 export function LargerScreenNotice({
   what,
+  note,
   backHref = '/train',
   backLabel = 'Back to training',
   className,
 }: {
   /** "The sim player", "The after-action replay", "The scenario builder". */
   what: string;
-  backHref?: string;
+  /** One more sentence, e.g. "The session keeps running." */
+  note?: string;
+  /** null: no way back offered (a running session must not be left by accident). */
+  backHref?: string | null;
   backLabel?: string;
   className?: string;
 }) {
@@ -110,11 +114,13 @@ export function LargerScreenNotice({
         <h1 className="text-h1">Use a larger screen</h1>
         <p className="text-body text-text-body">
           {what} needs a window at least 1280 px wide. Enlarge the window, or open this page on a
-          desktop or laptop.
+          desktop or laptop.{note ? ` ${note}` : ''}
         </p>
-        <Button asChild variant="secondary" size="md">
-          <Link href={backHref}>{backLabel}</Link>
-        </Button>
+        {backHref && (
+          <Button asChild variant="secondary" size="md">
+            <Link href={backHref}>{backLabel}</Link>
+          </Button>
+        )}
       </div>
     </div>
   );
