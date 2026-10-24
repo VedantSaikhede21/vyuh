@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { api } from '@/lib/api';
 import { REPLAY_FALLBACK_TEXT, penaltyHref, replayGate, type ReplayGate } from '@/lib/replay/gate';
+import { formatRating, primaryAction } from '@/lib/result-actions';
 import { displayScore } from '@/lib/score-display';
 import { loadPresetMeta } from '@/lib/terrain/load-world';
 import { OUTCOME_LABEL, OUTCOME_TONE, humaniseFeedback } from '@/lib/hud/feedback';
@@ -160,6 +161,7 @@ export function ResultScreen({
   };
 
   const shown = displayScore(score);
+  const primary = primaryAction(shown.total);
   const scored = (Object.keys(COMPONENT_LABEL) as (keyof ScoreComponents)[]).filter(
     (c) => score.componentMax[c] > 0,
   );
@@ -205,13 +207,16 @@ export function ResultScreen({
             </Button>
           )}
           <Button
+            variant={primary === 'retry' ? 'primary' : 'secondary'}
             disabled={busy !== null || !scenarioId}
             onClick={() => void start('retry', scenarioId)}
+            data-testid="retry"
           >
             {busy === 'retry' ? 'Starting…' : 'Retry same seed'}
           </Button>
           <Button
-            variant="primary"
+            variant={primary === 'next' ? 'primary' : 'secondary'}
+            data-testid="next"
             disabled={busy !== null || !next}
             onClick={() => {
               // Next opens that scenario's briefing (plan answer 9); retry starts directly.
@@ -228,6 +233,18 @@ export function ResultScreen({
                 : 'Next scenario'}
           </Button>
         </div>
+        {primary === 'retry' && (
+          <p className="basis-full text-right text-small text-text-2" data-testid="drill-hint">
+            Retry, then work through the{' '}
+            <a
+              href="#debrief"
+              className="underline decoration-line-2 underline-offset-2 hover:text-text-1"
+            >
+              drill in the debrief
+            </a>
+            .
+          </p>
+        )}
       </header>
       {error && <StatusNotice tone="error" title={`Could not start the session: ${error}`} />}
 
@@ -261,6 +278,11 @@ export function ResultScreen({
                       </span>
                     )}
                   </span>
+                  {score.recommendationRating !== undefined && (
+                    <span className="text-small text-text-2" data-testid="recommendation-basis">
+                      Recommended from your rating ({formatRating(score.recommendationRating)})
+                    </span>
+                  )}
                 </div>
               )}
               <RatingReadout score={score} mode={mode} />
@@ -356,7 +378,9 @@ export function ResultScreen({
         </Panel>
       </div>
 
-      <DebriefPanel sessionId={sessionId} />
+      <div id="debrief" className="scroll-mt-4">
+        <DebriefPanel sessionId={sessionId} />
+      </div>
 
       <Panel>
         <PanelHeader title="What was there vs what you did">
@@ -460,7 +484,7 @@ function RatingReadout({ score, mode }: { score: Score; mode: SessionMode }) {
       <div className="flex flex-col gap-1" data-testid="rating-change">
         <span className="text-label">Rating</span>
         <span className="text-small text-text-2">
-          {mode === 'PRACTICE' ? 'Practice — rating unchanged' : 'Not rated'}
+          {mode === 'PRACTICE' ? 'Practice runs never move your rating' : 'Not rated'}
         </span>
       </div>
     );
