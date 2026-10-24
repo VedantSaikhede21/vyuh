@@ -43,10 +43,14 @@ class Settings(BaseSettings):
     )
 
     llm_enabled: bool = False
+    #: openrouter | google | openai (any other OpenAI-compatible server); decides the
+    #: provider-specific request fields (decision 138).
     llm_provider: str = "openrouter"
     llm_model: str = "google/gemini-3.8-flash"
     #: OpenAI-compatible chat API root; OpenRouter by default (a local server works offline).
     llm_base_url: str = "https://openrouter.ai/api/v1"
+    llm_api_key: SecretStr = SecretStr("")
+    #: Older name of LLM_API_KEY, still read when LLM_API_KEY is empty.
     openrouter_api_key: SecretStr = SecretStr("")
     llm_timeout_s: float = 20
     llm_rate_limit_per_min: int = 10
@@ -61,6 +65,10 @@ class Settings(BaseSettings):
 
     #: Terrain presets (<dir>/<PRESET>/meta.json, heightmap.u16, buildings.geojson).
     terrain_dir: Path = DEFAULT_TERRAIN_DIR
+
+    @property
+    def llm_key(self) -> str:
+        return self.llm_api_key.get_secret_value() or self.openrouter_api_key.get_secret_value()
 
     @field_validator("cors_origins", mode="before")
     @classmethod
