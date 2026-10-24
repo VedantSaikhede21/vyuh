@@ -66,3 +66,24 @@ describe('trust and rating answers (DESIGN §11.7)', () => {
     expect(ratingAnswer([p(null, null), p(1000, 990)], 990)).toMatch(/complete another/);
   });
 });
+
+describe('text-to-scenario parameters (SPEC §13.2)', () => {
+  it('lists what was parsed and marks the rest as auto', async () => {
+    const { parameterRows } = await import('@/lib/ai/from-text');
+    const rows = parameterRows({
+      terrainPreset: 'PUNJAB_PLAINS',
+      difficulty: 4,
+      seed: 12,
+      timeBand: 'NIGHT',
+      swarmSize: 8,
+      decoys: 2,
+      approachBearingDeg: 0,
+    });
+    const get = (l: string) => rows.find((r) => r.label === l)!;
+    expect(get('Time of day').value).toBe('Night');
+    expect([get('Swarm').value, get('Swarm').unit]).toEqual(['8', 'drones']);
+    expect(get('Decoys').value).toBe('2');
+    expect(get('Main threat axis').value).toBe('000°');
+    expect(get('Weather').auto).toBe(true);
+  });
+});

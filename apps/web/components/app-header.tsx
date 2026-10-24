@@ -31,6 +31,9 @@ export function AppHeader() {
                   <Link href="/instructor/builder" className="text-label hover:text-text-1">
                     Builder
                   </Link>
+                  <Link href="/instructor/text" className="text-label hover:text-text-1">
+                    From text
+                  </Link>
                   <Link href="/instructor/scoring" className="text-label hover:text-text-1">
                     Scoring
                   </Link>
