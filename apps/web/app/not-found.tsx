@@ -9,6 +9,7 @@ export default function NotFound() {
       <PageHeader reference="Error 404" title="Page not found" />
       <ErrorState
         title="There is no page at this address."
+        tone="neutral"
         action={
           <Button asChild variant="secondary" size="sm">
             <Link href="/train">Open training</Link>
