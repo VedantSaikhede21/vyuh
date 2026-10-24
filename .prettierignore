@@ -8,3 +8,4 @@ packages/shared/schema
 *.md
 apps/web/public/terrain
 graphify-out
+apps/web/public/signatures
