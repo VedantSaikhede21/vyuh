@@ -1,5 +1,6 @@
 'use client';
 
+import { AiLabelLine } from '@/components/hud/ai-chip';
 import { Billboard, Html } from '@react-three/drei';
 import type { Affiliation } from '@vyuh/shared';
 import { toThree } from '@vyuh/sim-core';
@@ -152,6 +153,7 @@ function TrackMarker({
           >
             {style.letter} {track.id}
           </div>
+          {selected && track.ai && <AiLabelLine ai={track.ai} />}
         </Html>
       )}
     </group>

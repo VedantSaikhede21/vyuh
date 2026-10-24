@@ -24,6 +24,12 @@ export interface TrackView {
   affiliation: Affiliation;
   /** RF strobe lined up with the track (band, friendly ID), or null. */
   rf: { band: string | null; friendlyIdCode: string | null } | null;
+  /** AI-assist suggestion once shown (first selection), with the trainee's answer. */
+  ai: {
+    suggestedClass: ContactClass;
+    confidence: number;
+    decision: 'ACCEPTED' | 'REJECTED' | null;
+  } | null;
 }
 
 /** An RF bearing strobe as the operator sees it (no contact id, no range). */
@@ -113,6 +119,7 @@ export function snapshot(rt: SimRuntime): HudSnapshot {
       classifiedAs: t.classifiedAs,
       affiliation: t.affiliation,
       rf: t.rf && { band: t.rf.band, friendlyIdCode: t.rf.friendlyIdCode },
+      ai: t.aiShown && t.aiSuggestion ? { ...t.aiSuggestion, decision: t.aiDecision } : null,
     })),
     rfStrobes: s.rfStrobes.map((r) => ({
       id: r.id,
