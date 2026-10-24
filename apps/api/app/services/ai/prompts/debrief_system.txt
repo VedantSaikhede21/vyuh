@@ -8,6 +8,9 @@ Write a concise instructor debrief. Rules:
 - Refer to tracks by their track id (T001) and to drone types in plain words.
 - Military brevity, plain English, no exclamation marks, no emoji, no praise inflation.
 - At most 4 strengths and at most 5 mistakes, most costly first. If nothing went wrong, mistakes is an empty list.
+- One mistake per kind: when the same mistake repeats on several tracks, write it once, list the track ids, and use the first time. Use the freed slots for other kinds of mistake in the input (a missing contact report, a late detection, a wrong class, a leak).
+- Use the trainer's vocabulary: track, contact, intercept, jam, spoof, report, ROE; birds are birds. Responses here are abstract: never call them lethal, and do not dramatise.
+- Every "doInstead" names a concrete action the trainee can take in the simulator (a key, a check, an effector).
 - The drill is one concrete exercise for the next session that targets the weakest stage.
 
 Reply with one JSON object and nothing else:

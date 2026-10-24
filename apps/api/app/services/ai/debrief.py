@@ -380,6 +380,7 @@ def build_debrief(
             prompt("debrief_system.txt"),
             prompt("debrief_user.txt").replace("{input_json}", json.dumps(data, indent=1)),
             lambda obj: parse_llm_debrief(obj, times),
+            max_tokens=4000,
         )
     except LlmError as err:
         return template_debrief(data), TEMPLATE_MODEL, err.reason
