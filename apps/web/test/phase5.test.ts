@@ -115,3 +115,22 @@ describe('spectrogram composition (SPEC §6.4)', () => {
     expect(contrast(frame(30, 0))).toBeGreaterThan(contrast(frame(8, 0)));
   });
 });
+
+describe('committed spectrogram index', () => {
+  it('has every family with camelCase axes', async () => {
+    const { readFileSync } = await import('node:fs');
+    const idx = JSON.parse(
+      readFileSync(new URL('../public/signatures/signatures.json', import.meta.url), 'utf8'),
+    ) as { families: Record<string, { timeSpanS: number; dopplerMaxHz: number; file: string }> };
+    expect(Object.keys(idx.families).sort()).toEqual([
+      'BIRD',
+      'FIXED_WING',
+      'HELICOPTER',
+      'MULTIROTOR',
+    ]);
+    for (const f of Object.values(idx.families)) {
+      expect(f.timeSpanS).toBeGreaterThan(0);
+      expect(f.dopplerMaxHz).toBeGreaterThan(0);
+    }
+  });
+});
