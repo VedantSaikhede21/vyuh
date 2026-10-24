@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { AFFILIATION_STYLE } from '@/lib/affiliation';
 import { actionStates, formatKm, type ActionState } from '@/lib/hud/derive';
+import { useNextStep } from '@/lib/hud/use-next-step';
 import type { Commands } from '@/lib/sim/commands';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useHudStore, type EffectorView } from '@/lib/sim/store';
@@ -142,6 +143,7 @@ export function ActionBar({ runtime, commands }: { runtime: SimRuntime; commands
   const interceptArmed = useUiStore((s) => s.interceptArmed);
   const setUi = useUiStore((s) => s.set);
   const sites = useEffectorSites(runtime, hud);
+  const next = useNextStep(runtime, hud);
   if (!hud) return null;
   const st = actionStates(hud, sites, runtime.scenario.zones, runtime.mode);
   const selected = hud.tracks.find((t) => t.id === hud.selectedTrackId) ?? null;
@@ -158,7 +160,26 @@ export function ActionBar({ runtime, commands }: { runtime: SimRuntime; commands
     <Panel className="relative h-full border-0">
       {/* At 1366 px the AI chip needs the title's width while it waits for Y / X:
           the title stays for screen readers only, never truncated. */}
-      <PanelHeader title={<span className={aiPending ? 'sr-only' : undefined}>Actions</span>}>
+      <PanelHeader
+        title={
+          aiPending ? (
+            <span className="sr-only">Actions</span>
+          ) : next ? (
+            // Practice only (audit P0-5): what to do next with the selected track.
+            <span className="flex min-w-0 items-center gap-1.5" data-testid="next-step">
+              <span className="text-text-2">Next</span>
+              <span className="truncate" title={next.text}>
+                {next.text}
+              </span>
+              {next.keys.map((k) => (
+                <Kbd key={k}>{k}</Kbd>
+              ))}
+            </span>
+          ) : (
+            'Actions'
+          )
+        }
+      >
         {selected ? (
           <span className="flex min-w-0 items-center gap-2">
             <AiChip track={selected} commands={commands} />
