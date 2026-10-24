@@ -182,7 +182,7 @@ export function TrendsView({
                   <p className="flex justify-between text-label">
                     {COMPONENT_LABEL[c]}
                     <span className="text-readout text-text-1">
-                      {last === null ? '—' : Math.round(last)}
+                      {last === null ? '—' : last}
                       <span className="text-text-2"> %</span>
                     </span>
                   </p>
@@ -336,7 +336,7 @@ export function TrendsView({
                   <td className={TD}>
                     <Pips value={p.difficulty} />
                   </td>
-                  <td className={`${TD} text-right text-readout`}>{Math.round(p.total)}</td>
+                  <td className={`${TD} text-right text-readout`}>{p.total}</td>
                   <td className={`${TD} text-right text-readout`}>
                     {p.ratingAfter === null || p.ratingBefore === null ? (
                       <span className="text-text-2">—</span>

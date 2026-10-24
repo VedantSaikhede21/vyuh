@@ -39,8 +39,8 @@ const TD = 'h-8 px-2 whitespace-nowrap';
 
 function signed(v: number | null) {
   if (v === null) return <span className="text-text-2">—</span>;
-  const r = Math.round(v);
-  return <span className={r <= -5 ? 'text-warn' : undefined}>{r > 0 ? `+${r}` : r}</span>;
+  // Display value from the API (decision 149): never re-rounded here.
+  return <span className={v <= -5 ? 'text-warn' : undefined}>{v > 0 ? `+${v}` : v}</span>;
 }
 
 function AssignForm({ unit, onDone }: { unit: UnitSummary; onDone: () => void }) {
@@ -173,7 +173,7 @@ function Dashboard({
         <PanelBody className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <Readout
             label="Average score"
-            value={d.avgTotal === null ? '—' : d.avgTotal.toFixed(0)}
+            value={d.avgTotal === null ? '—' : d.avgTotal}
             unit="/ 100"
             size="lg"
             flash={false}
@@ -239,18 +239,10 @@ function Dashboard({
                   </td>
                   <td className={`${TD} text-right text-readout`}>{r.sessions}</td>
                   <td className={`${TD} text-right text-readout`}>
-                    {r.avgTotal === null ? (
-                      <span className="text-text-2">—</span>
-                    ) : (
-                      Math.round(r.avgTotal)
-                    )}
+                    {r.avgTotal === null ? <span className="text-text-2">—</span> : r.avgTotal}
                   </td>
                   <td className={`${TD} text-right text-readout`}>
-                    {r.lastTotal === null ? (
-                      <span className="text-text-2">—</span>
-                    ) : (
-                      Math.round(r.lastTotal)
-                    )}
+                    {r.lastTotal === null ? <span className="text-text-2">—</span> : r.lastTotal}
                   </td>
                   <td className={`${TD} text-right text-readout`}>{signed(r.change)}</td>
                   <td className={`${TD} text-right text-readout`}>
@@ -411,7 +403,7 @@ function Dashboard({
                   <td className={TD}>
                     <Pips value={s.difficulty} />
                   </td>
-                  <td className={`${TD} text-right text-readout`}>{Math.round(s.total)}</td>
+                  <td className={`${TD} text-right text-readout`}>{s.total}</td>
                 </tr>
               ))}
             </tbody>

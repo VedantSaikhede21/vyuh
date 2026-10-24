@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { api } from '@/lib/api';
 import { REPLAY_FALLBACK_TEXT, penaltyHref, replayGate, type ReplayGate } from '@/lib/replay/gate';
+import { displayScore } from '@/lib/score-display';
 import { loadPresetMeta } from '@/lib/terrain/load-world';
 import { OUTCOME_LABEL, OUTCOME_TONE, humaniseFeedback } from '@/lib/hud/feedback';
 import { CLASS_LABEL, formatClock } from '@/lib/strings';
@@ -158,6 +159,7 @@ export function ResultScreen({
     }
   };
 
+  const shown = displayScore(score);
   const scored = (Object.keys(COMPONENT_LABEL) as (keyof ScoreComponents)[]).filter(
     (c) => score.componentMax[c] > 0,
   );
@@ -238,7 +240,7 @@ export function ResultScreen({
             <div className="flex flex-wrap items-end gap-8">
               <Readout
                 label="Total"
-                value={<span data-testid="score-total">{score.total.toFixed(0)}</span>}
+                value={<span data-testid="score-total">{shown.total}</span>}
                 unit="/ 100"
                 size="lg"
                 flash={false}
@@ -280,7 +282,7 @@ export function ResultScreen({
                       <div className="h-full bg-text-1" style={{ width: `${pct}%` }} />
                     </div>
                     <span className="text-right text-readout">
-                      {score.components[c].toFixed(1)}
+                      {shown.components[c].toFixed(1)}
                       <span className="text-text-2"> / {score.componentMax[c]}</span>
                     </span>
                   </div>
@@ -468,7 +470,7 @@ function RatingReadout({ score, mode }: { score: Score; mode: SessionMode }) {
     <Tooltip
       content={`Elo: scenario rating ${r.scenarioRating}, expected result ${Math.round(
         r.expected * 100,
-      )} %, actual ${score.total.toFixed(0)} %. Change = 32 × (actual − expected).`}
+      )} %, actual ${displayScore(score).total} %. Change = 32 × (actual − expected).`}
     >
       <div className="flex flex-col gap-1" data-testid="rating-change" tabIndex={0}>
         <span className="text-label">Rating</span>

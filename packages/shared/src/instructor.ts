@@ -83,10 +83,10 @@ export type AssignmentListResponse = z.infer<typeof AssignmentListResponse>;
 export const ComponentPct = named(
   'ComponentPct',
   z.object({
-    detection: z.number().min(0).max(100).nullable(),
-    classification: z.number().min(0).max(100).nullable(),
-    decision: z.number().min(0).max(100).nullable(),
-    report: z.number().min(0).max(100).nullable(),
+    detection: z.int().min(0).max(100).nullable(),
+    classification: z.int().min(0).max(100).nullable(),
+    decision: z.int().min(0).max(100).nullable(),
+    report: z.int().min(0).max(100).nullable(),
   }),
 );
 export type ComponentPct = z.infer<typeof ComponentPct>;
@@ -101,7 +101,8 @@ export const TrendPoint = named(
     scenarioName: z.string(),
     difficulty: Difficulty,
     endedAt: z.iso.datetime({ offset: true }),
-    total: z.number().min(0).max(100),
+    /** Display value, whole number (decision 149). */
+    total: z.int().min(0).max(100),
     components: ComponentPct,
     /** Mean detection latency over the threats the trainee marked, seconds. */
     detectionLatencyS: z.number().min(0).nullable(),
@@ -179,11 +180,12 @@ export const UnitTraineeRow = named(
     userId: z.uuid(),
     name: z.string(),
     sessions: z.int().min(0),
-    avgTotal: z.number().nullable(),
-    lastTotal: z.number().nullable(),
-    bestTotal: z.number().nullable(),
+    /** Totals are display values, whole numbers (decision 149). */
+    avgTotal: z.int().nullable(),
+    lastTotal: z.int().nullable(),
+    bestTotal: z.int().nullable(),
     /** Mean of the last three totals minus the mean of the first three (null below two sessions). */
-    change: z.number().nullable(),
+    change: z.int().nullable(),
     detectionLatencyS: z.number().nullable(),
     classificationAccuracy: z.number().min(0).max(1).nullable(),
     weakestStage: KillChainStage.nullable(),
@@ -217,7 +219,8 @@ export const UnitSessionRow = named(
     scenarioName: z.string(),
     difficulty: Difficulty,
     endedAt: z.iso.datetime({ offset: true }),
-    total: z.number(),
+    /** Display value, whole number (decision 149). */
+    total: z.int(),
     treeVersion: z.string(),
     isDemo: z.boolean(),
   }),
@@ -231,7 +234,8 @@ export const UnitDashboardResponse = named(
     unit: UnitRef,
     sessions: z.int().min(0),
     demoSessions: z.int().min(0),
-    avgTotal: z.number().nullable(),
+    /** Display value, whole number (decision 149). */
+    avgTotal: z.int().nullable(),
     components: ComponentPct,
     detectionLatencyS: z.number().nullable(),
     classificationAccuracy: z.number().min(0).max(1).nullable(),
