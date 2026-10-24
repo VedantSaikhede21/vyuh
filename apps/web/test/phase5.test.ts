@@ -20,8 +20,10 @@ describe('AI-assist wording (SPEC §13.3)', () => {
   it('acknowledges shown, accepted and rejected in Comms', () => {
     const p = { suggestedClass: 'BIRD_SMALL', confidence: 0.6 };
     const line = (type: string) =>
-      eventLine({ seq: 1, tMs: 1000, type, trackId: 'T002', payload: p } as unknown as SimEvent, ctx)
-        ?.text;
+      eventLine(
+        { seq: 1, tMs: 1000, type, trackId: 'T002', payload: p } as unknown as SimEvent,
+        ctx,
+      )?.text;
     expect(line('AI_SUGGESTION_SHOWN')).toBe(
       'T002 AI SUGGESTS  SMALL BIRD · 60 %  (Y ACCEPT · X REJECT)',
     );
