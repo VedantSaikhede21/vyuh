@@ -16,7 +16,7 @@ import { useReplayStore } from '@/lib/replay/store';
 import { eoSensor } from '@/lib/sim/commands';
 import { snapshot, useHudStore } from '@/lib/sim/store';
 import { useUiStore } from '@/lib/sim/ui-store';
-import { KillChainPanel } from './kill-chain';
+import { AarSidePanel } from './side-panel';
 import { ReplayHelp, ReplayTimeline, useReplayKeys } from './timeline';
 import { TruthAnchors, TruthLabels, truthColumn, truthPpiOverlay } from './truth';
 
@@ -132,13 +132,7 @@ export function ReplayView({
         commands={commands}
         replay={{
           timeline: <ReplayTimeline controller={controller} markers={markers} seek={seek} />,
-          side: (
-            <KillChainPanel
-              rows={data.killChain}
-              penalties={data.session.score?.penalties}
-              onJump={seek}
-            />
-          ),
+          side: <AarSidePanel data={data} onJump={seek} />,
           tacticalScene: <TruthAnchors />,
           tacticalOverlay: <TruthLabels runtime={rt} />,
           ppiOverlay,

@@ -23,6 +23,7 @@ import {
   Readout,
   StatusNotice,
 } from '@/components/hud/primitives';
+import { DebriefPanel } from '@/components/aar/debrief-panel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -352,6 +353,8 @@ export function ResultScreen({
           )}
         </Panel>
       </div>
+
+      <DebriefPanel sessionId={sessionId} />
 
       <Panel>
         <PanelHeader title="What was there vs what you did">
