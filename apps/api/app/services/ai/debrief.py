@@ -250,6 +250,85 @@ def debrief_input(
     return json.loads(json.dumps(data, default=_value))
 
 
+def llm_payload(data: dict[str, Any]) -> dict[str, Any]:
+    """The compact view the LLM gets (decision 139): about a quarter of `data`.
+
+    Bonuses are dropped and repeated penalties merged into one line (first time, all
+    tracks); only contacts with something wrong are listed (their scoring feedback is
+    already in the penalties and kill-chain issues); key-event and issue lines are terse.
+    """
+    s = data["score"]
+    track_of = {
+        c["contactId"]: (c.get("trackIds") or [c["contactId"]])[0] for c in data["contacts"]
+    }
+    merged: dict[str, dict[str, Any]] = {}
+    for p in s["penalties"]:
+        if p["points"] >= 0 or p.get("unavoidable"):
+            continue
+        m = merged.setdefault(
+            p["code"],
+            {
+                "code": p["code"],
+                "pts": 0,
+                "tMs": p.get("tMs", 0),
+                "tracks": [],
+                "text": p["feedback"],
+            },
+        )
+        m["pts"] += p["points"]
+        m["tMs"] = min(m["tMs"], p.get("tMs", m["tMs"]))
+        track = track_of.get(p.get("contactId", ""))
+        if track and track not in m["tracks"]:
+            m["tracks"].append(track)
+    penalised = {t for m in merged.values() for t in m["tracks"]}
+    flagged = {i["contactId"] for i in data["killChainIssues"]}
+    # Non-threats appear only when misclassified; an engagement is already a penalty.
+    contacts = [
+        {
+            k: c[k]
+            for k in ("trackIds", "isThreat", "trueClass", "classifiedAs", "outcome")
+            if k in c
+        }
+        for c in data["contacts"]
+        if c["isThreat"] or c.get("classification") not in (None, "EXACT")
+    ]
+    issues = [
+        f"{i['tMs']} {i.get('trackId', i['contactId'])} {i['stage']} {i['status']}: {i['feedback']}"
+        for i in data["killChainIssues"]
+        if i["isThreat"] or i.get("trackId") not in penalised
+    ]
+    events = [
+        " ".join(str(e[k]) for k in ("tMs", "trackId", "type", "detail") if k in e)
+        for e in data["keyEvents"]
+        if not str(e.get("detail", "")).split(" ")[-1].startswith("BLOCKED")
+    ]
+    return {
+        "scenario": data["scenario"],
+        "mode": data["mode"],
+        "score": {
+            "total": s["total"],
+            "got": {k: v for k, v in s["components"].items() if s["componentMax"][k] > 0},
+            "max": {k: v for k, v in s["componentMax"].items() if v > 0},
+        },
+        "penalties": list(merged.values()),
+        "contacts": contacts,
+        "nonThreatsHandledWell": sum(
+            1 for c in data["contacts"] if not c["isThreat"] and c["contactId"] not in flagged
+        ),
+        "nonThreatsEngaged": len(
+            {t for t in penalised}
+            - {t for c in data["contacts"] if c["isThreat"] for t in c.get("trackIds", [])}
+        ),
+        "issues": issues,
+        "events": events,
+    }
+
+
+def user_message(data: dict[str, Any]) -> str:
+    compact = json.dumps(llm_payload(data), separators=(",", ":"), ensure_ascii=False)
+    return prompt("debrief_user.txt").replace("{input_json}", compact)
+
+
 def allowed_times(data: dict[str, Any]) -> set[int]:
     times = {p["tMs"] for p in data["score"]["penalties"] if "tMs" in p}
     times |= {i["tMs"] for i in data["killChainIssues"]}
@@ -378,9 +457,9 @@ def build_debrief(
         content = llm.complete_json(
             user_key,
             prompt("debrief_system.txt"),
-            prompt("debrief_user.txt").replace("{input_json}", json.dumps(data, indent=1)),
+            user_message(data),
             lambda obj: parse_llm_debrief(obj, times),
-            max_tokens=4000,
+            max_tokens=2500,
         )
     except LlmError as err:
         return template_debrief(data), TEMPLATE_MODEL, err.reason

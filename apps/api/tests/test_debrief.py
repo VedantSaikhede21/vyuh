@@ -60,8 +60,7 @@ def _llm_on(app: FastAPI, transport: FakeTransport) -> None:
 
 
 def _user_prompt(call: dict[str, Any]) -> dict[str, Any]:
-    text = call["body"]["messages"][1]["content"]
-    return json.loads(text.split("\n", 1)[1])
+    return json.loads(call["body"]["messages"][1]["content"])
 
 
 @pytest.fixture
@@ -112,13 +111,27 @@ def test_llm_debrief_validated_and_cached(
     probe.replies.append("still not json")
     client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=auth_header(user))
     data = _user_prompt(probe.calls[0])
-    t = data["keyEvents"][0]["tMs"]
+    t = data["penalties"][0]["tMs"]
 
     # Input holds no personal data and no raw log.
     text = json.dumps(data)
     assert "rifleman" not in text and "@test" not in text
-    assert len(data["keyEvents"]) <= 10
-    assert set(data) == {"scenario", "mode", "score", "contacts", "killChainIssues", "keyEvents"}
+    assert len(data["events"]) <= 10
+    assert set(data) == {
+        "scenario",
+        "mode",
+        "score",
+        "penalties",
+        "contacts",
+        "nonThreatsHandledWell",
+        "nonThreatsEngaged",
+        "issues",
+        "events",
+    }
+    # Compact (decision 139): repeated penalties merged, no indentation.
+    roe = [p for p in data["penalties"] if p["code"] == "ROE_VIOLATION_ATTEMPT"]
+    assert len(roe) == 1 and len(roe[0]["tracks"]) > 1
+    assert len(probe.calls[0]["body"]["messages"][1]["content"]) < 2500
 
     reply = {
         "summary": "Two of three threats engaged in time.",
@@ -159,7 +172,7 @@ def test_llm_answer_used_and_timeout_retried(
             data = _user_prompt(self.calls[-1])
             holder["data"] = data
             mistake = {
-                "tMs": data["keyEvents"][-1]["tMs"],
+                "tMs": data["penalties"][-1]["tMs"],
                 "what": "Late intercept.",
                 "whyItMatters": "It reached the town.",
                 "doInstead": "Engage at the first IDENTIFY.",
@@ -180,7 +193,7 @@ def test_llm_answer_used_and_timeout_retried(
     assert body["source"] == "LLM"
     assert body["model"] == "test/model"
     assert "fallbackReason" not in body
-    assert body["content"]["mistakes"][0]["tMs"] == holder["data"]["keyEvents"][-1]["tMs"]
+    assert body["content"]["mistakes"][0]["tMs"] == holder["data"]["penalties"][-1]["tMs"]
 
 
 def test_invented_time_falls_back(
