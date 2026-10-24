@@ -191,4 +191,4 @@ def rescore(db: Session, session_id: uuid.UUID, tree_id: str) -> Score:
     score = score_session(scenario, stored_events(db, row.id), tree)
     store_score(db, row.id, score)
     db.commit()
-    return with_derived_fields(score, scenario)
+    return with_derived_fields(db, score, scenario, row)

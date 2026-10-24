@@ -8,8 +8,8 @@ from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.core.errors import ApiError
+from app.models import RatingHistory, ScoreRow, SessionEvent, TrainingSession, User
 from app.models import Scenario as ScenarioRow
-from app.models import ScoreRow, SessionEvent, TrainingSession, User
 from app.schemas.events import event_to_dict
 from app.schemas.generated import (
     CompleteSessionRequest,
@@ -18,11 +18,13 @@ from app.schemas.generated import (
     ErrorCode,
     EventBatchRequest,
     EventBatchResponse,
+    RatingChange,
     Scenario,
     Score,
     ScoreComponents,
     SessionDetailResponse,
     SessionEnded,
+    SessionMode,
     SessionStatus,
     UserRole,
 )
@@ -33,7 +35,13 @@ from app.services.plausibility import (
     advance_state,
     check_batch,
 )
-from app.services.recommendation import recommend_difficulty
+from app.services.recommendation import (
+    START_RATING,
+    elo_update,
+    expected_result,
+    recommend_difficulty,
+    scenario_rating,
+)
 from app.services.scenarios import get_scenario_row, load_scenario
 from app.services.scoring.engine import score_session
 from app.services.scoring.versions import get_tree
@@ -252,8 +260,30 @@ def complete_session(
     row.status = SessionStatus.COMPLETED
     row.ended_at = datetime.now(UTC)
     row.client_meta = body.client_meta.model_dump(mode="json", by_alias=True, exclude_unset=True)
+    if row.mode is SessionMode.ASSESSMENT:
+        update_rating(db, user, row, scenario.difficulty, score.total)
     db.commit()
-    return with_derived_fields(score, scenario)
+    return with_derived_fields(db, score, scenario, row)
+
+
+def update_rating(
+    db: Session, user: User, row: TrainingSession, difficulty: int, total: float
+) -> None:
+    """Elo update on Assessment completion only (SPEC §9.3); the caller commits.
+
+    Uses the score the session completed with: a later re-score does not move the rating.
+    """
+    elo = elo_update(user.rating, difficulty, total)
+    db.add(
+        RatingHistory(
+            user_id=user.id,
+            session_id=row.id,
+            before=elo.before,
+            after=elo.after,
+            created_at=row.ended_at or datetime.now(UTC),
+        )
+    )
+    user.rating = elo.after
 
 
 def store_score(db: Session, session_id: uuid.UUID, score: Score) -> None:
@@ -284,7 +314,34 @@ def store_score(db: Session, session_id: uuid.UUID, score: Score) -> None:
     db.flush()
 
 
-def with_derived_fields(score: Score, scenario: Scenario) -> Score:
+def recompute_rating(db: Session, user: User) -> None:
+    """Set the rating from the newest remaining history row (1000 without one), after
+    sessions were deleted (demo reset, demo history rebuild). The caller commits."""
+    last = db.scalar(
+        select(RatingHistory)
+        .where(RatingHistory.user_id == user.id)
+        .order_by(RatingHistory.created_at.desc(), RatingHistory.id.desc())
+        .limit(1)
+    )
+    user.rating = last.after if last is not None else START_RATING
+
+
+def rating_change(db: Session, row: TrainingSession, difficulty: int) -> RatingChange | None:
+    """The Elo change this session made, if any (Assessment sessions since Phase 5)."""
+    hist = db.scalar(select(RatingHistory).where(RatingHistory.session_id == row.id))
+    if hist is None:
+        return None
+    return RatingChange(
+        before=hist.before,
+        after=hist.after,
+        scenario_rating=scenario_rating(difficulty),
+        expected=round(expected_result(hist.before, difficulty), 4),
+    )
+
+
+def with_derived_fields(
+    db: Session, score: Score, scenario: Scenario, row: TrainingSession
+) -> Score:
     """Fields shown with a completed session but not produced by the scoring tree (decision 64).
 
     The stored score stays exactly as the engine produced it (so tree re-scores compare
@@ -295,14 +352,22 @@ def with_derived_fields(score: Score, scenario: Scenario) -> Score:
     per_contact = [
         p.model_copy(update={"true_class": true_class.get(p.contact_id)}) for p in score.per_contact
     ]
-    nxt, basis = recommend_difficulty(score.total, scenario.difficulty)
-    return score.model_copy(
-        update={
-            "per_contact": per_contact,
-            "recommended_difficulty": nxt,
-            "recommendation_basis": basis,
-        }
-    )
+    rating = rating_change(db, row, scenario.difficulty)
+    if rating is not None:
+        basis_rating = rating.after
+    else:
+        # Practice (and sessions from before Phase 5): the trainee's current rating.
+        owner = db.get(User, row.user_id)
+        basis_rating = owner.rating if owner is not None else START_RATING
+    nxt, basis = recommend_difficulty(basis_rating)
+    update: dict = {
+        "per_contact": per_contact,
+        "recommended_difficulty": nxt,
+        "recommendation_basis": basis,
+    }
+    if rating is not None:
+        update["rating"] = rating
+    return score.model_copy(update=update)
 
 
 def latest_score_row(db: Session, session_id: uuid.UUID) -> ScoreRow | None:
@@ -343,7 +408,8 @@ def latest_score(db: Session, session_id: uuid.UUID) -> Score | None:
         return None
     score = score_from_row(db, row)
     session = db.get_one(TrainingSession, session_id)
-    return with_derived_fields(score, load_scenario(db.get_one(ScenarioRow, session.scenario_id)))
+    scenario = load_scenario(db.get_one(ScenarioRow, session.scenario_id))
+    return with_derived_fields(db, score, scenario, session)
 
 
 def session_ended(db: Session, session_id: uuid.UUID) -> SessionEnded | None:

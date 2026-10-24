@@ -31,6 +31,10 @@ function point(i: number, over: Partial<TrendPoint> = {}): TrendPoint {
     detectionLatencyS: 10,
     classificationAccuracy: 0.5,
     recommendedDifficulty: 3,
+    ratingBefore: null,
+    ratingAfter: null,
+    overTrust: null,
+    underTrust: null,
     treeVersion: 'default_v4',
     isDemo: false,
     ...over,
@@ -77,8 +81,10 @@ describe('trend answers (DESIGN §11.7)', () => {
       components: { detection: 90, classification: 50, decision: 70, report: null },
     });
     expect(componentAnswer([v1])).toMatch(/^Classification loses the most/);
-    expect(difficultyAnswer([point(1, { total: 84, recommendedDifficulty: 4 })])).toBe(
-      'Difficulty 4 next: your last score was 84 at difficulty 3 (step up at 80, down below 50).',
+    expect(
+      difficultyAnswer([point(1, { total: 84, recommendedDifficulty: 4, ratingAfter: 1320 })]),
+    ).toBe(
+      'Difficulty 4 next: the level closest to your rating 1320 + 50 (D1 = 950, each level + 150).',
     );
   });
 

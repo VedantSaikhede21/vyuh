@@ -22,6 +22,7 @@ from app.core.config import get_settings
 from app.core.db import make_engine, make_session_factory
 from app.models import ScoreRow, TrainingSession, User
 from app.seed.e2e import E2E_EMAIL
+from app.services.sessions import recompute_rating
 
 DEMO_DOMAIN = "@demo"
 
@@ -56,7 +57,11 @@ def reset_demo(db: Session, *, apply: bool) -> tuple[int, int]:
     for (email, mode, status), n in sorted(per.items()):
         print(f"  {email:<20} {mode:<10} {status:<10} {n:>4}")
     if apply:
+        owners = {s.user_id for s, _ in doomed}
         db.execute(delete(TrainingSession).where(TrainingSession.id.in_(ids)))
+        # Their rating history went with them (cascade): re-derive each owner's Elo.
+        for user in db.scalars(select(User).where(User.id.in_(owners))):
+            recompute_rating(db, user)
         db.commit()
         print("Done.")
     else:

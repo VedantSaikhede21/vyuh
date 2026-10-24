@@ -274,7 +274,9 @@ def test_complete_scores_on_server(
 
     # Derived after the engine (decision 64): truth per contact + next difficulty.
     assert [c["trueClass"] for c in score["perContact"]] == ["QUAD_SMALL"]
-    assert (score["recommendedDifficulty"], score["recommendationBasis"]) == (2, "RULE_V1")
+    # Practice: no Elo change; recommended from the current rating (1000 → D2, SPEC §9.3).
+    assert (score["recommendedDifficulty"], score["recommendationBasis"]) == (2, "ELO_V1")
+    assert "rating" not in score
 
     row = db.get(TrainingSession, uuid.UUID(sid))
     db.refresh(row)
@@ -313,7 +315,7 @@ def test_complete_ignored_run_scores_zero(
     assert score["total"] == 0
     assert score["perContact"][0]["leaves"] == ["MISSED"]
     assert score["perContact"][0]["outcome"] == "LEAKED"
-    assert score["recommendedDifficulty"] == 1  # 0 at difficulty 1 clamps to 1
+    assert score["recommendedDifficulty"] == 2  # Practice: from the current rating (1000)
 
 
 def test_complete_rejects_unfinished_or_inconsistent_logs(

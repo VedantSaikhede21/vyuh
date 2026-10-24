@@ -20,7 +20,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.core.security import local_auth_id
-from app.models import Assignment, TrainingSession, Unit, User
+from app.models import Assignment, RatingHistory, TrainingSession, Unit, User
 from app.models import Scenario as ScenarioRow
 from app.schemas.generated import (
     CompleteSessionRequest,
@@ -28,6 +28,7 @@ from app.schemas.generated import (
     EventBatchRequest,
 )
 from app.services import sessions
+from app.services.sessions import recompute_rating
 
 DEMO_DIR = Path(__file__).resolve().parent / "demo_sessions"
 INSTRUCTOR_EMAIL = "instructor@demo"
@@ -109,6 +110,9 @@ def _play(db: Session, user: User, log: dict[str, Any], fingerprint: str) -> Non
     session.last_batch_at = start + timedelta(milliseconds=end_t)
     session.ended_at = start + timedelta(milliseconds=end_t)
     session.client_meta = {"browser": "demo history", "demo": fingerprint}
+    hist = db.scalar(select(RatingHistory).where(RatingHistory.session_id == session.id))
+    if hist is not None:
+        hist.created_at = session.ended_at
     db.commit()
 
 
@@ -151,6 +155,12 @@ def seed_demo_history(db: Session) -> int:
     ):
         return 0
     db.execute(delete(TrainingSession).where(TrainingSession.is_demo.is_(True)))
+    db.commit()
+    # Demo history rows went with their sessions: the rating falls back to what is left.
+    for email in sorted({log["email"] for log in logs.values()}):
+        user = _user(db, email)
+        if user is not None:
+            recompute_rating(db, user)
     db.commit()
     played = 0
     for log in logs.values():

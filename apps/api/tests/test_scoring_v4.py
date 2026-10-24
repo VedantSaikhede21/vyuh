@@ -457,4 +457,7 @@ def test_v1_to_v3_rescore_byte_identical_on_every_fixture_log() -> None:
         events = json.loads((FIXTURES / f"{log}.json").read_text(encoding="utf-8"))
         code = {"s01": "S01", "s14": "S14", "s04": "S04", "s06": "S06"}[log[:3]]
         score = score_session(scenario(code, scoringTreeId=tree), events)
-        assert score.model_dump(mode="json") == expected, key
+        dumped = score.model_dump(mode="json")
+        # Added after the goldens (Phase 5 Elo, set by the API only): absent from the engine.
+        assert dumped.pop("rating") is None
+        assert dumped == expected, key

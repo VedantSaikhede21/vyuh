@@ -8,6 +8,7 @@ from app.core.errors import ApiError
 from app.models import Scenario as ScenarioRow
 from app.models import User
 from app.schemas.generated import AarSessionResponse, ErrorCode, SessionStatus
+from app.services.analytics.ai_trust import ai_trust
 from app.services.analytics.kill_chain import kill_chain
 from app.services.scenarios import load_scenario
 from app.services.sessions import get_viewable_session, session_detail, stored_events
@@ -31,5 +32,6 @@ def aar_session(db: Session, user: User, session_id: uuid.UUID) -> AarSessionRes
             "scenario": scenario,
             "events": events,
             "killChain": kill_chain(scenario, events),
+            "aiTrust": ai_trust(scenario, events),
         }
     )

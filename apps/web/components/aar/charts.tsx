@@ -94,9 +94,12 @@ export function SeriesChart({
   step = false,
   ticks,
   ariaLabel,
+  yWidth = 30,
 }: {
   data: SeriesPoint[];
-  domain: [number, number] | [number, 'auto'];
+  domain: [number | 'auto', number | 'auto'];
+  /** Y-axis width in px (wider for four-digit values such as a rating). */
+  yWidth?: number;
   unit?: string;
   digits?: number;
   height?: number;
@@ -116,7 +119,7 @@ export function SeriesChart({
             domain={domain}
             ticks={ticks}
             allowDecimals={false}
-            width={30}
+            width={yWidth}
           />
           <Tooltip
             cursor={{ stroke: UI.line2 }}
