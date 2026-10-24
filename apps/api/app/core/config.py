@@ -45,6 +45,8 @@ class Settings(BaseSettings):
     llm_enabled: bool = False
     llm_provider: str = "openrouter"
     llm_model: str = "google/gemini-flash-latest"
+    #: OpenAI-compatible chat API root; OpenRouter by default (a local server works offline).
+    llm_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_api_key: SecretStr = SecretStr("")
     llm_timeout_s: float = 20
     llm_rate_limit_per_min: int = 10
