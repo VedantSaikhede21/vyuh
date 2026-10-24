@@ -8,6 +8,8 @@ from app.schemas.generated import (
     AuthorPreviewResponse,
     AuthorScenarioRequest,
     AuthorScenarioResponse,
+    FromTextRequest,
+    FromTextResponse,
     GenerateRequest,
     GenerateScenarioResponse,
     ScenarioDetailResponse,
@@ -16,6 +18,7 @@ from app.schemas.generated import (
     UserRole,
 )
 from app.services import author, scenarios
+from app.services.ai import from_text
 
 router = APIRouter(prefix="/scenarios", tags=["scenarios"])
 
@@ -53,6 +56,17 @@ def generate_scenario(
 ) -> GenerateScenarioResponse:
     request.app.state.generate_limiter.check(str(user.id))
     return scenarios.generate_scenario(db, user, body)
+
+
+@router.post("/from-text", response_model=FromTextResponse, response_model_exclude_unset=True)
+def scenario_from_text(
+    body: FromTextRequest, request: Request, user: StaffUser
+) -> FromTextResponse:
+    """Plain text → generator parameters (LLM), for the instructor to confirm (SPEC §13.2).
+
+    Nothing is generated here: the client then calls POST /scenarios/generate.
+    """
+    return from_text.parse_text(request.app.state.llm, str(user.id), body.text)
 
 
 @router.post("/preview", response_model=AuthorPreviewResponse, response_model_exclude_unset=True)

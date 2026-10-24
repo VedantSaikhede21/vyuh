@@ -224,7 +224,11 @@ REVEAL_REF_SPEED_MPS = 16.0
 CRITICAL_RANGE_M = 1000.0
 
 
-def _best_axis(ctx: Ctx, axis: float) -> float:
+#: An axis the request names (text-to-scenario, decision 134) moves at most this much.
+REQUESTED_AXIS_SEARCH_DEG = 20
+
+
+def _best_axis(ctx: Ctx, axis: float, search_deg: int = AXIS_SEARCH_DEG) -> float:
     """The bearing near `axis` whose final approach the radar sees best (proxy), so terrain
     masking hides the outer route but not the last REVEAL seconds (decision 76)."""
     level = ctx.level
@@ -233,7 +237,7 @@ def _best_axis(ctx: Ctx, axis: float) -> float:
     if level.difficulty <= FIRST_TRACK_MAX_DIFFICULTY:
         far = level.spawn_m - 300  # D1-D2 pacing: the whole approach in view
     best: tuple[float, int, float] | None = None
-    for k in range(-AXIS_SEARCH_DEG // AXIS_STEP_DEG, AXIS_SEARCH_DEG // AXIS_STEP_DEG + 1):
+    for k in range(-search_deg // AXIS_STEP_DEG, search_deg // AXIS_STEP_DEG + 1):
         b = (axis + k * AXIS_STEP_DEG) % 360
         if not inside(bearing_point(ctx.asset, b, level.spawn_m), ctx.half):
             continue
@@ -250,6 +254,10 @@ def _plan_threats(ctx: Ctx, rng: random.Random) -> list[Slot]:
         _best_axis(ctx, fit_bearing(ctx.asset, b, level.spawn_m, ctx.half))
         for b in pick_axes(rng, n_axes)
     ]
+    if req.approach_bearing_deg is not None:
+        # The main axis (swarms, decoy offsets, the first single) comes from the request.
+        named = fit_bearing(ctx.asset, float(req.approach_bearing_deg), level.spawn_m, ctx.half)
+        axes[0] = _best_axis(ctx, named, REQUESTED_AXIS_SEARCH_DEG)
     slots: list[Slot] = []
 
     if req.threat_mix:
@@ -262,6 +270,7 @@ def _plan_threats(ctx: Ctx, rng: random.Random) -> list[Slot]:
             slots.append(
                 Slot("swarm:0", "SWARM", "SWARM_SATURATION", "QUAD_SMALL", req.swarm_size, axes[0])
             )
+        _add_decoys(ctx, rng, slots, req.decoys or 0, axes[0])
         return slots
 
     n = rng.randint(*level.threats)
@@ -281,16 +290,14 @@ def _plan_threats(ctx: Ctx, rng: random.Random) -> list[Slot]:
             members = rest - max(1, rest // 5)
             swarm_sizes = [members // k + (1 if i < members % k else 0) for i in range(k)]
             swarm_sizes = [s for s in swarm_sizes if s >= 2]
+    if req.decoys is not None:
+        decoys = req.decoys
     singles = max(0, n - decoys - sum(swarm_sizes))
 
     for i, size in enumerate(swarm_sizes):
         cls = rng.choice(cs.classes_for("SWARM_SATURATION", d))
         slots.append(Slot(f"swarm:{i}", "SWARM", "SWARM_SATURATION", cls, size, axes[i % n_axes]))
-    for i in range(decoys):
-        cls = rng.choice(cs.classes_for("DECOY", d))
-        off = rng.uniform(100, 160) * rng.choice((-1, 1))
-        axis = fit_bearing(ctx.asset, (axes[0] + off) % 360, level.spawn_m, ctx.half)
-        slots.append(Slot(f"decoy:{i}", "DECOY", "DECOY", cls, axis=axis, link="RF_MANUAL"))
+    _add_decoys(ctx, rng, slots, decoys, axes[0])
     for i in range(singles):
         if d == 1 or (d <= FIRST_TRACK_MAX_DIFFICULTY and i == 0):
             # D1, and the D2 pacing threat: a plain attack run (decision 79).
@@ -307,6 +314,17 @@ def _plan_threats(ctx: Ctx, rng: random.Random) -> list[Slot]:
             )
         )
     return slots
+
+
+def _add_decoys(
+    ctx: Ctx, rng: random.Random, slots: list[Slot], count: int, main_axis: float
+) -> None:
+    """Decoys orbit 100-160 degrees off the main axis, to pull attention from it."""
+    for i in range(count):
+        cls = rng.choice(cs.classes_for("DECOY", ctx.req.difficulty))
+        off = rng.uniform(100, 160) * rng.choice((-1, 1))
+        axis = fit_bearing(ctx.asset, (main_axis + off) % 360, ctx.level.spawn_m, ctx.half)
+        slots.append(Slot(f"decoy:{i}", "DECOY", "DECOY", cls, axis=axis, link="RF_MANUAL"))
 
 
 def _assign_links(slots: list[Slot], level: Level, rng: random.Random) -> None:
@@ -1084,6 +1102,8 @@ def generate(
         "aiAssistAccuracy": accuracy,
         "durationS": ctx.duration_s,
         "roe": roe,
+        "approachBearingDeg": req.approach_bearing_deg,
+        "decoys": req.decoys,
     }
     request = {k: v for k, v in request.items() if v is not None}
     # The generator version is part of the content id, so a request re-run after a
