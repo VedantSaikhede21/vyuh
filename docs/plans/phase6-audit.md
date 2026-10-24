@@ -5,7 +5,7 @@
 ## How this was measured
 
 - **Build:** production `next build` of `main`, served with `next start` on :3100, pointed at a separate API on :8100 (`CORS_ORIGINS=http://localhost:3100`, `LLM_ENABLED=false`, local Postgres with the seeded demo data). The developer's own dev servers on :3000 / :8000 were left untouched.
-- **Captures:** a temporary, untracked spec `apps/web/e2e/audit-6-0.spec.ts` (tag `@audit`), headless Chrome, ANGLE D3D11, AMD Radeon integrated. Output in `apps/web/e2e/checkpoint/6.0/` (git-ignored): every screen at 1366×768 and 1920×1080, public pages also at 390×844, the player at 1200×800, error states, console logs, horizontal-overflow measurements, journey logs.
+- **Captures:** `apps/web/e2e/capture-all.spec.ts` (tag `@capture`, excluded from `pnpm e2e`; run with `pnpm --filter @vyuh/web e2e:capture`, kept for 6H; written as `audit-6-0.spec.ts` for this run), headless Chrome, ANGLE D3D11, AMD Radeon integrated. Output in `apps/web/e2e/checkpoint/6.0/` (git-ignored): every screen at 1366×768 and 1920×1080, public pages also at 390×844, the player at 1200×800, error states, console logs, horizontal-overflow measurements, journey logs.
 - **Journeys:** scripted at 1366×768 in real time (production build, no test hook). Scripted time is the machine floor; "human estimate" adds reading and decision time and is an estimate, not a measurement.
 - **Audit checklist:** `redesign-existing-projects`, used as a checklist only. Its advice that DESIGN.md bans or overrides (font swap, grain / noise, glass, tinted shadows, spring / parallax / staggered motion, stock imagery, replacing Lucide, dropping uppercase labels) was skipped.
 
@@ -21,7 +21,7 @@
 | **New trainee** (first login → S01 Assessment → debrief → replay) | First track 21 s after Begin; result at 2:48 (clock ran out); replay 1.5 s later | 8 clicks, 6 keys | ~5–6 min | Lands on the training list (no home, no welcome, no "start here"); nothing in the player says what to do first; result recommends **harder** difficulty after a leak; score 63 vs debrief "62" |
 | **Instructor** (builder → save → unit → assign → trainee AAR) | 9 s | 7 clicks (assignment not submitted, to keep demo lists clean) | ~2–3 min | Lands on the training list, not the unit; zone drawing not explained on the map; saved scenario appears in the assign list without its `AUT-` code; "Open a row for its AAR" but the first link in a row (trainee name) opens trends |
 
-Data created by the runs (local DB): non-demo sessions on trainee1, trainee3 and trainee6 (`pnpm seed:reset-demo --yes` removes them) and one authored scenario "Canal Bridge" (instructor@demo).
+Data created by the runs (local DB) was removed afterwards: `pnpm seed:reset-demo --yes` deleted 7 non-demo sessions on trainee1, trainee3 and trainee6 and re-derived their ratings (trainee6 back to 1141), and the authored scenario "Canal Bridge" (created by the run at 12:12 UTC, no sessions or assignments) was deleted.
 
 ---
 
@@ -35,15 +35,16 @@ Ranked **P0** (blocks or embarrasses the demo), **P1** (noticeable), **P2** (pol
 |---|---|---|---|---|---|
 | P0-1 | Landing, login | **No guest entry.** The only path in is "Sign in to train"; the login dropdown is developer-facing; on the hosted Supabase build a judge has no credentials. | `pub-landing-fold`, `pub-login-fold`, `journey-judge.json` | Guest mode + "Try the demo" as the landing's primary action; login shows "Try the demo instead"; dev dropdown only in `local` mode and worded for offline units, not developers. | 6E (entry button wired in 6C) |
 | P0-2 | Judge path | **Unit dashboard needs a role switch.** Step 6 of SPEC §20 requires signing out and in as instructor@demo. | `journey-judge.json` (clicks 11–15) | Guest gets a read-only instructor view of the demo units (requires restricting real instructors to their own unit first, decision 123). | 6E |
-| P0-3 | Result | **Recommendation contradicts the run.** 0 / 100 in Practice shows "Recommended next difficulty 3, up from 2"; a leaked threat at D1 shows "3, up from 1" with rating −4. The bone primary is "Next · S04 Night Drop" either way. The value is rating-based (decision 129), but the screen does not say so. | `result-full`, `journey-trainee-result` | Label the basis ("From your rating 1137"); in Practice say the rating is unchanged and drop "up from"; after a leak or a score below a threshold the primary action becomes the suggested drill / Retry, Next becomes secondary. **Needs approval** (changes what the trainee sees). | 6B |
-| P0-4 | Result + debrief | **Score mismatch.** Result shows 63 / 100, the debrief says "Score 62 / 100" for the same session (62.5: JS `toFixed` rounds half up, Python `:.0f` rounds half to even). | `journey-trainee-result` | One display-rounding rule (half up) in the debrief template and anywhere else a total is printed; display only, scoring unchanged. | 6B |
+| P0-3 | Result | **Recommendation contradicts the run.** 0 / 100 in Practice shows "Recommended next difficulty 3, up from 2"; a leaked threat at D1 shows "3, up from 1" with rating −4. The bone primary is "Next · S04 Night Drop" either way. The value is rating-based (decision 129), but the screen does not say so. | `result-full`, `journey-trainee-result` | **Approved (user, 2026-10-24):** the screen states "Recommended from your rating (1,024)"; a Practice result says Practice runs never move the rating; primary action by score — under 50: Retry (same seed) or the suggested drill for the weakest stage; 50–79: unchanged secondary set; 80+: "Next scenario" becomes primary. | 6B |
+| P0-4 | Result + debrief | **Score mismatch.** Result shows 63 / 100, the debrief says "Score 62 / 100" for the same session (62.5: JS `toFixed` rounds half up, Python `:.0f` rounds half to even). | `journey-trainee-result` | **Approved (user, 2026-10-24):** one rounding rule everywhere — the server returns the display value with every score it sends, the debrief template uses the same value, and the client never re-rounds. Display only; stored scores unchanged. | 6B |
+| P0-6 | Sim player | **3D tactical view never shows the tracks** (promoted from P1-1, user 2026-10-24): camera fixed north while S15 birds come from 273°; the selected track's 3D label is clipped at the bottom edge over the EO header. | `player-selected`, `player-eo-cued-1920x1080` | Camera eases to keep the selected track in frame (bounded, no motion when reduced motion); label clamped inside the view. No FPS regression. | 6B |
 | P0-5 | Sim player | **First-time trainee has no next step.** Nothing tells them to select a track, cue the camera, classify; the tour does not exist yet. | `player-start`, `player-selected` | Practice-mode "next step" line in the action bar header driven by the selected track's kill-chain state (e.g. "Cue the camera · Space"), plus the guided tour. | 6B (hint), 6E (tour) |
 
 ### P1
 
 | # | Screen | Finding | Evidence | Proposed fix | Part |
 |---|---|---|---|---|---|
-| P1-1 | Player | 3D tactical view (the largest panel) never shows the tracks: camera fixed north while S15 birds come from 273°; the selected track's 3D label is clipped at the bottom edge over the EO header. | `player-selected`, `player-eo-cued-1920x1080` | Camera eases to keep the selected track in frame (bounded, no motion when reduced motion); label clamped inside the view. | 6B |
+| P1-1 | Player | *Promoted to P0-6.* | — | — | — |
 | P1-2 | Player | Comms shows 4 lines at 768 px (long lines wrap to two). Known debt. | `player-selected-1366x768` | Single-line entries with ellipsis + full text on hover; tighter line height; ≥ 8 lines at 768. | 6B |
 | P1-3 | Player, landing | EO day view is a blown-out flat sky (top half near-white) — reads as a broken render; same in the landing "Identify" crop. | `player-eo-cued`, `pub-landing-1920x1080` | Tone the day sky / exposure in the EO render target; re-record the crop. | 6B, 6C |
 | P1-4 | Player | Disabled INTERCEPT is drawn in `--crit` red at all times — critical colour on an unavailable control. | `player-start` | Danger styling only when armed / confirming; disabled uses the normal disabled treatment with its reason. | 6A |
@@ -55,7 +56,7 @@ Ranked **P0** (blocks or embarrasses the demo), **P1** (noticeable), **P2** (pol
 | P1-10 | Global | Disabled bone buttons render as a muddy grey block (`opacity-40` over bone). | `scoring`, `from-text`, `unit-full` | Disabled primary = outline + `--text-2` label + reason. | 6A |
 | P1-11 | Global | `--text-3` used for text in 96 places (examples, captions, hints, units) — fails 4.5:1 at small sizes. | `from-text` examples, landing captions | `--text-body` / `--text-2` for text; `--text-3` for non-text only (amendment 3). | 6A |
 | P1-12 | Result | Template debrief repeats one missed track as five rows (one per stage, same time). | `result-full` | Group a track whose chain stopped at one stage into one line ("T006 never acted on — 00:18"). Template only; LLM prompt already groups. | 6B |
-| P1-13 | Result | Components sum to 50 but the total is 63 (v1 scaled over 80) with no explanation; S01 — the tutorial — still scores on `default_v1` ("does not score report"). | `journey-trainee-result` | Show "scaled to 100" note. Moving S01 (and S02 / S03) to `default_v4` for new sessions is a **scoring change — your call** (old sessions keep v1). | 6B |
+| P1-13 | Result | Components sum to 50 but the total is 63 (v1 scaled over 80) with no explanation; S01 — the tutorial — still scores on `default_v1` ("does not score report"). | `journey-trainee-result` | Show a "scaled to 100" note. **S01–S03 keep their current trees** (user, 2026-10-24; decision 140): `default_v4` would penalise missing reports in the tutorial. | 6B |
 | P1-14 | AAR | Opens at 00:00 on an empty scene ("No radar tracks yet"); "GROUND TRUTH ON" reads as state or action; MISS cells in `--crit`; timeline marker shapes have no legend; side panel shows 4 rows at 768. | `aar-truth-1366x768` | Open at the first event; switch with a clear label ("Ground truth · G" + on / off state); MISS in `--warn`/text with symbol; marker legend. | 6B |
 | P1-15 | Trends | "Detect 40 %" (kill-chain stage) next to "Detection 58 %" (score component) with no explanation; difficulty chart is a flat line with odd ticks (2, 5); score axis ticks 0 / 25 / 50 / 100. | `trends-full` | One-line definitions under both panels; replace the difficulty chart with a step readout; even ticks. | 6B |
 | P1-16 | Unit dashboard | "Open a row for its AAR" but the first link opens trends; overdue assignment not flagged in "Are assignments being completed?". | `unit-full`, `journey-instructor.json` | Whole row opens the AAR, trainee name is a separate explicit link; overdue chip. | 6B |
@@ -113,18 +114,22 @@ Ranked **P0** (blocks or embarrasses the demo), **P1** (noticeable), **P2** (pol
 Order and scope as in the requirements, with these specifics from the audit:
 
 - **6A — Design system and shell.** Amendments 1–5; `--text-3` sweep (P1-11); disabled / danger / pressed states (P1-4, P1-10, P2-7); container 1280 (P2-1); shell with active nav, role chip, notices, clock, user menu, breadcrumbs, skip link (P1-6); `not-found`, `error`, `loading` routes and an `ErrorState` primitive (P1-7, P1-8); styled larger-screen notice (P2-6); new primitives per 6A §4; `/dev/ui`.
-- **6B — Core screens.** All P0-3 to P0-5 and P1-1 … P1-17 above, then `break-ui` and keyboard pass.
+- **6B — Core screens.** P0-3 … P0-6 and P1-2 … P1-17 above, then `break-ui` and keyboard pass.
 - **6C — New and public pages.** Landing / login / sources (P1-18 … P1-20, P2-8), operator home with first-run welcome, threat library, service record (SPEC §9.7 rules proposed in the 6C plan), notices, help, settings, status, readiness board; `mobile-native`; re-record landing media last.
-- **6D — Motion.** As specified; includes the camera ease from P1-1 under the reduced-motion rule.
+- **6D — Motion.** As specified; reviews the camera ease from P0-6 under the reduced-motion rule.
 - **6E — Guest demo and tour.** P0-1, P0-2, tour (P0-5), instructor scope restriction first.
 - **6F, 6G, 6H, 6I** — as specified, plus the tech-debt rows above.
 
-### Proposed changes to `phase6-requirements.md` / UI-PREP (need your OK)
+### Decisions on the plan (user, 2026-10-24)
 
-1. **Wire "Try the demo" in 6C, make it live in 6E.** 6C builds the landing with the button behind `NEXT_PUBLIC_GUEST_MODE`; 6E turns it on. Keeps the landing design final in one Part.
-2. **Restrict instructors to their own unit in 6E** (moved from tech debt), so a guest's read-only instructor view sees only the demo units.
-3. **UI-PREP vs requirements:** "printable PDF export" becomes the print stylesheet (browser Save as PDF, no dependency, as §6.3 says); UI-PREP's Settings "units km / NM" is dropped (SI everywhere, CLAUDE.md §6) unless you want it.
-4. **UI-PREP's visual reference ("VYUH UI Shell" canvas)** is not in the repo. If you have it, share it before 6A; otherwise 6A works from UI-PREP's text.
-5. **Two trainee-visible decisions for 6B** (listed so the 6B plan can assume them): P0-3 result recommendation wording and primary-action rule; P1-13 whether S01–S03 move to `default_v4` for new sessions (scoring change; old sessions keep `default_v1`).
+1. **"Try the demo"** is built in 6C behind `NEXT_PUBLIC_GUEST_MODE` and enabled in 6E.
+2. **Instructors are scoped to their own unit in 6E** (decision 123 debt closed there); the guest's read-only instructor view sees only the demo units.
+3. **UI-PREP aligned with the requirements:** the service record prints through a light print stylesheet (no PDF export dependency); no km / NM setting (SI everywhere). `docs/UI-PREP.md` updated.
+4. **No visual canvas in the repo:** Phase 6 works from the UI-PREP text; the canvas is a private reference.
+5. **Result screen (P0-3):** "Recommended from your rating (1,024)"; Practice runs never move the rating and the screen says so; under 50 the primary action is Retry (same seed) or the suggested drill for the weakest stage; "Next scenario" is primary only at 80+.
+6. **S01–S03 keep their current trees** (decision 140).
+7. **P0-6:** the 3D view not showing tracks is P0, fixed in 6B.
+8. **P0-4:** one rounding rule; the server returns the display value and the client never re-rounds.
+9. **Housekeeping done in 6.0:** demo sessions reset, "Canal Bridge" deleted, capture spec committed as `e2e/capture-all.spec.ts` (`@capture`), `.next` rebuilt for the normal `.env.local`.
 
-**Stop.** Waiting for approval of this audit and the 6A–6I plan before Part 6A starts in a fresh session.
+**Approved.** Part 6A starts in a fresh session on its own `feat/phase6-<part>` branch from `main`, after this branch is merged.

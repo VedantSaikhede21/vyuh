@@ -1,7 +1,7 @@
 # VYUH — UI clean-up & shell brief (prep for Phase 6)
 
 > Place at `docs/UI-PREP.md`. Input for a later Claude Code session, not approved scope. DESIGN.md stays binding; section 4 lists the changes to it this brief proposes.
-> Visual reference: the "VYUH UI Shell" canvas (landing, operator home, service record, threat library).
+> Visual reference: the "VYUH UI Shell" canvas (landing, operator home, service record, threat library) is a private reference, not in the repo; Phase 6 works from this text (user, 2026-10-24).
 
 ---
 
@@ -36,7 +36,7 @@ Landing · login · training list · briefing · sim player · result · AAR rep
 ### New — high value, low cost (recommend for Phase 6)
 1. **Operator home** (post-login landing): assigned scenario with due date and one primary action, "Where am I losing points?" kill-chain bars, notices from the instructor, recent sessions with Replay, next qualification criteria.
 2. **Threat recognition library**: one entry per contact class — silhouette, size, RCS, speed, RF behaviour, ID cues, "often confused with". Filter by threat / non-threat / friendly. Linked from track list and AAR ("what was this?"). Data comes from `CLASS_PROFILES`, so it stays in sync.
-3. **Service record**: qualification ladder (Basic operator → Sensor operator → Engagement controller → Instructor), each level with criteria and instructor sign-off; endorsements earned only from Assessment sessions; printable PDF export for the unit training file.
+3. **Service record**: qualification ladder (Basic operator → Sensor operator → Engagement controller → Instructor), each level with criteria and instructor sign-off; endorsements earned only from Assessment sessions; a printable record via a light print stylesheet (browser "Save as PDF", no new dependency) for the unit training file.
 4. **Notices / inbox**: assignments, instructor remarks, library updates. Unread count in the top bar.
 5. **Help & controls**: keyboard reference, glossary (SPEC §21), "how scoring works" with the decision tree explained in plain words.
 
@@ -44,7 +44,7 @@ Landing · login · training list · briefing · sim player · result · AAR rep
 6. **Instructor: live session monitor** — which trainees are in a session right now, their clock and current score component (read-only).
 7. **Unit readiness board** — one row per trainee, qualification level, last assessment, weakest stage, overdue assignments.
 8. **Printable briefing sheet** — the briefing page as a light print stylesheet (DESIGN.md §3 already allows this).
-9. **Settings** — reduced motion, sound on/off, units (km / NM), shortcut cheat-sheet toggle.
+9. **Settings** — reduced motion, sound on/off, shortcut cheat-sheet toggle. (No km / NM setting: SI everywhere, CLAUDE.md §6.)
 10. **System status page** — API, database, build version, sim version, terrain revisions; useful for the offline build and for judges.
 
 ### Do NOT add
@@ -77,7 +77,7 @@ Leaderboards across units, streaks, XP or confetti (gamification undermines a se
 2. Landing rework with sheet framing and the real replay loop.
 3. Operator home.
 4. Threat recognition library (data from `CLASS_PROFILES`; silhouettes as inline SVG components).
-5. Service record + PDF export.
+5. Service record + print stylesheet.
 6. Help & controls, settings, status page.
 7. Instructor extras if time remains.
 
