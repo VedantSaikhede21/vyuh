@@ -11,6 +11,7 @@ import {
 } from './enums.ts';
 import { ContactKillChain } from './aar.ts';
 import { SimEvent } from './events.ts';
+import { AiTrustMetrics } from './ai.ts';
 import { named } from './registry.ts';
 import { Scenario, TimeOfDay, Weather } from './scenario.ts';
 import { Score } from './score.ts';
@@ -177,6 +178,8 @@ export const AarSessionResponse = named(
     scenario: Scenario,
     events: z.array(SimEvent),
     killChain: z.array(ContactKillChain),
+    /** AI-assist over- / under-trust in this session (SPEC §9.4). */
+    aiTrust: AiTrustMetrics,
   }),
 );
 export type AarSessionResponse = z.infer<typeof AarSessionResponse>;

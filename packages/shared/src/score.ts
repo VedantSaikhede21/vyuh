@@ -69,6 +69,20 @@ export const PerContactMetrics = named(
 );
 export type PerContactMetrics = z.infer<typeof PerContactMetrics>;
 
+/** Elo change of an Assessment session (SPEC §9.3). Practice never changes the rating. */
+export const RatingChange = named(
+  'RatingChange',
+  z.object({
+    before: z.int(),
+    after: z.int(),
+    /** D = 800 + 150 × difficulty. */
+    scenarioRating: z.int(),
+    /** Expected result E = 1 / (1 + 10^((D − R) / 400)). */
+    expected: z.number().min(0).max(1),
+  }),
+);
+export type RatingChange = z.infer<typeof RatingChange>;
+
 export const Score = named(
   'Score',
   z.object({
@@ -83,6 +97,8 @@ export const Score = named(
     /** Next difficulty to train at; added by the API, not the scoring tree (decision 64). */
     recommendedDifficulty: Difficulty.optional(),
     recommendationBasis: RecommendationBasis.optional(),
+    /** Added by the API for Assessment sessions that changed the rating. */
+    rating: RatingChange.optional(),
   }),
 );
 export type Score = z.infer<typeof Score>;

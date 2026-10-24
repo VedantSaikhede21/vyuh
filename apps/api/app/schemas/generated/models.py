@@ -41,6 +41,37 @@ class AffiliationSetPayload(BaseModel):
     affiliation: Affiliation
 
 
+class AiStatusResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    llm_enabled: Annotated[bool, Field(alias="llmEnabled")]
+    model: str | None
+
+
+class OverTrust(RootModel[float]):
+    root: Annotated[float, Field(ge=0.0, le=1.0)]
+
+
+class UnderTrust(RootModel[float]):
+    root: Annotated[float, Field(ge=0.0, le=1.0)]
+
+
+class AiTrustMetrics(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    shown: Annotated[int, Field(ge=0, le=9007199254740991)]
+    shown_correct: Annotated[int, Field(alias="shownCorrect", ge=0, le=9007199254740991)]
+    shown_wrong: Annotated[int, Field(alias="shownWrong", ge=0, le=9007199254740991)]
+    accepted_correct: Annotated[int, Field(alias="acceptedCorrect", ge=0, le=9007199254740991)]
+    accepted_wrong: Annotated[int, Field(alias="acceptedWrong", ge=0, le=9007199254740991)]
+    rejected_correct: Annotated[int, Field(alias="rejectedCorrect", ge=0, le=9007199254740991)]
+    rejected_wrong: Annotated[int, Field(alias="rejectedWrong", ge=0, le=9007199254740991)]
+    over_trust: Annotated[OverTrust | None, Field(alias="overTrust")]
+    under_trust: Annotated[UnderTrust | None, Field(alias="underTrust")]
+
+
 class AltitudeBand(StrEnum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
@@ -264,6 +295,33 @@ class CreateAssignmentRequest(BaseModel):
     due_at: Annotated[AwareDatetime | None, Field(alias="dueAt")] = None
 
 
+class Strength(RootModel[str]):
+    root: Annotated[str, Field(max_length=300, min_length=1)]
+
+
+class DebriefFallbackReason(StrEnum):
+    LLM_DISABLED = "LLM_DISABLED"
+    TIMEOUT = "TIMEOUT"
+    INVALID_OUTPUT = "INVALID_OUTPUT"
+    ERROR = "ERROR"
+    RATE_LIMITED = "RATE_LIMITED"
+
+
+class DebriefMistake(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    t_ms: Annotated[int, Field(alias="tMs", ge=0, le=9007199254740991)]
+    what: Annotated[str, Field(max_length=300, min_length=1)]
+    why_it_matters: Annotated[str, Field(alias="whyItMatters", max_length=300, min_length=1)]
+    do_instead: Annotated[str, Field(alias="doInstead", max_length=300, min_length=1)]
+
+
+class DebriefSource(StrEnum):
+    LLM = "LLM"
+    TEMPLATE = "TEMPLATE"
+
+
 class DevLoginRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -380,6 +438,13 @@ class FalseContactDensity(StrEnum):
     HIGH = "HIGH"
 
 
+class FromTextRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    text: Annotated[str, Field(max_length=600, min_length=3)]
+
+
 class HealthResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -490,8 +555,20 @@ class RadarSensor(BaseModel):
     scan_period_s: Annotated[float, Field(alias="scanPeriodS", gt=0.0)]
 
 
+class RatingChange(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    before: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+    after: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+    scenario_rating: Annotated[
+        int, Field(alias="scenarioRating", ge=-9007199254740991, le=9007199254740991)
+    ]
+    expected: Annotated[float, Field(ge=0.0, le=1.0)]
+
+
 class RecommendationBasis(StrEnum):
-    RULE_V1 = "RULE_V1"
+    ELO_V1 = "ELO_V1"
 
 
 class ReportLocation(BaseModel):
@@ -851,6 +928,14 @@ class ClassificationAccuracy(RootModel[float]):
     root: Annotated[float, Field(ge=0.0, le=1.0)]
 
 
+class RatingBefore(RootModel[int]):
+    root: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+
+
+class RatingAfter(RootModel[int]):
+    root: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+
+
 class TrendPoint(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -868,6 +953,10 @@ class TrendPoint(BaseModel):
         ClassificationAccuracy | None, Field(alias="classificationAccuracy")
     ]
     recommended_difficulty: Annotated[int, Field(alias="recommendedDifficulty", ge=1, le=5)]
+    rating_before: Annotated[RatingBefore | None, Field(alias="ratingBefore")]
+    rating_after: Annotated[RatingAfter | None, Field(alias="ratingAfter")]
+    over_trust: Annotated[OverTrust | None, Field(alias="overTrust")]
+    under_trust: Annotated[UnderTrust | None, Field(alias="underTrust")]
     tree_version: Annotated[str, Field(alias="treeVersion")]
     is_demo: Annotated[bool, Field(alias="isDemo")]
 
@@ -1152,6 +1241,28 @@ class CreateSessionRequest(BaseModel):
     sim_version: Annotated[int, Field(alias="simVersion", ge=1, le=9007199254740991)]
 
 
+class DebriefContent(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    summary: Annotated[str, Field(max_length=800, min_length=1)]
+    strengths: Annotated[list[Strength], Field(max_length=5)]
+    mistakes: Annotated[list[DebriefMistake], Field(max_length=6)]
+    drill: Annotated[str, Field(max_length=400, min_length=1)]
+
+
+class DebriefResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    session_id: Annotated[UUID, Field(alias="sessionId")]
+    source: DebriefSource
+    model: str
+    fallback_reason: Annotated[DebriefFallbackReason | None, Field(alias="fallbackReason")] = None
+    content: DebriefContent
+    created_at: Annotated[AwareDatetime, Field(alias="createdAt")]
+
+
 class EffectorConfig(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1222,6 +1333,10 @@ class GenerateRequest(BaseModel):
     ai_assist_accuracy: Annotated[float | None, Field(alias="aiAssistAccuracy", ge=0.0, le=1.0)] = (
         None
     )
+    approach_bearing_deg: Annotated[
+        float | None, Field(alias="approachBearingDeg", ge=0.0, lt=360.0)
+    ] = None
+    decoys: Annotated[int | None, Field(ge=0, le=6)] = None
 
 
 class MeResponse(BaseModel):
@@ -1360,6 +1475,10 @@ class ScenarioRequest(BaseModel):
     )
     duration_s: Annotated[int, Field(alias="durationS", ge=30, le=3600)]
     roe: Roe
+    approach_bearing_deg: Annotated[
+        float | None, Field(alias="approachBearingDeg", ge=0.0, lt=360.0)
+    ] = None
+    decoys: Annotated[int | None, Field(ge=0, le=6)] = None
 
 
 class Score(BaseModel):
@@ -1379,6 +1498,7 @@ class Score(BaseModel):
     recommendation_basis: Annotated[
         RecommendationBasis | None, Field(alias="recommendationBasis")
     ] = None
+    rating: RatingChange | None = None
 
 
 class ScoringTreeListResponse(BaseModel):
@@ -1450,9 +1570,11 @@ class TraineeTrendsResponse(BaseModel):
         populate_by_name=True,
     )
     user: TrendUser
+    rating: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
     points: list[TrendPoint]
     mistakes: list[MistakeItem]
     stages: list[StageRate]
+    ai_trust: Annotated[AiTrustMetrics, Field(alias="aiTrust")]
 
 
 class UnitDashboardResponse(BaseModel):
@@ -1593,6 +1715,15 @@ class EoIdentifiableEvent(BaseModel):
     payload: EoIdentifiablePayload
 
 
+class FromTextResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    request: GenerateRequest
+    notes: list[str]
+    model: str
+
+
 class ResponseOutcomeEvent(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1697,6 +1828,7 @@ class AarSessionResponse(BaseModel):
         ]
     ]
     kill_chain: Annotated[list[ContactKillChain], Field(alias="killChain")]
+    ai_trust: Annotated[AiTrustMetrics, Field(alias="aiTrust")]
 
 
 class AuthorPreviewResponse(BaseModel):

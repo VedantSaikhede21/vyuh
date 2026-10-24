@@ -24,13 +24,17 @@
           "items": {
             "$ref": "#/$defs/ContactKillChain"
           }
+        },
+        "aiTrust": {
+          "$ref": "#/$defs/AiTrustMetrics"
         }
       },
       "required": [
         "session",
         "scenario",
         "events",
-        "killChain"
+        "killChain",
+        "aiTrust"
       ]
     },
     "Activity": {
@@ -95,6 +99,24 @@
       },
       "required": [
         "affiliation"
+      ]
+    },
+    "AiStatusResponse": {
+      "type": "object",
+      "properties": {
+        "llmEnabled": {
+          "type": "boolean"
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "llmEnabled",
+        "model"
       ]
     },
     "AiSuggestion": {
@@ -231,6 +253,81 @@
         "type",
         "trackId",
         "payload"
+      ]
+    },
+    "AiTrustMetrics": {
+      "type": "object",
+      "properties": {
+        "shown": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "shownCorrect": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "shownWrong": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "acceptedCorrect": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "acceptedWrong": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "rejectedCorrect": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "rejectedWrong": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "overTrust": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "underTrust": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "shown",
+        "shownCorrect",
+        "shownWrong",
+        "acceptedCorrect",
+        "acceptedWrong",
+        "rejectedCorrect",
+        "rejectedWrong",
+        "overTrust",
+        "underTrust"
       ]
     },
     "AltitudeBand": {
@@ -1412,6 +1509,123 @@
         "simVersion"
       ]
     },
+    "DebriefContent": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        },
+        "strengths": {
+          "maxItems": 5,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          }
+        },
+        "mistakes": {
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DebriefMistake"
+          }
+        },
+        "drill": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        }
+      },
+      "required": [
+        "summary",
+        "strengths",
+        "mistakes",
+        "drill"
+      ]
+    },
+    "DebriefFallbackReason": {
+      "type": "string",
+      "enum": [
+        "LLM_DISABLED",
+        "TIMEOUT",
+        "INVALID_OUTPUT",
+        "ERROR",
+        "RATE_LIMITED"
+      ]
+    },
+    "DebriefMistake": {
+      "type": "object",
+      "properties": {
+        "tMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "what": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "whyItMatters": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "doInstead": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        }
+      },
+      "required": [
+        "tMs",
+        "what",
+        "whyItMatters",
+        "doInstead"
+      ]
+    },
+    "DebriefResponse": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "source": {
+          "$ref": "#/$defs/DebriefSource"
+        },
+        "model": {
+          "type": "string"
+        },
+        "fallbackReason": {
+          "$ref": "#/$defs/DebriefFallbackReason"
+        },
+        "content": {
+          "$ref": "#/$defs/DebriefContent"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "sessionId",
+        "source",
+        "model",
+        "content",
+        "createdAt"
+      ]
+    },
+    "DebriefSource": {
+      "type": "string",
+      "enum": [
+        "LLM",
+        "TEMPLATE"
+      ]
+    },
     "DevLoginRequest": {
       "type": "object",
       "properties": {
@@ -1800,6 +2014,41 @@
         "HIGH"
       ]
     },
+    "FromTextRequest": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 600
+        }
+      },
+      "required": [
+        "text"
+      ]
+    },
+    "FromTextResponse": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/$defs/GenerateRequest"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "model": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "request",
+        "notes",
+        "model"
+      ]
+    },
     "GenerateRequest": {
       "type": "object",
       "properties": {
@@ -1842,6 +2091,16 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        },
+        "approachBearingDeg": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 360
+        },
+        "decoys": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
         }
       },
       "required": [
@@ -2276,10 +2535,41 @@
         "scanPeriodS"
       ]
     },
+    "RatingChange": {
+      "type": "object",
+      "properties": {
+        "before": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "after": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "scenarioRating": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "expected": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "before",
+        "after",
+        "scenarioRating",
+        "expected"
+      ]
+    },
     "RecommendationBasis": {
       "type": "string",
       "enum": [
-        "RULE_V1"
+        "ELO_V1"
       ]
     },
     "ReportLocation": {
@@ -2916,6 +3206,16 @@
         },
         "roe": {
           "$ref": "#/$defs/Roe"
+        },
+        "approachBearingDeg": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 360
+        },
+        "decoys": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
         }
       },
       "required": [
@@ -2970,6 +3270,9 @@
         },
         "recommendationBasis": {
           "$ref": "#/$defs/RecommendationBasis"
+        },
+        "rating": {
+          "$ref": "#/$defs/RatingChange"
         }
       },
       "required": [
@@ -3885,6 +4188,11 @@
         "user": {
           "$ref": "#/$defs/TrendUser"
         },
+        "rating": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
         "points": {
           "type": "array",
           "items": {
@@ -3902,13 +4210,18 @@
           "items": {
             "$ref": "#/$defs/StageRate"
           }
+        },
+        "aiTrust": {
+          "$ref": "#/$defs/AiTrustMetrics"
         }
       },
       "required": [
         "user",
+        "rating",
         "points",
         "mistakes",
-        "stages"
+        "stages",
+        "aiTrust"
       ]
     },
     "TrendPoint": {
@@ -3972,6 +4285,54 @@
         "recommendedDifficulty": {
           "$ref": "#/$defs/Difficulty"
         },
+        "ratingBefore": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ratingAfter": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overTrust": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "underTrust": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "treeVersion": {
           "type": "string"
         },
@@ -3991,6 +4352,10 @@
         "detectionLatencyS",
         "classificationAccuracy",
         "recommendedDifficulty",
+        "ratingBefore",
+        "ratingAfter",
+        "overTrust",
+        "underTrust",
         "treeVersion",
         "isDemo"
       ]
