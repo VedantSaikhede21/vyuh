@@ -21,7 +21,6 @@ from app.services.ratelimit import RateLimiter
 logger = logging.getLogger(__name__)
 
 PROMPTS = Path(__file__).resolve().parent / "prompts"
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 ATTEMPTS = 2  # one retry
 
 T = TypeVar("T")
@@ -44,7 +43,7 @@ def prompt(name: str) -> str:
 
 def urllib_transport(url: str, headers: dict[str, str], body: bytes, timeout_s: float) -> str:
     req = urllib.request.Request(url, data=body, headers=headers, method="POST")  # noqa: S310
-    with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # noqa: S310 - fixed https URL
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # noqa: S310 - URL from settings
         return resp.read().decode("utf-8")
 
 
@@ -61,6 +60,10 @@ class LlmClient:
     @property
     def model(self) -> str:
         return self.settings.llm_model
+
+    @property
+    def url(self) -> str:
+        return self.settings.llm_base_url.rstrip("/") + "/chat/completions"
 
     def complete_json(
         self, user_key: str, system: str, user: str, parse: Callable[[dict[str, Any]], T]
@@ -92,7 +95,7 @@ class LlmClient:
         reason, message = "ERROR", "no attempt made"
         for attempt in range(1, ATTEMPTS + 1):
             try:
-                raw = self.transport(OPENROUTER_URL, headers, body, self.settings.llm_timeout_s)
+                raw = self.transport(self.url, headers, body, self.settings.llm_timeout_s)
             except TimeoutError as err:
                 reason, message = "TIMEOUT", f"LLM timed out after {self.settings.llm_timeout_s} s"
                 logger.warning("LLM attempt %d: %s (%s)", attempt, message, err)
