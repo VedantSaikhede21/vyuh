@@ -8,6 +8,8 @@ import { Environment } from './environment';
 import { useSimRuntime } from './sim-context';
 import { SiteMarkers } from './site-markers';
 import { TerrainMesh } from './terrain-mesh';
+import { SelectedFraming } from './selected-framing';
+import { TrackLabelAnchors } from './track-labels';
 import { TrackMarkers } from './track-markers';
 import { ZoneMarkers } from './zone-markers';
 
@@ -40,9 +42,12 @@ export function TacticalScene({
       <SiteMarkers />
       <ZoneMarkers />
       <Drones />
-      <TrackMarkers onSelect={onSelectTrack} labelPortal={element} />
+      <TrackMarkers onSelect={onSelectTrack} />
+      <TrackLabelAnchors />
+      <SelectedFraming />
       {element.current && (
         <OrbitControls
+          makeDefault
           domElement={element.current}
           target={[0, 0, 0]}
           maxPolarAngle={Math.PI / 2.15}

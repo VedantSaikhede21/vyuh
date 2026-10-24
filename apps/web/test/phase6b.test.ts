@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { nextStep } from '@/lib/hud/next-step';
+import {
+  azimuthBehind,
+  clampLabel,
+  easeOutCubic,
+  inFrame,
+  orbitAt,
+  shortestTurn,
+} from '@/lib/sim/framing';
 import type { TrackView } from '@/lib/sim/store';
 import { formatRating, primaryAction } from '@/lib/result-actions';
 import { displayScore } from '@/lib/score-display';
@@ -111,5 +119,42 @@ describe('Practice next step (audit P0-5)', () => {
 
   it('ignores lost tracks', () => {
     expect(text({}, [track({ status: 'LOST' })])).toBe('Watch the radar for new tracks');
+  });
+});
+
+describe('selected-track framing (audit P0-6)', () => {
+  it('puts the camera behind the defended position, looking towards the track', () => {
+    // three.js: position = target + r·(sin φ sin θ, cos φ, sin φ cos θ).
+    const theta = azimuthBehind({ x: 0, z: 0 }, { x: 1000, z: 0 });
+    expect(Math.sin(theta)).toBeCloseTo(-1); // camera at −x when the track is at +x
+    const north = azimuthBehind({ x: 0, z: 0 }, { x: 0, z: -2000 }); // three z = −north
+    expect(Math.cos(north)).toBeCloseTo(1); // camera south of the asset (+z)
+  });
+
+  it('turns the short way round', () => {
+    expect(shortestTurn(0.1, 2 * Math.PI - 0.1)).toBeCloseTo(-0.2);
+    expect(shortestTurn(3, -3)).toBeCloseTo(2 * Math.PI - 6);
+    const mid = orbitAt({ theta: 3, phi: 1, radius: 100 }, { theta: -3, phi: 1, radius: 200 }, 1);
+    expect(Math.cos(mid.theta)).toBeCloseTo(Math.cos(-3));
+    expect(mid.radius).toBe(200);
+  });
+
+  it('eases out and holds its ends', () => {
+    expect(easeOutCubic(0)).toBe(0);
+    expect(easeOutCubic(1)).toBe(1);
+    expect(easeOutCubic(0.5)).toBeGreaterThan(0.5);
+    expect(easeOutCubic(2)).toBe(1);
+  });
+
+  it('counts a point as in frame only inside the inner view and in front of the camera', () => {
+    expect(inFrame({ x: 0, y: 0, z: 0.5 })).toBe(true);
+    expect(inFrame({ x: 0.9, y: 0, z: 0.5 })).toBe(false);
+    expect(inFrame({ x: 0, y: 0, z: 1.2 })).toBe(false);
+  });
+
+  it('clamps a label inside the view', () => {
+    expect(clampLabel(500, 300, 60, 16, 1000, 600)).toEqual({ left: 470, top: 284 });
+    expect(clampLabel(10, 5, 60, 16, 1000, 600)).toEqual({ left: 4, top: 4 });
+    expect(clampLabel(995, 700, 60, 16, 1000, 600)).toEqual({ left: 936, top: 580 });
   });
 });

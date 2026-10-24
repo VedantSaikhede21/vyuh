@@ -1,10 +1,9 @@
 'use client';
 
-import { AiLabelLine } from '@/components/hud/ai-chip';
-import { Billboard, Html } from '@react-three/drei';
+import { Billboard } from '@react-three/drei';
 import type { Affiliation } from '@vyuh/shared';
 import { toThree } from '@vyuh/sim-core';
-import { useEffect, useMemo, type RefObject } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   BufferAttribute,
   BufferGeometry,
@@ -17,7 +16,6 @@ import { AFFILIATION_STYLE, affiliationOutline } from '@/lib/affiliation';
 import { useHudStore, type TrackView } from '@/lib/sim/store';
 import { useSimRuntime } from './sim-context';
 import { SITES } from '@/lib/theme/scene-colours';
-import { cn } from '@/lib/utils';
 
 const MARKER_M = 22;
 
@@ -99,12 +97,10 @@ function TrackMarker({
   track,
   selected,
   onSelect,
-  labelPortal,
 }: {
   track: TrackView;
   selected: boolean;
   onSelect: (id: string) => void;
-  labelPortal?: RefObject<HTMLElement | null> | undefined;
 }) {
   const rt = useSimRuntime();
   const ground = rt.groundHeight(track.x, track.z);
@@ -136,39 +132,13 @@ function TrackMarker({
           <meshBasicMaterial color={SITES.markerStem} />
         </mesh>
       )}
-      {/* DOM labels only where they matter: each <Html> costs layout (FPS with bird flocks). */}
-      {(selected || track.markedDetected) && (
-        <Html
-          position={[top.x, top.y + MARKER_M * 3, top.z]}
-          center
-          zIndexRange={[10, 0]}
-          {...(labelPortal ? { portal: labelPortal as RefObject<HTMLElement> } : {})}
-        >
-          <div
-            className={cn(
-              'pointer-events-none whitespace-nowrap border bg-bg-1 px-1 text-readout leading-4',
-              style.textClass,
-              selected ? 'border-select' : 'border-line-2',
-            )}
-          >
-            {style.letter} {track.id}
-          </div>
-          {selected && track.ai && <AiLabelLine ai={track.ai} />}
-        </Html>
-      )}
     </group>
   );
 }
 
 /** Radar tracks (what the trainee knows), not ground truth. */
-export function TrackMarkers({
-  onSelect,
-  labelPortal,
-}: {
-  onSelect: (id: string) => void;
-  /** DOM element the track labels are placed in (the tactical view panel). */
-  labelPortal?: RefObject<HTMLElement | null>;
-}) {
+/** Labels are DOM, drawn by TrackLabels (track-labels.tsx). */
+export function TrackMarkers({ onSelect }: { onSelect: (id: string) => void }) {
   const hud = useHudStore((s) => s.hud);
   if (!hud) return null;
   return (
@@ -181,7 +151,6 @@ export function TrackMarkers({
             track={t}
             selected={t.id === hud.selectedTrackId}
             onSelect={onSelect}
-            labelPortal={labelPortal}
           />
         ))}
     </>
