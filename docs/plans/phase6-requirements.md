@@ -11,6 +11,7 @@
 - **One fresh Claude Code session per Part, one branch per Part** (`feat/phase6-<part>` from `main`). Rebase-merge after each Part's close-out (never squash — CLAUDE.md §12).
 - **Each Part:** read → plan → wait for approval → save the approved plan to `docs/plans/phase6<part>-plan.md` and commit → build in small commits → checkpoint (screenshots) → close-out → STOP.
 - **Testing during UI Parts (6A–6E):** lint, unit tests, pytest, plus the Part's checkpoint captures. **The full suite runs in 6H** (and 6F/6G run their own measurements).
+- **Visual baselines at every Part boundary (user, 2026-10-24):** after the user approves a Part's checkpoint, regenerate the visual baselines for the screens that Part changed, review every diff, and commit them, so `pnpm e2e` passes at each Part boundary. 6H still does the final full regeneration and review.
 - **Binding documents, in priority order:** `CLAUDE.md` → `docs/DESIGN.md` (with §2 amendments below) → `docs/SPEC.md` → `docs/UI-PREP.md`. If a skill's advice conflicts with any of these, the document wins.
 - **Decide routine choices yourself** and log them in `docs/decisions.md`. Stop and ask only for: anything that changes scoring, safety rules, what the trainee sees beyond the approved plan, the SPEC, a new dependency, or a checkpoint.
 
