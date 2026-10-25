@@ -1,8 +1,8 @@
 {
   "images": {
     "chain-assess": {
-      "w": 1104,
-      "h": 422
+      "w": 2496,
+      "h": 356
     },
     "chain-decide": {
       "w": 638,
@@ -10,7 +10,7 @@
     },
     "chain-detect": {
       "w": 638,
-      "h": 574
+      "h": 538
     },
     "chain-identify": {
       "w": 862,
@@ -18,7 +18,7 @@
     },
     "chain-respond": {
       "w": 638,
-      "h": 338
+      "h": 374
     },
     "chain-track": {
       "w": 1228,
@@ -33,12 +33,12 @@
       "h": 1200
     },
     "measure-result": {
-      "w": 2240,
-      "h": 884
+      "w": 2496,
+      "h": 1400
     },
     "realism-false-contacts": {
       "w": 638,
-      "h": 574
+      "h": 538
     },
     "realism-night-ir": {
       "w": 862,
@@ -66,6 +66,17 @@
     "contacts": 8
   },
   "respond": {
-    "lines": []
+    "lines": [
+      "00:12 T008 AFFILIATION  HOSTILE",
+      "00:20 TRACK T008 LOST",
+      "00:26 NEW TRACK T009  BRG 032°  RNG 2.62 km",
+      "00:26 T009 SELECTED",
+      "00:26 T009 MARKED DETECTED",
+      "00:26 T009 CLASSIFIED  SMALL QUADCOPTER",
+      "00:26 T009 AFFILIATION  HOSTILE",
+      "02:25 INTERCEPT ORDERED  T009",
+      "02:25 T009 INTERCEPT  NEUTRALISED",
+      "02:25 SESSION ENDED — ALL TRACKS RESOLVED"
+    ]
   }
 }

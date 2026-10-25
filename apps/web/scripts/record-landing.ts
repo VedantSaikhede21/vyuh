@@ -134,7 +134,12 @@ async function recordCrops(): Promise<void> {
   await heroReady(page, 's=S14&t=60&defend=0&select=threat&pause=1');
   await page.locator('[role=group][aria-label=Respond] span[tabindex="0"]').last().focus();
   await page.waitForTimeout(300);
-  const actions = await panel('Actions').boundingBox();
+  // The action bar's title changes with state (Practice next step, AI chip), so it is
+  // found by its Respond group.
+  const actions = await page
+    .locator('section', { has: page.locator('[role=group][aria-label=Respond]') })
+    .first()
+    .boundingBox();
   if (actions) {
     await page.screenshot({
       path: join(OUT, 'chain-decide.png'),
@@ -192,12 +197,16 @@ async function recordCrops(): Promise<void> {
   await crop(panel('Radar PPI'), 'realism-false-contacts.png');
 
   // Measurement + ASSESS: a real session played by the defender, scored by the API.
+  await page.setExtraHTTPHeaders({ 'X-Vyuh-Test-Debrief': 'template' });
   await page.goto(`${BASE}/login`);
   await page.selectOption('#email', 'trainee1@demo');
   await page.click('button[type=submit]');
-  await page.waitForURL('**/train');
+  await page.waitForURL((u) => !u.pathname.startsWith('/login')); // trainees land on Home
   await page.goto(`${BASE}/dev/hero?s=S01&submit=1`);
   await page.waitForSelector('[data-testid=result-screen]', { timeout: 180_000 });
+  // The debrief must be written, not loading: the template one (no LLM spend), as the
+  // e2e runs ask for it (decision 148; honoured only where dev login is enabled).
+  await page.waitForSelector('[data-testid=debrief-body]', { timeout: 60_000 });
   await page.addStyleTag({ content: HIDE_DEV_OVERLAY });
   await page.waitForTimeout(1000);
   await crop(page.locator('[data-testid=result-screen]'), 'measure-result.png');
