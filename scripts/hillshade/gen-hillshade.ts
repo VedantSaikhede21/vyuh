@@ -221,6 +221,17 @@ export function crop(rgb: Uint8Array, size: number, width: number, height: numbe
   return out;
 }
 
+/** Rescale shade in place so its 2nd–98th percentiles span 0..1. */
+export function stretchShade(shade: Float32Array): void {
+  const sorted = Float32Array.from(shade).sort();
+  const lo = sorted[Math.floor(sorted.length * 0.02)] ?? 0;
+  const hi = sorted[Math.floor(sorted.length * 0.98)] ?? 1;
+  const span = Math.max(hi - lo, 1e-6);
+  for (let i = 0; i < shade.length; i++) {
+    shade[i] = Math.min(1, Math.max(0, ((shade[i] ?? 0) - lo) / span));
+  }
+}
+
 /** thumb.png and map.png for one preset folder. */
 export function presetImages(presetDir: string): { map: Buffer; thumb: Buffer } {
   const { meta, h } = readHeights(presetDir);
@@ -251,15 +262,20 @@ export function proceduralImages(): { map: Buffer; thumb: Buffer } {
     relMaxM: hi,
     sizeM: map.sizeM,
   };
-  return images(meta, Float32Array.from(map.heights), []);
+  // Smooth hills with no buildings read as a blank tile at thumbnail size: exaggerate
+  // the relief and stretch the shade to its own range (audit P2-2).
+  return images(meta, Float32Array.from(map.heights), [], 2, true);
 }
 
 function images(
   meta: Meta,
   h: Float32Array,
   rings: (readonly (readonly [number, number])[])[],
+  zBoost = 1,
+  stretch = false,
 ): { map: Buffer; thumb: Buffer } {
-  const shade = hillshade(meta, h, zFactorFor(meta));
+  const shade = hillshade(meta, h, zFactorFor(meta) * zBoost);
+  if (stretch) stretchShade(shade);
   const tone = TONES.map;
   const image = (size: number) => {
     const rgb = toRgb(shade, meta.resolution, size, tone.dark, tone.light, tone.gamma, tone.levels);

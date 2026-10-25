@@ -120,7 +120,7 @@ function Field({
       <span className="text-label">{label}</span>
       {children}
       {error && (
-        <span className="block text-small text-warn" role="alert">
+        <span className="block text-small text-crit" role="alert">
           {error}
         </span>
       )}

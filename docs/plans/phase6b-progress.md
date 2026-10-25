@@ -76,10 +76,18 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 - Briefing legend names the no-kinetic zones ("No-kinetic · Z1 village, Z2 school"). The instructor note already shows as a briefing section, so the legend does not repeat it.
 - Not captured yet with a tool active — add to `checkpoint-6b.spec.ts`. "Preview without jank" not touched (the map keeps the last good preview already).
 
+## Briefing and training list (2026-10-25, P2-2, P2-3)
+
+- `lib/briefing/label-place.ts` (`placeLabel`, `bbox`, tested): ring labels and the asset name take the first candidate clear of zone boxes and earlier labels; the asset name gets a `--bg-0` plate. S06 RELAY SITE moved off the hatching; S05 INT label clear of Z2.
+- PROCEDURAL_HILLS thumb / map regenerated with 2× relief and a stretched shade (`scripts/hillshade/gen-hillshade.ts`, `stretchShade`; the other presets regenerate byte-identical).
+- Generate button secondary.
+- Builder field errors use `--crit` like the invalid input border.
+- `e2e/checkpoint-6b.spec.ts` started (`@cp6b`, out `e2e/checkpoint/6b/`): training list, briefings S06 / S05 / S01, builder asset tool, zone draft, field error. Passes at 1366 on a production build; captures reviewed.
+
 ## Still to do in 6B (from the plan, in order)
 
 2. Player: disabled reasons and title hovers checked in the break-ui pass. (Aids labelled: spectrogram "Aid · confirm on camera"; the AI chip tooltip already says it can be wrong.)
-4. Briefing labels (P2-3) + S01–S03 thumbnails + Generate secondary (P2-2), weight editor / From text copy (P1-9) and "/10" wording.
+4. Weight editor / From text copy (P1-9) and "/10" wording.
 5. Apply 6A primitives everywhere (Tabs, SegmentedControl, Table, PageHeader, ErrorState); one primary action per screen; keyboard focus order.
 6. Load `emil-design-eng` before the polish, `break-ui` before stress-testing; write the break-ui report.
 7. Checkpoint B: `checkpoint-6b.spec.ts` captures of every 6B screen at 1366×768 and 1920×1080 + break-ui report + FPS before / after → **stop for the user's OK**.

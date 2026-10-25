@@ -11,6 +11,7 @@ import {
 } from '@/lib/briefing/coverage';
 import type { CoverageState } from '@/lib/briefing/use-coverage';
 import { UI, ZONES } from '@/lib/theme/scene-colours';
+import { bbox, placeLabel, type Rect } from '@/lib/briefing/label-place';
 import { BriefingLegend, LEGEND_H } from './briefing-legend';
 
 // Briefing map (DESIGN §11.4): the preset's hillshade with buildings (map.png),
@@ -125,10 +126,14 @@ export function BriefingMap({
       }
     }
 
+    // Zone outlines and placed labels: later labels move off them (audit P2-3).
+    const taken: Rect[] = [];
+
     // Zones: no-kinetic hatched and outlined, the border dashed.
     for (const z of scenario.zones) {
       if (z.kind === 'NO_KINETIC') {
         const pts = z.polygon.map(([x, zz]) => [X(x), Y(zz)] as const);
+        taken.push(bbox(pts));
         g.save();
         g.beginPath();
         pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
@@ -154,6 +159,7 @@ export function BriefingMap({
         g.fillStyle = ZONES.label;
         g.font = `600 11px ${cond}`;
         g.fillText(z.id, left + 2, top - 3);
+        taken.push({ x: left + 2, y: top - 14, w: g.measureText(z.id).width, h: 12 });
       } else if (z.kind === 'BORDER_LINE') {
         g.strokeStyle = ZONES.border;
         g.lineWidth = 1.5;
@@ -183,7 +189,24 @@ export function BriefingMap({
       g.setLineDash([]);
       g.fillStyle = UI.text2;
       g.font = `500 11px ${mono}`;
-      g.fillText(label, X(x) + 3, Y(z) - r * k - 3);
+      // Above the ring, else beside it at either side, else below.
+      const w = g.measureText(label).width;
+      const cx = X(x);
+      const cy = Y(z);
+      const rp = r * k;
+      const at = placeLabel(
+        [
+          { x: cx + 3, y: cy - rp - 14, w, h: 12 },
+          { x: cx - w - 3, y: cy - rp - 14, w, h: 12 },
+          { x: cx + rp * 0.71 + 3, y: cy - rp * 0.71 - 12, w, h: 12 },
+          { x: cx - rp * 0.71 - w - 3, y: cy - rp * 0.71 - 12, w, h: 12 },
+          { x: cx + 3, y: cy + rp + 3, w, h: 12 },
+        ],
+        taken,
+        px,
+      );
+      taken.push(at);
+      g.fillText(label, at.x, at.y + 11);
     };
     for (const s of scenario.sensors) {
       if (s.kind === 'RADAR')
@@ -212,9 +235,25 @@ export function BriefingMap({
       g.strokeStyle = UI.select;
       g.lineWidth = 2;
       g.strokeRect(x - 6, y - 6, 12, 12);
-      g.fillStyle = UI.text1;
       g.font = `600 12px ${cond}`;
-      g.fillText(a.name.toUpperCase(), x + 10, y + 4);
+      const name = a.name.toUpperCase();
+      const w = g.measureText(name).width;
+      // Right of the square, else left, below or above, clear of zones (S06 relay site).
+      const at = placeLabel(
+        [
+          { x: x + 10, y: y - 8, w, h: 13 },
+          { x: x - 10 - w, y: y - 8, w, h: 13 },
+          { x: x - w / 2, y: y + 9, w, h: 13 },
+          { x: x - w / 2, y: y - 22, w, h: 13 },
+        ],
+        taken,
+        px,
+      );
+      taken.push(at);
+      g.fillStyle = hexToRgba(UI.bg0, 0.7);
+      g.fillRect(at.x - 2, at.y - 1, w + 4, 15);
+      g.fillStyle = UI.text1;
+      g.fillText(name, at.x, at.y + 11);
     }
 
     // Intel axis: from the map edge toward the first asset.

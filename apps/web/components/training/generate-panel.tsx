@@ -223,8 +223,9 @@ export function GeneratePanel({ role }: { role: UserRole }) {
           side="bottom"
           className="flex w-full"
         >
+          {/* Secondary: choosing a scenario from the list is the page's main act (audit P2-2). */}
           <Button
-            variant="primary"
+            variant="secondary"
             className="w-full"
             disabled={disabledReason !== null}
             onClick={() => void generate()}
