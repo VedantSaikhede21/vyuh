@@ -218,8 +218,11 @@ async function noHorizontalScroll(page: Page, name: string, s: State) {
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
   const size = page.viewportSize();
-  appendFileSync(`${OUT}/overflow.txt`, `${name} ${s} ${size?.width}: ${over}px
-`);
+  appendFileSync(
+    `${OUT}/overflow.txt`,
+    `${name} ${s} ${size?.width}: ${over}px
+`,
+  );
   expect.soft(over, `${name} ${s}: horizontal scroll`).toBeLessThanOrEqual(1);
 }
 
