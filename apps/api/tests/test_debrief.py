@@ -102,7 +102,11 @@ def test_template_when_llm_disabled(
 
 
 def test_llm_debrief_validated_and_cached(
-    app: FastAPI, client: TestClient, auth_header: Headers, session_id: tuple[str, User]
+    app: FastAPI,
+    client: TestClient,
+    auth_header: Headers,
+    make_user: Callable[..., User],
+    session_id: tuple[str, User],
 ) -> None:
     sid, user = session_id
     # First find a real time from the input, as the LLM would.
@@ -153,6 +157,18 @@ def test_llm_debrief_validated_and_cached(
     assert kept["source"] == "TEMPLATE"
     assert kept["fallbackReason"] == "INVALID_OUTPUT"
     assert good.calls == []
+
+    # Decision 151: staff can discard it and build it again; the trainee cannot.
+    regen = f"/api/v1/aar/sessions/{sid}/debrief/regenerate"
+    assert_error(client.post(regen, headers=auth_header(user)), 403, "FORBIDDEN")
+    staff = make_user(UserRole.INSTRUCTOR, "instructor@test")
+    fresh = client.post(regen, headers=auth_header(staff))
+    assert fresh.status_code == 200, fresh.text
+    assert fresh.json()["source"] == "LLM"
+    assert len(good.calls) == 1
+    # The trainee now sees the regenerated debrief from the cache.
+    seen = client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=auth_header(user)).json()
+    assert seen["source"] == "LLM" and seen["createdAt"] == fresh.json()["createdAt"]
 
 
 def test_llm_answer_used_and_timeout_retried(
@@ -337,3 +353,60 @@ def test_test_header_is_ignored_where_dev_login_is_off(
     body = client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=forced).json()
     assert body["source"] == "LLM"
     assert len(transport.calls) == 1
+
+
+def _template_input(
+    issues: list[dict[str, Any]], penalties: list[dict[str, Any]]
+) -> dict[str, Any]:
+    comps = {"detection": 10, "classification": 10, "decision": 20, "report": 0, "efficiency": 0}
+    return {
+        "scenario": {"code": "S06", "name": "Crowded Skies", "difficulty": 3},
+        "mode": "ASSESSMENT",
+        "score": {
+            "total": 40.0,
+            "components": comps,
+            "componentMax": {**comps, "detection": 20, "classification": 20, "decision": 40},
+            "penalties": penalties,
+        },
+        "contacts": [
+            {"contactId": f"c0{n}", "trackIds": [f"T00{n}"], "isThreat": n < 5} for n in range(1, 8)
+        ],
+        "killChainIssues": issues,
+        "keyEvents": [],
+    }
+
+
+def test_template_groups_a_stopped_chain_and_repeated_penalties() -> None:
+    """Audit P1-12: one line for a chain stopped at one stage, one per repeated code."""
+    from app.services.ai.debrief import template_debrief
+
+    stopped = [
+        {
+            "contactId": "c06",
+            "trackId": "T006",
+            "isThreat": True,
+            "stage": stage,
+            "status": "MISSED",
+            "tMs": 18_000,
+            "feedback": f"{stage.lower()} missed",
+        }
+        for stage in ("IDENTIFY", "DECIDE", "RESPOND", "ASSESS")
+    ]
+    roe = [
+        {
+            "code": "ROE_VIOLATION_ATTEMPT",
+            "points": -5,
+            "tMs": 94_000 + n * 1000,
+            "contactId": f"c0{n}",
+            "feedback": "Engagement attempted against ROE",
+        }
+        for n in (1, 2, 3)
+    ]
+    content = template_debrief(_template_input(stopped, roe))
+    whats = [m.what for m in content.mistakes]
+    assert sum("T006" in w for w in whats) == 1, whats
+    assert any(w.startswith("T006 STOPPED AT IDENTIFY") for w in whats), whats
+    roe_lines = [w for w in whats if "against ROE" in w]
+    assert roe_lines == ["Engagement attempted against ROE. Also T002, T003."], whats
+    roe_line = next(m for m in content.mistakes if "against ROE" in m.what)
+    assert roe_line.t_ms == 94_000 + 1000

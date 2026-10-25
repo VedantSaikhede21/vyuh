@@ -29,7 +29,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { api } from '@/lib/api';
 import { REPLAY_FALLBACK_TEXT, penaltyHref, replayGate, type ReplayGate } from '@/lib/replay/gate';
-import { formatRating, primaryAction } from '@/lib/result-actions';
+import { formatRating, primaryAction, scaleNote } from '@/lib/result-actions';
 import { displayScore } from '@/lib/score-display';
 import { loadPresetMeta } from '@/lib/terrain/load-world';
 import { OUTCOME_LABEL, OUTCOME_TONE, humaniseFeedback } from '@/lib/hud/feedback';
@@ -169,6 +169,11 @@ export function ResultScreen({
     (c) => score.componentMax[c] === 0,
   );
   const penalties = [...score.penalties].sort((a, b) => (a.tMs ?? 0) - (b.tMs ?? 0));
+  const note = scaleNote(
+    shown.components,
+    score.componentMax,
+    penalties.reduce((s, p) => s + (p.unavoidable ? 0 : p.points), 0),
+  );
   const contacts = [...score.perContact].sort(
     (a, b) => Number(b.isThreat) - Number(a.isThreat) || a.contactId.localeCompare(b.contactId),
   );
@@ -248,139 +253,149 @@ export function ResultScreen({
       </header>
       {error && <StatusNotice tone="error" title={`Could not start the session: ${error}`} />}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <Panel>
-          <PanelHeader title="Score">
-            <span className="text-label">Scored on the server</span>
-          </PanelHeader>
-          <PanelBody className="space-y-4">
-            <div className="flex flex-wrap items-end gap-8">
-              <Readout
-                label="Total"
-                value={<span data-testid="score-total">{shown.total}</span>}
-                unit="/ 100"
-                size="lg"
-                flash={false}
-              />
-              {score.recommendedDifficulty !== undefined && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-label">Recommended next difficulty</span>
-                  <span className="flex items-center gap-2">
-                    <Pips value={score.recommendedDifficulty} />
-                    <span className="text-readout">{score.recommendedDifficulty}</span>
-                    {current && (
-                      <span className="text-small text-text-2">
-                        {score.recommendedDifficulty > current.difficulty
-                          ? `up from ${current.difficulty}`
-                          : score.recommendedDifficulty < current.difficulty
-                            ? `down from ${current.difficulty}`
-                            : 'same level'}
-                      </span>
-                    )}
-                  </span>
-                  {score.recommendationRating !== undefined && (
-                    <span className="text-small text-text-2" data-testid="recommendation-basis">
-                      Recommended from your rating ({formatRating(score.recommendationRating)})
+      {/* Story order (audit, plan 6B): score → debrief (went well, mistakes, drill)
+          → penalties with replay links → per contact. Actions stay in the header. */}
+      <Panel>
+        <PanelHeader title="Score">
+          <span className="text-label">Scored on the server</span>
+        </PanelHeader>
+        <PanelBody className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="flex flex-wrap content-start items-end gap-8">
+            <Readout
+              label="Total"
+              value={<span data-testid="score-total">{shown.total}</span>}
+              unit="/ 100"
+              size="lg"
+              flash={false}
+            />
+            {score.recommendedDifficulty !== undefined && (
+              <div className="flex flex-col gap-1">
+                <span className="text-label">Recommended next difficulty</span>
+                <span className="flex items-center gap-2">
+                  <Pips value={score.recommendedDifficulty} />
+                  <span className="text-readout">{score.recommendedDifficulty}</span>
+                  {current && (
+                    <span className="text-small text-text-2">
+                      {score.recommendedDifficulty > current.difficulty
+                        ? `up from ${current.difficulty}`
+                        : score.recommendedDifficulty < current.difficulty
+                          ? `down from ${current.difficulty}`
+                          : 'same level'}
                     </span>
                   )}
-                </div>
-              )}
-              <RatingReadout score={score} mode={mode} />
-            </div>
-            <div className="space-y-2">
-              {scored.map((c) => {
-                const pct = (score.components[c] / score.componentMax[c]) * 100;
-                return (
-                  <div key={c} className="grid grid-cols-[7.5rem_1fr_6.5rem] items-center gap-3">
-                    <span className="text-label">{COMPONENT_LABEL[c]}</span>
-                    <div
-                      className="h-2 bg-bg-3"
-                      role="meter"
-                      aria-label={COMPONENT_LABEL[c]}
-                      aria-valuemin={0}
-                      aria-valuemax={score.componentMax[c]}
-                      aria-valuenow={score.components[c]}
-                    >
-                      <div className="h-full bg-text-1" style={{ width: `${pct}%` }} />
-                    </div>
-                    <span className="text-right text-readout">
-                      {shown.components[c].toFixed(1)}
-                      <span className="text-text-2"> / {score.componentMax[c]}</span>
-                    </span>
+                </span>
+                {score.recommendationRating !== undefined && (
+                  <span className="text-small text-text-2" data-testid="recommendation-basis">
+                    Recommended from your rating ({formatRating(score.recommendationRating)})
+                  </span>
+                )}
+              </div>
+            )}
+            <RatingReadout score={score} mode={mode} />
+          </div>
+          <div className="space-y-2">
+            {scored.map((c) => {
+              const pct = (score.components[c] / score.componentMax[c]) * 100;
+              return (
+                <div key={c} className="grid grid-cols-[7.5rem_1fr_6.5rem] items-center gap-3">
+                  <span className="text-label">{COMPONENT_LABEL[c]}</span>
+                  <div
+                    className="h-2 bg-bg-3"
+                    role="meter"
+                    aria-label={COMPONENT_LABEL[c]}
+                    aria-valuemin={0}
+                    aria-valuemax={score.componentMax[c]}
+                    aria-valuenow={score.components[c]}
+                  >
+                    <div className="h-full bg-text-1" style={{ width: `${pct}%` }} />
                   </div>
-                );
-              })}
-            </div>
-            {unscored.length > 0 && (
-              <p className="text-small text-text-2">
-                Scoring tree {score.treeVersion.replace('default_', '')} does not score{' '}
-                {unscored.map((c) => COMPONENT_LABEL[c].toLowerCase()).join(' or ')}.
+                  <span className="text-right text-readout">
+                    {shown.components[c].toFixed(1)}
+                    <span className="text-text-2"> / {score.componentMax[c]}</span>
+                  </span>
+                </div>
+              );
+            })}
+            {(note || unscored.length > 0) && (
+              <p className="pt-1 text-small text-text-2" data-testid="scale-note">
+                {note}
+                {unscored.length > 0 && (
+                  <>
+                    {note && ' '}
+                    Scoring tree {score.treeVersion.replace('default_', '')} does not score{' '}
+                    {unscored.map((c) => COMPONENT_LABEL[c].toLowerCase()).join(' or ')}.
+                  </>
+                )}
               </p>
             )}
-          </PanelBody>
-        </Panel>
-
-        <Panel>
-          <PanelHeader title="Penalties and bonuses">
-            <span className="text-label">{penalties.length}</span>
-          </PanelHeader>
-          {penalties.length === 0 ? (
-            <StatusNotice title="No penalties or bonuses." />
-          ) : (
-            <table className="w-full border-collapse" aria-label="Penalties and bonuses">
-              <thead>
-                <tr>
-                  <th className={TH}>Time</th>
-                  <th className={cn(TH, 'text-right')}>Points</th>
-                  <th className={TH}>What happened</th>
-                </tr>
-              </thead>
-              <tbody>
-                {penalties.map((p, i) => (
-                  <tr key={i} className="border-t border-line-1">
-                    <td className={cn(TD, 'text-readout text-text-2')}>
-                      <Link
-                        href={penaltyHref(sessionId, p, score.penalties.indexOf(p))}
-                        className="underline decoration-line-2 underline-offset-2 hover:text-text-1 hover:decoration-text-2 focus-visible:outline-2 focus-visible:outline-select"
-                        aria-label={`Open the replay at this moment: ${humaniseFeedback(p.feedback)}`}
-                        data-testid="penalty-link"
-                      >
-                        {p.tMs === undefined ? 'View' : formatClock(p.tMs)}
-                      </Link>
-                    </td>
-                    <td
-                      className={cn(
-                        TD,
-                        'text-right text-readout',
-                        p.unavoidable
-                          ? 'text-text-2'
-                          : p.points < 0
-                            ? 'text-crit'
-                            : p.points > 0
-                              ? 'text-ok'
-                              : 'text-text-2',
-                      )}
-                    >
-                      {p.points > 0 ? '+' : ''}
-                      {p.points}
-                    </td>
-                    <td className={cn(TD, 'text-body')}>
-                      {humaniseFeedback(p.feedback)}
-                      {p.unavoidable && (
-                        <span className="text-small text-text-2"> · not counted (unavoidable)</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </Panel>
-      </div>
+            {penalties.length === 0 && (
+              // Empty penalties are one line here, not a half-width panel (audit P2-4).
+              <p className="text-small text-text-2" data-testid="no-penalties">
+                No penalties or bonuses.
+              </p>
+            )}
+          </div>
+        </PanelBody>
+      </Panel>
 
       <div id="debrief" className="scroll-mt-4">
         <DebriefPanel sessionId={sessionId} />
       </div>
+
+      {penalties.length > 0 && (
+        <Panel data-testid="penalties">
+          <PanelHeader title="Penalties and bonuses">
+            <span className="text-label">{penalties.length}</span>
+          </PanelHeader>
+          <table className="w-full border-collapse" aria-label="Penalties and bonuses">
+            <thead>
+              <tr>
+                <th className={TH}>Time</th>
+                <th className={cn(TH, 'text-right')}>Points</th>
+                <th className={TH}>What happened</th>
+              </tr>
+            </thead>
+            <tbody>
+              {penalties.map((p, i) => (
+                <tr key={i} className="border-t border-line-1">
+                  <td className={cn(TD, 'text-readout text-text-2')}>
+                    <Link
+                      href={penaltyHref(sessionId, p, score.penalties.indexOf(p))}
+                      className="underline decoration-line-2 underline-offset-2 hover:text-text-1 hover:decoration-text-2 focus-visible:outline-2 focus-visible:outline-select"
+                      aria-label={`Open the replay at this moment: ${humaniseFeedback(p.feedback)}`}
+                      data-testid="penalty-link"
+                    >
+                      {p.tMs === undefined ? 'View' : formatClock(p.tMs)}
+                    </Link>
+                  </td>
+                  <td
+                    className={cn(
+                      TD,
+                      'text-right text-readout',
+                      p.unavoidable
+                        ? 'text-text-2'
+                        : p.points < 0
+                          ? 'text-crit'
+                          : p.points > 0
+                            ? 'text-ok'
+                            : 'text-text-2',
+                    )}
+                  >
+                    {p.points > 0 ? '+' : ''}
+                    {p.points}
+                  </td>
+                  <td className={cn(TD, 'text-body')}>
+                    {humaniseFeedback(p.feedback)}
+                    {p.unavoidable && (
+                      <span className="text-small text-text-2"> · not counted (unavoidable)</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Panel>
+      )}
 
       <Panel>
         <PanelHeader title="What was there vs what you did">

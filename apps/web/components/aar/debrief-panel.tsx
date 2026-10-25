@@ -4,9 +4,12 @@ import type { DebriefFallbackReason, DebriefResponse } from '@vyuh/shared';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { Panel, PanelHeader, Skeleton, StateChip, StatusNotice } from '@/components/hud/primitives';
+import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { humaniseFeedback } from '@/lib/hud/feedback';
+import { isStaff } from '@/lib/nav';
 import { formatClock } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 
@@ -32,11 +35,10 @@ export function useDebrief(sessionId: string) {
   const [state, setState] = useState<
     { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ok'; data: DebriefResponse }
   >({ kind: 'loading' });
-  const [attempt, setAttempt] = useState(0);
+  const [attempt, setAttempt] = useState({ n: 0, regenerate: false });
   useEffect(() => {
     const ctrl = new AbortController();
-    api
-      .debrief(sessionId, ctrl.signal)
+    (attempt.regenerate ? api.regenerateDebrief : api.debrief)(sessionId, ctrl.signal)
       .then((data) => setState({ kind: 'ok', data }))
       .catch((err: unknown) => {
         if (!ctrl.signal.aborted)
@@ -49,9 +51,13 @@ export function useDebrief(sessionId: string) {
   }, [sessionId, attempt]);
   const retry = useCallback(() => {
     setState({ kind: 'loading' });
-    setAttempt((a) => a + 1);
+    setAttempt((a) => ({ n: a.n + 1, regenerate: false }));
   }, []);
-  return { state, retry };
+  const regenerate = useCallback(() => {
+    setState({ kind: 'loading' });
+    setAttempt((a) => ({ n: a.n + 1, regenerate: true }));
+  }, []);
+  return { state, retry, regenerate };
 }
 
 const TIME_LINK =
@@ -180,11 +186,32 @@ export function SourceChip({ data }: { data: DebriefResponse }) {
 
 /** Full panel for the result screen and the timeline fallback. */
 export function DebriefPanel({ sessionId }: { sessionId: string }) {
-  const { state, retry } = useDebrief(sessionId);
+  const { state, retry, regenerate } = useDebrief(sessionId);
+  const { user } = useAuth();
+  // A template kept because the LLM answer failed validation is not rebuilt on its
+  // own (the LLM would likely fail again); staff can ask for it (decision 151).
+  const stale =
+    state.kind === 'ok' &&
+    state.data.source === 'TEMPLATE' &&
+    state.data.fallbackReason === 'INVALID_OUTPUT';
   return (
     <Panel data-testid="debrief">
       <PanelHeader title="Instructor debrief">
-        {state.kind === 'ok' && <SourceChip data={state.data} />}
+        {state.kind === 'ok' && (
+          <span className="flex items-center gap-2">
+            <SourceChip data={state.data} />
+            {stale && isStaff(user?.role) && (
+              <Button
+                size="hud"
+                variant="secondary"
+                onClick={regenerate}
+                data-testid="regenerate-debrief"
+              >
+                Regenerate debrief
+              </Button>
+            )}
+          </span>
+        )}
       </PanelHeader>
       <DebriefState state={state} retry={retry} />
     </Panel>

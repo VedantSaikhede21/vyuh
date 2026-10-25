@@ -174,6 +174,12 @@ export const api = {
   /** Generated once (LLM or template), then cached on the server. */
   debrief: (sessionId: string, signal?: AbortSignal) =>
     apiFetch(`/aar/sessions/${sessionId}/debrief`, DebriefResponse, { method: 'POST', signal }),
+  /** Staff: discard the cached debrief and build it again (decision 151). */
+  regenerateDebrief: (sessionId: string, signal?: AbortSignal) =>
+    apiFetch(`/aar/sessions/${sessionId}/debrief/regenerate`, DebriefResponse, {
+      method: 'POST',
+      signal,
+    }),
   /** Text → parsed generator parameters (instructors; nothing is generated yet). */
   scenarioFromText: (text: string, signal?: AbortSignal) =>
     apiFetch('/scenarios/from-text', FromTextResponse, {

@@ -9,7 +9,7 @@ import {
   shortestTurn,
 } from '@/lib/sim/framing';
 import type { TrackView } from '@/lib/sim/store';
-import { formatRating, primaryAction } from '@/lib/result-actions';
+import { formatRating, primaryAction, scaleNote } from '@/lib/result-actions';
 import { displayScore } from '@/lib/score-display';
 
 describe('result-screen primary action (audit P0-3)', () => {
@@ -25,6 +25,29 @@ describe('result-screen primary action (audit P0-3)', () => {
   it('formats a rating with a thousands separator', () => {
     expect(formatRating(1024)).toBe('1,024');
     expect(formatRating(987)).toBe('987');
+  });
+});
+
+describe('result scale note (audit P1-13)', () => {
+  const max = { detection: 20, classification: 20, decision: 40, report: 0, efficiency: 0 };
+  it('explains a tree that scores fewer than 100 points', () => {
+    expect(
+      scaleNote(
+        { detection: 10, classification: 15, decision: 25, report: 0, efficiency: 0 },
+        max,
+        0,
+      ),
+    ).toBe('Components 50.0 of 80 points, scaled to 100.');
+  });
+  it('adds penalties and bonuses', () => {
+    const full = { detection: 20, classification: 20, decision: 40, report: 10, efficiency: 10 };
+    expect(scaleNote(full, full, -15)).toBe(
+      'Components 100.0 of 100 points, then −15 penalties and bonuses.',
+    );
+  });
+  it('says nothing when the bars are the total', () => {
+    const full = { detection: 20, classification: 20, decision: 40, report: 10, efficiency: 10 };
+    expect(scaleNote(full, full, 0)).toBeNull();
   });
 });
 

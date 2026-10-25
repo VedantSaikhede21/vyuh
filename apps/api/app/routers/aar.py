@@ -47,6 +47,32 @@ def session_debrief(
     )
 
 
+@router.post(
+    "/sessions/{session_id}/debrief/regenerate",
+    response_model=DebriefResponse,
+    response_model_exclude_unset=True,
+)
+def regenerate_debrief(
+    session_id: uuid.UUID,
+    request: Request,
+    user: StaffUser,
+    db: DbDep,
+    settings: SettingsDep,
+) -> DebriefResponse:
+    """Staff: discard the cached debrief and build it again (decision 151)."""
+    force_template = (
+        settings.dev_login_enabled and request.headers.get(TEST_DEBRIEF_HEADER) == "template"
+    )
+    return debrief.session_debrief(
+        db,
+        request.app.state.llm,
+        user,
+        session_id,
+        force_template=force_template,
+        regenerate=True,
+    )
+
+
 @router.get("/users/{user_id}/trends", response_model=TraineeTrendsResponse)
 def user_trends(user_id: uuid.UUID, user: CurrentUser, db: DbDep) -> TraineeTrendsResponse:
     """Assessment trends of one trainee: self, or instructor / admin."""
