@@ -46,7 +46,7 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 
 ## Still to do in 6B (from the plan, in order)
 
-2. Player: aids labelling (AI chip and spectrogram say they are aids); disabled reasons and title hovers checked in the break-ui pass.
+2. Player: disabled reasons and title hovers checked in the break-ui pass. (Aids labelled: spectrogram "Aid · confirm on camera"; the AI chip tooltip already says it can be wrong.)
 4. AAR (P1-14), trends (P1-15), unit dashboard + assignments (P1-16, P2-9), builder (P1-17 + legend), briefing labels (P2-3) + S01–S03 thumbnails + Generate secondary (P2-2), weight editor / From text copy (P1-9) and "/10" wording.
 5. Apply 6A primitives everywhere (Tabs, SegmentedControl, Table, PageHeader, ErrorState); one primary action per screen; keyboard focus order.
 6. Load `emil-design-eng` before the polish, `break-ui` before stress-testing; write the break-ui report.
