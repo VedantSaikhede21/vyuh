@@ -87,12 +87,7 @@ function AarSession({
           data={data}
           world={world}
           keyframes={kf.result.keyframes}
-          initialTMs={initialReplayTime(
-            start,
-            data.session.score,
-            data.killChain,
-            data.events,
-          )}
+          initialTMs={initialReplayTime(start, data.session.score, data.killChain, data.events)}
         />
       ) : (
         <FallbackView
