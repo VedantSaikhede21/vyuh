@@ -107,7 +107,7 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 ## Still to do in 6B (from the plan, in order)
 
 2. Player: disabled reasons and title hovers checked in the break-ui pass. (Aids labelled: spectrogram "Aid · confirm on camera"; the AI chip tooltip already says it can be wrong.)
-5. Keyboard focus order on every 6B screen (with break-ui). `Table` primitive not applied to the existing tables yet — decide in the polish pass whether the swap is worth it.
+5. Keyboard pass: done (`e2e/keyboard-6b.spec.ts`, `@keyboard`, logs in `e2e/checkpoint/6b/keyboard/`). Every stop has a visible ring and none is hidden. Fixed: the AAR kill chain is one tab stop with arrow / Home / End movement (`gridMove` in `components/ui/tabs.tsx`, tested; the replay ignores those keys inside it) — 78 → 19 stops; Recharts' keyboard layer off (8 unlabelled chart stops on trends; the wrapper is the labelled image). Skip link is the first stop. Left as is: unit recent sessions are two links per row (both real destinations). `Table` primitive not swapped in (no defect found; not worth the churn now).
 6. break-ui: done. Report and fix outcomes in `docs/plans/phase6b-break-ui.md` (user said "fix all"; 1–5 and 7 fixed, 6 needed no change). Spec `e2e/break-ui.spec.ts` (`@breakui`) passes 20 / 20 with no overflow anywhere.
 7. Checkpoint B: `checkpoint-6b.spec.ts` captures of every 6B screen at 1366×768 and 1920×1080 + break-ui report + FPS before / after → **stop for the user's OK**.
 8. After OK: regenerate + review + commit visual baselines; full `pnpm e2e`; lint, `pnpm test`, pytest, `gen:schemas` no diff; CLAUDE.md §14; decisions.

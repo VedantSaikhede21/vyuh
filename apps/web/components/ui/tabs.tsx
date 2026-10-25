@@ -28,6 +28,38 @@ export function rovingIndex(key: string, i: number, n: number): number | null {
   }
 }
 
+/**
+ * Arrow / Home / End move in a rows × cols grid with one tab stop (DESIGN §12):
+ * arrows step and stop at the edges; Home / End go to the row's ends; Ctrl+Home /
+ * Ctrl+End to the first / last cell. Null for any other key.
+ */
+export function gridMove(
+  key: string,
+  ctrl: boolean,
+  r: number,
+  c: number,
+  rows: number,
+  cols: number,
+): [number, number] | null {
+  if (rows === 0 || cols === 0) return null;
+  switch (key) {
+    case 'ArrowRight':
+      return [r, Math.min(c + 1, cols - 1)];
+    case 'ArrowLeft':
+      return [r, Math.max(c - 1, 0)];
+    case 'ArrowDown':
+      return [Math.min(r + 1, rows - 1), c];
+    case 'ArrowUp':
+      return [Math.max(r - 1, 0), c];
+    case 'Home':
+      return ctrl ? [0, 0] : [r, 0];
+    case 'End':
+      return ctrl ? [rows - 1, cols - 1] : [r, cols - 1];
+    default:
+      return null;
+  }
+}
+
 const VARIANT = {
   // Fills a panel header strip: equal cells split by 1 px rules (AAR side panel, player).
   strip: {

@@ -112,6 +112,8 @@ export function useReplayKeys(
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null;
       if (el && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) && e.key !== ' ') return;
+      // The kill-chain table moves its own focus with arrows, Home and End.
+      if (el?.closest('[data-kc-grid]') && /^(Arrow|Home$|End$)/.test(e.key)) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const st = useReplayStore.getState();
       const t = controller.tMs;

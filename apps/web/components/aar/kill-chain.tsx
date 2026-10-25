@@ -8,12 +8,13 @@ import type {
   Penalty,
 } from '@vyuh/shared';
 import { ChevronRight } from 'lucide-react';
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo, useRef, useState } from 'react';
 import { AffiliationSymbol, Panel } from '@/components/hud/primitives';
 import { humaniseFeedback } from '@/lib/hud/feedback';
 import { clearedLabel, groupRows } from '@/lib/replay/kill-chain-rows';
 import { useReplayStore } from '@/lib/replay/store';
 import { CLASS_LABEL, formatClock } from '@/lib/strings';
+import { gridMove } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 // Kill-chain breakdown (Phase 4a Step 8, decision 110): one row per contact,
@@ -181,6 +182,15 @@ export const KillChainPanel = memo(function KillChainPanel({
   const g = useGroupedRows(rows, penalties);
   const sorted = g.all;
   const stages = sorted[0]?.stages ?? [];
+  // One tab stop for the whole table; arrows move between cells (keyboard pass:
+  // 60+ stops before the side tabs otherwise). The replay ignores arrows in here.
+  const visible = [...g.listed, ...g.shown];
+  const [cursor, setCursor] = useState<[number, number]>([0, 0]);
+  const cur = [
+    Math.min(cursor[0], Math.max(visible.length - 1, 0)),
+    Math.min(cursor[1], Math.max(stages.length - 1, 0)),
+  ] as const;
+  const grid = useRef<HTMLTableElement>(null);
   const focused = sorted
     .flatMap((r) => r.stages.map((s) => ({ row: r, step: s })))
     .find(({ row, step }) => cellKey(row, step) === focus);
@@ -189,7 +199,12 @@ export const KillChainPanel = memo(function KillChainPanel({
   return (
     <Panel className="h-full border-0" data-testid="kill-chain">
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <table className="w-full border-collapse" aria-label="Kill chain by contact">
+        <table
+          ref={grid}
+          className="w-full border-collapse"
+          aria-label="Kill chain by contact. Arrow keys move between stages."
+          data-kc-grid
+        >
           <thead>
             <tr>
               <th className="sticky top-0 z-[1] h-6 bg-bg-2 pl-2 text-left text-label font-medium">
@@ -229,16 +244,38 @@ export const KillChainPanel = memo(function KillChainPanel({
                       <span className="font-mono text-text-1">{row.contactId}</span>
                     </span>
                   </td>
-                  {row.stages.map((step) => {
+                  {row.stages.map((step, c) => {
                     const key = cellKey(row, step);
+                    const r = visible.indexOf(row);
                     return (
                       <td key={step.stage} className="p-0 text-center">
                         <button
                           type="button"
+                          tabIndex={r === cur[0] && c === cur[1] ? 0 : -1}
+                          data-cell={`${r}-${c}`}
+                          onKeyDown={(e) => {
+                            const to = gridMove(
+                              e.key,
+                              e.ctrlKey,
+                              r,
+                              c,
+                              visible.length,
+                              stages.length,
+                            );
+                            if (!to) return;
+                            e.preventDefault();
+                            setCursor(to);
+                            grid.current
+                              ?.querySelector<HTMLButtonElement>(`[data-cell="${to[0]}-${to[1]}"]`)
+                              ?.focus();
+                          }}
                           data-testid={`kc-${key.replace(':', '-')}`}
                           aria-label={`${row.contactId} ${STAGE_NAME[step.stage]}: ${STATUS_NAME[step.status]}. Jump to ${formatClock(step.jumpTMs)}`}
                           onMouseEnter={() => set({ focusCell: key })}
-                          onFocus={() => set({ focusCell: key })}
+                          onFocus={() => {
+                            setCursor([r, c]);
+                            set({ focusCell: key });
+                          }}
                           onClick={() => {
                             set({ focusCell: key });
                             onJump(step.jumpTMs);

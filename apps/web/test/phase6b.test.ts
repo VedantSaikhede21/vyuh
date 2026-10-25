@@ -4,6 +4,7 @@ import { difficultyRuns } from '@/lib/aar/answers';
 import { fieldErrors } from '@/lib/builder/field-errors';
 import { bbox, placeLabel } from '@/lib/briefing/label-place';
 import { rowTags } from '@/lib/scenario/library';
+import { gridMove } from '@/components/ui/tabs';
 import { nextStep } from '@/lib/hud/next-step';
 import {
   azimuthBehind,
@@ -243,5 +244,17 @@ describe('training list tags (break-ui 2)', () => {
       shown: ['a', 'b'],
       rest: ['c', 'd', 'e'],
     });
+  });
+});
+
+describe('kill-chain grid keys (keyboard pass)', () => {
+  it('steps, stops at the edges and jumps with Home / End', () => {
+    expect(gridMove('ArrowRight', false, 0, 5, 3, 6)).toEqual([0, 5]);
+    expect(gridMove('ArrowDown', false, 0, 2, 3, 6)).toEqual([1, 2]);
+    expect(gridMove('ArrowUp', false, 0, 2, 3, 6)).toEqual([0, 2]);
+    expect(gridMove('Home', false, 2, 4, 3, 6)).toEqual([2, 0]);
+    expect(gridMove('End', true, 0, 0, 3, 6)).toEqual([2, 5]);
+    expect(gridMove('Enter', false, 0, 0, 3, 6)).toBeNull();
+    expect(gridMove('ArrowDown', false, 0, 0, 0, 6)).toBeNull();
   });
 });
