@@ -77,7 +77,7 @@ export function useShortcuts(commands: Commands | null): void {
 const AFFILIATIONS: Affiliation[] = ['HOSTILE', 'FRIENDLY', 'NEUTRAL', 'UNKNOWN'];
 
 /** `?` sheet: every shortcut plus the APP-6 symbol legend (moved out of the player). */
-export function CheatSheet() {
+export function CheatSheet({ practice = false }: { practice?: boolean }) {
   const open = useUiStore((s) => s.cheatSheet);
   const set = useUiStore((s) => s.set);
   if (!open) return null;
@@ -95,6 +95,11 @@ export function CheatSheet() {
           </Button>
         </PanelHeader>
         <PanelBody className="space-y-4">
+          {practice && (
+            <p className="text-small text-text-2" data-testid="cheat-sheet-held">
+              Practice clock held while this list is open.
+            </p>
+          )}
           <dl className="grid grid-cols-[11rem_1fr] gap-x-3 gap-y-1.5 text-body">
             {SHORTCUTS.map((s) => (
               <div key={s.keys} className="contents">

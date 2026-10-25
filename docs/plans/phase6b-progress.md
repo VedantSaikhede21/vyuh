@@ -24,9 +24,17 @@ FPS_SELECT=1 FPS_MODES=fixed E2E_BASE_URL=http://localhost:3000 E2E_SKIP_DEMO_RE
 ```
 Production stack: `cd apps/web && pnpm build`, then `npx next start --port 3000`; API `cd apps/api && uv run uvicorn app.main:create_app --factory --port 8000` (no `--reload`). Stop by port: `netstat -ano | grep ":3000 "` → `taskkill //PID <pid> //F //T`.
 
+## Player P1s (2026-10-25, second session)
+
+- **P1-5** AI chip: action-bar chip "AI · LARGE BIRD · 79%" (truncates; "SUGGESTS" stays in the 3D label and tooltip), decided state "AI LARGE BIRD · ACCEPTED"; `CLASS_CODE` no longer used by the chip.
+- **P1-2** Comms: one line per entry (ellipsis, full text in `title`), 18 px rhythm; PPI `calc(100vh-536px)` → 8 lines at 768 (captured), 1080 unchanged (PPI capped at 318 px).
+- **P1-3** EO day sky: drei `<Sky>` removed — the EO view's sky is the haze / fog colour (grey-blue), which a 17° vertical camera at the horizon really sees; EO render target is half float (the 8-bit target clipped HDR before the filmic curve). `showSky` / `turbidity` dropped from `environmentLook`; test asserts a grey-blue, non-white day sky. Rayleigh 3 was tried first and made it whiter. The landing "Identify" crop is re-recorded in 6C.
+- **P2-5** `?` sheet holds the Practice clock (`SimRuntime.setOverlayHold`, separate from the trainee's pause; never in Assessment; test in `runtime.test.ts`); the sheet says "Practice clock held while this list is open."
+- Captures reviewed: `player-eo-cued`, `player-later`, `player-shortcuts` at 1366 and 1920 (S15 practice, `capture-all.spec.ts`, scratchpad output).
+
 ## Still to do in 6B (from the plan, in order)
 
-2. Player P1s: Comms single-line + ≥ 8 lines at 768 (P1-2); EO day sky (P1-3); AI chip class name — still shows "BRDL" (P1-5); `?` pauses Practice (P2-5); aids labelling.
+2. Player: aids labelling (AI chip and spectrogram say they are aids); disabled reasons and title hovers checked in the break-ui pass.
 3. Result: story order, "scaled to 100" note (P1-13), empty penalties one line (P2-4), template debrief grouping (P1-12) and ROE lines, staff-only "Regenerate debrief".
 4. AAR (P1-14), trends (P1-15), unit dashboard + assignments (P1-16, P2-9), builder (P1-17 + legend), briefing labels (P2-3) + S01–S03 thumbnails + Generate secondary (P2-2), weight editor / From text copy (P1-9) and "/10" wording.
 5. Apply 6A primitives everywhere (Tabs, SegmentedControl, Table, PageHeader, ErrorState); one primary action per screen; keyboard focus order.

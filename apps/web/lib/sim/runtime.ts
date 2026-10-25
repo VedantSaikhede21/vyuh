@@ -32,6 +32,7 @@ export class SimRuntime {
   /** Fraction of a tick elapsed since the last one, for interpolation. */
   alpha = 0;
   paused = false;
+  private overlayHold = false;
   /**
    * Called before every tick with the sim about to advance — for a scripted
    * player such as the ground-truth defender on the dev hero route. Unset in
@@ -58,9 +59,17 @@ export class SimRuntime {
     if (this.mode === 'PRACTICE') this.paused = paused;
   }
 
+  /**
+   * Practice only: an overlay covering the console (the `?` sheet) holds the
+   * clock without touching the trainee's own pause (audit P2-5).
+   */
+  setOverlayHold(hold: boolean): void {
+    this.overlayHold = this.mode === 'PRACTICE' && hold;
+  }
+
   /** Advance by a frame's elapsed wall time; returns the number of ticks run. */
   advance(frameMs: number): number {
-    if (this.paused || this.ended) return 0;
+    if (this.paused || this.overlayHold || this.ended) return 0;
     this.accumulatorMs += Math.min(Math.max(frameMs, 0), MAX_FRAME_MS);
     let ticks = 0;
     while (this.accumulatorMs >= TICK_MS && !this.ended) {

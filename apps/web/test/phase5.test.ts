@@ -13,8 +13,7 @@ const ctx: CommsContext = {
 describe('AI-assist wording (SPEC §13.3)', () => {
   it('says it is a suggestion, with confidence', () => {
     const ai = { suggestedClass: 'QUAD_SMALL' as const, confidence: 0.724, decision: null };
-    expect(aiLabel(ai)).toBe('AI SUGGESTS · QDS · 72%');
-    expect(aiLabel(ai, false)).toBe('AI SUGGESTS · SMALL QUADCOPTER · 72%');
+    expect(aiLabel(ai)).toBe('AI SUGGESTS · SMALL QUADCOPTER · 72%');
   });
 
   it('acknowledges shown, accepted and rejected in Comms', () => {

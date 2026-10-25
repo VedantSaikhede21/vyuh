@@ -3,7 +3,7 @@
 import type { TrackView } from '@/lib/sim/store';
 import { Kbd, StateChip, Tooltip } from '@/components/hud/primitives';
 import type { Commands } from '@/lib/sim/commands';
-import { CLASS_CODE, CLASS_LABEL } from '@/lib/strings';
+import { CLASS_LABEL } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 
 // AI-assist chip (SPEC §13.3): a pre-baked, deliberately imperfect suggestion for the
@@ -12,10 +12,12 @@ import { cn } from '@/lib/utils';
 
 export const aiPct = (c: number) => `${Math.round(c * 100)}%`;
 
-/** One-line label, e.g. "AI SUGGESTS · QDS · 72%". */
-export function aiLabel(ai: NonNullable<TrackView['ai']>, short = true): string {
-  const cls = short ? CLASS_CODE[ai.suggestedClass] : CLASS_LABEL[ai.suggestedClass].toUpperCase();
-  return `AI SUGGESTS · ${cls} · ${aiPct(ai.confidence)}`;
+/** Class name as the chip and 3D label show it — the same words as Comms (audit P1-5). */
+const aiClass = (ai: NonNullable<TrackView['ai']>) => CLASS_LABEL[ai.suggestedClass].toUpperCase();
+
+/** One-line label, e.g. "AI SUGGESTS · SMALL QUADCOPTER · 72%". */
+export function aiLabel(ai: NonNullable<TrackView['ai']>): string {
+  return `AI SUGGESTS · ${aiClass(ai)} · ${aiPct(ai.confidence)}`;
 }
 
 /** In the action bar header: the suggestion with Y / X controls. */
@@ -29,8 +31,7 @@ export function AiChip({ track, commands }: { track: TrackView; commands: Comman
     return (
       <Tooltip content={tip} align="end">
         <StateChip tone="muted" data-testid="ai-chip" tabIndex={0}>
-          AI {CLASS_CODE[ai.suggestedClass]} ·{' '}
-          {ai.decision === 'ACCEPTED' ? 'ACCEPTED' : 'REJECTED'}
+          AI {aiClass(ai)} · {ai.decision === 'ACCEPTED' ? 'ACCEPTED' : 'REJECTED'}
         </StateChip>
       </Tooltip>
     );
@@ -38,10 +39,14 @@ export function AiChip({ track, commands }: { track: TrackView; commands: Comman
   const btn =
     'inline-flex h-5 items-center gap-1 rounded-sm border border-line-2 px-1 text-label hover:bg-bg-3 focus-visible:outline-2 focus-visible:outline-select';
   return (
-    <span className="flex items-center gap-1" data-testid="ai-chip">
+    <span className="flex min-w-0 items-center gap-1" data-testid="ai-chip">
       <Tooltip content={tip} align="end">
-        <StateChip tone="neutral" tabIndex={0} className="font-mono tnum">
-          {aiLabel(ai)}
+        {/* "AI · CLASS · %" — the header has no room for "SUGGESTS" next to Y / X;
+            the tooltip and the 3D label say it in full. */}
+        <StateChip tone="neutral" tabIndex={0} className="min-w-0 font-mono tnum">
+          <span className="truncate">
+            AI · {aiClass(ai)} · {aiPct(ai.confidence)}
+          </span>
         </StateChip>
       </Tooltip>
       <Tooltip content="Accept: classify as suggested" shortcut="Y" align="end">
@@ -78,9 +83,7 @@ export function AiLabelLine({ ai }: { ai: NonNullable<TrackView['ai']> }) {
       )}
       data-testid="ai-label"
     >
-      {ai.decision
-        ? `AI ${CLASS_CODE[ai.suggestedClass]} · ${ai.decision}`
-        : `${aiLabel(ai)} · Y/X`}
+      {ai.decision ? `AI ${aiClass(ai)} · ${ai.decision}` : `${aiLabel(ai)} · Y/X`}
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import { createPortal, useFrame, type RootState } from '@react-three/fiber';
 import { toThree, type Vec3 } from '@vyuh/sim-core';
 import { forwardRef, useEffect, useMemo, useRef } from 'react';
-import { PerspectiveCamera, Scene, ShaderMaterial, WebGLRenderTarget } from 'three';
+import { HalfFloatType, PerspectiveCamera, Scene, ShaderMaterial, WebGLRenderTarget } from 'three';
 import { BuildingsMesh } from '@/components/sim/buildings-mesh';
 import { Drones } from '@/components/sim/drones';
 import { Environment } from '@/components/sim/environment';
@@ -180,7 +180,9 @@ export function EoScene() {
     () => new PerspectiveCamera(vfovDeg(fovMax), ASPECT, 0.5, 30_000),
     [fovMax],
   );
-  const target = useMemo(() => new WebGLRenderTarget(RT_W, RT_H), []);
+  // Half float: an 8-bit target clipped the HDR sky to 1.0 before the filmic
+  // curve, so the day sky still read as flat white (audit P1-3).
+  const target = useMemo(() => new WebGLRenderTarget(RT_W, RT_H, { type: HalfFloatType }), []);
   const material = useMemo(
     () =>
       new ShaderMaterial({
