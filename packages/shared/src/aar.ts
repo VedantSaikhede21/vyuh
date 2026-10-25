@@ -49,3 +49,22 @@ export const ContactKillChain = named(
   }),
 );
 export type ContactKillChain = z.infer<typeof ContactKillChain>;
+
+/** An instructor's remark on a completed session, shown in its AAR and as a notice. */
+export const SessionRemark = named(
+  'SessionRemark',
+  z.object({
+    id: z.uuid(),
+    authorName: z.string(),
+    body: z.string().min(1).max(500),
+    createdAt: z.iso.datetime({ offset: true }),
+  }),
+);
+export type SessionRemark = z.infer<typeof SessionRemark>;
+
+/** POST /aar/sessions/{id}/remarks (instructor, admin) → SessionRemark */
+export const CreateRemarkRequest = named(
+  'CreateRemarkRequest',
+  z.object({ body: z.string().trim().min(1).max(500) }),
+);
+export type CreateRemarkRequest = z.infer<typeof CreateRemarkRequest>;

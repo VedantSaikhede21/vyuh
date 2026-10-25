@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import {
   CLASS_PROFILES,
+  LIBRARY_UPDATES,
+  RECORD_V1,
   DAY_MIN_EL_DEG,
   FIRST_TRACK_MAX_DIFFICULTY,
   FIRST_TRACK_MAX_S,
@@ -20,6 +22,7 @@ type Json = Record<string, unknown>;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outFile = resolve(here, '../schema/vyuh.schema.json');
+const recordFile = resolve(here, '../../../apps/api/app/seed/generated/record_v1.json');
 const profilesFile = resolve(here, '../../../apps/api/app/seed/generated/class_profiles.json');
 const difficultyFile = resolve(here, '../../../apps/api/app/seed/generated/difficulty.json');
 const timeBandsFile = resolve(here, '../../../apps/api/app/seed/generated/time_bands.json');
@@ -112,6 +115,8 @@ const profiles = {
   classes: Object.fromEntries(
     Object.entries(CLASS_PROFILES).map(([cls, p]) => [cls, { isThreat: threat.has(cls), ...p }]),
   ),
+  // Threat library changelog: each entry is a LIBRARY notice (Phase 6C).
+  libraryUpdates: LIBRARY_UPDATES,
 };
 mkdirSync(dirname(profilesFile), { recursive: true });
 writeFileSync(profilesFile, `${JSON.stringify(profiles, null, 2)}\n`, 'utf8');
@@ -148,3 +153,17 @@ writeFileSync(
   'utf8',
 );
 console.log(`Wrote time bands → ${timeBandsFile}`);
+
+// Service-record rules (SPEC §9.7): the API evaluates them; the web shows the same labels.
+const record = {
+  _generated:
+    'GENERATED FILE — DO NOT EDIT. Source: packages/shared/src/record.ts; run `pnpm gen:schemas`.',
+  ...RECORD_V1,
+};
+writeFileSync(
+  recordFile,
+  `${JSON.stringify(record, null, 2)}
+`,
+  'utf8',
+);
+console.log(`Wrote ${RECORD_V1.id} → ${recordFile}`);

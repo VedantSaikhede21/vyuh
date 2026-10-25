@@ -1,0 +1,221 @@
+{
+  "_generated": "GENERATED FILE — DO NOT EDIT. Source: packages/shared/src/record.ts; run `pnpm gen:schemas`.",
+  "id": "record_v1",
+  "levels": [
+    {
+      "level": "BASIC_OPERATOR",
+      "name": "Basic operator",
+      "signoffBy": "STAFF",
+      "criteria": [
+        {
+          "kind": "SESSIONS",
+          "id": "sessions",
+          "label": "Assessment sessions",
+          "min": 3
+        },
+        {
+          "kind": "STAGE_OK",
+          "id": "detect",
+          "label": "Detect done right, last 3 sessions",
+          "stage": "DETECT",
+          "minRate": 0.7,
+          "window": 3
+        },
+        {
+          "kind": "NO_LEAVES",
+          "id": "fratricide",
+          "label": "Fratricide, last 3 sessions",
+          "leaves": [
+            "FRATRICIDE"
+          ],
+          "window": 3
+        }
+      ]
+    },
+    {
+      "level": "SENSOR_OPERATOR",
+      "name": "Sensor operator",
+      "signoffBy": "STAFF",
+      "criteria": [
+        {
+          "kind": "SESSIONS",
+          "id": "sessions",
+          "label": "Assessment sessions at D2 or above",
+          "min": 3,
+          "minDifficulty": 2
+        },
+        {
+          "kind": "STAGE_OK",
+          "id": "identify",
+          "label": "Identify done right, last 5 at D2+",
+          "stage": "IDENTIFY",
+          "minRate": 0.7,
+          "window": 5,
+          "minDifficulty": 2
+        },
+        {
+          "kind": "MEAN_LATENCY",
+          "id": "latency",
+          "label": "Mean detection latency, last 5 at D2+",
+          "maxS": 15,
+          "window": 5,
+          "minDifficulty": 2
+        },
+        {
+          "kind": "SESSIONS",
+          "id": "night",
+          "label": "Night session scoring 60 or more",
+          "min": 1,
+          "minTotal": 60,
+          "night": true
+        }
+      ]
+    },
+    {
+      "level": "ENGAGEMENT_CONTROLLER",
+      "name": "Engagement controller",
+      "signoffBy": "STAFF",
+      "criteria": [
+        {
+          "kind": "SESSIONS",
+          "id": "sessions",
+          "label": "Sessions at D3+ scoring 70 or more",
+          "min": 3,
+          "minDifficulty": 3,
+          "minTotal": 70
+        },
+        {
+          "kind": "STAGE_OK",
+          "id": "decide",
+          "label": "Decide done right, last 5 at D3+",
+          "stage": "DECIDE",
+          "minRate": 0.75,
+          "window": 5,
+          "minDifficulty": 3
+        },
+        {
+          "kind": "STAGE_OK",
+          "id": "respond",
+          "label": "Respond done right, last 5 at D3+",
+          "stage": "RESPOND",
+          "minRate": 0.75,
+          "window": 5,
+          "minDifficulty": 3
+        },
+        {
+          "kind": "NO_LEAVES",
+          "id": "discipline",
+          "label": "Fratricide, wrong engagement or ROE attempt, last 5 at D3+",
+          "leaves": [
+            "FRATRICIDE",
+            "WRONGLY_ENGAGED",
+            "ROE_VIOLATION_ATTEMPT",
+            "NO_KINETIC_VIOLATION_ATTEMPT"
+          ],
+          "window": 5,
+          "minDifficulty": 3
+        },
+        {
+          "kind": "COMPONENT_PCT",
+          "id": "report",
+          "label": "Contact report points, last 5 at D3+",
+          "component": "report",
+          "minPct": 60,
+          "window": 5,
+          "minDifficulty": 3
+        }
+      ]
+    },
+    {
+      "level": "INSTRUCTOR",
+      "name": "Instructor",
+      "signoffBy": "ADMIN",
+      "criteria": [
+        {
+          "kind": "SESSIONS",
+          "id": "sessions",
+          "label": "Assessment sessions",
+          "min": 10
+        },
+        {
+          "kind": "SESSIONS",
+          "id": "hard",
+          "label": "Sessions at D4+ scoring 75 or more",
+          "min": 2,
+          "minDifficulty": 4,
+          "minTotal": 75
+        },
+        {
+          "kind": "RATING",
+          "id": "rating",
+          "label": "Rating",
+          "min": 1300
+        }
+      ]
+    }
+  ],
+  "endorsements": [
+    {
+      "code": "NIGHT_OPS",
+      "name": "Night ops",
+      "description": "A night scenario scoring 70 or more with no threat leaked.",
+      "params": {
+        "minTotal": 70
+      }
+    },
+    {
+      "code": "SWARM",
+      "name": "Swarm",
+      "description": "Every threat of a swarm of 3 or more neutralised.",
+      "params": {
+        "minSwarm": 3
+      }
+    },
+    {
+      "code": "SILENT_LINK",
+      "name": "Silent link",
+      "description": "A fibre-optic or GNSS-autonomous threat neutralised with no ineffective EW ordered on it first.",
+      "params": {}
+    },
+    {
+      "code": "DISCRIMINATION",
+      "name": "Discrimination",
+      "description": "A session with 3 or more non-threats: every threat classified exactly and no non-threat engaged or jammed.",
+      "params": {
+        "minNonThreats": 3
+      }
+    },
+    {
+      "code": "ROE_DISCIPLINE",
+      "name": "ROE discipline",
+      "description": "5 sessions in a row on ROE-scoring trees without an ROE or no-kinetic attempt.",
+      "params": {
+        "sessions": 5
+      }
+    },
+    {
+      "code": "REPORTING",
+      "name": "Reporting",
+      "description": "Contact reports earning 80 % or more of their points in 3 sessions.",
+      "params": {
+        "minPct": 80,
+        "sessions": 3
+      }
+    },
+    {
+      "code": "CALIBRATED_TRUST",
+      "name": "Calibrated trust",
+      "description": "3 sessions where the AI assist was wrong at least once and every wrong suggestion was rejected. An insight, never part of the score.",
+      "params": {
+        "sessions": 3
+      }
+    }
+  ],
+  "nonThreatPenaltyLeaves": [
+    "FRATRICIDE",
+    "FRIENDLY_JAMMED",
+    "WRONGLY_ENGAGED",
+    "CIVILIAN_JAMMED",
+    "BIRD_EW_ORDERED"
+  ]
+}

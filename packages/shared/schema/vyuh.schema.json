@@ -27,6 +27,12 @@
         },
         "aiTrust": {
           "$ref": "#/$defs/AiTrustMetrics"
+        },
+        "remarks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SessionRemark"
+          }
         }
       },
       "required": [
@@ -34,7 +40,79 @@
         "scenario",
         "events",
         "killChain",
-        "aiTrust"
+        "aiTrust",
+        "remarks"
+      ]
+    },
+    "ActiveSessionRow": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "userId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "userName": {
+          "type": "string"
+        },
+        "scenarioCode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scenarioName": {
+          "type": "string"
+        },
+        "mode": {
+          "$ref": "#/$defs/SessionMode"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastBatchAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "simTMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "sessionId",
+        "userId",
+        "userName",
+        "scenarioCode",
+        "scenarioName",
+        "mode",
+        "startedAt",
+        "lastBatchAt",
+        "simTMs"
+      ]
+    },
+    "ActiveSessionsResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ActiveSessionRow"
+          }
+        },
+        "polledAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "items",
+        "polledAt"
       ]
     },
     "Activity": {
@@ -998,6 +1076,13 @@
         "report"
       ]
     },
+    "ComponentStatus": {
+      "type": "string",
+      "enum": [
+        "OK",
+        "DOWN"
+      ]
+    },
     "ContactCategory": {
       "type": "string",
       "enum": [
@@ -1460,6 +1545,19 @@
         "scenarioId"
       ]
     },
+    "CreateRemarkRequest": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "body"
+      ]
+    },
     "CreateSessionRequest": {
       "type": "object",
       "properties": {
@@ -1507,6 +1605,54 @@
         "scenario",
         "startedAt",
         "simVersion"
+      ]
+    },
+    "CriterionStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "target": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "COUNT",
+            "PCT",
+            "S",
+            "RATING"
+          ]
+        },
+        "comparison": {
+          "type": "string",
+          "enum": [
+            "AT_LEAST",
+            "AT_MOST"
+          ]
+        },
+        "met": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "value",
+        "target",
+        "unit",
+        "comparison",
+        "met"
       ]
     },
     "DebriefContent": {
@@ -1716,6 +1862,128 @@
       "type": "object",
       "properties": {},
       "additionalProperties": false
+    },
+    "EndorsementCode": {
+      "type": "string",
+      "enum": [
+        "NIGHT_OPS",
+        "SWARM",
+        "SILENT_LINK",
+        "DISCRIMINATION",
+        "ROE_DISCIPLINE",
+        "REPORTING",
+        "CALIBRATED_TRUST"
+      ]
+    },
+    "EndorsementRule": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/EndorsementCode"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      },
+      "required": [
+        "code",
+        "name",
+        "description",
+        "params"
+      ]
+    },
+    "EndorsementStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/EndorsementCode"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "earned": {
+          "type": "boolean"
+        },
+        "sessionId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scenarioName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "earnedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "progress": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "of": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "count",
+                "of"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "name",
+        "description",
+        "earned",
+        "sessionId",
+        "scenarioName",
+        "earnedAt",
+        "progress"
+      ]
     },
     "Environment": {
       "type": "object",
@@ -2145,6 +2413,132 @@
         "version"
       ]
     },
+    "HomeResponse": {
+      "type": "object",
+      "properties": {
+        "assignment": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AssignmentItem"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "openAssignments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StageRate"
+          }
+        },
+        "assessments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "demoAssessments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "rating": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "recent": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HomeSessionRow"
+          }
+        },
+        "notices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Notice"
+          }
+        },
+        "unreadCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "nextLevel": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LevelStatus"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "assignment",
+        "openAssignments",
+        "stages",
+        "assessments",
+        "demoAssessments",
+        "rating",
+        "recent",
+        "notices",
+        "unreadCount",
+        "nextLevel"
+      ]
+    },
+    "HomeSessionRow": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "scenarioCode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scenarioName": {
+          "type": "string"
+        },
+        "mode": {
+          "$ref": "#/$defs/SessionMode"
+        },
+        "difficulty": {
+          "$ref": "#/$defs/Difficulty"
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "total": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "isDemo": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "sessionId",
+        "scenarioCode",
+        "scenarioName",
+        "mode",
+        "difficulty",
+        "endedAt",
+        "total",
+        "isDemo"
+      ]
+    },
     "KillChainStage": {
       "type": "string",
       "enum": [
@@ -2228,6 +2622,118 @@
       "required": [
         "lat",
         "lon"
+      ]
+    },
+    "LevelRule": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "$ref": "#/$defs/TrainingLevel"
+        },
+        "name": {
+          "type": "string"
+        },
+        "signoffBy": {
+          "type": "string",
+          "enum": [
+            "STAFF",
+            "ADMIN"
+          ]
+        },
+        "criteria": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RecordCriterion"
+          }
+        }
+      },
+      "required": [
+        "level",
+        "name",
+        "signoffBy",
+        "criteria"
+      ]
+    },
+    "LevelSignoff": {
+      "type": "object",
+      "properties": {
+        "byName": {
+          "type": "string"
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "isDemo": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "byName",
+        "at",
+        "isDemo"
+      ]
+    },
+    "LevelState": {
+      "type": "string",
+      "enum": [
+        "LOCKED",
+        "IN_PROGRESS",
+        "QUALIFIED"
+      ]
+    },
+    "LevelStatus": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "$ref": "#/$defs/TrainingLevel"
+        },
+        "name": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/LevelState"
+        },
+        "criteriaMet": {
+          "type": "boolean"
+        },
+        "reviewDue": {
+          "type": "boolean"
+        },
+        "signoffBy": {
+          "type": "string",
+          "enum": [
+            "STAFF",
+            "ADMIN"
+          ]
+        },
+        "signoff": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LevelSignoff"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "criteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CriterionStatus"
+          }
+        }
+      },
+      "required": [
+        "level",
+        "name",
+        "state",
+        "criteriaMet",
+        "reviewDue",
+        "signoffBy",
+        "signoff",
+        "criteria"
       ]
     },
     "MarkedDetectedEvent": {
@@ -2353,6 +2859,90 @@
         "FRIENDLY_QUAD",
         "CIVILIAN_HOBBY",
         "HELICOPTER_FRIENDLY"
+      ]
+    },
+    "Notice": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/NoticeKind"
+        },
+        "title": {
+          "type": "string"
+        },
+        "body": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "href": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "unread": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "title",
+        "body",
+        "href",
+        "createdAt",
+        "unread"
+      ]
+    },
+    "NoticeCountResponse": {
+      "type": "object",
+      "properties": {
+        "unreadCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "unreadCount"
+      ]
+    },
+    "NoticeKind": {
+      "type": "string",
+      "enum": [
+        "ASSIGNMENT",
+        "REMARK",
+        "SIGNOFF",
+        "LIBRARY"
+      ]
+    },
+    "NoticeListResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Notice"
+          }
+        },
+        "unreadCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "items",
+        "unreadCount"
       ]
     },
     "Penalty": {
@@ -2566,10 +3156,378 @@
         "expected"
       ]
     },
+    "ReadinessResponse": {
+      "type": "object",
+      "properties": {
+        "unit": {
+          "$ref": "#/$defs/UnitRef"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ReadinessRow"
+          }
+        }
+      },
+      "required": [
+        "unit",
+        "rows"
+      ]
+    },
+    "ReadinessRow": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        },
+        "level": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TrainingLevel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "awaitingSignoff": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TrainingLevel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reviewDue": {
+          "type": "boolean"
+        },
+        "assessments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "lastAssessmentAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lastTotal": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "weakestStage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/KillChainStage"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overdueAssignments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "userId",
+        "name",
+        "level",
+        "awaitingSignoff",
+        "reviewDue",
+        "assessments",
+        "lastAssessmentAt",
+        "lastTotal",
+        "weakestStage",
+        "overdueAssignments"
+      ]
+    },
     "RecommendationBasis": {
       "type": "string",
       "enum": [
         "ELO_V1"
+      ]
+    },
+    "RecordCriterion": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "SESSIONS"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "min": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "minDifficulty": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            "minTotal": {
+              "type": "number"
+            },
+            "night": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "label",
+            "min"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "STAGE_OK"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "stage": {
+              "$ref": "#/$defs/KillChainStage"
+            },
+            "minRate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "window": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "minDifficulty": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "label",
+            "stage",
+            "minRate"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "MEAN_LATENCY"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "maxS": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "window": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "minDifficulty": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "label",
+            "maxS"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "NO_LEAVES"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "leaves": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "window": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "minDifficulty": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "label",
+            "leaves"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "COMPONENT_PCT"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "component": {
+              "type": "string",
+              "enum": [
+                "detection",
+                "classification",
+                "decision",
+                "report"
+              ]
+            },
+            "minPct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "window": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "minDifficulty": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "label",
+            "component",
+            "minPct"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "RATING"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "min": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "label",
+            "min"
+          ]
+        }
+      ]
+    },
+    "RecordRuleset": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "levels": {
+          "minItems": 4,
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LevelRule"
+          }
+        },
+        "endorsements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EndorsementRule"
+          }
+        },
+        "nonThreatPenaltyLeaves": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "levels",
+        "endorsements",
+        "nonThreatPenaltyLeaves"
       ]
     },
     "ReportLocation": {
@@ -3337,6 +4295,78 @@
         "components"
       ]
     },
+    "ScoringLeafSummary": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "component": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "detection",
+                "classification",
+                "decision",
+                "report",
+                "efficiency"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "points": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "adjust": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "component",
+        "points",
+        "adjust"
+      ]
+    },
+    "ScoringSummaryResponse": {
+      "type": "object",
+      "properties": {
+        "current": {
+          "type": "string"
+        },
+        "componentMax": {
+          "$ref": "#/$defs/ScoreComponents"
+        },
+        "detectionBandsS": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "leaves": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScoringLeafSummary"
+          }
+        }
+      },
+      "required": [
+        "current",
+        "componentMax",
+        "detectionBandsS",
+        "leaves"
+      ]
+    },
     "ScoringTreeListResponse": {
       "type": "object",
       "properties": {
@@ -3575,6 +4605,86 @@
         "reason"
       ]
     },
+    "ServiceRecordResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "name": {
+              "type": "string"
+            },
+            "unit": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/UnitRef"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "unit"
+          ]
+        },
+        "ruleset": {
+          "type": "string"
+        },
+        "rating": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "assessments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "demoAssessments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "levels": {
+          "minItems": 4,
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LevelStatus"
+          }
+        },
+        "endorsements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EndorsementStatus"
+          }
+        },
+        "canSignOff": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TrainingLevel"
+          }
+        }
+      },
+      "required": [
+        "user",
+        "ruleset",
+        "rating",
+        "assessments",
+        "demoAssessments",
+        "levels",
+        "endorsements",
+        "canSignOff"
+      ]
+    },
     "SessionDetailResponse": {
       "type": "object",
       "properties": {
@@ -3744,6 +4854,33 @@
         "ASSESSMENT"
       ]
     },
+    "SessionRemark": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "authorName": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "authorName",
+        "body",
+        "createdAt"
+      ]
+    },
     "SessionStartedEvent": {
       "type": "object",
       "properties": {
@@ -3800,6 +4937,17 @@
         "ACTIVE",
         "COMPLETED",
         "ABANDONED"
+      ]
+    },
+    "SignoffRequest": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "$ref": "#/$defs/TrainingLevel"
+        }
+      },
+      "required": [
+        "level"
       ]
     },
     "SimEvent": {
@@ -3934,6 +5082,64 @@
         "total",
         "rate"
       ]
+    },
+    "StatusResponse": {
+      "type": "object",
+      "properties": {
+        "components": {
+          "type": "object",
+          "properties": {
+            "api": {
+              "$ref": "#/$defs/ComponentStatus"
+            },
+            "database": {
+              "$ref": "#/$defs/ComponentStatus"
+            },
+            "llmEnabled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "api",
+            "database",
+            "llmEnabled"
+          ]
+        },
+        "versions": {
+          "type": "object",
+          "properties": {
+            "api": {
+              "type": "string"
+            },
+            "generator": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "terrain": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            }
+          },
+          "required": [
+            "api",
+            "generator",
+            "terrain"
+          ]
+        }
+      },
+      "required": [
+        "components",
+        "versions"
+      ],
+      "additionalProperties": false
     },
     "SunAzEl": {
       "type": "object",
@@ -4247,6 +5453,15 @@
         "mistakes",
         "stages",
         "aiTrust"
+      ]
+    },
+    "TrainingLevel": {
+      "type": "string",
+      "enum": [
+        "BASIC_OPERATOR",
+        "SENSOR_OPERATOR",
+        "ENGAGEMENT_CONTROLLER",
+        "INSTRUCTOR"
       ]
     },
     "TrendPoint": {

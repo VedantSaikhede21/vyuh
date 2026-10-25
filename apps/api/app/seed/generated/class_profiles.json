@@ -13,7 +13,12 @@
         "RF_MANUAL",
         "AUTONOMOUS_GNSS"
       ],
-      "category": "DRONE"
+      "category": "DRONE",
+      "confusedWith": [
+        "CIVILIAN_HOBBY",
+        "BIRD_LARGE",
+        "QUAD_HEAVY"
+      ]
     },
     "QUAD_HEAVY": {
       "isThreat": true,
@@ -27,7 +32,11 @@
         "RF_MANUAL",
         "AUTONOMOUS_GNSS"
       ],
-      "category": "DRONE"
+      "category": "DRONE",
+      "confusedWith": [
+        "FRIENDLY_QUAD",
+        "QUAD_SMALL"
+      ]
     },
     "FPV": {
       "isThreat": true,
@@ -41,7 +50,11 @@
         "RF_MANUAL",
         "FIBRE_OPTIC"
       ],
-      "category": "DRONE"
+      "category": "DRONE",
+      "confusedWith": [
+        "BIRD_SMALL",
+        "QUAD_SMALL"
+      ]
     },
     "FIXED_WING_SMALL": {
       "isThreat": true,
@@ -55,7 +68,11 @@
         "AUTONOMOUS_GNSS",
         "RF_MANUAL"
       ],
-      "category": "DRONE"
+      "category": "DRONE",
+      "confusedWith": [
+        "BIRD_LARGE",
+        "LOITERING_GENERIC"
+      ]
     },
     "LOITERING_GENERIC": {
       "isThreat": true,
@@ -68,7 +85,10 @@
       "typicalLinks": [
         "AUTONOMOUS_GNSS"
       ],
-      "category": "DRONE"
+      "category": "DRONE",
+      "confusedWith": [
+        "FIXED_WING_SMALL"
+      ]
     },
     "BIRD_SMALL": {
       "isThreat": false,
@@ -81,7 +101,11 @@
       "typicalLinks": [
         "NONE"
       ],
-      "category": "BIRD"
+      "category": "BIRD",
+      "confusedWith": [
+        "FPV",
+        "QUAD_SMALL"
+      ]
     },
     "BIRD_LARGE": {
       "isThreat": false,
@@ -94,7 +118,11 @@
       "typicalLinks": [
         "NONE"
       ],
-      "category": "BIRD"
+      "category": "BIRD",
+      "confusedWith": [
+        "QUAD_SMALL",
+        "FIXED_WING_SMALL"
+      ]
     },
     "FRIENDLY_QUAD": {
       "isThreat": false,
@@ -107,7 +135,11 @@
       "typicalLinks": [
         "RF_MANUAL"
       ],
-      "category": "DRONE"
+      "category": "DRONE",
+      "confusedWith": [
+        "QUAD_HEAVY",
+        "CIVILIAN_HOBBY"
+      ]
     },
     "CIVILIAN_HOBBY": {
       "isThreat": false,
@@ -120,7 +152,11 @@
       "typicalLinks": [
         "RF_MANUAL"
       ],
-      "category": "DRONE"
+      "category": "DRONE",
+      "confusedWith": [
+        "QUAD_SMALL",
+        "FRIENDLY_QUAD"
+      ]
     },
     "HELICOPTER_FRIENDLY": {
       "isThreat": false,
@@ -133,7 +169,17 @@
       "typicalLinks": [
         "NONE"
       ],
-      "category": "MANNED_AIRCRAFT"
+      "category": "MANNED_AIRCRAFT",
+      "confusedWith": [
+        "FIXED_WING_SMALL"
+      ]
     }
-  }
+  },
+  "libraryUpdates": [
+    {
+      "id": "lib-2026-10-25",
+      "date": "2026-10-25",
+      "text": "Threat library published: 10 contact classes with ID cues and common confusions."
+    }
+  ]
 }

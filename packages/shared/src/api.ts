@@ -9,7 +9,7 @@ import {
   SessionStatus,
   UserRole,
 } from './enums.ts';
-import { ContactKillChain } from './aar.ts';
+import { ContactKillChain, SessionRemark } from './aar.ts';
 import { SimEvent } from './events.ts';
 import { AiTrustMetrics } from './ai.ts';
 import { named } from './registry.ts';
@@ -180,6 +180,8 @@ export const AarSessionResponse = named(
     killChain: z.array(ContactKillChain),
     /** AI-assist over- / under-trust in this session (SPEC §9.4). */
     aiTrust: AiTrustMetrics,
+    /** Instructor remarks, oldest first. */
+    remarks: z.array(SessionRemark),
   }),
 );
 export type AarSessionResponse = z.infer<typeof AarSessionResponse>;

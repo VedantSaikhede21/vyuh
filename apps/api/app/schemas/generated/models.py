@@ -229,6 +229,11 @@ class ComponentPct(BaseModel):
     report: Report | None
 
 
+class ComponentStatus(StrEnum):
+    OK = "OK"
+    DOWN = "DOWN"
+
+
 class ContactCategory(StrEnum):
     DRONE = "DRONE"
     BIRD = "BIRD"
@@ -295,6 +300,38 @@ class CreateAssignmentRequest(BaseModel):
     due_at: Annotated[AwareDatetime | None, Field(alias="dueAt")] = None
 
 
+class CreateRemarkRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    body: Annotated[str, Field(max_length=500, min_length=1)]
+
+
+class Unit(StrEnum):
+    COUNT = "COUNT"
+    PCT = "PCT"
+    S = "S"
+    RATING = "RATING"
+
+
+class Comparison(StrEnum):
+    AT_LEAST = "AT_LEAST"
+    AT_MOST = "AT_MOST"
+
+
+class CriterionStatus(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: str
+    label: str
+    value: float | None
+    target: float
+    unit: Unit
+    comparison: Comparison
+    met: bool
+
+
 class Strength(RootModel[str]):
     root: Annotated[str, Field(max_length=300, min_length=1)]
 
@@ -349,6 +386,48 @@ class EmptyPayload(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
+
+
+class EndorsementCode(StrEnum):
+    NIGHT_OPS = "NIGHT_OPS"
+    SWARM = "SWARM"
+    SILENT_LINK = "SILENT_LINK"
+    DISCRIMINATION = "DISCRIMINATION"
+    ROE_DISCIPLINE = "ROE_DISCIPLINE"
+    REPORTING = "REPORTING"
+    CALIBRATED_TRUST = "CALIBRATED_TRUST"
+
+
+class EndorsementRule(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    code: EndorsementCode
+    name: str
+    description: str
+    params: dict[str, float]
+
+
+class Progress(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    count: Annotated[int, Field(ge=0, le=9007199254740991)]
+    of: Annotated[int, Field(gt=0, le=9007199254740991)]
+
+
+class EndorsementStatus(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    code: EndorsementCode
+    name: str
+    description: str
+    earned: bool
+    session_id: Annotated[UUID | None, Field(alias="sessionId")]
+    scenario_name: Annotated[str | None, Field(alias="scenarioName")]
+    earned_at: Annotated[AwareDatetime | None, Field(alias="earnedAt")]
+    progress: Progress | None
 
 
 class ResolutionItem(RootModel[int]):
@@ -496,6 +575,26 @@ class LatLon(BaseModel):
     lon: Annotated[float, Field(ge=-180.0, le=180.0)]
 
 
+class SignoffBy(StrEnum):
+    STAFF = "STAFF"
+    ADMIN = "ADMIN"
+
+
+class LevelSignoff(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    by_name: Annotated[str, Field(alias="byName")]
+    at: AwareDatetime
+    is_demo: Annotated[bool, Field(alias="isDemo")]
+
+
+class LevelState(StrEnum):
+    LOCKED = "LOCKED"
+    IN_PROGRESS = "IN_PROGRESS"
+    QUALIFIED = "QUALIFIED"
+
+
 class MarkedDetectedEvent(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -524,6 +623,20 @@ class NonThreatClass(StrEnum):
     FRIENDLY_QUAD = "FRIENDLY_QUAD"
     CIVILIAN_HOBBY = "CIVILIAN_HOBBY"
     HELICOPTER_FRIENDLY = "HELICOPTER_FRIENDLY"
+
+
+class NoticeCountResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    unread_count: Annotated[int, Field(alias="unreadCount", ge=0, le=9007199254740991)]
+
+
+class NoticeKind(StrEnum):
+    ASSIGNMENT = "ASSIGNMENT"
+    REMARK = "REMARK"
+    SIGNOFF = "SIGNOFF"
+    LIBRARY = "LIBRARY"
 
 
 class Penalty(BaseModel):
@@ -567,8 +680,92 @@ class RatingChange(BaseModel):
     expected: Annotated[float, Field(ge=0.0, le=1.0)]
 
 
+class LastTotal(RootModel[int]):
+    root: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+
+
 class RecommendationBasis(StrEnum):
     ELO_V1 = "ELO_V1"
+
+
+class RecordCriterion1(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind: Literal["SESSIONS"]
+    id: str
+    label: str
+    min: Annotated[int, Field(gt=0, le=9007199254740991)]
+    min_difficulty: Annotated[int | None, Field(alias="minDifficulty", ge=1, le=5)] = None
+    min_total: Annotated[float | None, Field(alias="minTotal")] = None
+    night: bool | None = None
+
+
+class RecordCriterion2(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind: Literal["STAGE_OK"]
+    id: str
+    label: str
+    stage: KillChainStage
+    min_rate: Annotated[float, Field(alias="minRate", ge=0.0, le=1.0)]
+    window: Annotated[int | None, Field(gt=0, le=9007199254740991)] = None
+    min_difficulty: Annotated[int | None, Field(alias="minDifficulty", ge=1, le=5)] = None
+
+
+class RecordCriterion3(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind: Literal["MEAN_LATENCY"]
+    id: str
+    label: str
+    max_s: Annotated[float, Field(alias="maxS", gt=0.0)]
+    window: Annotated[int | None, Field(gt=0, le=9007199254740991)] = None
+    min_difficulty: Annotated[int | None, Field(alias="minDifficulty", ge=1, le=5)] = None
+
+
+class RecordCriterion4(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind: Literal["NO_LEAVES"]
+    id: str
+    label: str
+    leaves: Annotated[list[str], Field(min_length=1)]
+    window: Annotated[int | None, Field(gt=0, le=9007199254740991)] = None
+    min_difficulty: Annotated[int | None, Field(alias="minDifficulty", ge=1, le=5)] = None
+
+
+class Component(StrEnum):
+    DETECTION = "detection"
+    CLASSIFICATION = "classification"
+    DECISION = "decision"
+    REPORT = "report"
+
+
+class RecordCriterion5(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind: Literal["COMPONENT_PCT"]
+    id: str
+    label: str
+    component: Component
+    min_pct: Annotated[float, Field(alias="minPct", ge=0.0, le=100.0)]
+    window: Annotated[int | None, Field(gt=0, le=9007199254740991)] = None
+    min_difficulty: Annotated[int | None, Field(alias="minDifficulty", ge=1, le=5)] = None
+
+
+class RecordCriterion6(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind: Literal["RATING"]
+    id: str
+    label: str
+    min: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
 
 
 class ReportLocation(BaseModel):
@@ -699,6 +896,34 @@ class ScoreDisplay(BaseModel):
     components: ScoreComponents
 
 
+class Component1(StrEnum):
+    DETECTION = "detection"
+    CLASSIFICATION = "classification"
+    DECISION = "decision"
+    REPORT = "report"
+    EFFICIENCY = "efficiency"
+
+
+class ScoringLeafSummary(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    code: str
+    component: Component1 | None
+    points: float | None
+    adjust: float | None
+
+
+class ScoringSummaryResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    current: str
+    component_max: Annotated[ScoreComponents, Field(alias="componentMax")]
+    detection_bands_s: Annotated[list[float], Field(alias="detectionBandsS")]
+    leaves: list[ScoringLeafSummary]
+
+
 class EditableEnum(StrEnum):
     DETECTION = "detection"
     CLASSIFICATION = "classification"
@@ -773,6 +998,16 @@ class SessionMode(StrEnum):
     ASSESSMENT = "ASSESSMENT"
 
 
+class SessionRemark(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID
+    author_name: Annotated[str, Field(alias="authorName")]
+    body: Annotated[str, Field(max_length=500, min_length=1)]
+    created_at: Annotated[AwareDatetime, Field(alias="createdAt")]
+
+
 class SessionStartedPayload(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -801,6 +1036,38 @@ class StageRate(BaseModel):
     ok: Annotated[int, Field(ge=0, le=9007199254740991)]
     total: Annotated[int, Field(ge=0, le=9007199254740991)]
     rate: Rate | None
+
+
+class Components(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    api: ComponentStatus
+    database: ComponentStatus
+    llm_enabled: Annotated[bool, Field(alias="llmEnabled")]
+
+
+TerrainAdditionalProperty = TypeAliasType(
+    "TerrainAdditionalProperty", Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+)
+
+
+class Versions(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    api: str
+    generator: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+    terrain: dict[str, TerrainAdditionalProperty]
+
+
+class StatusResponse(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    components: Components
+    versions: Versions
 
 
 class SunAzEl(BaseModel):
@@ -928,6 +1195,13 @@ class TraineeEventType(StrEnum):
     AI_SUGGESTION_REJECTED = "AI_SUGGESTION_REJECTED"
 
 
+class TrainingLevel(StrEnum):
+    BASIC_OPERATOR = "BASIC_OPERATOR"
+    SENSOR_OPERATOR = "SENSOR_OPERATOR"
+    ENGAGEMENT_CONTROLLER = "ENGAGEMENT_CONTROLLER"
+    INSTRUCTOR = "INSTRUCTOR"
+
+
 class DetectionLatencyS(RootModel[float]):
     root: Annotated[float, Field(ge=0.0)]
 
@@ -1006,10 +1280,6 @@ class UnitSessionRow(BaseModel):
     is_demo: Annotated[bool, Field(alias="isDemo")]
 
 
-class LastTotal(RootModel[int]):
-    root: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
-
-
 class BestTotal(RootModel[int]):
     root: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
 
@@ -1080,6 +1350,29 @@ class ZoneKind(StrEnum):
     NO_KINETIC = "NO_KINETIC"
     BORDER_LINE = "BORDER_LINE"
     SENSOR_SITE = "SENSOR_SITE"
+
+
+class ActiveSessionRow(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    session_id: Annotated[UUID, Field(alias="sessionId")]
+    user_id: Annotated[UUID, Field(alias="userId")]
+    user_name: Annotated[str, Field(alias="userName")]
+    scenario_code: Annotated[str | None, Field(alias="scenarioCode")]
+    scenario_name: Annotated[str, Field(alias="scenarioName")]
+    mode: SessionMode
+    started_at: Annotated[AwareDatetime, Field(alias="startedAt")]
+    last_batch_at: Annotated[AwareDatetime, Field(alias="lastBatchAt")]
+    sim_t_ms: Annotated[int, Field(alias="simTMs", ge=0, le=9007199254740991)]
+
+
+class ActiveSessionsResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    items: list[ActiveSessionRow]
+    polled_at: Annotated[AwareDatetime, Field(alias="polledAt")]
 
 
 class AffiliationSetEvent(BaseModel):
@@ -1363,6 +1656,54 @@ class GenerateRequest(BaseModel):
     decoys: Annotated[int | None, Field(ge=0, le=6)] = None
 
 
+class HomeSessionRow(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    session_id: Annotated[UUID, Field(alias="sessionId")]
+    scenario_code: Annotated[str | None, Field(alias="scenarioCode")]
+    scenario_name: Annotated[str, Field(alias="scenarioName")]
+    mode: SessionMode
+    difficulty: Annotated[int, Field(ge=1, le=5)]
+    ended_at: Annotated[AwareDatetime, Field(alias="endedAt")]
+    total: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+    is_demo: Annotated[bool, Field(alias="isDemo")]
+
+
+class LevelRule(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    level: TrainingLevel
+    name: str
+    signoff_by: Annotated[SignoffBy, Field(alias="signoffBy")]
+    criteria: Annotated[
+        list[
+            RecordCriterion1
+            | RecordCriterion2
+            | RecordCriterion3
+            | RecordCriterion4
+            | RecordCriterion5
+            | RecordCriterion6
+        ],
+        Field(min_length=1),
+    ]
+
+
+class LevelStatus(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    level: TrainingLevel
+    name: str
+    state: LevelState
+    criteria_met: Annotated[bool, Field(alias="criteriaMet")]
+    review_due: Annotated[bool, Field(alias="reviewDue")]
+    signoff_by: Annotated[SignoffBy, Field(alias="signoffBy")]
+    signoff: LevelSignoff | None
+    criteria: list[CriterionStatus]
+
+
 class MeResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1374,6 +1715,27 @@ class MeResponse(BaseModel):
     unit: UnitRef | None
     rating: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
     is_guest: Annotated[bool, Field(alias="isGuest")]
+
+
+class Notice(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: str
+    kind: NoticeKind
+    title: str
+    body: str | None
+    href: str | None
+    created_at: Annotated[AwareDatetime, Field(alias="createdAt")]
+    unread: bool
+
+
+class NoticeListResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    items: list[Notice]
+    unread_count: Annotated[int, Field(alias="unreadCount", ge=0, le=9007199254740991)]
 
 
 class PerContactMetrics(BaseModel):
@@ -1408,6 +1770,34 @@ class PerContactMetrics(BaseModel):
     points: float | None = None
     leaves: list[Leaf]
     feedback: list[str]
+
+
+class ReadinessRow(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    user_id: Annotated[UUID, Field(alias="userId")]
+    name: str
+    level: TrainingLevel | None
+    awaiting_signoff: Annotated[TrainingLevel | None, Field(alias="awaitingSignoff")]
+    review_due: Annotated[bool, Field(alias="reviewDue")]
+    assessments: Annotated[int, Field(ge=0, le=9007199254740991)]
+    last_assessment_at: Annotated[AwareDatetime | None, Field(alias="lastAssessmentAt")]
+    last_total: Annotated[LastTotal | None, Field(alias="lastTotal")]
+    weakest_stage: Annotated[KillChainStage | None, Field(alias="weakestStage")]
+    overdue_assignments: Annotated[
+        int, Field(alias="overdueAssignments", ge=0, le=9007199254740991)
+    ]
+
+
+class RecordRuleset(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: str
+    levels: Annotated[list[LevelRule], Field(max_length=4, min_length=4)]
+    endorsements: list[EndorsementRule]
+    non_threat_penalty_leaves: Annotated[list[str], Field(alias="nonThreatPenaltyLeaves")]
 
 
 class ReportSubmittedEvent(BaseModel):
@@ -1555,6 +1945,29 @@ class SensorTrackLostPayload(BaseModel):
     reason: TrackLostReason
 
 
+class User(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID
+    name: str
+    unit: UnitRef | None
+
+
+class ServiceRecordResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    user: User
+    ruleset: str
+    rating: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+    assessments: Annotated[int, Field(ge=0, le=9007199254740991)]
+    demo_assessments: Annotated[int, Field(alias="demoAssessments", ge=0, le=9007199254740991)]
+    levels: Annotated[list[LevelStatus], Field(max_length=4, min_length=4)]
+    endorsements: list[EndorsementStatus]
+    can_sign_off: Annotated[list[TrainingLevel], Field(alias="canSignOff")]
+
+
 class SessionDetailResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1591,6 +2004,13 @@ class SessionStartedEvent(BaseModel):
     t_ms: Annotated[int, Field(alias="tMs", ge=0, le=9007199254740991)]
     type: Literal["SESSION_STARTED"]
     payload: SessionStartedPayload
+
+
+class SignoffRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    level: TrainingLevel
 
 
 class TraineeTrendsResponse(BaseModel):
@@ -1752,6 +2172,30 @@ class FromTextResponse(BaseModel):
     model: str
 
 
+class HomeResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    assignment: AssignmentItem | None
+    open_assignments: Annotated[int, Field(alias="openAssignments", ge=0, le=9007199254740991)]
+    stages: list[StageRate]
+    assessments: Annotated[int, Field(ge=0, le=9007199254740991)]
+    demo_assessments: Annotated[int, Field(alias="demoAssessments", ge=0, le=9007199254740991)]
+    rating: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+    recent: list[HomeSessionRow]
+    notices: list[Notice]
+    unread_count: Annotated[int, Field(alias="unreadCount", ge=0, le=9007199254740991)]
+    next_level: Annotated[LevelStatus | None, Field(alias="nextLevel")]
+
+
+class ReadinessResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    unit: UnitRef
+    rows: list[ReadinessRow]
+
+
 class ResponseOutcomeEvent(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1857,6 +2301,7 @@ class AarSessionResponse(BaseModel):
     ]
     kill_chain: Annotated[list[ContactKillChain], Field(alias="killChain")]
     ai_trust: Annotated[AiTrustMetrics, Field(alias="aiTrust")]
+    remarks: list[SessionRemark]
 
 
 class AuthorPreviewResponse(BaseModel):

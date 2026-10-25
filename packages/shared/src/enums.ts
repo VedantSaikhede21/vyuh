@@ -267,6 +267,42 @@ export const ContactOutcome = named(
 );
 export type ContactOutcome = z.infer<typeof ContactOutcome>;
 
+/** Representative training levels, lowest first (SPEC §9.7). Not official qualifications. */
+export const TrainingLevel = named(
+  'TrainingLevel',
+  z.enum(['BASIC_OPERATOR', 'SENSOR_OPERATOR', 'ENGAGEMENT_CONTROLLER', 'INSTRUCTOR']),
+);
+export type TrainingLevel = z.infer<typeof TrainingLevel>;
+
+/** LOCKED: the level below is not qualified. QUALIFIED: criteria met and signed off. */
+export const LevelState = named('LevelState', z.enum(['LOCKED', 'IN_PROGRESS', 'QUALIFIED']));
+export type LevelState = z.infer<typeof LevelState>;
+
+/** Endorsements earned automatically from Assessment sessions (SPEC §9.7). */
+export const EndorsementCode = named(
+  'EndorsementCode',
+  z.enum([
+    'NIGHT_OPS',
+    'SWARM',
+    'SILENT_LINK',
+    'DISCRIMINATION',
+    'ROE_DISCIPLINE',
+    'REPORTING',
+    'CALIBRATED_TRUST',
+  ]),
+);
+export type EndorsementCode = z.infer<typeof EndorsementCode>;
+
+export const NoticeKind = named(
+  'NoticeKind',
+  z.enum(['ASSIGNMENT', 'REMARK', 'SIGNOFF', 'LIBRARY']),
+);
+export type NoticeKind = z.infer<typeof NoticeKind>;
+
+/** Public status page: a component is up or down; the LLM is switched on or off. */
+export const ComponentStatus = named('ComponentStatus', z.enum(['OK', 'DOWN']));
+export type ComponentStatus = z.infer<typeof ComponentStatus>;
+
 export const ErrorCode = named(
   'ErrorCode',
   z.enum([

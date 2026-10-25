@@ -38,19 +38,6 @@ SPEED_MPS = {
     "CIVILIAN_HOBBY": (6.0, 10.0),
     "HELICOPTER_FRIENDLY": (45.0, 55.0),
 }
-#: A wrong AI suggestion picks a plausible confusion, never a random class.
-CONFUSABLE = {
-    "QUAD_SMALL": ("CIVILIAN_HOBBY", "BIRD_LARGE", "QUAD_HEAVY"),
-    "QUAD_HEAVY": ("FRIENDLY_QUAD", "QUAD_SMALL"),
-    "FPV": ("BIRD_SMALL", "QUAD_SMALL"),
-    "FIXED_WING_SMALL": ("BIRD_LARGE", "LOITERING_GENERIC"),
-    "LOITERING_GENERIC": ("FIXED_WING_SMALL",),
-    "BIRD_SMALL": ("FPV", "QUAD_SMALL"),
-    "BIRD_LARGE": ("QUAD_SMALL", "FIXED_WING_SMALL"),
-    "FRIENDLY_QUAD": ("QUAD_HEAVY", "CIVILIAN_HOBBY"),
-    "CIVILIAN_HOBBY": ("QUAD_SMALL", "FRIENDLY_QUAD"),
-    "HELICOPTER_FRIENDLY": ("FIXED_WING_SMALL",),
-}
 #: Chance a friendly patrol broadcasts its friendly ID, by difficulty.
 FRIENDLY_ID_P = {2: 0.8, 3: 0.6, 4: 0.4, 5: 0.3}
 
@@ -102,7 +89,8 @@ def ai_suggestion(rng: random.Random, cls: str, accuracy: float) -> dict:
     if rng.random() < accuracy:
         return {"suggestedClass": cls, "confidence": round(uniform(rng, 0.6, 0.95), 2)}
     return {
-        "suggestedClass": rng.choice(CONFUSABLE[cls]),
+        # A wrong suggestion is a plausible confusion (CLASS_PROFILES confusedWith), never random.
+        "suggestedClass": rng.choice(profiles()[cls]["confusedWith"]),
         "confidence": round(uniform(rng, 0.5, 0.85), 2),
     }
 

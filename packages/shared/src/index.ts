@@ -12,3 +12,5 @@ export * from './difficulty.ts';
 export * from './time-band.ts';
 export * from './instructor.ts';
 export * from './ai.ts';
+export * from './record.ts';
+export * from './portal.ts';
