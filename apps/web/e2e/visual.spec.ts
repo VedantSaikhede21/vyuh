@@ -89,6 +89,8 @@ for (const vp of VIEWPORTS) {
       const sid = await sessionFromLog(page, 'S06', 's06_trainee', SIM_VERSION);
       await page.goto(`/aar/session/${sid}`);
       await expect(page.getByTestId('replay-timeline')).toBeVisible({ timeout: 120_000 });
+      // The replay opens at the first track (audit P1-14); count from 00:00.
+      await page.keyboard.press('Home');
       for (let i = 0; i < 18; i++) await page.keyboard.press('Shift+ArrowRight');
       await expect(page.getByTestId('replay-clock')).toHaveText(/^03:00/);
       await page.keyboard.press('g');
