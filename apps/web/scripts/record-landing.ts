@@ -86,7 +86,9 @@ async function recordHero(): Promise<void> {
   const page = await ctx.newPage();
   const t0 = Date.now();
   await heroReady(page, `s=${HERO.s}&t=${HERO.t}&select=threat&zoom=4`);
-  const start = (Date.now() - t0) / 1000 + 1.5; // let the first frames settle
+  // Let the terrain and first frames draw: 1.5 s left the 3D view black at the start
+  // of the loop on a busy machine (6C re-record).
+  const start = (Date.now() - t0) / 1000 + 4;
   await page.waitForTimeout((HERO.seconds + 2) * 1000);
   const video = page.video();
   await ctx.close();
