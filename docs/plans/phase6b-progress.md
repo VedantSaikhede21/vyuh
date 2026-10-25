@@ -42,7 +42,7 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 - Template debrief (`app/services/ai/debrief.py`): stages missed at one moment for one contact → one "T006 STOPPED AT DETECT: …" line; one penalty code repeated → one line at the first time, "… Also T002, T003." (P1-12). Test `test_template_groups_a_stopped_chain_and_repeated_penalties`.
 - Staff-only `POST /aar/sessions/{id}/debrief/regenerate` (SPEC §11 row) + "Regenerate debrief" button beside the TEMPLATE chip when the fallback reason is INVALID_OUTPUT. RBAC + behaviour in `test_llm_debrief_validated_and_cached`.
 - Captured `result` / `result-full` at 1366 and 1920 (S15 practice, `capture-all.spec.ts`) and reviewed.
-- Checks: web 24 files / 203 tests, `pnpm lint` clean, `test_debrief.py` / `test_ai_trust.py` / `test_aar.py` green, ruff clean. Full API pytest not run for this step.
+- Checks: web 24 files / 203 tests, `pnpm lint` clean, `test_debrief.py` / `test_ai_trust.py` / `test_aar.py` green, ruff clean; full API pytest 460 passed; `pnpm gen:schemas` no diff.
 
 ## Still to do in 6B (from the plan, in order)
 
