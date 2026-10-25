@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState, type FormEvent } from 'react';
 import { PctBar, QuestionPanel, StageBars } from '@/components/aar/charts';
 import {
+  ErrorState,
   DemoBadge,
   PageHeader,
   Panel,
@@ -441,7 +442,7 @@ function UnitPage() {
   const params = useSearchParams();
   const [units, setUnits] = useState<UnitSummary[] | null>(null);
   const [data, setData] = useState<UnitDashboardResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [attempt, setAttempt] = useState(0);
   const reload = useCallback(() => setAttempt((a) => a + 1), []);
   const unitId = params.get('unit') ?? units?.[0]?.id ?? null;
@@ -453,7 +454,7 @@ function UnitPage() {
       .listUnits(ctrl.signal)
       .then((r) => setUnits(r.items))
       .catch((err: unknown) => {
-        if (!ctrl.signal.aborted) setError(err instanceof Error ? err.message : 'Network error');
+        if (!ctrl.signal.aborted) setError(err);
       });
     return () => ctrl.abort();
   }, []);
@@ -468,7 +469,7 @@ function UnitPage() {
         setError(null);
       })
       .catch((err: unknown) => {
-        if (!ctrl.signal.aborted) setError(err instanceof Error ? err.message : 'Network error');
+        if (!ctrl.signal.aborted) setError(err);
       });
     return () => ctrl.abort();
   }, [unitId, attempt]);
@@ -506,18 +507,16 @@ function UnitPage() {
           </div>
         }
       />
-      {error && (
+      {error !== null && (
         <Panel>
-          <StatusNotice
-            tone="error"
-            title="Could not load the unit dashboard."
+          <ErrorState
+            error={error}
+            subject="unit dashboard"
             onRetry={() => {
               setError(null);
               reload();
             }}
-          >
-            {error}. Check that the API is running, then retry.
-          </StatusNotice>
+          />
         </Panel>
       )}
       {units?.length === 0 && (
@@ -527,7 +526,7 @@ function UnitPage() {
           </StatusNotice>
         </Panel>
       )}
-      {!error && units?.length !== 0 && (!data || data.unit.id !== unitId) && (
+      {error === null && units?.length !== 0 && (!data || data.unit.id !== unitId) && (
         <Skeleton label="Loading unit dashboard" />
       )}
       {data && unit && data.unit.id === unitId && (

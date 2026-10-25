@@ -13,6 +13,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { BriefingMap } from '@/components/briefing/briefing-map';
 import { ModeToggle } from '@/components/briefing/mode-toggle';
 import {
+  ErrorState,
   Kbd,
   Panel,
   PanelBody,
@@ -20,10 +21,10 @@ import {
   Pips,
   Skeleton,
   StateChip,
-  StatusNotice,
 } from '@/components/hud/primitives';
 import { RequireAuth } from '@/components/require-auth';
 import { Button } from '@/components/ui/button';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { api } from '@/lib/api';
 import {
   COVERAGE_ALTITUDES,
@@ -37,7 +38,6 @@ import { useCoverage } from '@/lib/briefing/use-coverage';
 import { conditions, terrainLabel, visibilityKm } from '@/lib/scenario/library';
 import { loadPresetMeta } from '@/lib/terrain/load-world';
 import { ROE_LABEL } from '@/lib/strings';
-import { cn } from '@/lib/utils';
 
 // Briefing page (DESIGN §11.4, plan Step 12): map left, mission card right, mode
 // toggle and Begin (Enter), which creates the session in the chosen mode.
@@ -338,26 +338,21 @@ function Briefing({ detail }: { detail: ScenarioDetailResponse }) {
                   ? 'Coverage unavailable'
                   : `LOS coverage · ${altitude} m AGL`}
             </span>
-            <div className="flex" role="radiogroup" aria-label="Coverage altitude">
-              {COVERAGE_ALTITUDES.map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  role="radio"
-                  aria-checked={altitude === a}
-                  onClick={() => setAltitude(a)}
-                  className={cn(
-                    'h-6 border px-2 text-readout transition-colors duration-150 ease-ui first:rounded-l-sm last:rounded-r-sm',
-                    altitude === a
-                      ? 'border-select bg-bg-3 text-text-1'
-                      : 'border-line-2 text-text-2 hover:text-text-1',
-                  )}
-                >
-                  {a}
-                  <span className="text-text-2"> m</span>
-                </button>
-              ))}
-            </div>
+            <SegmentedControl
+              label="Coverage altitude"
+              size="strip"
+              value={String(altitude)}
+              onChange={(v) => setAltitude(Number(v) as CoverageAltitude)}
+              items={COVERAGE_ALTITUDES.map((a) => ({
+                value: String(a),
+                label: (
+                  <span className="font-mono tnum">
+                    {a}
+                    <span className="text-text-2"> m</span>
+                  </span>
+                ),
+              }))}
+            />
           </PanelHeader>
           <div className="flex min-h-0 flex-1 items-center justify-center bg-bg-0 p-2">
             <BriefingMap
@@ -394,7 +389,7 @@ function Briefing({ detail }: { detail: ScenarioDetailResponse }) {
 
 function BriefingLoader({ id }: { id: string }) {
   const [detail, setDetail] = useState<ScenarioDetailResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -403,17 +398,17 @@ function BriefingLoader({ id }: { id: string }) {
       .getScenario(id, ctrl.signal)
       .then(setDetail)
       .catch((err: unknown) => {
-        if (!ctrl.signal.aborted) setError(err instanceof Error ? err.message : 'Network error');
+        if (!ctrl.signal.aborted) setError(err);
       });
     return () => ctrl.abort();
   }, [id, attempt]);
 
-  if (error)
+  if (error !== null)
     return (
       <Panel className="mx-auto max-w-xl">
-        <StatusNotice
-          tone="error"
-          title="Could not load the briefing."
+        <ErrorState
+          error={error}
+          subject="briefing"
           onRetry={() => {
             setError(null);
             setAttempt((a) => a + 1);
@@ -423,9 +418,7 @@ function BriefingLoader({ id }: { id: string }) {
               <Link href="/train">Back to scenarios</Link>
             </Button>
           }
-        >
-          {error}.
-        </StatusNotice>
+        />
       </Panel>
     );
   if (!detail) return <Skeleton label="Loading briefing" className="p-6" />;

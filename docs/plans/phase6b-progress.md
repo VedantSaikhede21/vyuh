@@ -91,10 +91,18 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 - Help dialog and Demo badge tooltip without "SPEC §" references. Login's ENV=prod line is 6C.
 - `reweighted()` (`app/services/scoring/versions.py`): a scaled `pointsMetric` leaf's feedback says so — "Best contact report 7.0/10 (scaled by 2 for this tree's weights)". Existing weight versions are immutable and keep the old text. Test in `test_reweighted_tree_scales_component_leaves`.
 
+## 6A primitives applied (2026-10-25, plan item 5)
+
+- `Tabs`: AAR side panel (strip) and the player's Tracks / RF / Spectrogram (underline variant in the 28 px strip); `visual.spec.ts` now selects tabs by role (ids changed).
+- `SegmentedControl`: briefing mode toggle (hud), coverage altitude (new `strip` size, 24 px, mono labels), replay speed (hud). Arrow keys now move and select in all three.
+- `ErrorState` (API error copy map, neutral 404): briefing loader, unit dashboard, scoring trees. `PageHeader` with breadcrumbs on Scoring weights.
+- One primary per screen: builder tool toggles are pressed secondaries; From text "Read parameters" turns secondary once parameters are read, so "Generate and open briefing" is the primary.
+- Keyboard focus order: to check in the break-ui / keyboard pass.
+
 ## Still to do in 6B (from the plan, in order)
 
 2. Player: disabled reasons and title hovers checked in the break-ui pass. (Aids labelled: spectrogram "Aid · confirm on camera"; the AI chip tooltip already says it can be wrong.)
-5. Apply 6A primitives everywhere (Tabs, SegmentedControl, Table, PageHeader, ErrorState); one primary action per screen; keyboard focus order.
+5. Keyboard focus order on every 6B screen (with break-ui). `Table` primitive not applied to the existing tables yet — decide in the polish pass whether the swap is worth it.
 6. Load `emil-design-eng` before the polish, `break-ui` before stress-testing; write the break-ui report.
 7. Checkpoint B: `checkpoint-6b.spec.ts` captures of every 6B screen at 1366×768 and 1920×1080 + break-ui report + FPS before / after → **stop for the user's OK**.
 8. After OK: regenerate + review + commit visual baselines; full `pnpm e2e`; lint, `pnpm test`, pytest, `gen:schemas` no diff; CLAUDE.md §14; decisions.
