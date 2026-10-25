@@ -109,7 +109,9 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 2. Player: disabled reasons and title hovers checked in the break-ui pass. (Aids labelled: spectrogram "Aid · confirm on camera"; the AI chip tooltip already says it can be wrong.)
 5. Keyboard pass: done (`e2e/keyboard-6b.spec.ts`, `@keyboard`, logs in `e2e/checkpoint/6b/keyboard/`). Every stop has a visible ring and none is hidden. Fixed: the AAR kill chain is one tab stop with arrow / Home / End movement (`gridMove` in `components/ui/tabs.tsx`, tested; the replay ignores those keys inside it) — 78 → 19 stops; Recharts' keyboard layer off (8 unlabelled chart stops on trends; the wrapper is the labelled image). Skip link is the first stop. Left as is: unit recent sessions are two links per row (both real destinations). `Table` primitive not swapped in (no defect found; not worth the churn now).
 6. break-ui: done. Report and fix outcomes in `docs/plans/phase6b-break-ui.md` (user said "fix all"; 1–5 and 7 fixed, 6 needed no change). Spec `e2e/break-ui.spec.ts` (`@breakui`) passes 20 / 20 with no overflow anywhere.
-7. Checkpoint B: `checkpoint-6b.spec.ts` captures of every 6B screen at 1366×768 and 1920×1080 + break-ui report + FPS before / after → **stop for the user's OK**.
+7. Checkpoint B: **captured, waiting for the user's OK** (2026-10-25, production build, AMD integrated).
+   - `e2e/checkpoint/6b/` (git-ignored): `checkpoint-6b.spec.ts` 10 / 10 (training list, briefings S06 / S05 / S01, builder asset tool, zone draft, field error — both sizes); `capture/` from `capture-all.spec.ts` (signed-in screens and the S15 player run incl. result, both sizes) 4 / 4; `break/` (break-ui 20 / 20); `keyboard/` (2 / 2). Console: only the 404 / 422 of the deliberate error-state captures.
+   - FPS (FPS_SELECT=1, fixed DPR): S06 1920 65 fps (p95 24.9 ms), 1366 113; URBAN D5 seed 2 1920 56 (p95 25.0), 1366 80. Morning same-machine baseline before P0-6: S06 53, URBAN D5 46 at 1920.
 8. After OK: regenerate + review + commit visual baselines; full `pnpm e2e`; lint, `pnpm test`, pytest, `gen:schemas` no diff; CLAUDE.md §14; decisions.
 
 ## Notes
