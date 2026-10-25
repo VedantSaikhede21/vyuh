@@ -112,11 +112,11 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 7. Checkpoint B: **captured, waiting for the user's OK** (2026-10-25, production build, AMD integrated).
    - `e2e/checkpoint/6b/` (git-ignored): `checkpoint-6b.spec.ts` 10 / 10 (training list, briefings S06 / S05 / S01, builder asset tool, zone draft, field error — both sizes); `capture/` from `capture-all.spec.ts` (signed-in screens and the S15 player run incl. result, both sizes) 4 / 4; `break/` (break-ui 20 / 20); `keyboard/` (2 / 2). Console: only the 404 / 422 of the deliberate error-state captures.
    - FPS (FPS_SELECT=1, fixed DPR): S06 1920 65 fps (p95 24.9 ms), 1366 113; URBAN D5 seed 2 1920 56 (p95 25.0), 1366 80. Morning same-machine baseline before P0-6: S06 53, URBAN D5 46 at 1920.
-8. After OK: regenerate + review + commit visual baselines; full `pnpm e2e`; lint, `pnpm test`, pytest, `gen:schemas` no diff; CLAUDE.md §14; decisions.
+8. Close-out **done** (user OK 2026-10-25): visual baselines regenerated and reviewed (`36cd407`; the AAR visual test now presses Home, since the replay opens at the first track); `pnpm e2e` 23 / 23; lint clean; web 211, shared 48, sim-core 345 (isolation), pytest 460; `gen:schemas` no diff; CLAUDE.md §14 and decision 152. **Part 6B is closed.**
 
 ## Notes
 
-- Decisions so far in 6B: 149 (rounding), 150 (framing + DOM labels), 151 (result screen + template grouping + regenerate). Next free number: 152.
+- Decisions so far in 6B: 149 (rounding), 150 (framing + DOM labels), 151 (result screen + template grouping + regenerate), 152 (break-ui and keyboard passes). Next free number: 153.
 - `pnpm e2e` now resets the @demo accounts and forces the template debrief (decision 148).
 - The auto-mode classifier blocked running `pnpm seed:reset-demo --yes` directly once; the e2e global setup runs it fine.
 - Player screenshots / probes need the e2e step hook, which exists only on the dev server; production probes run in real time.
