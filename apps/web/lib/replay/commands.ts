@@ -1,10 +1,12 @@
 import type { Commands } from '@/lib/sim/commands';
+import { useUiStore } from '@/lib/sim/ui-store';
 
 const noop = (): void => undefined;
 
 /**
  * The player's command surface for a replay: every trainee action is a no-op,
  * because a replay only shows what the trainee did (the log is never changed).
+ * Opening the threat library is reading, so it works (a class click in the list).
  */
 export function readOnlyCommands(): Commands {
   return {
@@ -32,5 +34,6 @@ export function readOnlyCommands(): Commands {
     zoom: noop,
     armEnd: noop,
     abort: noop,
+    openLibrary: (cls) => useUiStore.getState().set({ library: { cls: cls ?? null } }),
   };
 }

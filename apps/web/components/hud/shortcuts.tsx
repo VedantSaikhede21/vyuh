@@ -28,8 +28,9 @@ export function useShortcuts(commands: Commands | null): void {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const ui = useUiStore.getState();
       const k = e.key.toLowerCase();
-      // The open report form takes its own keys (1–5, Enter, Esc).
-      if (ui.report) return;
+      // The open report form takes its own keys (1–5, Enter, Esc); the library
+      // dialog is reading, not acting: no order may go out behind it.
+      if (ui.report || ui.library) return;
 
       if (ui.classifyMenu) {
         const item = CLASS_MENU.find((c) => c.key === e.key);
@@ -66,6 +67,7 @@ export function useShortcuts(commands: Commands | null): void {
       else if (k === 'x') commands.rejectAi();
       else if (k === 'p') commands.togglePause();
       else if (k === 't') commands.toggleEoMode();
+      else if (k === 'l') commands.openLibrary();
       else handled = false;
       if (handled) e.preventDefault();
     };

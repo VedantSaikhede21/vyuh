@@ -76,6 +76,7 @@ export const SHORTCUTS: { keys: string; action: string }[] = [
   { keys: 'Enter', action: 'Confirm End session once armed' },
   { keys: 'Esc', action: 'Cancel current action' },
   { keys: 'P', action: 'Pause (practice only)' },
+  { keys: 'L', action: 'Threat library entry for the selected track' },
   { keys: '?', action: 'Show / hide this list' },
 ];
 
@@ -187,3 +188,14 @@ export function errorCopy(
       };
   }
 }
+
+/** ISO date + local time, "2026-10-25 14:05" (DESIGN §8: outside sessions). */
+export function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/** ISO date in local time, "2026-10-25". */
+export const formatDate = (iso: string): string => formatDateTime(iso).slice(0, 10);

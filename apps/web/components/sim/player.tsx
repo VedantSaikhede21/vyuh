@@ -16,6 +16,8 @@ import type { Commands } from '@/lib/sim/commands';
 import type { BatcherStatus } from '@/lib/sim/event-batcher';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useHudStore } from '@/lib/sim/store';
+import { LibraryDialog } from '@/components/library/library-dialog';
+import { readSettings } from '@/lib/settings';
 import { useUiStore } from '@/lib/sim/ui-store';
 import { cn } from '@/lib/utils';
 import { SimCanvas } from './sim-canvas';
@@ -101,10 +103,20 @@ export function SimPlayer({
   useShortcuts(replay ? null : commands);
   usePracticeHints(runtime, !replay);
   const cheatSheet = useUiStore((s) => s.cheatSheet);
+  const library = useUiStore((s) => s.library);
+  const setUi = useUiStore((s) => s.set);
+  // Settings: open the shortcut list when a Practice run starts (it holds the clock).
   useEffect(() => {
-    runtime.setOverlayHold(cheatSheet);
+    if (!replay && runtime.mode === 'PRACTICE' && readSettings().shortcutsOnStart) {
+      useUiStore.getState().set({ cheatSheet: true });
+    }
+  }, [runtime, replay]);
+  // Reading a reference sheet holds the Practice clock (never Assessment).
+  const overlay = cheatSheet || library !== null;
+  useEffect(() => {
+    runtime.setOverlayHold(overlay);
     return () => runtime.setOverlayHold(false);
-  }, [runtime, cheatSheet]);
+  }, [runtime, overlay]);
   const container = useRef<HTMLDivElement>(null);
   const tactical = useRef<HTMLDivElement>(null);
   const eo = useRef<HTMLDivElement>(null);
@@ -173,6 +185,11 @@ export function SimPlayer({
           backHref={null}
         />
       )}
+      <LibraryDialog
+        open={library !== null}
+        cls={library?.cls ?? null}
+        onClose={() => setUi({ library: null })}
+      />
     </div>
   );
 }

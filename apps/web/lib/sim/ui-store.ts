@@ -1,4 +1,4 @@
-import type { EoMode } from '@vyuh/shared';
+import type { ContactClass, EoMode } from '@vyuh/shared';
 import type { EoTrackMode } from '@vyuh/sim-core';
 import { create } from 'zustand';
 import type { CommsLine, CommsStatus } from '@/components/hud/primitives/comms-log';
@@ -38,6 +38,8 @@ interface UiStore {
   interceptArmed: boolean;
   endArmed: boolean;
   cheatSheet: boolean;
+  /** Threat-library dialog (L): the class shown, or null for the class picker; null = closed. */
+  library: { cls: ContactClass | null } | null;
   /** Contact report being filled in (R), or null. */
   report: ReportDraft | null;
   local: LocalLine[];
@@ -70,6 +72,7 @@ export const useUiStore = create<UiStore>((set) => ({
   interceptArmed: false,
   endArmed: false,
   cheatSheet: false,
+  library: null,
   report: null,
   local: [],
   hinted: [],
@@ -105,6 +108,7 @@ export const useUiStore = create<UiStore>((set) => ({
       interceptArmed: false,
       endArmed: false,
       cheatSheet: false,
+      library: null,
       report: null,
       local: [],
       hinted: [],

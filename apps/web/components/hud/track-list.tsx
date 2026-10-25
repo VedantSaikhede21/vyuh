@@ -7,6 +7,7 @@ import { rfBadgeText } from '@/lib/rf';
 import type { Commands } from '@/lib/sim/commands';
 import { useHudStore, type TrackView } from '@/lib/sim/store';
 import { useUiStore } from '@/lib/sim/ui-store';
+import { Info } from 'lucide-react';
 import { CLASS_LABEL } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 
@@ -136,7 +137,28 @@ const TrackRow = memo(
         </td>
         <td className={cn(CELL, 'text-text-1', lost && 'text-text-2 line-through')}>{t.id}</td>
         <td className={cn(CELL, 'max-w-40 truncate font-sans text-body')}>
-          {t.classifiedAs ? CLASS_LABEL[t.classifiedAs] : <span className="text-text-2">—</span>}
+          {t.classifiedAs ? (
+            <span className="flex min-w-0 items-center gap-1">
+              <span className="truncate">{CLASS_LABEL[t.classifiedAs]}</span>
+              {/* Mouse route to the library; keyboard users press L on the selected track. */}
+              <button
+                type="button"
+                tabIndex={-1}
+                title={`Threat library: ${CLASS_LABEL[t.classifiedAs]} · L`}
+                aria-label={`Threat library entry for ${CLASS_LABEL[t.classifiedAs]}`}
+                data-testid="track-library"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  commands.openLibrary(t.classifiedAs);
+                }}
+                className="shrink-0 rounded-sm text-text-2 transition-colors duration-150 ease-ui hover:text-text-1"
+              >
+                <Info aria-hidden size={12} strokeWidth={1.5} />
+              </button>
+            </span>
+          ) : (
+            <span className="text-text-2">—</span>
+          )}
         </td>
         <td className={cn(CELL, 'text-right')}>
           {formatKm(t.rangeM)}

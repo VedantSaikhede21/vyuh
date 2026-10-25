@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { prefersReducedMotion } from '@/lib/settings';
 
 /**
  * Hero clip recorded from the simulator (scripts/record-landing.ts). Muted
@@ -11,7 +12,7 @@ export function HeroVideo() {
   const [reduced, setReduced] = useState<boolean | null>(null);
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReduced(mq.matches);
+    const update = () => setReduced(prefersReducedMotion());
     update();
     mq.addEventListener('change', update);
     return () => mq.removeEventListener('change', update);

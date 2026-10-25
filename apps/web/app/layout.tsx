@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { AppHeader, SkipLink } from '@/components/app-header';
 import { AuthProvider } from '@/lib/auth';
+import { MotionAttribute } from '@/lib/settings';
 import { UI } from '@/lib/theme/scene-colours';
 import { plexCondensed, plexMono, plexSans } from './fonts';
 import './globals.css';
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <body className="min-h-screen">
         <SkipLink />
+        <MotionAttribute />
         <AuthProvider>
           <AppHeader />
           <main

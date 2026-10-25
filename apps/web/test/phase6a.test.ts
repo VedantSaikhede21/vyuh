@@ -9,16 +9,16 @@ const ids = (role: Parameters<typeof navFor>[0]) => navFor(role).map((n) => n.id
 const item = (id: string) => NAV.find((n) => n.id === id)!;
 
 describe('shell navigation (DESIGN §11.0)', () => {
-  it('trainees see Training and After-action only; staff add Unit and Builder', () => {
-    expect(ids('TRAINEE')).toEqual(['training', 'aar']);
-    expect(ids('INSTRUCTOR')).toEqual(['training', 'aar', 'unit', 'builder']);
+  it('trainees add Home and Service record; staff add Unit and Builder (Phase 6C)', () => {
+    expect(ids('TRAINEE')).toEqual(['training', 'library', 'aar']);
+    expect(ids('INSTRUCTOR')).toEqual(['training', 'library', 'aar', 'unit', 'builder']);
     expect(ids('ADMIN')).toEqual(ids('INSTRUCTOR'));
   });
 
   it('never shows an item whose page does not exist yet', () => {
     for (const role of ['TRAINEE', 'INSTRUCTOR', 'ADMIN'] as const)
       for (const n of navFor(role)) expect(n.ready).toBe(true);
-    expect(NAV.filter((n) => !n.ready).map((n) => n.id)).toEqual(['home', 'library', 'record']);
+    expect(NAV.filter((n) => !n.ready).map((n) => n.id)).toEqual(['home', 'record']);
   });
 
   it('keeps Builder active on both ways of building a scenario', () => {

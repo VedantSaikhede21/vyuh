@@ -15,6 +15,7 @@ import {
 } from '@/lib/sim/framing';
 import { useHudStore } from '@/lib/sim/store';
 import { useSimRuntime } from './sim-context';
+import { prefersReducedMotion } from '@/lib/settings';
 
 /** What this needs of drei's OrbitControls (made default in the tactical scene). */
 interface Orbiter {
@@ -29,8 +30,7 @@ const MAX_RADIUS = 12_000;
 /** Above the marker, where the label sits. */
 const LIFT_M = 40;
 
-const reducedMotion = () =>
-  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reducedMotion = prefersReducedMotion;
 
 /**
  * Keeps the selected track in the tactical view (audit P0-6). When a track is

@@ -1,6 +1,7 @@
 'use client';
 
 import type {
+  ContactClass,
   ContactKillChain,
   KillChainStage,
   KillChainStatus,
@@ -10,9 +11,11 @@ import type {
 import { ChevronRight } from 'lucide-react';
 import { memo, useMemo, useRef, useState } from 'react';
 import { AffiliationSymbol, Panel } from '@/components/hud/primitives';
+import { LibraryDialog } from '@/components/library/library-dialog';
 import { humaniseFeedback } from '@/lib/hud/feedback';
 import { clearedLabel, groupRows } from '@/lib/replay/kill-chain-rows';
 import { useReplayStore } from '@/lib/replay/store';
+import { useUiStore } from '@/lib/sim/ui-store';
 import { CLASS_LABEL, formatClock } from '@/lib/strings';
 import { gridMove } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -235,14 +238,20 @@ export const KillChainPanel = memo(function KillChainPanel({
                 )
               ) : (
                 <tr key={row.contactId} className="border-t border-line-1">
-                  <td
-                    className="h-6 max-w-[5.5rem] truncate pl-2 text-small"
-                    title={`${row.contactId} · ${CLASS_LABEL[row.trueClass]}`}
-                  >
-                    <span className="inline-flex items-center gap-1">
+                  <td className="h-6 max-w-[5.5rem] truncate pl-2 text-small">
+                    {/* Mouse route to the true class's library entry; not a tab stop (the
+                        grid keeps one stop). */}
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      title={`${row.contactId} · ${CLASS_LABEL[row.trueClass]} · threat library`}
+                      data-testid="kc-library"
+                      onClick={() => useUiStore.getState().set({ library: { cls: row.trueClass } })}
+                      className="inline-flex items-center gap-1 rounded-sm hover:underline"
+                    >
                       <AffiliationSymbol affiliation={row.trueAffiliation} size={12} />
                       <span className="font-mono text-text-1">{row.contactId}</span>
-                    </span>
+                    </button>
                   </td>
                   {row.stages.map((step, c) => {
                     const key = cellKey(row, step);
@@ -322,66 +331,77 @@ export function KillChainTable({
   const g = useGroupedRows(rows, penalties);
   const sorted = g.all;
   const stages = sorted[0]?.stages.map((s) => s.stage) ?? [];
+  const [library, setLibrary] = useState<ContactClass | null>(null);
   return (
-    <table
-      className="w-full border-collapse"
-      aria-label="Kill chain by contact"
-      data-testid="kill-chain"
-    >
-      <thead>
-        <tr>
-          <th className="h-7 bg-bg-2 px-2 text-left text-label font-medium">Contact</th>
-          {stages.map((s) => (
-            <th key={s} className="h-7 bg-bg-2 px-2 text-left text-label font-medium">
-              {STAGE_NAME[s]}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {[...g.listed, null, ...g.shown].map((row) =>
-          row === null ? (
-            g.cleared.length > 0 && (
-              <ClearedToggle
-                key="cleared"
-                count={g.cleared.length}
-                open={g.open}
-                colSpan={stages.length + 1}
-                onToggle={g.toggle}
-                tall
-              />
-            )
-          ) : (
-            <tr key={row.contactId} className="border-t border-line-1 align-top">
-              <td className="px-2 py-1.5 text-small">
-                <span className="inline-flex items-center gap-1.5">
-                  <AffiliationSymbol affiliation={row.trueAffiliation} size={14} />
-                  <span className="font-mono text-text-1">{row.contactId}</span>
-                </span>
-                <span className="block text-text-2">{CLASS_LABEL[row.trueClass]}</span>
-              </td>
-              {row.stages.map((step) => (
-                <td
-                  key={step.stage}
-                  className="px-2 py-1.5 text-small"
-                  title={humaniseFeedback(step.feedback)}
-                >
-                  <span className={cn('font-mono', STATUS_CLASS[step.status])}>
-                    {step.status === 'MISSED' && <MissGlyph />}
-                    {STATUS_NAME[step.status]}
+    <>
+      <LibraryDialog open={library !== null} cls={library} onClose={() => setLibrary(null)} />
+      <table
+        className="w-full border-collapse"
+        aria-label="Kill chain by contact"
+        data-testid="kill-chain"
+      >
+        <thead>
+          <tr>
+            <th className="h-7 bg-bg-2 px-2 text-left text-label font-medium">Contact</th>
+            {stages.map((s) => (
+              <th key={s} className="h-7 bg-bg-2 px-2 text-left text-label font-medium">
+                {STAGE_NAME[s]}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {[...g.listed, null, ...g.shown].map((row) =>
+            row === null ? (
+              g.cleared.length > 0 && (
+                <ClearedToggle
+                  key="cleared"
+                  count={g.cleared.length}
+                  open={g.open}
+                  colSpan={stages.length + 1}
+                  onToggle={g.toggle}
+                  tall
+                />
+              )
+            ) : (
+              <tr key={row.contactId} className="border-t border-line-1 align-top">
+                <td className="px-2 py-1.5 text-small">
+                  <span className="inline-flex items-center gap-1.5">
+                    <AffiliationSymbol affiliation={row.trueAffiliation} size={14} />
+                    <span className="font-mono text-text-1">{row.contactId}</span>
                   </span>
-                  {step.actionTMs !== undefined && (
-                    <span className="font-mono text-text-2"> {formatClock(step.actionTMs)}</span>
-                  )}
-                  {step.action && (
-                    <span className="block text-text-2">{humaniseFeedback(step.action)}</span>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setLibrary(row.trueClass)}
+                    title="Threat library entry"
+                    className="block text-left text-text-2 underline decoration-line-2 underline-offset-2 hover:text-text-1"
+                  >
+                    {CLASS_LABEL[row.trueClass]}
+                  </button>
                 </td>
-              ))}
-            </tr>
-          ),
-        )}
-      </tbody>
-    </table>
+                {row.stages.map((step) => (
+                  <td
+                    key={step.stage}
+                    className="px-2 py-1.5 text-small"
+                    title={humaniseFeedback(step.feedback)}
+                  >
+                    <span className={cn('font-mono', STATUS_CLASS[step.status])}>
+                      {step.status === 'MISSED' && <MissGlyph />}
+                      {STATUS_NAME[step.status]}
+                    </span>
+                    {step.actionTMs !== undefined && (
+                      <span className="font-mono text-text-2"> {formatClock(step.actionTMs)}</span>
+                    )}
+                    {step.action && (
+                      <span className="block text-text-2">{humaniseFeedback(step.action)}</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ),
+          )}
+        </tbody>
+      </table>
+    </>
   );
 }

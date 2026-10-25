@@ -1,17 +1,16 @@
 'use client';
 
 import type { UserRole } from '@vyuh/shared';
-import { ChevronDown } from 'lucide-react';
+import { Bell, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useSyncExternalStore } from 'react';
-import { Kbd, StateChip } from '@/components/hud/primitives';
+import { useEffect, useSyncExternalStore } from 'react';
+import { StateChip } from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
-import { Dialog } from '@/components/ui/dialog';
 import { Menu, type MenuItem } from '@/components/ui/menu';
 import { useAuth } from '@/lib/auth';
-import { PUBLIC_PATHS, ROLE_LABEL, isActive, isStaff, navFor } from '@/lib/nav';
-import { SHORTCUTS } from '@/lib/strings';
+import { PUBLIC_PATHS, ROLE_LABEL, homeHref, isActive, isStaff, navFor } from '@/lib/nav';
+import { unreadLabel, useNoticeStore } from '@/lib/notices';
 import { cn } from '@/lib/utils';
 
 const WORDMARK = 'text-h2 tracking-[0.2em] text-text-1';
@@ -36,29 +35,6 @@ function LocalTime() {
   );
 }
 
-/** Help & controls until the full Help page exists (Phase 6C): the shortcut reference. */
-function HelpDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  return (
-    <Dialog open={open} onClose={onClose} title="Help & controls" testId="help-dialog">
-      <p className="mb-3 text-small text-text-2">
-        Shortcuts in the sim player. Press <Kbd>?</Kbd> there for the same list.
-      </p>
-      <table className="w-full border-collapse" aria-label="Keyboard shortcuts">
-        <tbody>
-          {SHORTCUTS.map((s) => (
-            <tr key={s.keys} className="border-t border-line-1 first:border-t-0">
-              <td className="h-8 whitespace-nowrap pr-4">
-                <Kbd>{s.keys}</Kbd>
-              </td>
-              <td className="h-8 text-body text-text-body">{s.action}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Dialog>
-  );
-}
-
 /**
  * Shared shell top bar for signed-in pages (DESIGN §11.0, UI-PREP §3).
  * Presentational, so the design gallery can show it for each role.
@@ -67,20 +43,18 @@ export function ShellTopBar({
   user,
   path,
   onSignOut,
+  unread = null,
 }: {
   user: { name: string; role: UserRole };
   path: string;
   onSignOut: () => void;
+  /** Unread notices; null until known (nothing is shown). */
+  unread?: number | null;
 }) {
-  const [help, setHelp] = useState(false);
   const staff = isStaff(user.role);
   const items: MenuItem[] = [
-    {
-      kind: 'action',
-      label: 'Help & controls',
-      onSelect: () => setHelp(true),
-      testId: 'menu-help',
-    },
+    { kind: 'link', label: 'Settings', href: '/settings', testId: 'menu-settings' },
+    { kind: 'link', label: 'Help & controls', href: '/help', testId: 'menu-help' },
     ...(staff
       ? [
           {
@@ -97,7 +71,11 @@ export function ShellTopBar({
   return (
     <header className="relative z-10 border-b border-line-1 bg-bg-1" data-testid="shell-top-bar">
       <div className="mx-auto flex h-12 max-w-[1280px] items-stretch gap-6 px-4">
-        <Link href="/train" className={cn(WORDMARK, 'self-center')} aria-label="VYUH — Training">
+        <Link
+          href={homeHref(user.role)}
+          className={cn(WORDMARK, 'self-center')}
+          aria-label="VYUH — Home"
+        >
           VYUH
         </Link>
         <nav aria-label="Main" className="flex min-w-0 items-stretch">
@@ -128,6 +106,26 @@ export function ShellTopBar({
           <StateChip tone="neutral" data-testid="shell-role">
             {ROLE_LABEL[user.role]}
           </StateChip>
+          {unread !== null && (
+            <Link
+              href="/notices"
+              data-testid="shell-notices"
+              aria-label={unread > 0 ? `Notices: ${unread} unread` : 'Notices: none unread'}
+              aria-current={path === '/notices' ? 'page' : undefined}
+              className={cn(
+                'flex h-8 items-center gap-1.5 rounded-sm border border-transparent px-2 text-panel-title transition-colors duration-150 ease-ui hover:border-line-2 hover:bg-bg-2',
+                path === '/notices' ? 'text-text-1' : 'text-text-2 hover:text-text-1',
+              )}
+            >
+              <Bell aria-hidden size={16} strokeWidth={1.5} />
+              Notices
+              {unread > 0 && (
+                <span className="text-readout text-text-1" data-testid="shell-unread">
+                  {unreadLabel(unread)}
+                </span>
+              )}
+            </Link>
+          )}
           <LocalTime />
           <Menu
             label={
@@ -145,7 +143,6 @@ export function ShellTopBar({
           />
         </div>
       </div>
-      <HelpDialog open={help} onClose={() => setHelp(false)} />
     </header>
   );
 }
@@ -179,8 +176,15 @@ function PublicHeader() {
 export function AppHeader() {
   const { status, user, logout } = useAuth();
   const path = usePathname() ?? '/';
-  if (PUBLIC_PATHS.includes(path) || status !== 'authenticated' || !user) return <PublicHeader />;
-  return <ShellTopBar user={user} path={path} onSignOut={() => void logout()} />;
+  const signedIn = status === 'authenticated' && !!user;
+  const unread = useNoticeStore((s) => s.unread);
+  const refresh = useNoticeStore((s) => s.refresh);
+  // Re-read the unread count on every signed-in navigation (cheap: one count query).
+  useEffect(() => {
+    if (signedIn && !PUBLIC_PATHS.includes(path)) refresh();
+  }, [signedIn, path, refresh]);
+  if (PUBLIC_PATHS.includes(path) || !signedIn) return <PublicHeader />;
+  return <ShellTopBar user={user} path={path} unread={unread} onSignOut={() => void logout()} />;
 }
 
 /** First focusable element on every page (DESIGN §11.0). */

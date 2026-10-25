@@ -3,6 +3,7 @@
 import type { AarSessionResponse } from '@vyuh/shared';
 import Link from 'next/link';
 import { DebriefPanel } from '@/components/aar/debrief-panel';
+import { Remarks } from '@/components/aar/remarks';
 import { TrustInsight } from '@/components/aar/trust-insight';
 import { useMemo } from 'react';
 import {
@@ -102,6 +103,10 @@ export function FallbackView({ data, why }: { data: AarSessionResponse; why: str
       </div>
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <DebriefPanel sessionId={data.session.id} />
+        <Panel>
+          <PanelHeader title="Instructor remarks" />
+          <Remarks sessionId={data.session.id} initial={data.remarks} />
+        </Panel>
         <Panel data-testid="trust-insight">
           <PanelHeader title="Did you trust the AI assist too much?" />
           <div className="p-3">

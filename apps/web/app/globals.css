@@ -243,7 +243,8 @@
   }
 }
 
-/* §7: no flashes or transitions when the user asks for reduced motion. */
+/* §7: no flashes or transitions when the user asks for reduced motion — in the
+   system, or in Settings (<html data-motion="reduce">, Phase 6C). */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
@@ -252,6 +253,13 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+:root[data-motion='reduce'] *,
+:root[data-motion='reduce'] ::before,
+:root[data-motion='reduce'] ::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
 }
 
 /* AAR replay scrubber (Phase 4a): a 2 px hairline track and a narrow bone

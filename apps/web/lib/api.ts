@@ -1,5 +1,15 @@
 import {
   AarSessionResponse,
+  ActiveSessionsResponse,
+  HomeResponse,
+  NoticeCountResponse,
+  NoticeListResponse,
+  ReadinessResponse,
+  ScoringSummaryResponse,
+  ServiceRecordResponse,
+  SessionRemark,
+  StatusResponse,
+  type TrainingLevel,
   AiStatusResponse,
   DebriefResponse,
   FromTextResponse,
@@ -33,7 +43,7 @@ import {
   type TokenResponse as TokenResponseT,
 } from '@vyuh/shared';
 import { SIM_VERSION } from '@vyuh/sim-core';
-import type { z } from 'zod';
+import { z } from 'zod';
 import { env } from './env';
 
 /** An API error in the SPEC §11.2 envelope (or NETWORK when the API is unreachable). */
@@ -187,4 +197,32 @@ export const api = {
       body: { text },
       signal,
     }),
+
+  // Phase 6C: home, record, notices, remarks, help, status, readiness, live.
+  home: (signal?: AbortSignal) => apiFetch('/home', HomeResponse, { signal }),
+  record: (userId: string, signal?: AbortSignal) =>
+    apiFetch(`/record/${userId}`, ServiceRecordResponse, { signal }),
+  signOff: (userId: string, level: TrainingLevel) =>
+    apiFetch(`/record/${userId}/signoffs`, ServiceRecordResponse, {
+      method: 'POST',
+      body: { level },
+    }),
+  notices: (signal?: AbortSignal) => apiFetch('/notices', NoticeListResponse, { signal }),
+  noticeCount: (signal?: AbortSignal) =>
+    apiFetch('/notices/count', NoticeCountResponse, { signal }),
+  /** 204: everything up to now counts as read. */
+  markNoticesSeen: () => apiFetch('/notices/seen', z.null(), { method: 'POST' }),
+  addRemark: (sessionId: string, body: string) =>
+    apiFetch(`/aar/sessions/${sessionId}/remarks`, SessionRemark, {
+      method: 'POST',
+      body: { body },
+    }),
+  scoringSummary: (signal?: AbortSignal) =>
+    apiFetch('/scoring/summary', ScoringSummaryResponse, { signal }),
+  /** Public: no token sent. */
+  status: (signal?: AbortSignal) => apiFetch('/status', StatusResponse, { signal, auth: false }),
+  readiness: (unitId: string, signal?: AbortSignal) =>
+    apiFetch(`/units/${unitId}/readiness`, ReadinessResponse, { signal }),
+  activeSessions: (unitId: string, signal?: AbortSignal) =>
+    apiFetch(`/sessions/active?unit=${unitId}`, ActiveSessionsResponse, { signal }),
 };

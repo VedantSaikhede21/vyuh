@@ -12,6 +12,8 @@ export interface NavItem {
   /** Paths that must not activate it even though a prefix matches. */
   except?: readonly string[];
   staffOnly?: boolean;
+  /** Trainee pages (own home and service record); staff reach records from Readiness. */
+  traineeOnly?: boolean;
   /**
    * The page exists. Items for pages still to be built (Phase 6C) stay in the
    * config but are never shown: no placeholders (DESIGN §2).
@@ -20,11 +22,18 @@ export interface NavItem {
 }
 
 export const NAV: readonly NavItem[] = [
-  { id: 'home', label: 'Home', href: '/home', match: ['/home'], ready: false },
+  { id: 'home', label: 'Home', href: '/home', match: ['/home'], traineeOnly: true, ready: false },
   { id: 'training', label: 'Training', href: '/train', match: ['/train'], ready: true },
-  { id: 'library', label: 'Threat library', href: '/library', match: ['/library'], ready: false },
+  { id: 'library', label: 'Threat library', href: '/library', match: ['/library'], ready: true },
   { id: 'aar', label: 'After-action', href: '/aar/trends', match: ['/aar'], ready: true },
-  { id: 'record', label: 'Service record', href: '/record', match: ['/record'], ready: false },
+  {
+    id: 'record',
+    label: 'Service record',
+    href: '/record',
+    match: ['/record'],
+    traineeOnly: true,
+    ready: false,
+  },
   {
     id: 'unit',
     label: 'Unit',
@@ -49,8 +58,14 @@ export const isStaff = (role: UserRole | undefined): boolean =>
 
 /** The items a role sees, in order. */
 export function navFor(role: UserRole | undefined, items: readonly NavItem[] = NAV): NavItem[] {
-  return items.filter((it) => it.ready && (!it.staffOnly || isStaff(role)));
+  return items.filter(
+    (it) => it.ready && (!it.staffOnly || isStaff(role)) && (!it.traineeOnly || !isStaff(role)),
+  );
 }
+
+/** Where a role lands after sign-in and on the wordmark: trainees Home, staff the unit. */
+export const homeHref = (role: UserRole | undefined): string =>
+  isStaff(role) ? '/instructor' : NAV.find((n) => n.id === 'home')?.ready ? '/home' : '/train';
 
 const under = (path: string, prefix: string) => path === prefix || path.startsWith(`${prefix}/`);
 
@@ -59,8 +74,8 @@ export function isActive(item: NavItem, path: string): boolean {
   return item.match.some((p) => under(path, p));
 }
 
-/** Pages that carry their own public header instead of the signed-in shell (until Phase 6C). */
-export const PUBLIC_PATHS: readonly string[] = ['/', '/login', '/sources'];
+/** Public pages: their own header, never the signed-in shell (DESIGN §5, amendment 5). */
+export const PUBLIC_PATHS: readonly string[] = ['/', '/login', '/sources', '/status', '/demo'];
 
 export const ROLE_LABEL: Readonly<Record<UserRole, string>> = {
   TRAINEE: 'Trainee',

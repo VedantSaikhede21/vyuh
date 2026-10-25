@@ -243,6 +243,17 @@ export function useCommands(rt: SimRuntime | null) {
           ui().set({ report: null });
         }
       },
+      /** Threat-library entry for the selected track's class, or the picker (L). */
+      openLibrary(cls?: ContactClass | null) {
+        const hud = snapshot(rt);
+        const id = pendingSelect ?? hud.selectedTrackId;
+        const track = hud.tracks.find((t) => t.id === id);
+        ui().set({
+          library: { cls: cls !== undefined ? cls : (track?.classifiedAs ?? null) },
+          classifyMenu: false,
+          interceptArmed: false,
+        });
+      },
       togglePause() {
         if (rt.mode !== 'PRACTICE') return say('Pause is only available in practice mode.');
         rt.setPaused(!rt.paused);
