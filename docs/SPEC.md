@@ -513,6 +513,7 @@ The API owns all DB access (Supabase service key stays server-side; no client-si
 | GET `/sessions/{id}` | owner/instructor | Session + score |
 | GET `/aar/sessions/{id}` | owner/instructor | Scenario + events + score + kill chain (for replay); COMPLETED sessions only (else 409 `SESSION_NOT_ACTIVE`) |
 | POST `/aar/sessions/{id}/debrief` | owner/instructor | Generate/cache LLM debrief (`DebriefResponse {source LLM / TEMPLATE, model, fallbackReason?, content}`); COMPLETED sessions only |
+| POST `/aar/sessions/{id}/debrief/regenerate` | instructor/admin | Discard the cached debrief and build it again (same response); for a template kept after an invalid LLM answer (decision 151) |
 | GET `/ai/status` | any | `{llmEnabled, model}` so the UI can word disabled LLM controls |
 | GET `/aar/users/{id}/trends` | self/instructor | Score + component trends, rating history, recurring mistakes (Assessment sessions only) |
 | GET `/aar/units/{id}` | instructor | Unit averages, leaderboard, weakest kill-chain stage, common mistakes |

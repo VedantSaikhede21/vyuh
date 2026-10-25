@@ -32,10 +32,21 @@ Production stack: `cd apps/web && pnpm build`, then `npx next start --port 3000`
 - **P2-5** `?` sheet holds the Practice clock (`SimRuntime.setOverlayHold`, separate from the trainee's pause; never in Assessment; test in `runtime.test.ts`); the sheet says "Practice clock held while this list is open."
 - Captures reviewed: `player-eo-cued`, `player-later`, `player-shortcuts` at 1366 and 1920 (S15 practice, `capture-all.spec.ts`, scratchpad output).
 
+Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
+
+## Result screen (2026-10-25, decision 151)
+
+- Story order: header (Back · Replay · Retry · Next, primary by score) → Score full width (total, recommendation, rating | component bars) → debrief → penalties (only when there are any) → per contact.
+- `scaleNote()` in `lib/result-actions.ts` (tests in `test/phase6b.test.ts`): "Components 50.0 of 80 points, scaled to 100, then −15 penalties and bonuses." under the bars, with the "tree does not score …" line.
+- No penalties → one line "No penalties or bonuses." in the score panel (P2-4).
+- Template debrief (`app/services/ai/debrief.py`): stages missed at one moment for one contact → one "T006 STOPPED AT DETECT: …" line; one penalty code repeated → one line at the first time, "… Also T002, T003." (P1-12). Test `test_template_groups_a_stopped_chain_and_repeated_penalties`.
+- Staff-only `POST /aar/sessions/{id}/debrief/regenerate` (SPEC §11 row) + "Regenerate debrief" button beside the TEMPLATE chip when the fallback reason is INVALID_OUTPUT. RBAC + behaviour in `test_llm_debrief_validated_and_cached`.
+- Captured `result` / `result-full` at 1366 and 1920 (S15 practice, `capture-all.spec.ts`) and reviewed.
+- Checks: web 24 files / 203 tests, `pnpm lint` clean, `test_debrief.py` / `test_ai_trust.py` / `test_aar.py` green, ruff clean. Full API pytest not run for this step.
+
 ## Still to do in 6B (from the plan, in order)
 
 2. Player: aids labelling (AI chip and spectrogram say they are aids); disabled reasons and title hovers checked in the break-ui pass.
-3. Result: story order, "scaled to 100" note (P1-13), empty penalties one line (P2-4), template debrief grouping (P1-12) and ROE lines, staff-only "Regenerate debrief".
 4. AAR (P1-14), trends (P1-15), unit dashboard + assignments (P1-16, P2-9), builder (P1-17 + legend), briefing labels (P2-3) + S01–S03 thumbnails + Generate secondary (P2-2), weight editor / From text copy (P1-9) and "/10" wording.
 5. Apply 6A primitives everywhere (Tabs, SegmentedControl, Table, PageHeader, ErrorState); one primary action per screen; keyboard focus order.
 6. Load `emil-design-eng` before the polish, `break-ui` before stress-testing; write the break-ui report.
@@ -44,7 +55,7 @@ Production stack: `cd apps/web && pnpm build`, then `npx next start --port 3000`
 
 ## Notes
 
-- Decisions so far in 6B: 149 (rounding), 150 (framing + DOM labels). Next free number: 151.
+- Decisions so far in 6B: 149 (rounding), 150 (framing + DOM labels), 151 (result screen + template grouping + regenerate). Next free number: 152.
 - `pnpm e2e` now resets the @demo accounts and forces the template debrief (decision 148).
 - The auto-mode classifier blocked running `pnpm seed:reset-demo --yes` directly once; the e2e global setup runs it fine.
 - Player screenshots / probes need the e2e step hook, which exists only on the dev server; production probes run in real time.

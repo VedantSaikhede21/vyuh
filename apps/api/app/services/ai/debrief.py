@@ -358,9 +358,26 @@ def template_debrief(data: dict[str, Any]) -> DebriefContent:
 
     # Candidate mistakes, weighted by cost: a penalty by its points, a threat's stage 10,
     # a non-threat's stage 5. One per (contact, stage); a penalty at the same contact and
-    # time as a stage replaces that stage's line.
+    # time as a stage replaces that stage's line. A chain that stopped at one stage
+    # (several stages at one moment) is one line, and repeats of one penalty code are
+    # one line with their tracks listed (audit P1-12).
     candidates: dict[tuple[str, Any], dict[str, Any]] = {}
+    clusters: dict[tuple[str, int], list[dict[str, Any]]] = {}
     for i in issues:
+        bucket = next(
+            (
+                v
+                for k, v in clusters.items()
+                if k[0] == i["contactId"] and abs(k[1] - i["tMs"]) <= TIME_TOLERANCE_MS
+            ),
+            None,
+        )
+        if bucket is None:
+            clusters[(i["contactId"], i["tMs"])] = [i]
+        elif all(x["stage"] != i["stage"] for x in bucket):
+            bucket.append(i)
+    for group in clusters.values():
+        i = group[0]
         key = (i["contactId"], i["stage"])
         if key in candidates:
             continue
@@ -369,17 +386,23 @@ def template_debrief(data: dict[str, Any]) -> DebriefContent:
         else:
             why, instead = STAGE_ADVICE[i["stage"]]
         track = f"{i['trackId']} " if i.get("trackId") else ""
+        head = STAGE_WORD[i["stage"]].upper()
+        if len(group) > 1:
+            head = f"STOPPED AT {head}"
         candidates[key] = {
             "weight": 10 if i["isThreat"] else 5,
             "stage": i["stage"],
             "tMs": i["tMs"],
-            "what": _clip(f"{track}{STAGE_WORD[i['stage']].upper()}: {i['feedback']}"),
+            "contactId": i["contactId"],
+            "what": _clip(f"{track}{head}: {i['feedback']}"),
             "whyItMatters": why,
             "doInstead": instead,
         }
-    for p in penalties:
-        if "tMs" not in p:
-            continue
+    track_of = {
+        c["contactId"]: (c.get("trackIds") or [c["contactId"]])[0] for c in data["contacts"]
+    }
+    by_code: dict[str, dict[str, Any]] = {}
+    for p in sorted((p for p in penalties if "tMs" in p), key=lambda p: p["tMs"]):
         why, instead = PENALTY_ADVICE.get(p["code"], STAGE_ADVICE["RESPOND"])
         # A penalty replaces the kill-chain line of the same contact at the same moment.
         stage = "RESPOND"
@@ -391,13 +414,33 @@ def template_debrief(data: dict[str, Any]) -> DebriefContent:
             ):
                 stage = c["stage"]
                 del candidates[k]
-        candidates[(p.get("contactId", ""), p["code"])] = {
-            "weight": -p["points"],
-            "stage": stage,
-            "tMs": p["tMs"],
-            "what": _clip(p["feedback"]),
-            "whyItMatters": why,
-            "doInstead": instead,
+        m = by_code.get(p["code"])
+        if m is None:
+            m = by_code[p["code"]] = {
+                "weight": 0,
+                "stage": stage,
+                "tMs": p["tMs"],
+                "feedback": p["feedback"],
+                "tracks": [],
+                "whyItMatters": why,
+                "doInstead": instead,
+            }
+        m["weight"] -= p["points"]
+        track = track_of.get(p.get("contactId", ""))
+        if track and track not in m["tracks"]:
+            m["tracks"].append(track)
+    for code, m in by_code.items():
+        others = m["tracks"][1:]
+        what = m["feedback"].rstrip()
+        if others:
+            what += f"{'' if what.endswith('.') else '.'} Also {', '.join(others)}."
+        candidates[("", code)] = {
+            "weight": m["weight"],
+            "stage": m["stage"],
+            "tMs": m["tMs"],
+            "what": _clip(what),
+            "whyItMatters": m["whyItMatters"],
+            "doInstead": m["doInstead"],
         }
     ranked = sorted(candidates.values(), key=lambda c: (-c["weight"], c["tMs"]))
     cost: dict[str, float] = {}
@@ -492,11 +535,14 @@ def session_debrief(
     session_id: uuid.UUID,
     *,
     force_template: bool = False,
+    regenerate: bool = False,
 ) -> DebriefResponse:
     """The cached debrief, or a new one (LLM or template) stored for next time.
 
     A template cached because the LLM was off or failed is replaced once the LLM is on.
     `force_template` (e2e test hook, decision 148) acts as if the LLM were off.
+    `regenerate` (staff, decision 151) drops any cached debrief first, e.g. one kept
+    after the LLM answer failed validation.
     """
     llm_on = llm.enabled and not force_template
     row = get_viewable_session(db, user, session_id)
@@ -508,7 +554,7 @@ def session_debrief(
         )
     cached = db.get(Debrief, row.id)
     if cached is not None:
-        if not (llm_on and cached.content.get("fallbackReason") in TRANSIENT):
+        if not regenerate and not (llm_on and cached.content.get("fallbackReason") in TRANSIENT):
             return _response(cached)
         db.delete(cached)
         db.flush()
