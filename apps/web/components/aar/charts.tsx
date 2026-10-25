@@ -118,7 +118,12 @@ export function SeriesChart({
   return (
     <div style={{ height }} role="img" aria-label={ariaLabel}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
+        {/* The wrapper is the labelled image; Recharts' own keyboard layer only added unlabelled tab stops. */}
+        <LineChart
+          data={data}
+          margin={{ top: 6, right: 8, bottom: 0, left: 0 }}
+          accessibilityLayer={false}
+        >
           <CartesianGrid stroke={UI.line1} vertical={false} />
           <XAxis dataKey="n" {...AXIS} tick={TICK} interval="preserveStartEnd" />
           <YAxis
