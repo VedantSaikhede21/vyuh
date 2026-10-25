@@ -469,6 +469,36 @@ Rules (Phase 4a, `default_v4`, `services/scoring/report.py`, decision 115):
 - **UNAVOIDABLE (Phase 2B rule, decision 56):** for a threat that was not neutralised and reached an asset, if `reachedAssetTMs − firstDetectableTMs < max(shortest cooldown among effectors able to engage it, 10 s)` the decision component for that contact is excluded (`DECISION_UNAVOIDABLE`, with feedback). Detection and classification are still scored. "Able to engage": INTERCEPT always; EW_JAM if `RF_MANUAL`; EW_SPOOF if `AUTONOMOUS_GNSS`. There is no separate leak penalty (a leak already forfeits the decision points).
 - A tree change never re-scores old sessions silently; re-scoring is an explicit instructor action that writes a new score row with the new `tree_version`.
 
+### 9.7 Representative training levels and endorsements (`record_v1`, decision 155)
+> On screen: **"Representative training levels. Not official qualifications."** Evaluated on the server (`services/record.py`) from **Assessment sessions only**, each session's latest score row and kill chain. The rules are shared data (`RECORD_V1` in `packages/shared`, generated to `apps/api/app/seed/generated/record_v1.json`).
+
+**Window** = the trainee's most recent N completed Assessment sessions at or above the difficulty floor. **Stage OK rate** = OK ÷ (all statuses except NOT_APPLICABLE) over threat contacts in the window.
+
+| Level | Requires | Criteria (all) | Sign-off |
+|---|---|---|---|
+| 1 Basic operator | — | 3+ Assessment sessions; Detect OK ≥ 70 % over the last 3; no FRATRICIDE in the last 3 | instructor / admin |
+| 2 Sensor operator | L1 qualified | 3+ sessions at D2+; Identify OK ≥ 70 % over the last 5 at D2+; mean detection latency ≤ 15 s over those; 1+ night session with total ≥ 60 | instructor / admin |
+| 3 Engagement controller | L2 qualified | 3+ sessions at D3+ with total ≥ 70; Decide OK ≥ 75 % and Respond OK ≥ 75 % over the last 5 at D3+; no FRATRICIDE, WRONGLY_ENGAGED or ROE / no-kinetic attempt in those 5; contact report ≥ 60 % of its points over those 5 (report-scoring trees) | instructor / admin |
+| 4 Instructor | L3 qualified | 10+ Assessment sessions; 2+ at D4+ with total ≥ 75; rating ≥ 1300 | admin only |
+
+- **LOCKED** — previous level not qualified. **IN PROGRESS** — criteria shown with current figures; all met → "Criteria met · awaiting sign-off". **QUALIFIED** — met and signed.
+- Sign-off only while the criteria are met (a snapshot is stored in `level_signoffs.criteria`); never one's own record; a signed level stays QUALIFIED. Refusals are 422 `VALIDATION_ERROR` with `details.reason` `LOCKED` / `CRITERIA_NOT_MET` / `ALREADY_QUALIFIED`; wrong role or own record is 403.
+- **Review due:** shown beside a QUALIFIED chip when the current window figures no longer meet that level's criteria; the level stays qualified.
+
+**Endorsements** (automatic, Assessment only, no sign-off; each shows the first earning session):
+
+| Endorsement | Earned by |
+|---|---|
+| Night ops | Night scenario, total ≥ 70, no threat leaked |
+| Swarm | Swarm of 3+ threats (same `groupId`), every threat neutralised |
+| Silent link | Neutralised a FIBRE_OPTIC or AUTONOMOUS_GNSS threat with no ineffective EW ordered on it first |
+| Discrimination | 3+ non-threats, every threat classified exactly, no non-threat penalty (FRATRICIDE, FRIENDLY_JAMMED, WRONGLY_ENGAGED, CIVILIAN_JAMMED, BIRD_EW_ORDERED) |
+| ROE discipline | 5 consecutive sessions on ROE-scoring trees (v4) without an ROE / no-kinetic attempt |
+| Reporting | Contact report ≥ 80 % of its points in 3 sessions |
+| Calibrated trust | 3 sessions where the AI was wrong at least once and every wrong suggestion was rejected (insight, never scored) |
+
+**Demo data:** demo trainees meeting L1 get a seeded L1 sign-off from instructor@demo (`is_demo`); at least one demo trainee has L2 at "Criteria met · awaiting sign-off", so LOCKED, IN PROGRESS and QUALIFIED are all visible (§22).
+
 ---
 
 ## §10. Database (PostgreSQL, SQLAlchemy 2 + Alembic)
@@ -476,7 +506,7 @@ Rules (Phase 4a, `default_v4`, `services/scoring/report.py`, decision 115):
 | Table | Columns (key ones) |
 |---|---|
 | `units` | id, name, parent_id (nullable), created_at |
-| `users` | id, auth_id (unique), name, email, role, unit_id, rating (int, default 1000), is_guest, created_at |
+| `users` | id, auth_id (unique), name, email, role, unit_id, rating (int, default 1000), is_guest, notices_seen_at (timestamptz, nullable: unread-notice marker; migration 0007), created_at |
 | `threat_types` | code (pk), name, category, is_threat, size_m, rcs_m2, max_speed_mps, thermal_signature, control_links (text[]), model_path, source_ref |
 | `terrain_presets` | code (pk), name, meta (jsonb), attribution |
 | `scenarios` | id, code (nullable unique, e.g. `S04`), name, kind (SCRIPTED/GENERATED/AUTHORED), seed, difficulty, tags (text[], e.g. `demo`, `tutorial`), request (jsonb), content (jsonb), schema_version, created_by, created_at |
@@ -488,6 +518,8 @@ Rules (Phase 4a, `default_v4`, `services/scoring/report.py`, decision 115):
 | `rating_history` | id, user_id, session_id, before, after, created_at |
 | `seed_state` | key (pk, `demo`), fingerprint (SHA-256 of the seed data files last applied), updated_at — the dev API re-seeds at startup when it differs (decision 119) |
 | `scoring_trees` | id (pk, `<base>_w<n>`), base_id, derived_from, content (jsonb, full tree), created_by, created_at — instructor weight versions, immutable; built-in trees stay files (decision 121, migration 0006) |
+| `level_signoffs` | id, user_id, level (unique with user_id), ruleset (`record_v1`), signed_by (nullable), criteria (jsonb snapshot at sign-off), is_demo, created_at — §9.7 (migration 0007) |
+| `session_remarks` | id, session_id, author_id (nullable), body (≤ 500 chars), is_demo, created_at — instructor remarks on a completed session, shown in the AAR and as a notice (migration 0007) |
 
 The API owns all DB access (Supabase service key stays server-side; no client-side DB queries).
 
@@ -526,6 +558,15 @@ The API owns all DB access (Supabase service key stays server-side; no client-si
 | PATCH `/scoring/trees/{id}/weights` | instructor | Adjust weights → new immutable version `<base>_w<n>` (decision 121) |
 | POST `/sessions/{id}/rescore` | instructor | Re-score with a newer tree version (new score row) |
 | GET `/weather/live?preset=&time=` | instructor | Cached Open-Meteo lookup (if enabled) |
+| GET `/record/{userId}` | self/instructor | Service record: levels with criteria now / needed, Review due, endorsements with the earning session (§9.7) |
+| POST `/record/{userId}/signoffs` | instructor/admin | Sign off a level whose criteria are met (`{level}`); L4 admin only; never one's own (§9.7) |
+| GET `/notices` · GET `/notices/count` · POST `/notices/seen` | any | Library updates, assignments and remarks for the caller; unread count; mark all seen (204) |
+| GET `/home` | any | Operator home: next assignment or first-run welcome, threat-only stage rates, recent sessions, next level, notices |
+| GET `/status` | public | Per component OK / DOWN (API, database), LLM on / off, API, generator and terrain-preset versions — nothing else (decision 156) |
+| GET `/scoring/summary` | any | Current tree's components, weights and leaves for Help ("How scoring works") |
+| GET `/units/{id}/readiness` | instructor | One row per trainee: level, sign-off waiting, last Assessment, weakest stage, overdue assignments |
+| GET `/sessions/active?unit=` | instructor | Live monitor: ACTIVE sessions with a batch in the last minute (read-only, no score) |
+| POST `/aar/sessions/{id}/remarks` | instructor/admin | Add a remark to a completed session (`{body}`); also returned as `AarSessionResponse.remarks` |
 
 ### 11.1 Key payloads
 ```jsonc
@@ -631,6 +672,7 @@ All errors: `{ "error": { "code": "...", "message": "...", "details": {} } }`
 - Optional WebXR mode (tactical view + simplified HUD).
 - Realism sources page in-app; user study (5–10 people × 3 sessions) with improvement chart for the pitch.
 **Done when:** a judge with only the URL can understand and play a scenario in under 2 minutes; offline build runs on a laptop with no internet.
+- **Status (2026-10-26, Part 6C):** built — threat library, notices, help, settings, public status, AAR remarks, service record with sign-off (§9.7), operator home, unit readiness and live sessions, public landing / login / sources, guest entry behind `NEXT_PUBLIC_GUEST_MODE`. Decisions 153–158.
 
 ---
 
@@ -834,6 +876,7 @@ Pitch storyline: *problem (costly, too few reps) → our loop (realistic kill ch
   - `users` has no password column. In `AUTH_MODE=local` the seed script creates DB rows (`auth_id = local:<email>`) and `POST /auth/dev-login` (disabled when `ENV=prod`) issues a token by email. In `AUTH_MODE=supabase` the demo users are created in the Supabase dashboard; their `users` row is auto-provisioned as TRAINEE on first request and roles are set in the DB, never taken from token claims.
 - **Content:** full threat library (§7), all terrain presets built so far, scripted scenarios S01–S10 as they are completed, scoring tree `default_v1`.
 - **Demo history:** a script generates ~40 synthetic completed sessions across demo trainees with a plausible improvement curve, so trends and the unit dashboard are not empty. These rows are flagged `is_demo = true`, shown with a "Demo data" badge, and excluded from any real study numbers. Built in Part 4b (decision 125): 42 real sim logs from a skill-scaled trainee policy, scored by the server when seeded and replayable; `pnpm seed:reset-demo --yes` removes non-demo sessions from @demo accounts (decision 126).
+- **Service record (Part 6C, decision 155):** `seed_demo_record` signs L1 from instructor@demo for each demo trainee who meets it (4 sign-offs, `is_demo`) and adds one demo remark, so the record, readiness and AAR Remarks views are not empty (§9.7).
 - **Guests:** created on demand, can only run scenarios tagged `demo`, cleaned up after `GUEST_TTL_HOURS`.
 
 ---

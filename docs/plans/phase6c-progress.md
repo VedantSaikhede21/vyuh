@@ -1,6 +1,6 @@
 # Phase 6C — progress and handoff
 
-> Working notes for resuming Part 6C. Plan: `docs/plans/phase6c-plan.md` (approved 2026-10-25). Branch: **`main`** (solo workflow, decision 153: commit to `main`, push to `origin/main` after each step group, CI must stay green). Next free decision number: 158.
+> Working notes for resuming Part 6C. Plan: `docs/plans/phase6c-plan.md` (approved 2026-10-25). Branch: **`main`** (solo workflow, decision 153: commit to `main`, push to `origin/main` after each step group, CI must stay green). Next free decision number: 159.
 
 ## Done (committed)
 
@@ -16,8 +16,8 @@
 
 | 5b | `6fc9002` landing media re-recorded (Respond crop with order + outcome, written debrief, grey EO day sky). Follow-up: hero settle 1.5 s → 4 s (the loop opened on a black / "Loading 3D view" frame under load); first frame checked rendered. Night-IR cue moved 215 s → 200 s (a cue at ≥ 215 s never reaches TRK — drone too close and fast to centre; checked in sim-core) and the recorder now fails if TRK is not reached instead of capturing an empty frame; stills re-recorded with `--crops-only`. |
 
+| 5c | Checkpoint C (20 / 20: production build with the guest flag on, player library on the dev server) approved 2026-10-26; baselines regenerated (landing ×2, login, AAR replay) and reviewed; `pnpm e2e` 23 / 23 twice; lint, `pnpm test` 48 / 345 / 226, pytest 473, `gen:schemas` no diff; SPEC §9.7, §10, §11, §12, §22, CLAUDE.md §14, decision 158. **Part 6C closed.** |
+
 ## Next
 
-> **Machine (2026-10-25):** Windows Smart App Control is on and blocks uv's `python.exe` / `uvicorn.exe` and Next's native SWC. Run the API as the Docker image against the dev DB (`docker compose --profile api build api`, then `docker run -d --name vyuh-api-dev -p 8000:8000 --env-file apps/api/.env -e DATABASE_URL=postgresql+psycopg://vyuh:vyuh@host.docker.internal:5432/vyuh vyuh-api`) and the web as `next dev --webpack` (WASM SWC). pytest and other local Python are blocked until then.
-
-5. Checkpoint C on a production build with `NEXT_PUBLIC_GUEST_MODE=true` (wait for OK).
+6D on the user's go-ahead (new plan first). If Smart App Control blocks uv's Python or Next's SWC again: API as the Docker image (`docker compose --profile api build api`, then `docker run -d --name vyuh-api-dev -p 8000:8000 --env-file apps/api/.env -e DATABASE_URL=postgresql+psycopg://vyuh:vyuh@host.docker.internal:5432/vyuh vyuh-api`), web as `next dev --webpack`, demo reset via `docker exec vyuh-api-dev python -m app.seed.reset_demo --yes` and `E2E_SKIP_DEMO_RESET=1`.
