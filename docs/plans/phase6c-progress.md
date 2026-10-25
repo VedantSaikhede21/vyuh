@@ -14,8 +14,10 @@
 | 4 | Public pages (decision 157): landing in six sheets (`lib/landing.ts`, `components/landing/chain-explorer.tsx`), public header, login rework, `/demo` + `StartDemo` + `auth.loginGuest()` behind the flag, Sources as ruled tables (`lib/sources.ts`, citations tested; md Sky line corrected), mobile baseline in `globals.css`, telemetry strip two columns on phones; recorder: manifest `{images, hero, respond}`, Respond moment searched (not yet re-recorded: run last). Captures at 1366 / 1920 / 390 with no overflow, reviewed. Web vitest 225. |
 | 5a | break-ui (`e2e/break-ui-6c.spec.ts`, report `docs/plans/phase6c-break-ui.md`): status versions overflow at 360 px fixed (table-fixed 55 / 45 %), `formatCount` for counts ≥ 1,000, record "First earned" wraps. 30 / 30, no overflow. Web vitest 226. |
 
-| 5b | `6fc9002` landing media re-recorded (Respond crop with order + outcome, written debrief, grey EO day sky). Follow-up: hero settle 1.5 s → 4 s (the loop opened on a black / "Loading 3D view" frame under load); first frame checked rendered. **Open:** `realism-night-ir.png` shows noise with "No video lock" (S12 t=215, TRK never reached; same in the earlier capture) — needs a closer moment or a longer wait. |
+| 5b | `6fc9002` landing media re-recorded (Respond crop with order + outcome, written debrief, grey EO day sky). Follow-up: hero settle 1.5 s → 4 s (the loop opened on a black / "Loading 3D view" frame under load); first frame checked rendered. Night-IR cue moved 215 s → 200 s (a cue at ≥ 215 s never reaches TRK — drone too close and fast to centre; checked in sim-core) and the recorder now fails if TRK is not reached instead of capturing an empty frame; stills re-recorded with `--crops-only`. |
 
 ## Next
 
-5. Fix the night-IR capture moment, then Checkpoint C on a production build with `NEXT_PUBLIC_GUEST_MODE=true` (wait for OK).
+> **Machine (2026-10-25):** Windows Smart App Control is on and blocks uv's `python.exe` / `uvicorn.exe` and Next's native SWC. Run the API as the Docker image against the dev DB (`docker compose --profile api build api`, then `docker run -d --name vyuh-api-dev -p 8000:8000 --env-file apps/api/.env -e DATABASE_URL=postgresql+psycopg://vyuh:vyuh@host.docker.internal:5432/vyuh vyuh-api`) and the web as `next dev --webpack` (WASM SWC). pytest and other local Python are blocked until then.
+
+5. Checkpoint C on a production build with `NEXT_PUBLIC_GUEST_MODE=true` (wait for OK).

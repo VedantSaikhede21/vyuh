@@ -179,8 +179,10 @@ async function recordCrops(): Promise<void> {
   // Realism: terrain (S13 mountains), night/IR (S12), silent link (S13 RF), false contacts (S14 birds).
   await heroReady(page, 's=S13&t=60&pause=1');
   await crop(page.locator('[aria-label="Tactical view"]'), 'realism-terrain.png');
-  await heroReady(page, 's=S12&t=215&defend=0&select=threat&zoom=4&ir=1');
-  await page.waitForSelector('[data-eo-state=TRK]', { timeout: 20_000 }).catch(() => undefined);
+  // Cue at 200 s: the IR tracker locks within a second there; a cue at 215 s stays in
+  // CUE (the drone is too close and fast to centre), which captured an empty frame.
+  await heroReady(page, 's=S12&t=200&defend=0&select=threat&zoom=4&ir=1');
+  await page.waitForSelector('[data-eo-state=TRK]', { timeout: 20_000 });
   await page.waitForTimeout(800);
   await crop(
     page.locator('[aria-label^="EO/IR camera view"]').locator('..'),
