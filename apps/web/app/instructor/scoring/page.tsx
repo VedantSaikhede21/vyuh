@@ -31,6 +31,25 @@ const LABEL: Record<keyof ScoreComponents, string> = {
   efficiency: 'Efficiency',
 };
 
+/**
+ * Plain-language summaries of the built-in trees. Their stored descriptions are
+ * developer notes (spec sections, decision numbers) and the files are immutable
+ * once they have scored sessions (audit P1-9).
+ */
+const TREE_ABOUT: Record<string, string> = {
+  default_v1:
+    'Detection, classification and decision. Used by the tutorial scenarios S01–S03, which teach no reports yet.',
+  default_v2:
+    'Adds jamming and spoofing: orders are judged, and jamming a friendly or civilian drone costs points.',
+  default_v3:
+    'Adds payload drops: a threat that drops its payload before it is stopped counts as leaked.',
+  default_v4:
+    'Adds contact reports (10 points from the best report per threat) and the ROE: an intercept the rules block costs 10 points. Efficiency is not scored, so totals scale over 90.',
+};
+
+const treeAbout = (t: ScoringTreeSummary): string =>
+  (t.builtIn ? TREE_ABOUT[t.id] : undefined) ?? t.description;
+
 function Editor({ tree, onSaved }: { tree: ScoringTreeSummary; onSaved: (id: string) => void }) {
   const [w, setW] = useState<ScoreComponents>(tree.componentMax);
   const [note, setNote] = useState('');
@@ -61,7 +80,7 @@ function Editor({ tree, onSaved }: { tree: ScoringTreeSummary; onSaved: (id: str
         {tree.builtIn ? <Badge>Built-in</Badge> : <Badge tone="strong">Version</Badge>}
       </PanelHeader>
       <PanelBody className="space-y-3">
-        <p className="text-small text-text-2">{tree.description}</p>
+        <p className="text-small text-text-2">{treeAbout(tree)}</p>
         <table className="w-full border-collapse" data-testid="weights">
           <thead>
             <tr>

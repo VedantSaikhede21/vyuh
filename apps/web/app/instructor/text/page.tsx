@@ -127,7 +127,7 @@ function FromText() {
                       type="button"
                       disabled={off}
                       onClick={() => setText(ex)}
-                      className="text-left text-small text-text-2 underline decoration-line-2 underline-offset-2 hover:text-text-1 disabled:no-underline disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-select"
+                      className="text-left text-small text-text-2 underline decoration-line-2 underline-offset-2 hover:text-text-1 disabled:text-text-2 disabled:no-underline focus-visible:outline-2 focus-visible:outline-select"
                     >
                       {ex}
                     </button>

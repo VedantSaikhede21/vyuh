@@ -41,7 +41,7 @@ function HelpDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Dialog open={open} onClose={onClose} title="Help & controls" testId="help-dialog">
       <p className="mb-3 text-small text-text-2">
-        Sim player shortcuts (SPEC §15.1). Press <Kbd>?</Kbd> in the player for the same sheet.
+        Shortcuts in the sim player. Press <Kbd>?</Kbd> there for the same list.
       </p>
       <table className="w-full border-collapse" aria-label="Keyboard shortcuts">
         <tbody>

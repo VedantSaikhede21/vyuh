@@ -6,7 +6,7 @@ import { CLASS_LABEL } from '@/lib/strings';
 // Text-to-scenario (SPEC §13.2): wording of the parsed-parameters table.
 
 export const DISABLED_REASON =
-  'Text-to-scenario needs the LLM, which is off on this server (LLM_ENABLED=false). Use the Builder form instead.';
+  'Reading text needs the LLM, which is switched off on this server. Use the Builder form instead.';
 
 const TIME: Record<string, string> = { DAY: 'Day', DUSK: 'Dusk', NIGHT: 'Night' };
 const DENSITY: Record<string, string> = { LOW: 'Low', MED: 'Medium', HIGH: 'High' };
