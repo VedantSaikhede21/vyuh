@@ -30,7 +30,7 @@ export function StateChip({
 }: ComponentProps<'span'> & VariantProps<typeof chipVariants> & { pulse?: boolean }) {
   return (
     <span
-      className={cn(chipVariants({ tone }), pulse && 'motion-safe:animate-pulse', className)}
+      className={cn(chipVariants({ tone }), pulse && 'animate-acq-pulse', className)}
       {...props}
     />
   );

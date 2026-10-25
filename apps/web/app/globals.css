@@ -96,14 +96,50 @@
   --ease-*: initial;
   --ease-ui: var(--ease-ui);
 
-  /* §7 value-change flash: --bg-3 for 300 ms, no colour change. */
+  /* §7 value-change flash: --bg-3 for 300 ms, no colour change. Runs on an
+     --bg-3 ::after layer's opacity so the HUD stays transform/opacity only. */
   --animate-value-flash: value-flash 300ms var(--ease-ui);
   @keyframes value-flash {
     from {
-      background-color: var(--bg-3);
+      opacity: 1;
     }
     to {
-      background-color: transparent;
+      opacity: 0;
+    }
+  }
+
+  /* §7 entries (Phase 6D). Exits stay instant. A new Comms line starts at 0.3
+     so it is readable on its first frame (100 ms acknowledgement rule). */
+  --animate-comms-in: comms-in 150ms var(--ease-ui);
+  @keyframes comms-in {
+    from {
+      opacity: 0.3;
+      transform: translateY(3px);
+    }
+  }
+  --animate-fade-in: fade-in 120ms var(--ease-ui);
+  --animate-fade-in-slow: fade-in 180ms var(--ease-ui);
+  /* Rows unfolded under a disclosure: opacity only, no height (layout) animation. */
+  --animate-unfold: fade-in 150ms var(--ease-ui);
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  --animate-pop-in: pop-in 150ms var(--ease-ui);
+  --animate-pop-in-slow: pop-in 180ms var(--ease-ui);
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+
+  /* §7 acquisition indicator: the only continuous chip animation. */
+  --animate-acq-pulse: acq-pulse 1s ease-in-out infinite alternate;
+  @keyframes acq-pulse {
+    to {
+      opacity: 0.5;
     }
   }
 }

@@ -42,7 +42,8 @@ export function Readout({
           'whitespace-nowrap',
           size === 'lg' ? 'text-readout-lg' : 'text-readout',
           muted ? 'text-text-2' : 'text-text-1',
-          flashKey > 0 && 'animate-value-flash',
+          flashKey > 0 &&
+            'relative isolate after:absolute after:inset-0 after:-z-10 after:bg-bg-3 after:opacity-0 after:animate-value-flash',
         )}
       >
         {value}

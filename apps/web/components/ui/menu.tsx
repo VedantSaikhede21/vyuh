@@ -111,7 +111,9 @@ export function Menu({
           onKeyDown={onListKey}
           className={cn(
             'absolute top-full z-40 mt-1 min-w-48 rounded-md border border-line-2 bg-bg-2 py-1 shadow-overlay',
-            align === 'end' ? 'right-0' : 'left-0',
+            // Grows from the button's corner; closing is instant (§7).
+            align === 'end' ? 'right-0 origin-top-right' : 'left-0 origin-top-left',
+            !defaultOpen && 'animate-pop-in',
           )}
         >
           {items.map((it, i) => {

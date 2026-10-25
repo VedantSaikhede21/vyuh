@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formatClock } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 
@@ -42,6 +42,9 @@ export function CommsLog({
   empty?: string;
 }) {
   const shown = lines.slice(-max);
+  // Lines already there on first render (a reload, the AAR) do not animate in;
+  // only traffic that arrives while the operator watches does (§7).
+  const [initial] = useState<ReadonlySet<string>>(() => new Set(lines.map((l) => l.id)));
   const list = useRef<HTMLOListElement>(null);
   // Stay on the newest line unless the operator has scrolled up to read.
   const pinned = useRef(true);
@@ -84,7 +87,11 @@ export function CommsLog({
         // only four entries visible at 768 px.
         <li
           key={l.id}
-          className={cn('flex gap-3 py-px text-readout leading-4', l.pending && 'opacity-60')}
+          className={cn(
+            'flex gap-3 py-px text-readout leading-4',
+            l.pending && 'opacity-60',
+            !initial.has(l.id) && 'animate-comms-in',
+          )}
           title={`${formatClock(l.tMs)} ${l.tag ? `${l.tag} ` : ''}${l.text}${l.pending ? ' · QUEUED' : ''}`}
         >
           <span className="shrink-0 text-text-2">{formatClock(l.tMs)}</span>

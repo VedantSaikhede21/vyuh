@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { useFadeOnChange } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
 export interface TabItem<T extends string> {
@@ -159,8 +160,11 @@ export function TabPanel({
   className?: string;
   children: ReactNode;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFadeOnChange(ref, id);
   return (
     <div
+      ref={ref}
       role="tabpanel"
       id={`${idBase}-panel-${id}`}
       aria-labelledby={`${idBase}-tab-${id}`}

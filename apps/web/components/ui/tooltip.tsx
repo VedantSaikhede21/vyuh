@@ -55,6 +55,8 @@ export function Tooltip({
 }: TooltipProps) {
   const id = useId();
   const [open, setOpen] = useState(false);
+  /** Fade in only after the hover delay; focus and follow-on opens are instant (§7). */
+  const [fade, setFade] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const disabled = isValidElement(children) && Boolean(children.props.disabled);
 
@@ -65,8 +67,14 @@ export function Tooltip({
   }
   const show = (immediate: boolean) => {
     clear();
-    if (immediate || performance.now() - lastClosedAt < FOLLOW_ON_MS) setOpen(true);
-    else timer.current = setTimeout(() => setOpen(true), OPEN_DELAY_MS);
+    if (immediate || performance.now() - lastClosedAt < FOLLOW_ON_MS) {
+      setFade(false);
+      setOpen(true);
+    } else
+      timer.current = setTimeout(() => {
+        setFade(true);
+        setOpen(true);
+      }, OPEN_DELAY_MS);
   };
   const hide = () => {
     clear();
@@ -97,6 +105,7 @@ export function Tooltip({
         hidden={!visible}
         className={cn(
           'pointer-events-none absolute z-50 w-max max-w-64 rounded-md border border-line-2 bg-bg-2 px-2 py-1 text-small normal-case tracking-normal text-text-1 shadow-overlay',
+          fade && !forceOpen && 'animate-fade-in',
           SIDE[side],
           ALIGN[align],
         )}

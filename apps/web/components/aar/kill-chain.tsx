@@ -237,7 +237,13 @@ export const KillChainPanel = memo(function KillChainPanel({
                   />
                 )
               ) : (
-                <tr key={row.contactId} className="border-t border-line-1">
+                <tr
+                  key={row.contactId}
+                  className={cn(
+                    'border-t border-line-1',
+                    g.shown.includes(row) && 'animate-unfold',
+                  )}
+                >
                   <td className="h-6 max-w-[5.5rem] truncate pl-2 text-small">
                     {/* Mouse route to the true class's library entry; not a tab stop (the
                         grid keeps one stop). */}
@@ -364,7 +370,13 @@ export function KillChainTable({
                 />
               )
             ) : (
-              <tr key={row.contactId} className="border-t border-line-1 align-top">
+              <tr
+                key={row.contactId}
+                className={cn(
+                  'border-t border-line-1 align-top',
+                  g.shown.includes(row) && 'animate-unfold',
+                )}
+              >
                 <td className="px-2 py-1.5 text-small">
                   <span className="inline-flex items-center gap-1.5">
                     <AffiliationSymbol affiliation={row.trueAffiliation} size={14} />

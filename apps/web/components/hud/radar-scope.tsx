@@ -12,6 +12,7 @@ import {
   zonesNearTrack,
 } from '@/lib/hud/zones';
 import { layoutPpiLabels } from '@/lib/hud/declutter';
+import { sweepTrailRad, useReducedMotion } from '@/lib/motion';
 import { isThreatTrack } from '@/lib/hud/derive';
 import type { Commands } from '@/lib/sim/commands';
 import type { SimRuntime } from '@/lib/sim/runtime';
@@ -44,6 +45,12 @@ export function RadarScope({
   useEffect(() => {
     overlayRef.current = overlay;
   }, [overlay]);
+  // Read by the draw loop through a ref, so a settings change does not restart it.
+  const reduced = useReducedMotion();
+  const trailRef = useRef(sweepTrailRad(reduced));
+  useEffect(() => {
+    trailRef.current = sweepTrailRad(reduced);
+  }, [reduced]);
   const radar = runtime.scenario.sensors.find((s) => s.kind === 'RADAR');
   const maxRangeM =
     Math.ceil(((radar?.kind === 'RADAR' ? radar.refRangeM : 3000) * 1.4) / 1000) * 1000;
@@ -212,15 +219,27 @@ export function RadarScope({
       // Sweep.
       const t = (hud?.tMs ?? 0) + runtime.alpha * TICK_MS;
       const sweep = ((t % scanMs) / scanMs) * Math.PI * 2;
-      const grad = ctx.createConicGradient(sweep - Math.PI / 2 - 0.6, c, c);
-      grad.addColorStop(0, withAlpha(PPI.sweep, 0));
-      grad.addColorStop(0.095, withAlpha(PPI.sweep, 0.22));
-      grad.addColorStop(0.1, withAlpha(PPI.sweep, 0));
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.moveTo(c, c);
-      ctx.arc(c, c, r, sweep - Math.PI / 2 - 0.6, sweep - Math.PI / 2);
-      ctx.fill();
+      const trail = trailRef.current;
+      const beam = sweep - Math.PI / 2;
+      if (trail > 0) {
+        const grad = ctx.createConicGradient(beam - trail, c, c);
+        grad.addColorStop(0, withAlpha(PPI.sweep, 0));
+        grad.addColorStop(0.095, withAlpha(PPI.sweep, 0.22));
+        grad.addColorStop(0.1, withAlpha(PPI.sweep, 0));
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(c, c);
+        ctx.arc(c, c, r, beam - trail, beam);
+        ctx.fill();
+      } else {
+        // Reduced motion: the beam alone, no trail (DESIGN §7).
+        ctx.strokeStyle = withAlpha(PPI.sweep, 0.4);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(c, c);
+        ctx.lineTo(c + r * Math.cos(beam), c + r * Math.sin(beam));
+        ctx.stroke();
+      }
 
       // RF strobes: dashed bearing lines from the RF sensor (no range).
       ctx.setLineDash([3, 4]);

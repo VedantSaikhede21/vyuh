@@ -6,6 +6,7 @@ import { useRef, useState, type KeyboardEvent } from 'react';
 import { rovingIndex } from '@/components/ui/tabs';
 import { STAGE_LABEL } from '@/lib/aar/answers';
 import { CHAIN, imageSize } from '@/lib/landing';
+import { useFadeOnChange } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
 /**
@@ -17,6 +18,8 @@ import { cn } from '@/lib/utils';
 export function ChainExplorer() {
   const [on, setOn] = useState<KillChainStage>('DETECT');
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const panel = useRef<HTMLDivElement>(null);
+  useFadeOnChange(panel, on);
   const i = CHAIN.findIndex((c) => c.stage === on);
   const cur = CHAIN[i] ?? CHAIN[0]!;
   const size = imageSize(cur.shot.src);
@@ -64,6 +67,7 @@ export function ChainExplorer() {
         })}
       </div>
       <div
+        ref={panel}
         role="tabpanel"
         id="chain-panel"
         aria-labelledby={`chain-tab-${cur.stage}`}

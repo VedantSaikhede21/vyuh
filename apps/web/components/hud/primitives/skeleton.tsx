@@ -31,9 +31,15 @@ export function Skeleton({
         {pct !== null && <span className="tnum"> · {pct}%</span>}
       </span>
       <div className="h-0.5 w-full max-w-80 bg-line-1">
+        {/* Determinate: scaleX, not width, so the fill stays on the compositor (§7 progress). */}
         <div
-          className={cn('h-full bg-text-2', pct === null && 'w-1/4 motion-safe:animate-pulse')}
-          style={pct !== null ? { width: `${pct}%` } : undefined}
+          className={cn(
+            'h-full bg-text-2',
+            pct === null
+              ? 'w-1/4 motion-safe:animate-pulse'
+              : 'w-full origin-left transition-transform duration-150 ease-ui',
+          )}
+          style={pct !== null ? { transform: `scaleX(${pct / 100})` } : undefined}
         />
       </div>
     </div>

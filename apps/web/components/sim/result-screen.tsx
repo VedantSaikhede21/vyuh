@@ -179,7 +179,8 @@ export function ResultScreen({
   );
 
   return (
-    <div className="space-y-4" data-testid="result-screen">
+    // Revealed once, as one block, when the score arrives (§7: no stagger, no count-up).
+    <div className="animate-fade-in-slow space-y-4" data-testid="result-screen">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
           <p className="text-label">Debrief · {mode.toLowerCase()}</p>

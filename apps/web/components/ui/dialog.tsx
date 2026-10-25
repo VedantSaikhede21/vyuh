@@ -51,6 +51,8 @@ export function Dialog({
       }}
       className={cn(
         'm-auto w-[min(32rem,calc(100vw-2rem))] rounded-md border border-line-2 bg-bg-1 p-0 text-text-1 shadow-overlay backdrop:bg-bg-0/80',
+        // Opens centred in 180 ms (a modal is not anchored to its trigger); closes at once (§7).
+        'open:animate-pop-in-slow backdrop:animate-fade-in-slow',
         className,
       )}
     >
