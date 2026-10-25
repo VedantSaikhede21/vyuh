@@ -3,14 +3,19 @@
 import type { ScenarioListItem } from '@vyuh/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { Panel, PanelHeader, Skeleton, StatusNotice } from '@/components/hud/primitives';
+import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { ScenarioRowsTable, useTimeOfDay } from './scenario-table';
 
 // "My generated" (Phase 4a Step 1): the trainee's own generated scenarios, newest
 // first, under the library table. Generated runs never appear in the library list.
 
+/** Newest first, a page at a time (break-ui 7): the list grows without limit. */
+export const GENERATED_PAGE = 20;
+
 export function OwnGeneratedTable() {
   const [items, setItems] = useState<ScenarioListItem[] | null>(null);
+  const [shown, setShown] = useState(GENERATED_PAGE);
   const [error, setError] = useState<string | null>(null);
 
   const fetchList = useCallback((signal?: AbortSignal) => {
@@ -56,12 +61,25 @@ export function OwnGeneratedTable() {
       )}
       {items && items.length > 0 && (
         <ScenarioRowsTable
-          rows={items}
+          rows={items.slice(0, shown)}
           ariaLabel="My generated scenarios"
           testId="own-generated-table"
           timeOf={timeOf}
           label={label}
         />
+      )}
+      {items && items.length > shown && (
+        <div className="border-t border-line-1 px-3 py-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setShown((n) => n + GENERATED_PAGE)}
+            data-testid="own-generated-more"
+          >
+            Show {Math.min(GENERATED_PAGE, items.length - shown)} more · {items.length - shown} not
+            shown
+          </Button>
+        </div>
       )}
     </Panel>
   );

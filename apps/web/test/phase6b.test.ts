@@ -1,8 +1,9 @@
-import type { TrendPoint } from '@vyuh/shared';
+import type { ScenarioListItem, TrendPoint } from '@vyuh/shared';
 import { describe, expect, it } from 'vitest';
 import { difficultyRuns } from '@/lib/aar/answers';
 import { fieldErrors } from '@/lib/builder/field-errors';
 import { bbox, placeLabel } from '@/lib/briefing/label-place';
+import { rowTags } from '@/lib/scenario/library';
 import { nextStep } from '@/lib/hud/next-step';
 import {
   azimuthBehind,
@@ -227,5 +228,20 @@ describe('briefing label placement (audit P2-3)', () => {
   it('falls back to the least overlap', () => {
     const half = { x: 170, y: 120, w: 60, h: 12 };
     expect(placeLabel([right, half], [zone], 400)).toBe(half);
+  });
+});
+
+describe('training list tags (break-ui 2)', () => {
+  const item = (tags: string[]) => ({ tags }) as unknown as ScenarioListItem;
+  it('shows up to three, else two and "+n"', () => {
+    expect(rowTags(item(['library', 'tutorial', 'demo']))).toEqual({
+      shown: ['tutorial', 'demo'],
+      rest: [],
+    });
+    expect(rowTags(item(['a', 'b', 'c']))).toEqual({ shown: ['a', 'b', 'c'], rest: [] });
+    expect(rowTags(item(['a', 'b', 'c', 'd', 'e']))).toEqual({
+      shown: ['a', 'b'],
+      rest: ['c', 'd', 'e'],
+    });
   });
 });

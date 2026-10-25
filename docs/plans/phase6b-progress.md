@@ -108,7 +108,7 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 
 2. Player: disabled reasons and title hovers checked in the break-ui pass. (Aids labelled: spectrogram "Aid · confirm on camera"; the AI chip tooltip already says it can be wrong.)
 5. Keyboard focus order on every 6B screen (with break-ui). `Table` primitive not applied to the existing tables yet — decide in the polish pass whether the swap is worth it.
-6. break-ui: **report written** (`docs/plans/phase6b-break-ui.md`, spec `e2e/break-ui.spec.ts` `@breakui`). 2 Broken (unit pending names, training list long names + tags), 3 Ugly, 2 Fragile. **Waiting for the user's choice of fixes** ("fix all" / "fix 1, 3") and the five decisions in the report.
+6. break-ui: done. Report and fix outcomes in `docs/plans/phase6b-break-ui.md` (user said "fix all"; 1–5 and 7 fixed, 6 needed no change). Spec `e2e/break-ui.spec.ts` (`@breakui`) passes 20 / 20 with no overflow anywhere.
 7. Checkpoint B: `checkpoint-6b.spec.ts` captures of every 6B screen at 1366×768 and 1920×1080 + break-ui report + FPS before / after → **stop for the user's OK**.
 8. After OK: regenerate + review + commit visual baselines; full `pnpm e2e`; lint, `pnpm test`, pytest, `gen:schemas` no diff; CLAUDE.md §14; decisions.
 

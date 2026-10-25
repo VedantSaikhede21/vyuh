@@ -214,69 +214,71 @@ function Dashboard({
           testId="leaderboard"
           className="lg:col-span-2"
         >
-          <table className="-mx-3 w-[calc(100%+1.5rem)] border-collapse">
-            <thead>
-              <tr>
-                <th className={TH}>Rank</th>
-                <th className={`${TH} w-full`}>Trainee</th>
-                <th className={`${TH} text-right`}>Sessions</th>
-                <th className={`${TH} text-right`}>Average</th>
-                <th className={`${TH} text-right`}>Last</th>
-                <th className={`${TH} text-right`}>Change</th>
-                <th className={`${TH} text-right`}>Latency</th>
-                <th className={`${TH} text-right`}>Exact class</th>
-                <th className={TH}>Weakest stage</th>
-              </tr>
-            </thead>
-            <tbody>
-              {d.leaderboard.map((r, i) => (
-                <tr key={r.userId} className="border-t border-line-1 hover:bg-bg-2">
-                  <td className={`${TD} text-readout text-text-2`}>
-                    {r.avgTotal === null ? '—' : i + 1}
-                  </td>
-                  <td className={`${TD} text-body`}>
-                    <Link
-                      href={`/aar/trends?user=${r.userId}`}
-                      className="hover:text-text-1 hover:underline"
-                    >
-                      {r.name}
-                    </Link>
-                  </td>
-                  <td className={`${TD} text-right text-readout`}>{r.sessions}</td>
-                  <td className={`${TD} text-right text-readout`}>
-                    {r.avgTotal === null ? <span className="text-text-2">—</span> : r.avgTotal}
-                  </td>
-                  <td className={`${TD} text-right text-readout`}>
-                    {r.lastTotal === null ? <span className="text-text-2">—</span> : r.lastTotal}
-                  </td>
-                  <td className={`${TD} text-right text-readout`}>{signed(r.change)}</td>
-                  <td className={`${TD} text-right text-readout`}>
-                    {r.detectionLatencyS === null ? (
-                      <span className="text-text-2">—</span>
-                    ) : (
-                      <>
-                        {r.detectionLatencyS.toFixed(1)}
-                        <span className="text-text-2"> s</span>
-                      </>
-                    )}
-                  </td>
-                  <td className={`${TD} text-right text-readout`}>
-                    {r.classificationAccuracy === null ? (
-                      <span className="text-text-2">—</span>
-                    ) : (
-                      <>
-                        {Math.round(r.classificationAccuracy * 100)}
-                        <span className="text-text-2"> %</span>
-                      </>
-                    )}
-                  </td>
-                  <td className={`${TD} text-label`}>
-                    {r.weakestStage ? STAGE_LABEL[r.weakestStage] : '—'}
-                  </td>
+          {d.leaderboard.length > 0 && (
+            <table className="-mx-3 w-[calc(100%+1.5rem)] border-collapse">
+              <thead>
+                <tr>
+                  <th className={TH}>Rank</th>
+                  <th className={`${TH} w-full`}>Trainee</th>
+                  <th className={`${TH} text-right`}>Sessions</th>
+                  <th className={`${TH} text-right`}>Average</th>
+                  <th className={`${TH} text-right`}>Last</th>
+                  <th className={`${TH} text-right`}>Change</th>
+                  <th className={`${TH} text-right`}>Latency</th>
+                  <th className={`${TH} text-right`}>Exact class</th>
+                  <th className={TH}>Weakest stage</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {d.leaderboard.map((r, i) => (
+                  <tr key={r.userId} className="border-t border-line-1 hover:bg-bg-2">
+                    <td className={`${TD} text-readout text-text-2`}>
+                      {r.avgTotal === null ? '—' : i + 1}
+                    </td>
+                    <td className={`${TD} text-body`}>
+                      <Link
+                        href={`/aar/trends?user=${r.userId}`}
+                        className="hover:text-text-1 hover:underline"
+                      >
+                        {r.name}
+                      </Link>
+                    </td>
+                    <td className={`${TD} text-right text-readout`}>{r.sessions}</td>
+                    <td className={`${TD} text-right text-readout`}>
+                      {r.avgTotal === null ? <span className="text-text-2">—</span> : r.avgTotal}
+                    </td>
+                    <td className={`${TD} text-right text-readout`}>
+                      {r.lastTotal === null ? <span className="text-text-2">—</span> : r.lastTotal}
+                    </td>
+                    <td className={`${TD} text-right text-readout`}>{signed(r.change)}</td>
+                    <td className={`${TD} text-right text-readout`}>
+                      {r.detectionLatencyS === null ? (
+                        <span className="text-text-2">—</span>
+                      ) : (
+                        <>
+                          {r.detectionLatencyS.toFixed(1)}
+                          <span className="text-text-2"> s</span>
+                        </>
+                      )}
+                    </td>
+                    <td className={`${TD} text-right text-readout`}>
+                      {r.classificationAccuracy === null ? (
+                        <span className="text-text-2">—</span>
+                      ) : (
+                        <>
+                          {Math.round(r.classificationAccuracy * 100)}
+                          <span className="text-text-2"> %</span>
+                        </>
+                      )}
+                    </td>
+                    <td className={`${TD} text-label`}>
+                      {r.weakestStage ? STAGE_LABEL[r.weakestStage] : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </QuestionPanel>
         <QuestionPanel
           question="Which kill-chain stage is weakest across the unit?"
@@ -305,24 +307,26 @@ function Dashboard({
           }
           testId="unit-mistakes"
         >
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                <th className={`${TH} w-full`}>Mistake</th>
-                <th className={`${TH} text-right`}>Trainees</th>
-                <th className={`${TH} text-right`}>Times</th>
-              </tr>
-            </thead>
-            <tbody>
-              {d.mistakes.map((m) => (
-                <tr key={m.code} className="border-t border-line-1">
-                  <td className="px-2 py-1 text-body">{m.text}</td>
-                  <td className={`${TD} text-right text-readout`}>{m.trainees}</td>
-                  <td className={`${TD} text-right text-readout`}>{m.count}</td>
+          {d.mistakes.length > 0 && (
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  <th className={`${TH} w-full`}>Mistake</th>
+                  <th className={`${TH} text-right`}>Trainees</th>
+                  <th className={`${TH} text-right`}>Times</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {d.mistakes.map((m) => (
+                  <tr key={m.code} className="border-t border-line-1">
+                    <td className="px-2 py-1 text-body">{m.text}</td>
+                    <td className={`${TD} text-right text-readout`}>{m.trainees}</td>
+                    <td className={`${TD} text-right text-readout`}>{m.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </QuestionPanel>
         <QuestionPanel
           question="Are assignments being completed?"
@@ -344,11 +348,14 @@ function Dashboard({
               <tbody>
                 {d.assignments.map((a) => (
                   <tr key={a.assignmentId} className="border-t border-line-1">
-                    <td className={`${TD} text-body`}>
-                      {a.scenarioCode && (
-                        <span className="mr-2 text-readout text-text-2">{a.scenarioCode}</span>
-                      )}
-                      {a.scenarioName}
+                    {/* max-w-0 on the w-full column: long names truncate, never widen (break-ui 4). */}
+                    <td className={`${TD} max-w-0 text-body`}>
+                      <span className="block truncate" title={a.scenarioName}>
+                        {a.scenarioCode && (
+                          <span className="mr-2 text-readout text-text-2">{a.scenarioCode}</span>
+                        )}
+                        {a.scenarioName}
+                      </span>
                     </td>
                     <td className={`${TD} text-readout text-text-2`}>
                       {a.dueAt ? a.dueAt.slice(0, 10) : '—'}
@@ -362,8 +369,19 @@ function Dashboard({
                       {a.completed}
                       <span className="text-text-2"> / {a.assigned}</span>
                     </td>
-                    <td className="px-2 py-1 text-small whitespace-nowrap text-text-2">
-                      {a.pending.join(', ') || '—'}
+                    {/* One name, or a count with the names on hover (break-ui 1). */}
+                    <td className={`${TD} text-small text-text-2`}>
+                      {a.pending.length === 0 ? (
+                        '—'
+                      ) : (
+                        <span
+                          className="block max-w-[10rem] truncate"
+                          title={a.pending.join(', ')}
+                          data-testid="pending"
+                        >
+                          {a.pending.length === 1 ? a.pending[0] : `${a.pending.length} trainees`}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -377,58 +395,66 @@ function Dashboard({
           <PanelHeader title="Recent sessions">
             <span className="text-label">A row opens its AAR · a name opens trends</span>
           </PanelHeader>
-          <table className="w-full border-collapse" data-testid="unit-recent">
-            <thead>
-              <tr>
-                <th className={TH}>Date</th>
-                <th className={TH}>Trainee</th>
-                <th className={`${TH} w-full`}>Scenario</th>
-                <th className={TH}>Difficulty</th>
-                <th className={`${TH} text-right`}>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {d.recent.map((s) => (
-                // The whole row opens the AAR (audit P1-16); the scenario link is its
-                // keyboard target, the trainee name a separate link to their trends.
-                <tr
-                  key={s.sessionId}
-                  className="cursor-pointer border-t border-line-1 hover:bg-bg-2"
-                  data-testid="unit-recent-row"
-                  onClick={(e) => {
-                    if ((e.target as HTMLElement).closest('a')) return;
-                    router.push(`/aar/session/${s.sessionId}`);
-                  }}
-                >
-                  <td className={`${TD} text-readout text-text-2`}>{s.endedAt.slice(0, 10)}</td>
-                  <td className={`${TD} text-body`}>
-                    <Link
-                      href={`/aar/trends?user=${s.userId}`}
-                      className="underline decoration-line-2 underline-offset-2 hover:text-text-1 hover:decoration-text-2"
-                      title={`${s.userName}: trends`}
-                    >
-                      {s.userName}
-                    </Link>
-                  </td>
-                  <td className={`${TD} text-body`}>
-                    <Link
-                      href={`/aar/session/${s.sessionId}`}
-                      className="hover:text-text-1 hover:underline"
-                    >
-                      {s.scenarioCode && (
-                        <span className="mr-2 text-readout text-text-2">{s.scenarioCode}</span>
-                      )}
-                      {s.scenarioName}
-                    </Link>
-                  </td>
-                  <td className={TD}>
-                    <Pips value={s.difficulty} />
-                  </td>
-                  <td className={`${TD} text-right text-readout`}>{s.total}</td>
+          {d.recent.length === 0 && (
+            <p className="px-3 py-2 text-small text-text-2">
+              No Assessment sessions in this unit yet.
+            </p>
+          )}
+          {d.recent.length > 0 && (
+            <table className="w-full border-collapse" data-testid="unit-recent">
+              <thead>
+                <tr>
+                  <th className={TH}>Date</th>
+                  <th className={TH}>Trainee</th>
+                  <th className={`${TH} w-full`}>Scenario</th>
+                  <th className={TH}>Difficulty</th>
+                  <th className={`${TH} text-right`}>Total</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {d.recent.map((s) => (
+                  // The whole row opens the AAR (audit P1-16); the scenario link is its
+                  // keyboard target, the trainee name a separate link to their trends.
+                  <tr
+                    key={s.sessionId}
+                    className="cursor-pointer border-t border-line-1 hover:bg-bg-2"
+                    data-testid="unit-recent-row"
+                    onClick={(e) => {
+                      if ((e.target as HTMLElement).closest('a')) return;
+                      router.push(`/aar/session/${s.sessionId}`);
+                    }}
+                  >
+                    <td className={`${TD} text-readout text-text-2`}>{s.endedAt.slice(0, 10)}</td>
+                    <td className={`${TD} text-body`}>
+                      <Link
+                        href={`/aar/trends?user=${s.userId}`}
+                        className="block max-w-[12rem] truncate underline decoration-line-2 underline-offset-2 hover:text-text-1 hover:decoration-text-2"
+                        title={`${s.userName}: trends`}
+                      >
+                        {s.userName}
+                      </Link>
+                    </td>
+                    <td className={`${TD} max-w-0 text-body`}>
+                      <Link
+                        href={`/aar/session/${s.sessionId}`}
+                        className="block truncate hover:text-text-1 hover:underline"
+                        title={s.scenarioName}
+                      >
+                        {s.scenarioCode && (
+                          <span className="mr-2 text-readout text-text-2">{s.scenarioCode}</span>
+                        )}
+                        {s.scenarioName}
+                      </Link>
+                    </td>
+                    <td className={TD}>
+                      <Pips value={s.difficulty} />
+                    </td>
+                    <td className={`${TD} text-right text-readout`}>{s.total}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </Panel>
         <AssignForm unit={unit} onDone={reload} />
       </div>

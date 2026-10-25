@@ -30,3 +30,17 @@
 - **Trends:** long names wrap inside the sessions table; 200 points draw without overflow; `null` ratings show "—"; totals 0 and 100 sit inside the 0–100 axis; one point and zero points render the worded states.
 - **Leaderboard:** long and one-letter names, change −27 / 0 / null all align (tabular figures, "—" for null).
 - No horizontal scroll on any screen in demo, one or empty states, at either width.
+
+## Fixes applied (user: "fix all", 2026-10-25)
+
+| # | Outcome | Change |
+| --- | --- | --- |
+| 1 | Fixed | Pending shows one name, else "n trainees", names in the `title` (`app/instructor/page.tsx`) |
+| 2 | Fixed | Name cell wraps to two lines (`line-clamp-2`, full name in `title`, `min-w-[14rem]`); badge and "Opening briefing…" stay beside it; tags show up to three, else two and "+n" with the rest in a `title` (`rowTags` in `lib/scenario/library.ts`, tested) |
+| 3 | Fixed | Recent sessions: scenario cell `max-w-0` + `truncate` with `title`; trainee link truncates at 12 rem |
+| 4 | Fixed | Assignments: scenario cell `max-w-0` + `truncate` with `title` |
+| 5 | Fixed | Empty leaderboard and mistakes tables are omitted under their worded answer; Recent sessions says "No Assessment sessions in this unit yet." |
+| 6 | No change needed | Every path that stores a scenario name already caps it: authored names at 80 (`AuthorScenarioRequest`), generated names are two words, the library tops out at 15 characters. The DB column's 200 is headroom only. |
+| 7 | Fixed | "My generated" shows the newest 20 and "Show 20 more · n not shown" (`own-generated.tsx`); the spec asserts 20 → 40 rows |
+
+Re-run: all 20 break-ui tests pass; no horizontal scroll on any screen in any state at 1366 or 1920 (40 checks). The demo state was re-checked after the fixes: one regression (the DONE badge dropped under S05's name once the cell wrapped) was found and fixed by keeping the badge in a flex row beside the name.
