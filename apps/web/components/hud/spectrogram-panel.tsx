@@ -139,6 +139,10 @@ export function SpectrogramPanel() {
         <span>
           Span <span className="font-mono tnum text-text-1">{ms(meta.timeSpanS)}</span>
         </span>
+        {/* An aid, like the AI chip: the camera decides the class (plan 6B, player). */}
+        <span className="ml-auto text-text-2" data-testid="spectrogram-aid">
+          Aid · confirm on camera
+        </span>
       </p>
       <div className="grid min-h-0 flex-1 grid-cols-[2.75rem_1fr] grid-rows-[1fr_auto] gap-x-1">
         <div className="flex flex-col justify-between py-0.5 text-right font-mono text-[11px] text-text-2">
