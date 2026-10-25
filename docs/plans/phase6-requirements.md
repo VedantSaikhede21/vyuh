@@ -8,7 +8,7 @@
 ## §0. How this phase runs
 
 - **Parts, in order:** 6.0 Audit → 6A Design system & shell → 6B Core screens UX → 6C New & public pages → 6D Motion & interaction → 6E Guest demo & guided tour → 6F Performance → 6G Deploy & offline → 6H Final verification → 6I User study & extras.
-- **One fresh Claude Code session per Part, one branch per Part** (`feat/phase6-<part>` from `main`). Rebase-merge after each Part's close-out (never squash — CLAUDE.md §12).
+- **One fresh Claude Code session per Part.** From 6C on (decision 153, solo workflow): commit straight to `main` and push to `origin/main` after each completed group of commits (at minimum after every progress-file update); CI must stay green — fix a red run before continuing. Never squash (CLAUDE.md §12). (6.0–6B used `feat/phase6-<part>` branches, rebase-merged.)
 - **Each Part:** read → plan → wait for approval → save the approved plan to `docs/plans/phase6<part>-plan.md` and commit → build in small commits → checkpoint (screenshots) → close-out → STOP.
 - **Testing during UI Parts (6A–6E):** lint, unit tests, pytest, plus the Part's checkpoint captures. **The full suite runs in 6H** (and 6F/6G run their own measurements).
 - **Visual baselines at every Part boundary (user, 2026-10-24):** after the user approves a Part's checkpoint, regenerate the visual baselines for the screens that Part changed, review every diff, and commit them, so `pnpm e2e` passes at each Part boundary. 6H still does the final full regeneration and review.

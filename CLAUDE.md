@@ -272,7 +272,7 @@ docker compose up        # offline full stack
 - **Scenario schema:** bump `schema_version` on breaking changes and keep a loader that upgrades old scenario JSON.
 - **Raw data:** `scripts/terrain/raw/` is git-ignored. Built presets in `apps/web/public/terrain/` are committed (keep each ≤ ~10 MB).
 - **Never commit:** `.env*` (except `.env.example`), API keys, raw DEM tiles, user data.
-- **Branches:** `feat/<short-name>`, `fix/<short-name>`; PR into `main`; CI must pass; **rebase-merge** (never squash — every commit lands on `main` individually).
+- **Branches (solo, decision 153):** commit straight to `main`; push to `origin/main` after each completed group of commits (at minimum after every progress-file update); CI must stay green — fix a red run before continuing. Never squash: every commit lands on `main` individually.
 - **Team reality:** one developer builds VYUH; the stream split in SPEC §18 describes ownership areas, not separate people.
 - **Ownership:** `packages/shared` has one owner (stream C, SPEC §18). Schema PRs merge first; dependent PRs rebase after.
 - **Parallel sessions:** each teammate's Claude Code session stays inside its stream's folders unless the task says otherwise.
