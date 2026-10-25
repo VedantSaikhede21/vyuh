@@ -80,9 +80,15 @@ export function CommsLog({
       className={cn('min-h-0 overflow-y-auto px-3 py-1 [overflow-anchor:none]', className)}
     >
       {shown.map((l) => (
-        <li key={l.id} className={cn('flex gap-3 py-0.5 text-readout', l.pending && 'opacity-60')}>
+        // One line per entry, full text on hover (audit P1-2): wrapped lines left
+        // only four entries visible at 768 px.
+        <li
+          key={l.id}
+          className={cn('flex gap-3 py-px text-readout leading-4', l.pending && 'opacity-60')}
+          title={`${formatClock(l.tMs)} ${l.tag ? `${l.tag} ` : ''}${l.text}${l.pending ? ' · QUEUED' : ''}`}
+        >
           <span className="shrink-0 text-text-2">{formatClock(l.tMs)}</span>
-          <span className={cn('min-w-0 break-words', STATUS_CLASS[l.status ?? 'info'])}>
+          <span className={cn('min-w-0 truncate', STATUS_CLASS[l.status ?? 'info'])}>
             {l.tag && <span className="mr-2 text-label text-text-2">{l.tag}</span>}
             {l.text}
             {l.pending && <span className="text-text-2"> · QUEUED</span>}

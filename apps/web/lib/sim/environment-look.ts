@@ -46,9 +46,7 @@ export interface EnvironmentLook {
   background: Color;
   fogNear: number;
   fogFar: number;
-  showSky: boolean;
   showStars: boolean;
-  turbidity: number;
 }
 
 /** Pure mapping from the sim environment to render parameters (unit-testable). */
@@ -88,8 +86,6 @@ export function environmentLook(env: SimEnvironment, variant: EnvironmentVariant
     background: variant === 'tactical' ? TACTICAL_BACKGROUND.clone() : background,
     fogNear: variant === 'eo' ? vis * 0.05 : Math.max(vis, 4000) * 0.6,
     fogFar: variant === 'eo' ? Math.max(vis, 50) : Math.max(vis * 2.5, 9000),
-    showSky: variant === 'eo' && elDeg > -6,
     showStars: variant === 'eo' && elDeg <= -6,
-    turbidity: 2 + 10 * haze,
   };
 }

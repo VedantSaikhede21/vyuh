@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ActionBar } from '@/components/hud/action-bar';
 import { CommsPanel } from '@/components/hud/comms-panel';
 import { EoPanel } from '@/components/hud/eo-view';
@@ -15,6 +15,7 @@ import type { Commands } from '@/lib/sim/commands';
 import type { BatcherStatus } from '@/lib/sim/event-batcher';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useHudStore } from '@/lib/sim/store';
+import { useUiStore } from '@/lib/sim/ui-store';
 import { cn } from '@/lib/utils';
 import { SimCanvas } from './sim-canvas';
 import { usePracticeHints } from './use-practice-hints';
@@ -119,6 +120,11 @@ export function SimPlayer({
 }) {
   useShortcuts(replay ? null : commands);
   usePracticeHints(runtime, !replay);
+  const cheatSheet = useUiStore((s) => s.cheatSheet);
+  useEffect(() => {
+    runtime.setOverlayHold(cheatSheet);
+    return () => runtime.setOverlayHold(false);
+  }, [runtime, cheatSheet]);
   const container = useRef<HTMLDivElement>(null);
   const tactical = useRef<HTMLDivElement>(null);
   const eo = useRef<HTMLDivElement>(null);
@@ -145,8 +151,8 @@ export function SimPlayer({
             <PanelHeader title="Radar PPI">
               <span className="text-label">{ppiRangeKm(runtime)} km · rings 1 km</span>
             </PanelHeader>
-            {/* Leave the Comms log at least ~6 lines at 768 px height. */}
-            <div className="mx-auto w-[min(318px,calc(100vh-518px))] py-1">
+            {/* Leave the Comms log at least 8 lines at 768 px height (audit P1-2). */}
+            <div className="mx-auto w-[min(318px,calc(100vh-536px))] py-1">
               <RadarScope runtime={runtime} commands={commands} overlay={replay?.ppiOverlay} />
             </div>
           </Panel>
@@ -173,7 +179,7 @@ export function SimPlayer({
         onSelectTrack={commands.select}
         tacticalExtra={replay?.tacticalScene}
       />
-      {!replay && <CheatSheet />}
+      {!replay && <CheatSheet practice={runtime.mode === 'PRACTICE'} />}
       {replay ? (
         <LargerScreenNotice
           what="The after-action replay"

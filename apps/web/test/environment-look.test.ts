@@ -13,7 +13,6 @@ const env = (elDeg: number, visibilityM = 20_000, azDeg = 180): SimEnvironment =
 describe('environmentLook', () => {
   it('lights the day from the sun direction (south sun → +z in Three.js)', () => {
     const look = environmentLook(env(36), 'tactical');
-    expect(environmentLook(env(36), 'eo').showSky).toBe(true);
     expect(look.sunIntensity).toBeGreaterThan(1.5);
     expect(look.sunDir[1]).toBeCloseTo(Math.sin((36 * Math.PI) / 180));
     expect(look.sunDir[2]).toBeGreaterThan(0); // south = −north = +z
@@ -22,7 +21,6 @@ describe('environmentLook', () => {
   it('goes dark at night, keeping a light floor only for the tactical map', () => {
     const eo = environmentLook(env(-30), 'eo');
     const tac = environmentLook(env(-30), 'tactical');
-    expect(eo.showSky).toBe(false);
     expect(eo.showStars).toBe(true);
     expect(eo.sunIntensity).toBe(0);
     expect(eo.hemiIntensity).toBeLessThan(0.1);
@@ -33,7 +31,6 @@ describe('environmentLook', () => {
   it('draws the tactical map on --bg-0 with no sky dome or stars, day or night', () => {
     for (const el of [36, -30]) {
       const tac = environmentLook(env(el), 'tactical');
-      expect(tac.showSky).toBe(false);
       expect(tac.showStars).toBe(false);
       expect(`#${tac.background.getHexString()}`).toBe('#0a0d0c');
     }
@@ -44,8 +41,11 @@ describe('environmentLook', () => {
     const tac = environmentLook(env(30, 2000), 'tactical');
     expect(eo.fogFar).toBe(2000);
     expect(tac.fogFar).toBeGreaterThanOrEqual(9000);
-    expect(environmentLook(env(30, 2000), 'eo').turbidity).toBeGreaterThan(
-      environmentLook(env(30, 20_000), 'eo').turbidity,
-    );
+  });
+
+  it('gives the EO day view a grey-blue sky, not white (audit P1-3)', () => {
+    const { r, g, b } = environmentLook(env(36), 'eo').background;
+    expect(b).toBeGreaterThan(r);
+    expect(0.2126 * r + 0.7152 * g + 0.0722 * b).toBeLessThan(0.6);
   });
 });

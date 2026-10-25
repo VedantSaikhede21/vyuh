@@ -48,6 +48,18 @@ describe('SimRuntime', () => {
     expect(assessment.advance(200)).toBe(4);
   });
 
+  it('holds the practice clock while an overlay is open, never the assessment clock', () => {
+    const practice = new SimRuntime(S01, terrain, 'PRACTICE');
+    practice.setOverlayHold(true);
+    expect(practice.advance(200)).toBe(0);
+    expect(practice.paused).toBe(false);
+    practice.setOverlayHold(false);
+    expect(practice.advance(200)).toBe(4);
+    const assessment = new SimRuntime(S01, terrain, 'ASSESSMENT');
+    assessment.setOverlayHold(true);
+    expect(assessment.advance(200)).toBe(4);
+  });
+
   it('publishes a HUD snapshot without ground-truth contact ids', () => {
     const rt = new SimRuntime(S01, terrain, 'PRACTICE');
     while (rt.sim.getState().tracks.length === 0) rt.advance(50);
