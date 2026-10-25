@@ -2,13 +2,7 @@ import type { ContactClass } from '@vyuh/shared';
 import Link from 'next/link';
 import { ClassSilhouette, FactStrip } from '@/components/hud/primitives';
 import { Badge } from '@/components/ui/badge';
-import {
-  GROUP_LABEL,
-  LINK_LABEL,
-  formatRcs,
-  libraryEntry,
-  type LibraryEntry,
-} from '@/lib/library';
+import { GROUP_LABEL, LINK_LABEL, formatRcs, libraryEntry, type LibraryEntry } from '@/lib/library';
 import { cn } from '@/lib/utils';
 
 export const REPRESENTATIVE_NOTE =

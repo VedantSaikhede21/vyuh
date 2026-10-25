@@ -1,9 +1,4 @@
-import {
-  CLASS_PROFILES,
-  ThreatClass,
-  type ContactClass,
-  type ControlLink,
-} from '@vyuh/shared';
+import { CLASS_PROFILES, ThreatClass, type ContactClass, type ControlLink } from '@vyuh/shared';
 import { CLASS_LABEL, CLASS_MENU } from '@/lib/strings';
 
 // Threat recognition library (Phase 6C, UI-PREP §2). Numbers come from CLASS_PROFILES
