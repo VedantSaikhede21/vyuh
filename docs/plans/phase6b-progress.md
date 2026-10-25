@@ -61,10 +61,17 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 - Difficulty chart → step readout: "Next ■■■□□ D3 · Sessions 1–6 D2 → Session 7 D3" (`difficultyRuns`, tested).
 - Captured `trends-full` at 1366 (before the mini-chart tick change) and reviewed. Rating axis ticks stay auto (1015 / 1085 / 1155) — noted for the break-ui pass.
 
+## Unit dashboard and assignments (2026-10-25, P1-16, P2-9)
+
+- Recent sessions: the whole row opens the AAR (scenario link stays the keyboard target); trainee name is an underlined link to trends; header "A row opens its AAR · a name opens trends".
+- `isOverdue` + `completionAnswer(rows, now)` ("… 1 assignment is overdue."), "Overdue" warn chip beside the due date (tests in `phase4b.test.ts`).
+- API `scenario_code(row)` (`app/services/scenarios.py`): an authored scenario's `AUT-…` id is its list code (training list, assign form, trends, unit, assignments) — existing rows too, no migration. `test_builder_preview_checks_and_save` asserts the list and `assignments/mine` codes.
+- Captured `unit-full` at 1366 and reviewed. Web 205 tests; `test_phase4b.py` + `test_scenarios.py` green (full pytest at Checkpoint B).
+
 ## Still to do in 6B (from the plan, in order)
 
 2. Player: disabled reasons and title hovers checked in the break-ui pass. (Aids labelled: spectrogram "Aid · confirm on camera"; the AI chip tooltip already says it can be wrong.)
-4. Unit dashboard + assignments (P1-16, P2-9), builder (P1-17 + legend), briefing labels (P2-3) + S01–S03 thumbnails + Generate secondary (P2-2), weight editor / From text copy (P1-9) and "/10" wording.
+4. Builder (P1-17 + legend), briefing labels (P2-3) + S01–S03 thumbnails + Generate secondary (P2-2), weight editor / From text copy (P1-9) and "/10" wording.
 5. Apply 6A primitives everywhere (Tabs, SegmentedControl, Table, PageHeader, ErrorState); one primary action per screen; keyboard focus order.
 6. Load `emil-design-eng` before the polish, `break-ui` before stress-testing; write the break-ui report.
 7. Checkpoint B: `checkpoint-6b.spec.ts` captures of every 6B screen at 1366×768 and 1920×1080 + break-ui report + FPS before / after → **stop for the user's OK**.

@@ -44,7 +44,7 @@ from app.services.analytics.kill_chain import kill_chain
 from app.services.assignments import completed_session, unit_assignments
 from app.services.display import display_int, display_opt
 from app.services.recommendation import recommend_difficulty
-from app.services.scenarios import load_scenario
+from app.services.scenarios import load_scenario, scenario_code
 from app.services.sessions import (
     latest_score_row,
     rating_change,
@@ -228,7 +228,7 @@ def _point(f: SessionFacts, current_rating: int) -> TrendPoint:
     return TrendPoint(
         session_id=f.row.id,
         scenario_id=f.scenario_row.id,
-        scenario_code=f.scenario_row.code,
+        scenario_code=scenario_code(f.scenario_row),
         scenario_name=f.scenario_row.name,
         difficulty=f.scenario.difficulty,
         ended_at=f.ended_at,
@@ -325,7 +325,7 @@ def unit_dashboard(db: Session, unit_id: uuid.UUID) -> UnitDashboardResponse:
             AssignmentCompletion(
                 assignment_id=a.id,
                 scenario_id=a.scenario_id,
-                scenario_code=srow.code,
+                scenario_code=scenario_code(srow),
                 scenario_name=srow.name,
                 due_at=a.due_at,
                 assigned=len(covered),
@@ -359,7 +359,7 @@ def unit_dashboard(db: Session, unit_id: uuid.UUID) -> UnitDashboardResponse:
                 session_id=f.row.id,
                 user_id=f.row.user_id,
                 user_name=member_names[f.row.user_id],
-                scenario_code=f.scenario_row.code,
+                scenario_code=scenario_code(f.scenario_row),
                 scenario_name=f.scenario_row.name,
                 difficulty=f.scenario.difficulty,
                 ended_at=f.ended_at,

@@ -22,7 +22,7 @@ from app.schemas.generated import (
     SessionStatus,
     UserRole,
 )
-from app.services.scenarios import get_scenario_row
+from app.services.scenarios import get_scenario_row, scenario_code
 
 
 def completed_session(db: Session, a: Assignment, user_id: uuid.UUID) -> uuid.UUID | None:
@@ -50,7 +50,7 @@ def item(db: Session, a: Assignment, for_user: uuid.UUID | None = None) -> Assig
     return AssignmentItem(
         id=a.id,
         scenario_id=a.scenario_id,
-        scenario_code=scenario.code,
+        scenario_code=scenario_code(scenario),
         scenario_name=scenario.name,
         unit_id=a.unit_id,
         unit_name=unit.name if unit else None,

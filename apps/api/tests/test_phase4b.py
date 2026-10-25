@@ -351,6 +351,8 @@ def test_builder_preview_checks_and_save(
     listed = client.get("/api/v1/scenarios", headers=auth_header(trainees[0])).json()["items"]
     row = next(s for s in listed if s["id"] == sid)
     assert row["kind"] == "AUTHORED" and "authored" in row["tags"]
+    # Lists show the AUT- code (audit P2-9).
+    assert row["code"] == sc["id"]
     # Assignable.
     res = client.post(
         "/api/v1/assignments",
@@ -358,6 +360,8 @@ def test_builder_preview_checks_and_save(
         headers=sh,
     )
     assert res.status_code == 201
+    mine = client.get("/api/v1/assignments/mine", headers=auth_header(trainees[0])).json()
+    assert [a["scenarioCode"] for a in mine["items"]] == [sc["id"]]
     assert db.scalar(select(func.count()).select_from(Assignment)) == 1
 
 

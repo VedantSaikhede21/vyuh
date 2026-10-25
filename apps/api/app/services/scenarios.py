@@ -70,11 +70,21 @@ def load_scenario(row: ScenarioRow) -> Scenario:
     return Scenario.model_validate(row.content)
 
 
+def scenario_code(row: ScenarioRow) -> str | None:
+    """The code lists show: the library code, or an authored scenario's `AUT-…` id
+    (saved with no code; audit P2-9). Generated scenarios have none."""
+    if row.code is not None:
+        return row.code
+    if row.kind is ScenarioKind.AUTHORED:
+        return str(row.content.get("id")) if row.content.get("id") else None
+    return None
+
+
 def list_item(row: ScenarioRow, best_score: float | None = None) -> ScenarioListItem:
     content = load_scenario(row)
     return ScenarioListItem(
         id=row.id,
-        code=row.code,
+        code=scenario_code(row),
         name=row.name,
         kind=row.kind,
         difficulty=row.difficulty,

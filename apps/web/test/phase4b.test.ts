@@ -4,6 +4,7 @@ import {
   NOT_ENOUGH,
   accuracyAnswer,
   completionAnswer,
+  isOverdue,
   componentAnswer,
   difficultyAnswer,
   halves,
@@ -131,6 +132,17 @@ describe('trend answers (DESIGN §11.7)', () => {
         { assigned: 1, completed: 0 },
       ]),
     ).toBe('2 of 4 assigned runs completed in Assessment mode.');
+    // Audit P1-16: overdue = past due with runs pending.
+    const now = new Date('2026-10-25T12:00:00Z');
+    const late = { assigned: 3, completed: 2, dueAt: '2026-09-20T18:00:00Z' };
+    const done = { assigned: 1, completed: 1, dueAt: '2026-09-20T18:00:00Z' };
+    const future = { assigned: 1, completed: 0, dueAt: '2026-11-05T18:00:00Z' };
+    expect(isOverdue(late, now)).toBe(true);
+    expect(isOverdue(done, now)).toBe(false);
+    expect(isOverdue(future, now)).toBe(false);
+    expect(completionAnswer([late, done, future], now)).toBe(
+      '3 of 5 assigned runs completed in Assessment mode. 1 assignment is overdue.',
+    );
   });
 });
 
