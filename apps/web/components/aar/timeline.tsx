@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import { memo, useEffect, useMemo } from 'react';
 import { Kbd, Panel, PanelHeader, StateChip, Tooltip } from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { REPLAY_SPEEDS, type ReplayController } from '@/lib/replay/controller';
 import type { MarkerKind, TimelineMarker } from '@/lib/replay/gate';
 import { useReplayStore } from '@/lib/replay/store';
@@ -237,25 +238,19 @@ export function ReplayTimeline({
           </Button>
         </Tooltip>
       </div>
-      <div className="flex items-center" role="group" aria-label="Replay speed">
-        {REPLAY_SPEEDS.map((s) => (
-          <button
-            key={s}
-            type="button"
-            aria-pressed={speed === s}
-            onClick={() => {
-              controller.setSpeed(s);
-              set({ speed: s });
-            }}
-            className={cn(
-              'h-7 border border-line-2 px-2 font-mono text-readout first:rounded-l-sm last:rounded-r-sm',
-              speed === s ? 'bg-bg-3 text-select' : 'text-text-2 hover:bg-bg-2',
-            )}
-          >
-            {s}×
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        label="Replay speed"
+        size="hud"
+        value={String(speed)}
+        onChange={(v) => {
+          controller.setSpeed(Number(v) as (typeof REPLAY_SPEEDS)[number]);
+          set({ speed: controller.speed });
+        }}
+        items={REPLAY_SPEEDS.map((s) => ({
+          value: String(s),
+          label: <span className="font-mono tnum">{s}×</span>,
+        }))}
+      />
       <span className="w-[7.5rem] shrink-0 font-mono text-readout" data-testid="replay-clock">
         <span className="text-text-1">{formatClock(tMs)}</span>
         <span className="text-text-2"> / {formatClock(end)}</span>

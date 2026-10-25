@@ -142,9 +142,9 @@ for (const vp of VIEWPORTS) {
       await expect(chip).toHaveText('TRK');
       await shot(page, 'eo-trk');
 
-      await page.locator('#tab-RF').click();
+      await page.getByRole('tab', { name: /RF/ }).click();
       await shot(page, 'rf-tab');
-      await page.locator('#tab-TRACKS').click();
+      await page.getByRole('tab', { name: /Tracks/ }).click();
 
       // Undefended, the threat closes on the asset until the leak banner shows.
       const banner = page.getByTestId('sim-player').getByRole('alert');

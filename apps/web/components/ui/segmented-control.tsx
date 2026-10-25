@@ -31,8 +31,8 @@ export function SegmentedControl<T extends string>({
   onChange: (v: T) => void;
   /** Accessible name of the group. */
   label: string;
-  /** hud 28 px, sm 32 px. */
-  size?: 'hud' | 'sm';
+  /** strip 24 px (inside a 28 px panel header), hud 28 px, sm 32 px. */
+  size?: 'strip' | 'hud' | 'sm';
   className?: string;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -65,12 +65,12 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(it.value)}
             onKeyDown={(e) => onKey(e, it.value)}
             className={cn(
-              'border px-3 text-label font-medium transition-[background-color,border-color,color] duration-150 ease-ui focus-visible:relative focus-visible:z-10',
+              'border text-label font-medium transition-[background-color,border-color,color] duration-150 ease-ui focus-visible:relative focus-visible:z-10',
               // Joined edges: each wrapper sits in the group, so edges come from the index.
               i > 0 && !it.hint && '-ml-px',
               i === 0 && 'rounded-l-sm',
               i === items.length - 1 && 'rounded-r-sm',
-              size === 'hud' ? 'h-7' : 'h-8',
+              size === 'strip' ? 'h-6 px-2' : size === 'hud' ? 'h-7 px-3' : 'h-8 px-3',
               on
                 ? 'relative z-[1] border-select bg-bg-3 text-text-1'
                 : 'border-line-2 text-text-2 hover:bg-bg-2 hover:text-text-1',

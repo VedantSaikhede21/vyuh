@@ -482,7 +482,9 @@ function Builder() {
             <div className="flex items-center gap-1" role="group" aria-label="Map tool">
               <Button
                 size="hud"
-                variant={mode === 'asset' ? 'primary' : 'secondary'}
+                variant="secondary"
+                aria-pressed={mode === 'asset'}
+                className={cn(mode === 'asset' && 'border-select bg-bg-3 text-text-1')}
                 onClick={() => setMode(mode === 'asset' ? 'view' : 'asset')}
                 title="Click the map to place the defended asset"
               >
@@ -490,7 +492,9 @@ function Builder() {
               </Button>
               <Button
                 size="hud"
-                variant={mode === 'zone' ? 'primary' : 'secondary'}
+                variant="secondary"
+                aria-pressed={mode === 'zone'}
+                className={cn(mode === 'zone' && 'border-select bg-bg-3 text-text-1')}
                 disabled={zones.length >= 6}
                 title={
                   zones.length >= 6 ? 'At most six extra zones' : 'Click corners, Enter to close'

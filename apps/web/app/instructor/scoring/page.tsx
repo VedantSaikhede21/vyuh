@@ -2,7 +2,14 @@
 
 import type { ScoreComponents, ScoringTreeSummary } from '@vyuh/shared';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Panel, PanelBody, PanelHeader, Skeleton, StatusNotice } from '@/components/hud/primitives';
+import {
+  ErrorState,
+  PageHeader,
+  Panel,
+  PanelBody,
+  PanelHeader,
+  Skeleton,
+} from '@/components/hud/primitives';
 import { RequireStaff } from '@/components/require-staff';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -173,14 +180,14 @@ function Editor({ tree, onSaved }: { tree: ScoringTreeSummary; onSaved: (id: str
 function Scoring() {
   const [trees, setTrees] = useState<ScoringTreeSummary[] | null>(null);
   const [selected, setSelected] = useState<string>('default_v4');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const load = useCallback((signal?: AbortSignal) => {
     api
       .listTrees(signal)
       .then((r) => setTrees(r.items))
       .catch((err: unknown) => {
-        if (!signal?.aborted) setError(err instanceof Error ? err.message : 'Network error');
+        if (!signal?.aborted) setError(err);
       });
   }, []);
   useEffect(() => {
@@ -192,29 +199,24 @@ function Scoring() {
 
   return (
     <div className="space-y-3">
-      <div className="space-y-1">
-        <p className="text-label">Instructor / Scoring weights</p>
-        <h1 className="text-h1">Scoring weights</h1>
-        <p className="text-body text-text-2">
-          Saving creates a new version. Sessions keep the score they have; re-score one from a
-          trainee&apos;s trends to compare.
-        </p>
-      </div>
-      {error && (
+      <PageHeader
+        crumbs={[{ label: 'Unit', href: '/instructor' }, { label: 'Scoring weights' }]}
+        title="Scoring weights"
+        context="Saving creates a new version. Sessions keep the score they have; re-score one from a trainee's trends to compare."
+      />
+      {error !== null && (
         <Panel>
-          <StatusNotice
-            tone="error"
-            title="Could not load scoring trees."
+          <ErrorState
+            error={error}
+            subject="scoring trees"
             onRetry={() => {
               setError(null);
               load();
             }}
-          >
-            {error}
-          </StatusNotice>
+          />
         </Panel>
       )}
-      {!trees && !error && <Skeleton label="Loading scoring trees" />}
+      {!trees && error === null && <Skeleton label="Loading scoring trees" />}
       {trees && (
         <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <Panel>

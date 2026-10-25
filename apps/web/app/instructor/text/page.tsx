@@ -145,7 +145,9 @@ function FromText() {
               </Tooltip>
             ) : (
               <Button
-                variant="primary"
+                // One primary per screen: once parameters are read (and still match the
+                // text), Generate is the next step.
+                variant={parse.kind === 'ok' && !stale ? 'secondary' : 'primary'}
                 disabled={status === null || parse.kind === 'busy' || text.trim().length < 3}
                 onClick={() => void read()}
                 data-testid="from-text-read"
