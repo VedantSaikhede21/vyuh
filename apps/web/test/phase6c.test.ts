@@ -19,7 +19,7 @@ import { homeHref, navFor } from '@/lib/nav';
 import { unreadLabel } from '@/lib/notices';
 import { criterionTarget, criterionValue, highestQualified, levelNote } from '@/lib/record';
 import { DEFAULT_SETTINGS, parseSettings } from '@/lib/settings';
-import { formatDate, formatDateTime } from '@/lib/strings';
+import { formatCount, formatDate, formatDateTime } from '@/lib/strings';
 
 const SPEC = readFileSync(join(__dirname, '../../../docs/SPEC.md'), 'utf8');
 
@@ -232,5 +232,15 @@ describe('public pages', () => {
     expect(MEDIA.hero.roe).toBe(sc.roe);
     expect(MEDIA.hero.contacts).toBe(sc.contacts.length);
     expect(latLon(30.52, 75.7)).toBe('30.52 N 75.70 E');
+  });
+});
+
+describe('break-ui 6C', () => {
+  it('counts carry a thousands separator', () => {
+    expect([formatCount(7), formatCount(1284), formatCount(12840)]).toEqual([
+      '7',
+      '1,284',
+      '12,840',
+    ]);
   });
 });

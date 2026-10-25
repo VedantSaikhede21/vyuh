@@ -26,7 +26,7 @@ import { useAuth } from '@/lib/auth';
 import { lossAnswer, stageLosses, worstStage } from '@/lib/home';
 import { NOTICE_KIND_LABEL } from '@/lib/notices';
 import { criterionTarget, criterionValue, levelNote } from '@/lib/record';
-import { formatDate, formatDateTime } from '@/lib/strings';
+import { formatCount, formatDate, formatDateTime } from '@/lib/strings';
 import { useApiData } from '@/lib/use-api-data';
 
 // Operator home (Phase 6C, UI-PREP §2): what to do next, where points go, what
@@ -49,7 +49,7 @@ function NextUp({ data, firstRun }: { data: HomeResponse; firstRun: boolean }) {
       <Panel data-testid="home-assignment">
         <PanelHeader title="Next assignment">
           {data.openAssignments > 1 && (
-            <span className="text-label">{data.openAssignments} open</span>
+            <span className="text-label">{formatCount(data.openAssignments)} open</span>
           )}
         </PanelHeader>
         <PanelBody className="flex flex-wrap items-end justify-between gap-4">
@@ -121,7 +121,7 @@ function Losing({ data }: { data: HomeResponse }) {
         ? { value: '—', note: 'not yet', state: 'none' as const }
         : {
             value: `${l.lostPct} %`,
-            note: `of ${l.total}`,
+            note: `of ${formatCount(l.total)}`,
             state: worst && worst.stage === l.stage && l.lostPct > 0 ? ('weak' as const) : 'ok',
           },
     ]),
@@ -136,7 +136,8 @@ function Losing({ data }: { data: HomeResponse }) {
         <p className="text-body text-text-1">{lossAnswer(losses)}</p>
         <p className="text-small text-text-2">
           Share of threat contacts not done right at each kill-chain stage, over your{' '}
-          {data.assessments} Assessment {data.assessments === 1 ? 'session' : 'sessions'}.{' '}
+          {formatCount(data.assessments)} Assessment{' '}
+          {data.assessments === 1 ? 'session' : 'sessions'}.{' '}
           <Link href="/aar/trends" className="underline decoration-line-2 underline-offset-2">
             Open trends
           </Link>
@@ -254,7 +255,9 @@ function HomeNotices({ data }: { data: HomeResponse }) {
   return (
     <Panel data-testid="home-notices">
       <PanelHeader title="Notices">
-        {data.unreadCount > 0 && <span className="text-label">{data.unreadCount} unread</span>}
+        {data.unreadCount > 0 && (
+          <span className="text-label">{formatCount(data.unreadCount)} unread</span>
+        )}
       </PanelHeader>
       {data.notices.length === 0 ? (
         <p className="px-3 py-2 text-small text-text-2">No notices yet.</p>
@@ -305,9 +308,13 @@ function Home() {
         {...(data
           ? {
               facts: [
-                { label: 'Rating', value: data.rating },
-                { label: 'Assessments', value: data.assessments },
-                { label: 'Unread', value: data.unreadCount, muted: data.unreadCount === 0 },
+                { label: 'Rating', value: formatCount(data.rating) },
+                { label: 'Assessments', value: formatCount(data.assessments) },
+                {
+                  label: 'Unread',
+                  value: formatCount(data.unreadCount),
+                  muted: data.unreadCount === 0,
+                },
               ],
             }
           : {})}

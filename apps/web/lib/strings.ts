@@ -199,3 +199,6 @@ export function formatDateTime(iso: string): string {
 
 /** ISO date in local time, "2026-10-25". */
 export const formatDate = (iso: string): string => formatDateTime(iso).slice(0, 10);
+
+/** Counts with a thousands separator: 1,284 (break-ui 6C). */
+export const formatCount = (n: number): string => n.toLocaleString('en-GB');

@@ -1,4 +1,5 @@
 import type { CriterionStatus, LevelStatus, TrainingLevel } from '@vyuh/shared';
+import { formatCount } from '@/lib/strings';
 
 // Service record wording (SPEC §9.7). The server decides every state; these only
 // turn its figures into text.
@@ -13,7 +14,7 @@ export const LEVEL_NUMBER: Record<TrainingLevel, string> = {
 const UNIT: Record<CriterionStatus['unit'], string> = { COUNT: '', PCT: '%', S: 's', RATING: '' };
 
 function number(v: number, unit: CriterionStatus['unit']): string {
-  const n = unit === 'S' ? v.toFixed(1) : String(Math.round(v));
+  const n = unit === 'S' ? v.toFixed(1) : formatCount(Math.round(v));
   return UNIT[unit] ? `${n} ${UNIT[unit]}` : n;
 }
 

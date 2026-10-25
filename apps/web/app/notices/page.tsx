@@ -14,7 +14,7 @@ import {
 import { RequireAuth } from '@/components/require-auth';
 import { api } from '@/lib/api';
 import { NOTICE_KIND_LABEL, useNoticeStore } from '@/lib/notices';
-import { formatDateTime } from '@/lib/strings';
+import { formatCount, formatDateTime } from '@/lib/strings';
 import { useApiData } from '@/lib/use-api-data';
 import { cn } from '@/lib/utils';
 
@@ -89,7 +89,11 @@ function Notices() {
         {...(data
           ? {
               facts: [
-                { label: 'Unread', value: data.unreadCount, muted: data.unreadCount === 0 },
+                {
+                  label: 'Unread',
+                  value: formatCount(data.unreadCount),
+                  muted: data.unreadCount === 0,
+                },
                 { label: 'Shown', value: data.items.length },
               ],
             }

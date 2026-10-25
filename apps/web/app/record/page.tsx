@@ -31,7 +31,7 @@ import {
   levelNote,
   signoffByText,
 } from '@/lib/record';
-import { formatDate, formatDateTime } from '@/lib/strings';
+import { formatCount, formatDate, formatDateTime } from '@/lib/strings';
 import { useApiData } from '@/lib/use-api-data';
 import { cn } from '@/lib/utils';
 
@@ -214,7 +214,8 @@ function Endorsements({ data }: { data: ServiceRecordResponse }) {
                   <span className="text-label text-text-2">Not yet</span>
                 )}
               </Td>
-              <Td className="align-top py-2 text-small">
+              {/* Wraps: a 200-character scenario name must not widen the table (break-ui 6C). */}
+              <Td className="w-64 min-w-48 whitespace-normal py-2 align-top text-small">
                 {e.sessionId && e.earnedAt ? (
                   <Link
                     href={`/aar/session/${e.sessionId}`}
@@ -269,8 +270,8 @@ function Record() {
           ? {
               facts: [
                 { label: 'Level', value: top ? top.name : 'None yet', muted: !top },
-                { label: 'Assessments', value: data.assessments },
-                { label: 'Rating', value: data.rating },
+                { label: 'Assessments', value: formatCount(data.assessments) },
+                { label: 'Rating', value: formatCount(data.rating) },
               ],
             }
           : {})}
@@ -295,7 +296,8 @@ function Record() {
           {data.demoAssessments > 0 && (
             <p className="flex items-center gap-2 text-small text-text-2">
               <DemoBadge />
-              {data.demoAssessments} of {data.assessments} Assessment sessions are demo history.
+              {formatCount(data.demoAssessments)} of {formatCount(data.assessments)} Assessment
+              sessions are demo history.
             </p>
           )}
           {data.assessments === 0 && (

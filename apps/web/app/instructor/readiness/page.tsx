@@ -20,7 +20,7 @@ import { Table, TableNotice, Td, Th, Tr } from '@/components/ui/table';
 import { STAGE_LABEL } from '@/lib/aar/answers';
 import { readinessAnswer } from '@/lib/unit-views';
 import { api } from '@/lib/api';
-import { formatDate } from '@/lib/strings';
+import { formatCount, formatDate } from '@/lib/strings';
 import { useApiData } from '@/lib/use-api-data';
 
 // Unit readiness board (Phase 6C, UI-PREP §2): one row per trainee — level,
@@ -92,7 +92,7 @@ function Board({ d }: { d: ReadinessResponse }) {
                 </span>
               </Td>
               <Td align="right" className="text-readout">
-                {r.assessments}
+                {formatCount(r.assessments)}
               </Td>
               <Td className="text-readout text-text-2">
                 {r.lastAssessmentAt ? formatDate(r.lastAssessmentAt) : '—'}
@@ -105,7 +105,7 @@ function Board({ d }: { d: ReadinessResponse }) {
               </Td>
               <Td align="right" className="text-readout">
                 {r.overdueAssignments > 0 ? (
-                  <span className="text-warn">{r.overdueAssignments}</span>
+                  <span className="text-warn">{formatCount(r.overdueAssignments)}</span>
                 ) : (
                   <span className="text-text-2">0</span>
                 )}

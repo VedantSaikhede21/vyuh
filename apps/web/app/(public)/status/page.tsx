@@ -126,12 +126,19 @@ export default function StatusPage() {
           Versions
         </h2>
         <div className="border border-line-1">
-          <Table data-testid="status-versions">
+          <Table data-testid="status-versions" className="table-fixed">
             <tbody>
               {versions.map(([name, v]) => (
                 <Tr key={name}>
-                  <Td className="w-full whitespace-normal text-body text-text-body">{name}</Td>
-                  <Td align="right" className="text-readout text-text-1">
+                  <Td className="w-[55%] whitespace-normal py-1.5 text-body text-text-body [overflow-wrap:anywhere]">
+                    {name}
+                  </Td>
+                  {/* Fixed shares (55 / 45 %): long versions wrap instead of widening the page or
+                      collapsing the column (break-ui 6C, 360 px). */}
+                  <Td
+                    align="right"
+                    className="whitespace-normal py-1.5 text-readout text-text-1 [overflow-wrap:anywhere]"
+                  >
                     {v}
                   </Td>
                 </Tr>
