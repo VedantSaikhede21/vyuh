@@ -7,7 +7,7 @@ import { nextStep } from '@/lib/hud/next-step';
 import {
   azimuthBehind,
   clampLabel,
-  easeOutCubic,
+  easeOut,
   inFrame,
   orbitAt,
   shortestTurn,
@@ -167,10 +167,10 @@ describe('selected-track framing (audit P0-6)', () => {
   });
 
   it('eases out and holds its ends', () => {
-    expect(easeOutCubic(0)).toBe(0);
-    expect(easeOutCubic(1)).toBe(1);
-    expect(easeOutCubic(0.5)).toBeGreaterThan(0.5);
-    expect(easeOutCubic(2)).toBe(1);
+    expect(easeOut(0)).toBe(0);
+    expect(easeOut(1)).toBe(1);
+    expect(easeOut(0.5)).toBeGreaterThan(0.9);
+    expect(easeOut(2)).toBe(1);
   });
 
   it('counts a point as in frame only inside the inner view and in front of the camera', () => {

@@ -13,8 +13,8 @@ export interface Orbit {
   radius: number;
 }
 
-/** Ease length; reduced motion jumps instead (DESIGN §7). */
-export const FRAMING_MS = 400;
+/** Ease length: under 300 ms, since Tab triggers it often; reduced motion jumps (DESIGN §7). */
+export const FRAMING_MS = 300;
 /** No automatic re-aim this long after the trainee last orbited or zoomed. */
 export const HANDS_OFF_MS = 5_000;
 /** How often an already selected track is checked for being out of frame. */
@@ -38,11 +38,12 @@ export function shortestTurn(from: number, to: number): number {
   return d;
 }
 
-export const easeOutCubic = (t: number) => 1 - (1 - Math.min(Math.max(t, 0), 1)) ** 3;
+/** Strong ease-out (quint): the move starts at once and settles softly. */
+export const easeOut = (t: number) => 1 - (1 - Math.min(Math.max(t, 0), 1)) ** 5;
 
 /** The orbit at `t` (0..1) of an ease from `a` to `b`, turning the short way round. */
 export function orbitAt(a: Orbit, b: Orbit, t: number): Orbit {
-  const k = easeOutCubic(t);
+  const k = easeOut(t);
   return {
     theta: a.theta + shortestTurn(a.theta, b.theta) * k,
     phi: a.phi + (b.phi - a.phi) * k,
