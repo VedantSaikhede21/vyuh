@@ -17,7 +17,20 @@ from app.core.logging import (
     configure_logging,
     request_id_middleware,
 )
-from app.routers import aar, ai, assignments, auth, health, scenarios, scoring, sessions, units
+from app.routers import (
+    aar,
+    ai,
+    assignments,
+    auth,
+    health,
+    notices,
+    portal,
+    record,
+    scenarios,
+    scoring,
+    sessions,
+    units,
+)
 from app.seed.demo import seed_if_changed
 from app.services.ai.llm import LlmClient
 from app.services.ratelimit import RateLimiter
@@ -81,4 +94,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(units.router, prefix=API_PREFIX)
     app.include_router(scoring.router, prefix=API_PREFIX)
     app.include_router(ai.router, prefix=API_PREFIX)
+    app.include_router(record.router, prefix=API_PREFIX)
+    app.include_router(notices.router, prefix=API_PREFIX)
+    app.include_router(portal.router, prefix=API_PREFIX)
     return app

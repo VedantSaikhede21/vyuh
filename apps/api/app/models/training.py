@@ -1,4 +1,5 @@
-"""sessions, session_events, scores, debriefs, rating_history (SPEC §10)."""
+"""sessions, session_events, scores, debriefs, rating_history, session_remarks,
+level_signoffs (SPEC §10)."""
 
 import uuid
 from datetime import datetime
@@ -19,7 +20,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, created_at, str_enum, uuid_pk
-from app.schemas.generated import SessionMode, SessionStatus
+from app.schemas.generated import SessionMode, SessionStatus, TrainingLevel
 
 
 class TrainingSession(Base):
@@ -110,4 +111,39 @@ class RatingHistory(Base):
     session_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"))
     before: Mapped[int]
     after: Mapped[int]
+    created_at: Mapped[datetime] = created_at()
+
+
+class SessionRemark(Base):
+    """An instructor's remark on a completed session (Phase 6C): AAR tab and a notice."""
+
+    __tablename__ = "session_remarks"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("sessions.id", ondelete="CASCADE"), index=True
+    )
+    author_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    body: Mapped[str] = mapped_column(String(500))
+    is_demo: Mapped[bool] = mapped_column(server_default=text("false"))
+    created_at: Mapped[datetime] = created_at()
+
+
+class LevelSignoff(Base):
+    """A staff sign-off of a representative training level (SPEC §9.7). One per user and level."""
+
+    __tablename__ = "level_signoffs"
+    __table_args__ = (UniqueConstraint("user_id", "level", name="uq_level_signoffs_user_id_level"),)
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    level: Mapped[TrainingLevel] = mapped_column(str_enum(TrainingLevel, "training_level"))
+    #: The rules the criteria were met under (`record_v1`).
+    ruleset: Mapped[str] = mapped_column(String(32))
+    signed_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    #: The criteria figures at sign-off.
+    criteria: Mapped[list[Any]] = mapped_column(JSONB)
+    is_demo: Mapped[bool] = mapped_column(server_default=text("false"))
     created_at: Mapped[datetime] = created_at()

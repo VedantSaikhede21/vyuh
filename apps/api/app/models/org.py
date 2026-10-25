@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, String, text
+from sqlalchemy import DateTime, ForeignKey, String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, created_at, str_enum, uuid_pk
@@ -35,6 +35,8 @@ class User(Base):
     )
     rating: Mapped[int] = mapped_column(server_default=text("1000"))
     is_guest: Mapped[bool] = mapped_column(server_default=text("false"))
+    #: Notices created after this are unread (null: all unread).
+    notices_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = created_at()
 
     unit: Mapped[Unit | None] = relationship(lazy="joined")

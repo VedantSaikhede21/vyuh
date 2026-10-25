@@ -21,12 +21,14 @@ from app.schemas.generated import (
     AiTrustMetrics,
     AssignmentCompletion,
     ComponentPct,
+    ContactKillChain,
     ErrorCode,
     KillChainStage,
     KillChainStatus,
     MistakeItem,
     RatingChange,
     Scenario,
+    Score,
     SessionMode,
     SessionStatus,
     StageRate,
@@ -91,6 +93,9 @@ class SessionFacts:
     tree_version: str
     rating: RatingChange | None
     trust: AiTrustMetrics
+    #: The latest score and the kill chain, kept for the service record (SPEC §9.7).
+    score: Score
+    chains: list[ContactKillChain]
     mistakes: Counter[str] = field(default_factory=Counter)
     stage_ok: Counter[str] = field(default_factory=Counter)
     stage_total: Counter[str] = field(default_factory=Counter)
@@ -133,12 +138,14 @@ def _facts(db: Session, row: TrainingSession, scenarios: dict[uuid.UUID, tuple])
         tree_version=score.tree_version,
         rating=rating_change(db, row, scenario.difficulty),
         trust=ai_trust(scenario, events),
+        score=score,
+        chains=kill_chain(scenario, events),
     )
     for p in score.per_contact:
         for leaf in {getattr(x, "root", x) for x in p.leaves}:
             if leaf in MISTAKES:
                 facts.mistakes[leaf] += 1
-    for chain in kill_chain(scenario, events):
+    for chain in facts.chains:
         for step in chain.stages:
             if step.status is KillChainStatus.NOT_APPLICABLE:
                 continue

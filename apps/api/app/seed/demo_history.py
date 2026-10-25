@@ -171,3 +171,77 @@ def seed_demo_history(db: Session) -> int:
         played += 1
     _assignments(db)
     return played
+
+
+#: The demo remark (Phase 6C): on trainee1's latest demo session, an hour after it ended.
+DEMO_REMARK = (
+    "trainee1@demo",
+    "Good work holding fire on the birds. Send the contact report before you engage, "
+    "not after: the report scores on time from first detection.",
+)
+
+
+def seed_demo_record(db: Session) -> int:
+    """Demo sign-offs and the demo remark (SPEC §9.7, §22), rebuilt on every seed.
+
+    instructor@demo signs off Basic operator for every demo trainee whose demo history
+    meets its criteria, an hour after their latest demo session, so the record and the
+    readiness board show all three level states (the demo data leaves some trainees at
+    "Criteria met · awaiting sign-off" for Sensor operator). Returns sign-offs written.
+    """
+    from app.models import LevelSignoff, SessionRemark
+    from app.services.analytics.trends import assessment_facts
+    from app.services.record import build_record, rules
+
+    instructor = _user(db, INSTRUCTOR_EMAIL)
+    if instructor is None:
+        return 0
+    db.execute(delete(LevelSignoff).where(LevelSignoff.is_demo.is_(True)))
+    db.execute(delete(SessionRemark).where(SessionRemark.is_demo.is_(True)))
+    db.commit()
+    first = rules()["levels"][0]["level"]
+    written = 0
+    emails = sorted({log["email"] for log in _logs().values()})
+    for email in emails:
+        user = _user(db, email)
+        if user is None:
+            continue
+        facts = [f for f in assessment_facts(db, [user.id]) if f.row.is_demo]
+        if not facts:
+            continue
+        level = build_record(db, user, facts=facts).levels[0]
+        if not level.criteria_met:
+            continue
+        db.add(
+            LevelSignoff(
+                user_id=user.id,
+                level=first,
+                ruleset=rules()["id"],
+                signed_by=instructor.id,
+                criteria=[c.model_dump(mode="json", by_alias=True) for c in level.criteria],
+                is_demo=True,
+                created_at=facts[-1].ended_at + timedelta(hours=1),
+            )
+        )
+        written += 1
+    email, body = DEMO_REMARK
+    user = _user(db, email)
+    if user is not None:
+        latest = db.scalar(
+            select(TrainingSession)
+            .where(TrainingSession.user_id == user.id, TrainingSession.is_demo.is_(True))
+            .order_by(TrainingSession.ended_at.desc())
+            .limit(1)
+        )
+        if latest is not None and latest.ended_at is not None:
+            db.add(
+                SessionRemark(
+                    session_id=latest.id,
+                    author_id=instructor.id,
+                    body=body,
+                    is_demo=True,
+                    created_at=latest.ended_at + timedelta(hours=1),
+                )
+            )
+    db.commit()
+    return written

@@ -1,7 +1,13 @@
 from fastapi import APIRouter
 
-from app.core.auth import DbDep, StaffUser
-from app.schemas.generated import ScoringTreeListResponse, ScoringTreeSummary, UpdateWeightsRequest
+from app.core.auth import CurrentUser, DbDep, StaffUser
+from app.schemas.generated import (
+    ScoringSummaryResponse,
+    ScoringTreeListResponse,
+    ScoringTreeSummary,
+    UpdateWeightsRequest,
+)
+from app.services import portal
 from app.services.scoring import versions
 
 router = APIRouter(prefix="/scoring", tags=["scoring"])
@@ -19,3 +25,9 @@ def update_weights(
 ) -> ScoringTreeSummary:
     """Save new component weights as a new immutable version; nothing is re-scored."""
     return versions.create_weight_version(db, user, tree_id, body)
+
+
+@router.get("/summary", response_model=ScoringSummaryResponse)
+def summary(user: CurrentUser) -> ScoringSummaryResponse:
+    """The current tree's weights and leaves, for Help ("How scoring works")."""
+    return portal.scoring_summary()

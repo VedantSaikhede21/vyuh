@@ -4,6 +4,7 @@ from fastapi import APIRouter, status
 
 from app.core.auth import CurrentUser, DbDep, StaffUser
 from app.schemas.generated import (
+    ActiveSessionsResponse,
     CompleteSessionRequest,
     CreateSessionRequest,
     CreateSessionResponse,
@@ -13,7 +14,7 @@ from app.schemas.generated import (
     Score,
     SessionDetailResponse,
 )
-from app.services import sessions
+from app.services import portal, sessions
 from app.services.scoring import versions
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
@@ -31,6 +32,15 @@ def create_session(
     body: CreateSessionRequest, user: CurrentUser, db: DbDep
 ) -> CreateSessionResponse:
     return sessions.create_session(db, user, body)
+
+
+@router.get("/active", response_model=ActiveSessionsResponse)
+def active_sessions(
+    user: StaffUser, db: DbDep, unit: uuid.UUID | None = None
+) -> ActiveSessionsResponse:
+    """Live monitor: ACTIVE sessions with a batch in the last minute (read-only, no score).
+    Declared before /{session_id} so "active" is not parsed as an id."""
+    return portal.active_sessions(db, unit)
 
 
 @router.post("/{session_id}/events", response_model=EventBatchResponse)

@@ -1,12 +1,14 @@
 import uuid
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, status
 
 from app.core.auth import CurrentUser, DbDep, SettingsDep, StaffUser
 from app.core.logging import TEST_DEBRIEF_HEADER
 from app.schemas.generated import (
     AarSessionResponse,
+    CreateRemarkRequest,
     DebriefResponse,
+    SessionRemark,
     TraineeTrendsResponse,
     UnitDashboardResponse,
 )
@@ -83,3 +85,15 @@ def user_trends(user_id: uuid.UUID, user: CurrentUser, db: DbDep) -> TraineeTren
 def unit_dashboard(unit_id: uuid.UUID, user: StaffUser, db: DbDep) -> UnitDashboardResponse:
     """Unit averages, leaderboard, weakest kill-chain stage, mistakes, assignments."""
     return trends.unit_dashboard(db, unit_id)
+
+
+@router.post(
+    "/sessions/{session_id}/remarks",
+    response_model=SessionRemark,
+    status_code=status.HTTP_201_CREATED,
+)
+def add_remark(
+    session_id: uuid.UUID, body: CreateRemarkRequest, user: StaffUser, db: DbDep
+) -> SessionRemark:
+    """An instructor remark on a completed session; the trainee sees it as a notice."""
+    return aar.add_remark(db, user, session_id, body)

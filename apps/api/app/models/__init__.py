@@ -10,18 +10,28 @@ from app.models.content import (
     ThreatType,
 )
 from app.models.org import Unit, User
-from app.models.training import Debrief, RatingHistory, ScoreRow, SessionEvent, TrainingSession
+from app.models.training import (
+    Debrief,
+    LevelSignoff,
+    RatingHistory,
+    ScoreRow,
+    SessionEvent,
+    SessionRemark,
+    TrainingSession,
+)
 
 __all__ = [
     "Assignment",
     "Base",
     "Debrief",
+    "LevelSignoff",
     "RatingHistory",
     "Scenario",
     "ScoreRow",
     "ScoringTreeRow",
     "SeedState",
     "SessionEvent",
+    "SessionRemark",
     "TerrainPreset",
     "ThreatType",
     "TrainingSession",
