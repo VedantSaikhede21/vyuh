@@ -195,6 +195,12 @@ def test_reweighted_tree_scales_component_leaves() -> None:
     report = by_id["REPORT_SCORED"]
     assert leaf_points(report, {"reportPoints": 6.5}) == pytest.approx(13.0)
     assert leaf_points(report, {"reportPoints": 99}) == 20
+    # The feedback still quotes the report on its own 10-point scale, and says so.
+    assert report.feedback.startswith(
+        "Best contact report {reportPoints:.1f}/10 (scaled by 2 for this tree's weights), sent"
+    )
+    v4_report = next(x for x in v4.all_leaves() if x.leaf == "REPORT_SCORED")
+    assert "/10" in v4_report.feedback and "weights" not in v4_report.feedback
     # Same structure: every contact reaches the same leaves.
     m = {"isThreat": False, "outcome": "IGNORED_OK"}
     assert [x.leaf for x in evaluate(tree, m)] == [x.leaf for x in evaluate(v4, m)]

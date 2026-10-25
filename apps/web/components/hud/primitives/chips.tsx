@@ -30,7 +30,7 @@ export function QualificationChip({
 
 /** Seeded demo history (SPEC §22): shown wherever demo sessions appear. */
 export const DEMO_TITLE =
-  'Seeded demo history (SPEC §22): simulated trainee runs, scored by the server. Not real study data.';
+  'Demo history: simulated trainee runs, scored by the server. Not real training data.';
 
 /** Amber outline DEMO DATA chip on anything fed by `is_demo` rows (UI-PREP §3). */
 export function DemoBadge({

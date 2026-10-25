@@ -84,10 +84,16 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 - Builder field errors use `--crit` like the invalid input border.
 - `e2e/checkpoint-6b.spec.ts` started (`@cp6b`, out `e2e/checkpoint/6b/`): training list, briefings S06 / S05 / S01, builder asset tool, zone draft, field error. Passes at 1366 on a production build; captures reviewed.
 
+## Weight editor, From text, "/10" (2026-10-25, P1-9)
+
+- Scoring page shows plain-language summaries for the built-in trees (`TREE_ABOUT`); the tree files keep their developer descriptions (immutable). Versions keep their own note.
+- From text: "Reading text needs the LLM, which is switched off on this server. Use the Builder form instead." (no `LLM_ENABLED`); example buttons drop `disabled:opacity-40` (decision 142).
+- Help dialog and Demo badge tooltip without "SPEC §" references. Login's ENV=prod line is 6C.
+- `reweighted()` (`app/services/scoring/versions.py`): a scaled `pointsMetric` leaf's feedback says so — "Best contact report 7.0/10 (scaled by 2 for this tree's weights)". Existing weight versions are immutable and keep the old text. Test in `test_reweighted_tree_scales_component_leaves`.
+
 ## Still to do in 6B (from the plan, in order)
 
 2. Player: disabled reasons and title hovers checked in the break-ui pass. (Aids labelled: spectrogram "Aid · confirm on camera"; the AI chip tooltip already says it can be wrong.)
-4. Weight editor / From text copy (P1-9) and "/10" wording.
 5. Apply 6A primitives everywhere (Tabs, SegmentedControl, Table, PageHeader, ErrorState); one primary action per screen; keyboard focus order.
 6. Load `emil-design-eng` before the polish, `break-ui` before stress-testing; write the break-ui report.
 7. Checkpoint B: `checkpoint-6b.spec.ts` captures of every 6B screen at 1366×768 and 1920×1080 + break-ui report + FPS before / after → **stop for the user's OK**.

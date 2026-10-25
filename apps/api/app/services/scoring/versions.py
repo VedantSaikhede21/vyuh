@@ -8,6 +8,7 @@ action that writes a new score row (SPEC §9.6); nothing is re-scored silently.
 """
 
 import json
+import re
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -84,6 +85,17 @@ def reweighted(tree: Tree, new_max: dict[str, float], new_id: str) -> dict[str, 
                 out["points"] = round(out.get("points", 0) * f, 4)
                 if "pointsMetric" in out:
                     out["pointsScale"] = round(out.get("pointsScale", 1.0) * f, 6)
+                    # The feedback quotes the metric on its own scale ("report 7.0/10");
+                    # say it is scaled, or it reads against the new maximum (Phase 4b
+                    # tech debt).
+                    fb = out.get("feedback")
+                    if isinstance(fb, str):
+                        out["feedback"] = re.sub(
+                            r"(\{" + re.escape(out["pointsMetric"]) + r"[^}]*\})/(\d+)",
+                            rf"\1/\2 (scaled by {f:g} for this tree's weights)",
+                            fb,
+                            count=1,
+                        )
         return out
 
     content["nodes"] = scale(content["nodes"])
