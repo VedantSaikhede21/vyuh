@@ -178,3 +178,21 @@ export function completionAnswer(rows: readonly { assigned: number; completed: n
   const done = rows.reduce((a, r) => a + r.completed, 0);
   return `${done} of ${assigned} assigned runs completed in Assessment mode.`;
 }
+
+/** Runs of the same recommended difficulty over sessions, oldest first (audit P1-15). */
+export interface DifficultyRun {
+  difficulty: number;
+  /** 1-based session numbers, inclusive. */
+  from: number;
+  to: number;
+}
+
+export function difficultyRuns(points: readonly TrendPoint[]): DifficultyRun[] {
+  const runs: DifficultyRun[] = [];
+  points.forEach((p, i) => {
+    const last = runs.at(-1);
+    if (last && last.difficulty === p.recommendedDifficulty) last.to = i + 1;
+    else runs.push({ difficulty: p.recommendedDifficulty, from: i + 1, to: i + 1 });
+  });
+  return runs;
+}

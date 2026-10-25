@@ -27,6 +27,7 @@ export function QuestionPanel({
   className,
   testId,
   aside,
+  definition,
 }: {
   question: string;
   answer: string;
@@ -34,6 +35,8 @@ export function QuestionPanel({
   className?: string;
   testId?: string;
   aside?: ReactNode;
+  /** What the measure is, when two panels could be confused (audit P1-15). */
+  definition?: string;
 }) {
   return (
     <Panel className={className} data-testid={testId}>
@@ -42,6 +45,11 @@ export function QuestionPanel({
         {answer}
       </p>
       <div className="min-h-0 flex-1 p-3 pt-2">{children}</div>
+      {definition && (
+        <p className="px-3 pb-2 text-small text-text-2" data-testid="definition">
+          {definition}
+        </p>
+      )}
     </Panel>
   );
 }
@@ -118,6 +126,8 @@ export function SeriesChart({
             tick={TICK}
             domain={domain}
             ticks={ticks}
+            // Given ticks are all drawn: the default interval dropped 75 of 0–100 (audit P1-15).
+            interval={ticks ? 0 : 'preserveEnd'}
             allowDecimals={false}
             width={yWidth}
           />
