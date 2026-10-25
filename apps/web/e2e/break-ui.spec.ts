@@ -244,6 +244,13 @@ for (const width of [1366, 1920]) {
         await page.waitForLoadState('networkidle');
         await noHorizontalScroll(page, 'train', s);
         await shot(page, 'train', s, s !== 'many');
+        if (s === 'many') {
+          // "My generated" pages its 1,000 rows (break-ui 7).
+          const rows = page.getByTestId('own-generated-table').locator('tbody tr');
+          await expect(rows).toHaveCount(20);
+          await page.getByTestId('own-generated-more').click();
+          await expect(rows).toHaveCount(40);
+        }
         await page.goto('/aar/trends');
         await page.waitForLoadState('networkidle');
         await noHorizontalScroll(page, 'trends', s);

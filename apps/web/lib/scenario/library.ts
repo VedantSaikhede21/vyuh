@@ -36,6 +36,14 @@ export function visibilityKm(m: number): string {
 export const shownTags = (item: ScenarioListItem): string[] =>
   item.tags.filter((t) => t !== 'library');
 
+/** Tags a list row shows, and the rest behind "+n" (break-ui 2): rows keep one height. */
+export function rowTags(item: ScenarioListItem, max = 2): { shown: string[]; rest: string[] } {
+  const all = shownTags(item);
+  return all.length <= max + 1
+    ? { shown: all, rest: [] }
+    : { shown: all.slice(0, max), rest: all.slice(max) };
+}
+
 export type SortKey = 'difficulty' | 'name' | 'best';
 export const SORT_KEYS: readonly SortKey[] = ['difficulty', 'name', 'best'];
 export const TIME_LABELS: readonly TimeBandLabel[] = ['Day', 'Dawn', 'Dusk', 'Night'];

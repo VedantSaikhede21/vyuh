@@ -19,6 +19,7 @@ import {
   conditions,
   filterAndSort,
   readQuery,
+  rowTags,
   shownTags,
   terrainLabel,
   TIME_LABELS,
@@ -206,24 +207,34 @@ export function ScenarioRowsTable({
                   className="block h-[26px] w-[42px] max-w-none shrink-0 rounded-sm border border-line-1 object-cover"
                 />
               </td>
-              <td className={cn(TD, 'text-body')}>
-                {s.code && <span className="mr-2 text-readout text-text-2">{s.code}</span>}
-                <span className="text-text-1">{s.name}</span>
-                {badge && (
-                  <Badge
-                    className="ml-2"
-                    tone={
-                      badge.state === 'DONE' ? 'ok' : badge.state === 'OVERDUE' ? 'warn' : 'strong'
-                    }
-                    title={badge.title}
-                    data-testid="assigned-badge"
-                  >
-                    {badge.label}
-                  </Badge>
-                )}
-                {opening === s.id && (
-                  <span className="ml-2 text-small text-text-2">Opening briefing…</span>
-                )}
+              {/* Wraps to two lines, never widens the table (break-ui 2): names may run to 200 characters. */}
+              <td className="min-w-[14rem] px-2 py-1 text-body">
+                {/* Name wraps; the badge and the opening note stay beside it, never under it. */}
+                <span className="flex items-center gap-2">
+                  <span className="line-clamp-2 min-w-0" title={s.name}>
+                    {s.code && <span className="mr-2 text-readout text-text-2">{s.code}</span>}
+                    <span className="text-text-1">{s.name}</span>
+                  </span>
+                  {badge && (
+                    <Badge
+                      className="shrink-0"
+                      tone={
+                        badge.state === 'DONE'
+                          ? 'ok'
+                          : badge.state === 'OVERDUE'
+                            ? 'warn'
+                            : 'strong'
+                      }
+                      title={badge.title}
+                      data-testid="assigned-badge"
+                    >
+                      {badge.label}
+                    </Badge>
+                  )}
+                  {opening === s.id && (
+                    <span className="shrink-0 text-small text-text-2">Opening briefing…</span>
+                  )}
+                </span>
               </td>
               <td className={TD}>
                 <Pips value={s.difficulty} />
@@ -247,11 +258,16 @@ export function ScenarioRowsTable({
               </td>
               <td className={TD}>
                 <span className="flex gap-1">
-                  {shownTags(s).map((t) => (
+                  {rowTags(s).shown.map((t) => (
                     <Badge key={t} tone={t === 'test' ? 'default' : 'strong'}>
                       {t}
                     </Badge>
                   ))}
+                  {rowTags(s).rest.length > 0 && (
+                    <Badge tone="default" title={rowTags(s).rest.join(', ')}>
+                      +{rowTags(s).rest.length}
+                    </Badge>
+                  )}
                 </span>
               </td>
               <td className={cn(TD, 'text-right text-readout')}>
