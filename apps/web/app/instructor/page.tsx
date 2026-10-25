@@ -14,6 +14,7 @@ import {
   Pips,
   Readout,
   Skeleton,
+  StateChip,
   StatusNotice,
 } from '@/components/hud/primitives';
 import { RequireStaff } from '@/components/require-staff';
@@ -24,6 +25,7 @@ import {
   COMPONENT_LABEL,
   STAGE_LABEL,
   completionAnswer,
+  isOverdue,
   leaderboardAnswer,
   unitComponentAnswer,
   weakestStageAnswer,
@@ -151,6 +153,8 @@ function Dashboard({
   reload: () => void;
 }) {
   const c = d.components;
+  const router = useRouter();
+  const now = new Date();
   return (
     <div className="space-y-3" data-testid="unit-dashboard">
       <div className="flex flex-wrap items-center gap-3">
@@ -321,7 +325,7 @@ function Dashboard({
         </QuestionPanel>
         <QuestionPanel
           question="Are assignments being completed?"
-          answer={completionAnswer(d.assignments)}
+          answer={completionAnswer(d.assignments, now)}
           testId="unit-assignments"
         >
           {d.assignments.length === 0 ? (
@@ -347,6 +351,11 @@ function Dashboard({
                     </td>
                     <td className={`${TD} text-readout text-text-2`}>
                       {a.dueAt ? a.dueAt.slice(0, 10) : '—'}
+                      {isOverdue(a, now) && (
+                        <StateChip tone="warn" className="ml-2" data-testid="overdue">
+                          Overdue
+                        </StateChip>
+                      )}
                     </td>
                     <td className={`${TD} text-right text-readout`}>
                       {a.completed}
@@ -365,7 +374,7 @@ function Dashboard({
       <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <Panel>
           <PanelHeader title="Recent sessions">
-            <span className="text-label">Open a row for its AAR</span>
+            <span className="text-label">A row opens its AAR · a name opens trends</span>
           </PanelHeader>
           <table className="w-full border-collapse" data-testid="unit-recent">
             <thead>
@@ -379,12 +388,23 @@ function Dashboard({
             </thead>
             <tbody>
               {d.recent.map((s) => (
-                <tr key={s.sessionId} className="border-t border-line-1 hover:bg-bg-2">
+                // The whole row opens the AAR (audit P1-16); the scenario link is its
+                // keyboard target, the trainee name a separate link to their trends.
+                <tr
+                  key={s.sessionId}
+                  className="cursor-pointer border-t border-line-1 hover:bg-bg-2"
+                  data-testid="unit-recent-row"
+                  onClick={(e) => {
+                    if ((e.target as HTMLElement).closest('a')) return;
+                    router.push(`/aar/session/${s.sessionId}`);
+                  }}
+                >
                   <td className={`${TD} text-readout text-text-2`}>{s.endedAt.slice(0, 10)}</td>
                   <td className={`${TD} text-body`}>
                     <Link
                       href={`/aar/trends?user=${s.userId}`}
-                      className="hover:text-text-1 hover:underline"
+                      className="underline decoration-line-2 underline-offset-2 hover:text-text-1 hover:decoration-text-2"
+                      title={`${s.userName}: trends`}
                     >
                       {s.userName}
                     </Link>

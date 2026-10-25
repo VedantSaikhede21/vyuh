@@ -172,11 +172,26 @@ export function unitComponentAnswer(c: ComponentPct): string {
   return `${COMPONENT_LABEL[low]} is the unit's weakest component at ${Math.round(c[low] ?? 0)} % of its maximum.`;
 }
 
-export function completionAnswer(rows: readonly { assigned: number; completed: number }[]): string {
+interface AssignmentCount {
+  assigned: number;
+  completed: number;
+  dueAt?: string | null;
+}
+
+/** Past its due date with runs still pending (audit P1-16). */
+export function isOverdue(row: AssignmentCount, now: Date): boolean {
+  return !!row.dueAt && Date.parse(row.dueAt) < now.getTime() && row.completed < row.assigned;
+}
+
+export function completionAnswer(rows: readonly AssignmentCount[], now = new Date()): string {
   if (rows.length === 0) return 'No assignments for this unit yet.';
   const assigned = rows.reduce((a, r) => a + r.assigned, 0);
   const done = rows.reduce((a, r) => a + r.completed, 0);
-  return `${done} of ${assigned} assigned runs completed in Assessment mode.`;
+  const late = rows.filter((r) => isOverdue(r, now)).length;
+  return (
+    `${done} of ${assigned} assigned runs completed in Assessment mode.` +
+    (late ? ` ${late} ${late === 1 ? 'assignment is' : 'assignments are'} overdue.` : '')
+  );
 }
 
 /** Runs of the same recommended difficulty over sessions, oldest first (audit P1-15). */
