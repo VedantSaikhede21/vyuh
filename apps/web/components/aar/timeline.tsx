@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import { memo, useEffect, useMemo } from 'react';
-import { Kbd, Panel, PanelHeader, Tooltip } from '@/components/hud/primitives';
+import { Kbd, Panel, PanelHeader, StateChip, Tooltip } from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
 import { REPLAY_SPEEDS, type ReplayController } from '@/lib/replay/controller';
 import type { MarkerKind, TimelineMarker } from '@/lib/replay/gate';
@@ -12,6 +12,16 @@ import { cn } from '@/lib/utils';
 
 // Replay timeline (DESIGN §11.7, Phase 4a): scrubber with event markers, play /
 // pause, 1× / 2× / 4×, step one tick, ground truth, all from the keyboard.
+
+/** One-word names for the legend under the scrubber. */
+const MARKER_SHORT: Record<MarkerKind, string> = {
+  DETECT: 'Detect',
+  CLASSIFY: 'Class',
+  RESPOND: 'Order',
+  GOOD: 'Kill',
+  BAD: 'Leak',
+  PENALTY: 'Penalty',
+};
 
 const MARKER_NAME: Record<MarkerKind, string> = {
   DETECT: 'Marked detected',
@@ -148,7 +158,7 @@ const MarkerStrip = memo(function MarkerStrip({
 }) {
   const fan = useMemo(() => fanOffsets(markers, end), [markers, end]);
   return (
-    <div className="absolute inset-x-0 top-2 h-3" aria-hidden>
+    <div className="absolute inset-x-0 top-1.5 h-3" aria-hidden>
       {markers.map((m, i) => (
         <button
           key={`${m.tMs}-${i}`}
@@ -189,7 +199,7 @@ export function ReplayTimeline({
 
   return (
     <div
-      className="flex h-14 shrink-0 items-center gap-3 border-t border-line-1 bg-bg-1 px-3"
+      className="flex h-[68px] shrink-0 items-center gap-3 border-t border-line-1 bg-bg-1 px-3"
       data-testid="replay-timeline"
     >
       <div className="flex items-center gap-1">
@@ -262,18 +272,37 @@ export function ReplayTimeline({
           aria-label="Replay time"
           aria-valuetext={formatClock(tMs)}
           data-testid="replay-scrubber"
-          className="replay-scrubber absolute inset-x-0 bottom-2 h-4 w-full cursor-pointer"
+          className="replay-scrubber absolute inset-x-0 top-[22px] h-4 w-full cursor-pointer"
         />
+        {/* Marker legend, always in view (audit P1-14); full names in the ? help. */}
+        <ul
+          className="absolute inset-x-0 bottom-1 flex justify-end gap-3 text-[11px] leading-4 text-text-2"
+          aria-label="Marker legend"
+          data-testid="marker-legend"
+        >
+          {(Object.keys(MARKER_SHORT) as MarkerKind[]).map((k) => (
+            <li key={k} className="flex items-center gap-1" title={MARKER_NAME[k]}>
+              <MarkerGlyph kind={k} />
+              {MARKER_SHORT[k]}
+            </li>
+          ))}
+        </ul>
       </div>
+      {/* A switch, not an action: the label names it, the chip says its state (audit P1-14). */}
       <Tooltip content="Show what was really there" shortcut="G" align="end">
         <Button
           size="hud"
-          variant={truth ? 'primary' : 'secondary'}
-          aria-pressed={truth}
+          variant="secondary"
+          role="switch"
+          aria-checked={truth}
           data-testid="truth-toggle"
           onClick={() => set({ truth: !truth })}
         >
-          Ground truth {truth ? 'on' : 'off'}
+          Ground truth
+          <StateChip tone={truth ? 'active' : 'muted'} className="ml-1">
+            {truth ? 'On' : 'Off'}
+          </StateChip>
+          <Kbd>G</Kbd>
         </Button>
       </Tooltip>
     </div>

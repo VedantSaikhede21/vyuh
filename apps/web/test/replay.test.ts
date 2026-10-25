@@ -208,6 +208,15 @@ describe('timeline markers', () => {
     expect(at(null, null)).toBe(0);
   });
 
+  it('opens an unlinked replay at the first radar track (audit P1-14)', () => {
+    const first = events.find((e) => e.type === 'SENSOR_TRACK_CREATED');
+    expect(first).toBeDefined();
+    expect(initialReplayTime({ t: null, penalty: null }, null, killChain, events)).toBe(
+      first!.tMs,
+    );
+    expect(initialReplayTime({ t: '5000', penalty: null }, null, killChain, events)).toBe(5000);
+  });
+
   it('does not mark a bonus as a penalty', () => {
     const score = {
       penalties: [penalty({ code: 'NON_THREAT_IDENTIFIED', points: 5, contactId: 'c01' })],

@@ -9,7 +9,7 @@ import type {
 } from '@vyuh/shared';
 import { ChevronRight } from 'lucide-react';
 import { memo, useMemo, useState } from 'react';
-import { AffiliationSymbol, Panel, PanelHeader, StateChip } from '@/components/hud/primitives';
+import { AffiliationSymbol, Panel } from '@/components/hud/primitives';
 import { humaniseFeedback } from '@/lib/hud/feedback';
 import { clearedLabel, groupRows } from '@/lib/replay/kill-chain-rows';
 import { useReplayStore } from '@/lib/replay/store';
@@ -55,13 +55,31 @@ const STATUS_NAME: Record<KillChainStatus, string> = {
   NOT_APPLICABLE: 'Not applicable',
 };
 
+// A missed stage is an omission, not a wrong act: --warn with a symbol, so a
+// threat row is not a wall of red (audit P1-14). WRONG stays --crit.
 const STATUS_CLASS: Record<KillChainStatus, string> = {
   OK: 'text-ok',
   LATE: 'text-warn',
   WRONG: 'text-crit',
-  MISSED: 'text-crit',
+  MISSED: 'text-warn',
   NOT_APPLICABLE: 'text-text-2',
 };
+
+/** Hollow circle with a slash: "not done". Marks MISSED next to its word. */
+function MissGlyph() {
+  return (
+    <svg
+      width="7"
+      height="7"
+      viewBox="0 0 7 7"
+      aria-hidden
+      className="mr-0.5 inline-block align-[-0.5px]"
+    >
+      <circle cx="3.5" cy="3.5" r="2.9" fill="none" stroke="currentColor" strokeWidth="1.1" />
+      <path d="M1.4 5.6 L5.6 1.4" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  );
+}
 
 /** The row that folds the correctly handled non-threats away (spans the whole table). */
 function ClearedToggle({
@@ -166,14 +184,10 @@ export const KillChainPanel = memo(function KillChainPanel({
   const focused = sorted
     .flatMap((r) => r.stages.map((s) => ({ row: r, step: s })))
     .find(({ row, step }) => cellKey(row, step) === focus);
-  const threats = rows.filter((r) => r.isThreat).length;
+  // No panel header: the side panel's tab already says "Kill chain · n threats"
+  // (audit P1-14: six rows at 768 px instead of four).
   return (
     <Panel className="h-full border-0" data-testid="kill-chain">
-      <PanelHeader title="Kill chain">
-        <StateChip tone="muted">
-          {threats} threat{threats === 1 ? '' : 's'}
-        </StateChip>
-      </PanelHeader>
       <div className="min-h-0 flex-1 overflow-y-auto">
         <table className="w-full border-collapse" aria-label="Kill chain by contact">
           <thead>
@@ -235,6 +249,7 @@ export const KillChainPanel = memo(function KillChainPanel({
                             focus === key && 'bg-bg-3',
                           )}
                         >
+                          {step.status === 'MISSED' && <MissGlyph />}
                           {STATUS_TEXT[step.status]}
                         </button>
                       </td>
@@ -246,13 +261,12 @@ export const KillChainPanel = memo(function KillChainPanel({
           </tbody>
         </table>
       </div>
-      <div className="h-[84px] shrink-0 overflow-y-auto border-t border-line-1 px-2 py-1.5">
+      <div className="h-[64px] shrink-0 overflow-y-auto border-t border-line-1 px-2 py-1">
         {focused ? (
           <StepDetail row={focused.row} step={focused.step} />
         ) : (
           <p className="text-small text-text-2">
-            Point at a stage for what you did against what was there; select it to jump the replay
-            there.
+            Point at a stage to compare what you did with what was there; select it to jump there.
           </p>
         )}
       </div>
@@ -316,6 +330,7 @@ export function KillChainTable({
                   title={humaniseFeedback(step.feedback)}
                 >
                   <span className={cn('font-mono', STATUS_CLASS[step.status])}>
+                    {step.status === 'MISSED' && <MissGlyph />}
                     {STATUS_NAME[step.status]}
                   </span>
                   {step.actionTMs !== undefined && (

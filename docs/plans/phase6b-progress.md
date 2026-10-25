@@ -44,10 +44,20 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 - Captured `result` / `result-full` at 1366 and 1920 (S15 practice, `capture-all.spec.ts`) and reviewed.
 - Checks: web 24 files / 203 tests, `pnpm lint` clean, `test_debrief.py` / `test_ai_trust.py` / `test_aar.py` green, ruff clean; full API pytest 460 passed; `pnpm gen:schemas` no diff.
 
+## AAR (2026-10-25, P1-14)
+
+- Opens at the first radar track (`SENSOR_TRACK_CREATED`) when the link has no `?t=` / `?penalty=` (`initialReplayTime` gains `events`; test in `replay.test.ts`; `e2e/replay.spec.ts` presses Home before its 00:00 checks).
+- "Ground truth [On/Off] G" is a `role="switch"` with `aria-checked` (e2e checks both states), secondary style.
+- Marker legend always under the scrubber (Detect · Class · Order · Kill · Leak · Penalty; full names in the title and the ? help); timeline 56 → 68 px.
+- MISS in `--warn` with a hollow-slash symbol (replay panel and fallback table); WRONG stays `--crit`.
+- Kill-chain panel header dropped (the tab says "Kill chain 9"); detail box 84 → 64 px → 6 rows at 768.
+- Stages, debrief mistakes (side panel) and timeline markers already jump; the AAR page already uses the 6A `ErrorState`.
+- Captured `aar-truth` at 1366 and reviewed. Web 24 files / 204 tests, lint clean.
+
 ## Still to do in 6B (from the plan, in order)
 
 2. Player: disabled reasons and title hovers checked in the break-ui pass. (Aids labelled: spectrogram "Aid · confirm on camera"; the AI chip tooltip already says it can be wrong.)
-4. AAR (P1-14), trends (P1-15), unit dashboard + assignments (P1-16, P2-9), builder (P1-17 + legend), briefing labels (P2-3) + S01–S03 thumbnails + Generate secondary (P2-2), weight editor / From text copy (P1-9) and "/10" wording.
+4. Trends (P1-15), unit dashboard + assignments (P1-16, P2-9), builder (P1-17 + legend), briefing labels (P2-3) + S01–S03 thumbnails + Generate secondary (P2-2), weight editor / From text copy (P1-9) and "/10" wording.
 5. Apply 6A primitives everywhere (Tabs, SegmentedControl, Table, PageHeader, ErrorState); one primary action per screen; keyboard focus order.
 6. Load `emil-design-eng` before the polish, `break-ui` before stress-testing; write the break-ui report.
 7. Checkpoint B: `checkpoint-6b.spec.ts` captures of every 6B screen at 1366×768 and 1920×1080 + break-ui report + FPS before / after → **stop for the user's OK**.
