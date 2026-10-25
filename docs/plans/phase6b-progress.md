@@ -99,11 +99,16 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 - One primary per screen: builder tool toggles are pressed secondaries; From text "Read parameters" turns secondary once parameters are read, so "Generate and open briefing" is the primary.
 - Keyboard focus order: to check in the break-ui / keyboard pass.
 
+## Polish pass (`emil-design-eng`, 2026-10-25)
+
+- Reviewed 6B motion: new controls are colour-only transitions or motionless; charts not animated; pressed stays the 1 px offset (DESIGN §7, decision 142).
+- Camera re-aim (P0-6): 400 → 300 ms, ease-out cubic → quint (`easeOut` in `lib/sim/framing.ts`) — Tab triggers it often, so it must finish fast and start moving at once. Reduced motion still jumps.
+
 ## Still to do in 6B (from the plan, in order)
 
 2. Player: disabled reasons and title hovers checked in the break-ui pass. (Aids labelled: spectrogram "Aid · confirm on camera"; the AI chip tooltip already says it can be wrong.)
 5. Keyboard focus order on every 6B screen (with break-ui). `Table` primitive not applied to the existing tables yet — decide in the polish pass whether the swap is worth it.
-6. Load `emil-design-eng` before the polish, `break-ui` before stress-testing; write the break-ui report.
+6. `break-ui` on the 6B screens; write the break-ui report.
 7. Checkpoint B: `checkpoint-6b.spec.ts` captures of every 6B screen at 1366×768 and 1920×1080 + break-ui report + FPS before / after → **stop for the user's OK**.
 8. After OK: regenerate + review + commit visual baselines; full `pnpm e2e`; lint, `pnpm test`, pytest, `gen:schemas` no diff; CLAUDE.md §14; decisions.
 
