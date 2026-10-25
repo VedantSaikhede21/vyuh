@@ -60,39 +60,60 @@ export function TrackLabels() {
   const selectedId = useHudStore((s) => s.hud?.selectedTrackId ?? null);
 
   useEffect(() => {
+    const el = layer.current;
+    if (!el) return;
+    // Label sizes change only when a label's text does: cache them from a
+    // ResizeObserver so the per-frame loop never reads layout (decision 150).
+    const sizes = new Map<Element, { w: number; h: number }>();
+    const ro = new ResizeObserver((entries) => {
+      for (const e of entries) {
+        const box = e.borderBoxSize[0];
+        if (box) sizes.set(e.target, { w: box.inlineSize, h: box.blockSize });
+      }
+    });
+    const observeAll = () => {
+      for (const c of Array.from(el.children)) ro.observe(c);
+    };
+    observeAll();
+    const mo = new MutationObserver(observeAll);
+    mo.observe(el, { childList: true });
+    let vw = el.clientWidth;
+    let vh = el.clientHeight;
+    const lo = new ResizeObserver(() => {
+      vw = el.clientWidth;
+      vh = el.clientHeight;
+    });
+    lo.observe(el);
+
     let raf = 0;
     const place = () => {
-      const el = layer.current;
-      if (el) {
-        // Read every size first, then write every transform: interleaving them
-        // forced a layout per label per frame (decision 150).
-        const vw = el.clientWidth;
-        const vh = el.clientHeight;
-        const kids = Array.from(el.children) as HTMLElement[];
-        const sizes = kids.map((c) => [c.offsetWidth, c.offsetHeight] as const);
-        kids.forEach((child, i) => {
-          const at = trackLabelNdc.get(child.dataset.track ?? '');
-          if (!at?.on) {
-            child.style.visibility = 'hidden';
-            return;
-          }
-          const [w, h] = sizes[i]!;
-          const { left, top } = clampLabel(
-            ((at.x + 1) / 2) * vw,
-            ((1 - at.y) / 2) * vh,
-            w,
-            h,
-            vw,
-            vh,
-          );
-          child.style.visibility = 'visible';
-          child.style.transform = `translate(${left}px, ${top}px)`;
-        });
+      for (const child of Array.from(el.children) as HTMLElement[]) {
+        const at = trackLabelNdc.get(child.dataset.track ?? '');
+        const size = sizes.get(child);
+        if (!at?.on || !size) {
+          if (child.style.visibility !== 'hidden') child.style.visibility = 'hidden';
+          continue;
+        }
+        const { left, top } = clampLabel(
+          ((at.x + 1) / 2) * vw,
+          ((1 - at.y) / 2) * vh,
+          size.w,
+          size.h,
+          vw,
+          vh,
+        );
+        child.style.visibility = 'visible';
+        child.style.transform = `translate(${left}px, ${top}px)`;
       }
       raf = requestAnimationFrame(place);
     };
     raf = requestAnimationFrame(place);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      mo.disconnect();
+      lo.disconnect();
+    };
   }, []);
 
   return (
