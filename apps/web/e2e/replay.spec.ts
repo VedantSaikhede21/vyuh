@@ -14,6 +14,9 @@ test('a recorded session replays exactly and scrubs by keyboard', async ({ page 
   await page.goto(`/aar/session/${sid}`);
   await expect(page.getByTestId('replay-timeline')).toBeVisible({ timeout: 120_000 });
   await expect(page.getByTestId('replay-chip')).toBeVisible();
+  // Opens at the first radar track, not on an empty scene (audit P1-14).
+  await expect(page.locator('tr[data-track-id]').first()).toBeVisible();
+  await page.keyboard.press('Home');
   await expect(page.getByTestId('replay-clock')).toHaveText(/^00:00/);
 
   for (let i = 0; i < 6; i++) await page.keyboard.press('Shift+ArrowRight');
@@ -31,8 +34,10 @@ test('a recorded session replays exactly and scrubs by keyboard', async ({ page 
 
   // Ground truth only on request.
   await expect(page.getByTestId('truth-labels')).toHaveCount(0);
+  await expect(page.getByTestId('truth-toggle')).toHaveAttribute('aria-checked', 'false');
   await page.keyboard.press('g');
   await expect(page.getByTestId('truth-labels')).toHaveCount(1);
+  await expect(page.getByTestId('truth-toggle')).toHaveAttribute('aria-checked', 'true');
 });
 
 test('a session from an older simulator version falls back to the timeline', async ({ page }) => {

@@ -26,6 +26,7 @@ export function AarSidePanel({
 }) {
   const [tab, setTab] = useState<Tab>('chain');
   const { state, retry } = useDebrief(data.session.id);
+  const threats = data.killChain.filter((r) => r.isThreat).length;
   return (
     <Panel className="h-full border-0" data-testid="aar-side">
       <div
@@ -47,6 +48,11 @@ export function AarSidePanel({
             )}
           >
             {t.label}
+            {t.id === 'chain' && (
+              <span className="ml-1 font-mono tnum text-text-2" aria-label={`${threats} threats`}>
+                {threats}
+              </span>
+            )}
           </button>
         ))}
       </div>

@@ -49,12 +49,16 @@ export function initialReplayTime(
   params: { t: string | null; penalty: string | null },
   score: Score | null | undefined,
   killChain: readonly ContactKillChain[],
+  events: readonly SimEvent[] = [],
 ): number {
   const t = Number(params.t);
   if (params.t !== null && Number.isFinite(t) && t > 0) return t;
   const i = Number(params.penalty);
   const p = params.penalty !== null && Number.isInteger(i) ? score?.penalties[i] : undefined;
-  return (p && penaltyMoment(p, killChain)) ?? 0;
+  const at = p ? penaltyMoment(p, killChain) : null;
+  if (at !== null) return at;
+  // No link: open at the first radar track, not on an empty scene at 00:00 (audit P1-14).
+  return events.find((e) => e.type === 'SENSOR_TRACK_CREATED')?.tMs ?? 0;
 }
 
 export type MarkerKind = 'DETECT' | 'CLASSIFY' | 'RESPOND' | 'GOOD' | 'BAD' | 'PENALTY';
