@@ -211,9 +211,7 @@ describe('timeline markers', () => {
   it('opens an unlinked replay at the first radar track (audit P1-14)', () => {
     const first = events.find((e) => e.type === 'SENSOR_TRACK_CREATED');
     expect(first).toBeDefined();
-    expect(initialReplayTime({ t: null, penalty: null }, null, killChain, events)).toBe(
-      first!.tMs,
-    );
+    expect(initialReplayTime({ t: null, penalty: null }, null, killChain, events)).toBe(first!.tMs);
     expect(initialReplayTime({ t: '5000', penalty: null }, null, killChain, events)).toBe(5000);
   });
 
