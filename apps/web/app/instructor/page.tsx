@@ -18,8 +18,10 @@ import {
   StateChip,
   StatusNotice,
 } from '@/components/hud/primitives';
+import { UnitNav } from '@/components/builder-nav';
 import { RequireStaff } from '@/components/require-staff';
 import { Button } from '@/components/ui/button';
+import { Table, Td, Th, Tr } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import {
@@ -36,9 +38,6 @@ import { api } from '@/lib/api';
 // Unit dashboard (SPEC §12 Phase 4, DESIGN §11.7): unit averages, leaderboard,
 // weakest kill-chain stage, common mistakes, assignment completion; rows drill
 // down to a trainee's trends and any session's AAR. Assessment sessions only.
-
-const TH = 'h-7 bg-bg-2 px-2 text-left text-label font-medium whitespace-nowrap';
-const TD = 'h-8 px-2 whitespace-nowrap';
 
 function signed(v: number | null) {
   if (v === null) return <span className="text-text-2">—</span>;
@@ -215,43 +214,47 @@ function Dashboard({
           className="lg:col-span-2"
         >
           {d.leaderboard.length > 0 && (
-            <table className="-mx-3 w-[calc(100%+1.5rem)] border-collapse">
+            <Table className="-mx-3 w-[calc(100%+1.5rem)]">
               <thead>
                 <tr>
-                  <th className={TH}>Rank</th>
-                  <th className={`${TH} w-full`}>Trainee</th>
-                  <th className={`${TH} text-right`}>Sessions</th>
-                  <th className={`${TH} text-right`}>Average</th>
-                  <th className={`${TH} text-right`}>Last</th>
-                  <th className={`${TH} text-right`}>Change</th>
-                  <th className={`${TH} text-right`}>Latency</th>
-                  <th className={`${TH} text-right`}>Exact class</th>
-                  <th className={TH}>Weakest stage</th>
+                  <Th>Rank</Th>
+                  <Th className="w-full">Trainee</Th>
+                  <Th align="right">Sessions</Th>
+                  <Th align="right">Average</Th>
+                  <Th align="right">Last</Th>
+                  <Th align="right">Change</Th>
+                  <Th align="right">Latency</Th>
+                  <Th align="right">Exact class</Th>
+                  <Th>Weakest stage</Th>
                 </tr>
               </thead>
               <tbody>
                 {d.leaderboard.map((r, i) => (
-                  <tr key={r.userId} className="border-t border-line-1 hover:bg-bg-2">
-                    <td className={`${TD} text-readout text-text-2`}>
+                  <Tr key={r.userId} className="hover:bg-bg-2">
+                    <Td className="text-readout text-text-2">
                       {r.avgTotal === null ? '—' : i + 1}
-                    </td>
-                    <td className={`${TD} text-body`}>
+                    </Td>
+                    <Td className="text-body">
                       <Link
                         href={`/aar/trends?user=${r.userId}`}
                         className="hover:text-text-1 hover:underline"
                       >
                         {r.name}
                       </Link>
-                    </td>
-                    <td className={`${TD} text-right text-readout`}>{r.sessions}</td>
-                    <td className={`${TD} text-right text-readout`}>
+                    </Td>
+                    <Td align="right" className="text-readout">
+                      {r.sessions}
+                    </Td>
+                    <Td align="right" className="text-readout">
                       {r.avgTotal === null ? <span className="text-text-2">—</span> : r.avgTotal}
-                    </td>
-                    <td className={`${TD} text-right text-readout`}>
+                    </Td>
+                    <Td align="right" className="text-readout">
                       {r.lastTotal === null ? <span className="text-text-2">—</span> : r.lastTotal}
-                    </td>
-                    <td className={`${TD} text-right text-readout`}>{signed(r.change)}</td>
-                    <td className={`${TD} text-right text-readout`}>
+                    </Td>
+                    <Td align="right" className="text-readout">
+                      {signed(r.change)}
+                    </Td>
+                    <Td align="right" className="text-readout">
                       {r.detectionLatencyS === null ? (
                         <span className="text-text-2">—</span>
                       ) : (
@@ -260,8 +263,8 @@ function Dashboard({
                           <span className="text-text-2"> s</span>
                         </>
                       )}
-                    </td>
-                    <td className={`${TD} text-right text-readout`}>
+                    </Td>
+                    <Td align="right" className="text-readout">
                       {r.classificationAccuracy === null ? (
                         <span className="text-text-2">—</span>
                       ) : (
@@ -270,14 +273,14 @@ function Dashboard({
                           <span className="text-text-2"> %</span>
                         </>
                       )}
-                    </td>
-                    <td className={`${TD} text-label`}>
+                    </Td>
+                    <Td className="text-label">
                       {r.weakestStage ? STAGE_LABEL[r.weakestStage] : '—'}
-                    </td>
-                  </tr>
+                    </Td>
+                  </Tr>
                 ))}
               </tbody>
-            </table>
+            </Table>
           )}
         </QuestionPanel>
         <QuestionPanel
@@ -308,24 +311,28 @@ function Dashboard({
           testId="unit-mistakes"
         >
           {d.mistakes.length > 0 && (
-            <table className="w-full border-collapse">
+            <Table>
               <thead>
                 <tr>
-                  <th className={`${TH} w-full`}>Mistake</th>
-                  <th className={`${TH} text-right`}>Trainees</th>
-                  <th className={`${TH} text-right`}>Times</th>
+                  <Th className="w-full">Mistake</Th>
+                  <Th align="right">Trainees</Th>
+                  <Th align="right">Times</Th>
                 </tr>
               </thead>
               <tbody>
                 {d.mistakes.map((m) => (
-                  <tr key={m.code} className="border-t border-line-1">
-                    <td className="px-2 py-1 text-body">{m.text}</td>
-                    <td className={`${TD} text-right text-readout`}>{m.trainees}</td>
-                    <td className={`${TD} text-right text-readout`}>{m.count}</td>
-                  </tr>
+                  <Tr key={m.code}>
+                    <Td className="whitespace-normal py-1 text-body">{m.text}</Td>
+                    <Td align="right" className="text-readout">
+                      {m.trainees}
+                    </Td>
+                    <Td align="right" className="text-readout">
+                      {m.count}
+                    </Td>
+                  </Tr>
                 ))}
               </tbody>
-            </table>
+            </Table>
           )}
         </QuestionPanel>
         <QuestionPanel
@@ -336,41 +343,41 @@ function Dashboard({
           {d.assignments.length === 0 ? (
             <p className="text-small text-text-2">Assign a scenario with the form on the right.</p>
           ) : (
-            <table className="w-full border-collapse">
+            <Table>
               <thead>
                 <tr>
-                  <th className={`${TH} w-full`}>Scenario</th>
-                  <th className={TH}>Due</th>
-                  <th className={`${TH} text-right`}>Done</th>
-                  <th className={TH}>Pending</th>
+                  <Th className="w-full">Scenario</Th>
+                  <Th>Due</Th>
+                  <Th align="right">Done</Th>
+                  <Th>Pending</Th>
                 </tr>
               </thead>
               <tbody>
                 {d.assignments.map((a) => (
-                  <tr key={a.assignmentId} className="border-t border-line-1">
+                  <Tr key={a.assignmentId}>
                     {/* max-w-0 on the w-full column: long names truncate, never widen (break-ui 4). */}
-                    <td className={`${TD} max-w-0 text-body`}>
+                    <Td className="max-w-0 text-body">
                       <span className="block truncate" title={a.scenarioName}>
                         {a.scenarioCode && (
                           <span className="mr-2 text-readout text-text-2">{a.scenarioCode}</span>
                         )}
                         {a.scenarioName}
                       </span>
-                    </td>
-                    <td className={`${TD} text-readout text-text-2`}>
+                    </Td>
+                    <Td className="text-readout text-text-2">
                       {a.dueAt ? a.dueAt.slice(0, 10) : '—'}
                       {isOverdue(a, now) && (
                         <StateChip tone="warn" className="ml-2" data-testid="overdue">
                           Overdue
                         </StateChip>
                       )}
-                    </td>
-                    <td className={`${TD} text-right text-readout`}>
+                    </Td>
+                    <Td align="right" className="text-readout">
                       {a.completed}
                       <span className="text-text-2"> / {a.assigned}</span>
-                    </td>
+                    </Td>
                     {/* One name, or a count with the names on hover (break-ui 1). */}
-                    <td className={`${TD} text-small text-text-2`}>
+                    <Td className="text-small text-text-2">
                       {a.pending.length === 0 ? (
                         '—'
                       ) : (
@@ -382,18 +389,18 @@ function Dashboard({
                           {a.pending.length === 1 ? a.pending[0] : `${a.pending.length} trainees`}
                         </span>
                       )}
-                    </td>
-                  </tr>
+                    </Td>
+                  </Tr>
                 ))}
               </tbody>
-            </table>
+            </Table>
           )}
         </QuestionPanel>
       </div>
       <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <Panel>
           <PanelHeader title="Recent sessions">
-            <span className="text-label">A row opens its AAR · a name opens trends</span>
+            <span className="text-label">A row opens its AAR</span>
           </PanelHeader>
           {d.recent.length === 0 && (
             <p className="px-3 py-2 text-small text-text-2">
@@ -401,40 +408,35 @@ function Dashboard({
             </p>
           )}
           {d.recent.length > 0 && (
-            <table className="w-full border-collapse" data-testid="unit-recent">
+            <Table data-testid="unit-recent">
               <thead>
                 <tr>
-                  <th className={TH}>Date</th>
-                  <th className={TH}>Trainee</th>
-                  <th className={`${TH} w-full`}>Scenario</th>
-                  <th className={TH}>Difficulty</th>
-                  <th className={`${TH} text-right`}>Total</th>
+                  <Th>Date</Th>
+                  <Th>Trainee</Th>
+                  <Th className="w-full">Scenario</Th>
+                  <Th>Difficulty</Th>
+                  <Th align="right">Total</Th>
                 </tr>
               </thead>
               <tbody>
                 {d.recent.map((s) => (
-                  // The whole row opens the AAR (audit P1-16); the scenario link is its
-                  // keyboard target, the trainee name a separate link to their trends.
-                  <tr
+                  // The whole row opens the AAR (audit P1-16) and is one tab stop, the
+                  // scenario link (6B debt: the trainee name was a second stop; a
+                  // trainee's trends open from the leaderboard above).
+                  <Tr
                     key={s.sessionId}
-                    className="cursor-pointer border-t border-line-1 hover:bg-bg-2"
+                    interactive
                     data-testid="unit-recent-row"
                     onClick={(e) => {
                       if ((e.target as HTMLElement).closest('a')) return;
                       router.push(`/aar/session/${s.sessionId}`);
                     }}
                   >
-                    <td className={`${TD} text-readout text-text-2`}>{s.endedAt.slice(0, 10)}</td>
-                    <td className={`${TD} text-body`}>
-                      <Link
-                        href={`/aar/trends?user=${s.userId}`}
-                        className="block max-w-[12rem] truncate underline decoration-line-2 underline-offset-2 hover:text-text-1 hover:decoration-text-2"
-                        title={`${s.userName}: trends`}
-                      >
-                        {s.userName}
-                      </Link>
-                    </td>
-                    <td className={`${TD} max-w-0 text-body`}>
+                    <Td className="text-readout text-text-2">{s.endedAt.slice(0, 10)}</Td>
+                    <Td className="max-w-[12rem] truncate text-body" title={s.userName}>
+                      {s.userName}
+                    </Td>
+                    <Td className="max-w-0 text-body">
                       <Link
                         href={`/aar/session/${s.sessionId}`}
                         className="block truncate hover:text-text-1 hover:underline"
@@ -445,15 +447,17 @@ function Dashboard({
                         )}
                         {s.scenarioName}
                       </Link>
-                    </td>
-                    <td className={TD}>
+                    </Td>
+                    <Td>
                       <Pips value={s.difficulty} />
-                    </td>
-                    <td className={`${TD} text-right text-readout`}>{s.total}</td>
-                  </tr>
+                    </Td>
+                    <Td align="right" className="text-readout">
+                      {s.total}
+                    </Td>
+                  </Tr>
                 ))}
               </tbody>
-            </table>
+            </Table>
           )}
         </Panel>
         <AssignForm unit={unit} onDone={reload} />
@@ -533,6 +537,7 @@ function UnitPage() {
           </div>
         }
       />
+      <UnitNav />
       {error !== null && (
         <Panel>
           <ErrorState

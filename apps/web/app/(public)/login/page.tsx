@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { useAuth } from '@/lib/auth';
+import { homeHref } from '@/lib/nav';
 
 // Seeded by `uv run python -m app.seed.demo` (SPEC §22). Local/offline mode only.
 const DEMO_ACCOUNTS = [
@@ -22,12 +23,13 @@ const DEMO_ACCOUNTS = [
   ...Array.from({ length: 6 }, (_, i) => `trainee${i + 1}@demo`),
 ];
 
-function safeNext(next: string | null): string {
-  return next?.startsWith('/') && !next.startsWith('//') ? next : '/train';
+/** A same-site path to return to, else null (then the role's landing page). */
+function safeNext(next: string | null): string | null {
+  return next?.startsWith('/') && !next.startsWith('//') ? next : null;
 }
 
 function LoginForm() {
-  const { mode, status, error, loginDev, loginSupabase } = useAuth();
+  const { mode, status, user, error, loginDev, loginSupabase } = useAuth();
   const router = useRouter();
   const next = safeNext(useSearchParams().get('next'));
   const [email, setEmail] = useState(mode === 'local' ? 'trainee1@demo' : '');
@@ -35,8 +37,8 @@ function LoginForm() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (status === 'authenticated') router.replace(next);
-  }, [status, next, router]);
+    if (status === 'authenticated') router.replace(next ?? homeHref(user?.role));
+  }, [status, next, router, user?.role]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();

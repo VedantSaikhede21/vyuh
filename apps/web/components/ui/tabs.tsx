@@ -89,6 +89,7 @@ export function Tabs<T extends string>({
   label,
   idBase,
   variant = 'strip',
+  fit = false,
   className,
 }: {
   items: readonly TabItem<T>[];
@@ -98,6 +99,8 @@ export function Tabs<T extends string>({
   label: string;
   idBase: string;
   variant?: keyof typeof VARIANT;
+  /** Strip only: cells sized by their labels (never wrapping) instead of equal widths. */
+  fit?: boolean;
   className?: string;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -132,6 +135,7 @@ export function Tabs<T extends string>({
             onKeyDown={(e) => onKey(e, i)}
             className={cn(
               v.tab,
+              fit && 'flex-auto whitespace-nowrap px-1.5',
               'transition-[background-color,border-color,color] duration-150 ease-ui',
               on ? v.on : v.off,
             )}

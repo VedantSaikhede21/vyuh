@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { login } from './helpers';
+import { beginSession, login, openBriefing, selectTrack, stepUntilTracked } from './helpers';
+
+const API = process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
 
 // Phase 6C Checkpoint C (tags @checkpoint @cp6c), written to e2e/checkpoint/6c/
 // (git-ignored). Every new signed-in page at 1366×768 and 1920×1080; public pages
@@ -50,6 +52,117 @@ for (const size of SIZES) {
       await page.goto('/notices');
       await expect(page.getByTestId('notice').first()).toBeVisible({ timeout: 30_000 });
       await shot(page, 'notices');
+    });
+  });
+}
+
+for (const size of SIZES) {
+  test.describe(`${size.width}x${size.height} record and home`, () => {
+    test.use({ viewport: size });
+
+    test(`operator home @checkpoint @cp6c`, async ({ page }) => {
+      await login(page, 'trainee3@demo');
+      await page.goto('/home');
+      await expect(page.getByTestId('home-losing')).toBeVisible({ timeout: 30_000 });
+      await shot(page, 'home');
+      // First run: the same page with an empty history (response rewritten in flight).
+      await page.route('**/api/v1/home', async (route) => {
+        const res = await route.fetch();
+        const body = await res.json();
+        await route.fulfill({
+          response: res,
+          json: {
+            ...body,
+            assignment: null,
+            openAssignments: 0,
+            assessments: 0,
+            demoAssessments: 0,
+            recent: [],
+            stages: body.stages.map((s: object) => ({ ...s, ok: 0, total: 0, rate: null })),
+          },
+        });
+      });
+      await page.reload();
+      await expect(page.getByTestId('home-welcome')).toBeVisible({ timeout: 30_000 });
+      await shot(page, 'home-first-run');
+    });
+
+    test(`service record @checkpoint @cp6c`, async ({ page }) => {
+      await login(page, 'trainee3@demo');
+      await page.goto('/record');
+      await expect(page.getByTestId('levels')).toBeVisible({ timeout: 30_000 });
+      await shot(page, 'record-trainee');
+      await page.emulateMedia({ media: 'print' });
+      await shot(page, 'record-print');
+      await page.emulateMedia({ media: 'screen' });
+    });
+
+    test(`staff: readiness, sign-off, live, remark @checkpoint @cp6c`, async ({ page }) => {
+      await login(page, 'instructor@demo');
+      await page.goto('/instructor/readiness');
+      await expect(page.getByTestId('readiness-row').first()).toBeVisible({ timeout: 60_000 });
+      await shot(page, 'readiness');
+      await page.getByTestId('readiness-row').filter({ hasText: 'Trainee 3' }).first().click();
+      await expect(page.getByTestId('signoff')).toBeVisible({ timeout: 30_000 });
+      await shot(page, 'record-staff');
+      await page.getByTestId('signoff').click();
+      await shot(page, 'record-staff-confirm', false);
+
+      // Live: one running session for a trainee in the unit, started through the API.
+      const tr = await page.request.post(`${API}/auth/dev-login`, {
+        data: { email: 'trainee1@demo' },
+      });
+      const auth = { Authorization: `Bearer ${(await tr.json()).accessToken}` };
+      const list = await (await page.request.get(`${API}/scenarios`, { headers: auth })).json();
+      const s15 = list.items.find((x: { code: string }) => x.code === 'S15');
+      const detail = await (
+        await page.request.get(`${API}/scenarios/${s15.id}`, { headers: auth })
+      ).json();
+      const created = await (
+        await page.request.post(`${API}/sessions`, {
+          headers: auth,
+          data: { scenarioId: s15.id, mode: 'PRACTICE', simVersion: 6 },
+        })
+      ).json();
+      await page.request.post(`${API}/sessions/${created.sessionId}/events`, {
+        headers: auth,
+        data: {
+          batchSeq: 0,
+          events: [
+            {
+              seq: 0,
+              tMs: 0,
+              type: 'SESSION_STARTED',
+              payload: { mode: 'PRACTICE', scenarioId: 'S15', seed: detail.scenario.seed },
+            },
+          ],
+        },
+      });
+      await page.goto('/instructor/live');
+      await expect(page.getByTestId('live')).toBeVisible({ timeout: 30_000 });
+      await shot(page, 'live');
+    });
+
+    test(`AAR remarks tab @checkpoint @cp6c`, async ({ page }) => {
+      await login(page, 'trainee1@demo');
+      await page.goto('/notices');
+      const remark = page.getByTestId('notice').filter({ hasText: 'Remark from' }).first();
+      await expect(remark).toBeVisible({ timeout: 30_000 });
+      await remark.getByRole('link').click();
+      await expect(page.getByTestId('remarks')).toBeVisible({ timeout: 60_000 });
+      await shot(page, 'aar-remarks', false);
+    });
+
+    test(`player library dialog @checkpoint @cp6c`, async ({ page }) => {
+      test.setTimeout(240_000);
+      await login(page, 'trainee1@demo');
+      await openBriefing(page, 'S15');
+      await beginSession(page);
+      const track = await stepUntilTracked(page, 'c01');
+      await selectTrack(page, track);
+      await page.keyboard.press('l');
+      await expect(page.getByTestId('library-dialog')).toBeVisible();
+      await shot(page, 'player-library', false);
     });
   });
 }

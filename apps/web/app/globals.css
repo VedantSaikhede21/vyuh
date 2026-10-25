@@ -295,3 +295,35 @@
   outline: 2px solid var(--select);
   outline-offset: 2px;
 }
+
+/* Light print stylesheet (DESIGN §3, Phase 6C): the service record prints for the
+   unit training file through the browser's "Save as PDF". Tokens turn light; the
+   signed-in shell and controls carry `print:hidden`. */
+@media print {
+  :root {
+    --bg-0: #ffffff;
+    --bg-1: #ffffff;
+    --bg-2: #f1f3f2;
+    --bg-3: #e6e9e7;
+    --line-1: #c9d0cc;
+    --line-2: #9aa59f;
+    --text-1: #101513;
+    --text-body: #26312c;
+    --text-2: #4a5650;
+    --text-3: #9aa59f;
+    --select: #101513;
+    --ok: #1d6b3a;
+    --warn: #8a5300;
+    --crit: #a3161b;
+  }
+  @page {
+    margin: 14mm;
+  }
+  body {
+    background: #ffffff;
+  }
+  /* Keep a level's criteria together on one sheet. */
+  [data-print-block] {
+    break-inside: avoid;
+  }
+}

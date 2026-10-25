@@ -25,7 +25,9 @@ export async function login(page: Page, email: string): Promise<void> {
   }
   await page.selectOption('#email', email);
   await page.click('button[type=submit]');
-  await page.waitForURL('**/train');
+  // Trainees land on Home and staff on the unit (Phase 6C); the specs start from Training.
+  await page.waitForURL((u) => !u.pathname.startsWith('/login'));
+  if (new URL(page.url()).pathname !== '/train') await page.goto('/train');
 }
 
 /** Open a scenario's briefing page from the training list (/train/scenario/[id]). */

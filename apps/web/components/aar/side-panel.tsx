@@ -34,6 +34,7 @@ export function AarSidePanel({
       <Tabs
         label="Review"
         idBase={ID}
+        fit
         value={tab}
         onChange={setTab}
         items={[

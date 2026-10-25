@@ -69,7 +69,10 @@ export function ShellTopBar({
     { kind: 'action', label: 'Sign out', onSelect: onSignOut, testId: 'menu-sign-out' },
   ];
   return (
-    <header className="relative z-10 border-b border-line-1 bg-bg-1" data-testid="shell-top-bar">
+    <header
+      className="relative z-10 border-b border-line-1 bg-bg-1 print:hidden"
+      data-testid="shell-top-bar"
+    >
       <div className="mx-auto flex h-12 max-w-[1280px] items-stretch gap-6 px-4">
         <Link
           href={homeHref(user.role)}

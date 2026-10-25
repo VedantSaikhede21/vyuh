@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 import { useAuth } from '@/lib/auth';
 
@@ -8,10 +8,12 @@ import { useAuth } from '@/lib/auth';
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { status } = useAuth();
   const router = useRouter();
+  const path = usePathname();
 
+  // Back to this page after signing in.
   useEffect(() => {
-    if (status === 'anonymous') router.replace('/login?next=/train');
-  }, [status, router]);
+    if (status === 'anonymous') router.replace(`/login?next=${encodeURIComponent(path ?? '/')}`);
+  }, [status, router, path]);
 
   if (status !== 'authenticated') {
     return (

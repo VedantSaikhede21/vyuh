@@ -22,7 +22,7 @@ export interface NavItem {
 }
 
 export const NAV: readonly NavItem[] = [
-  { id: 'home', label: 'Home', href: '/home', match: ['/home'], traineeOnly: true, ready: false },
+  { id: 'home', label: 'Home', href: '/home', match: ['/home'], traineeOnly: true, ready: true },
   { id: 'training', label: 'Training', href: '/train', match: ['/train'], ready: true },
   { id: 'library', label: 'Threat library', href: '/library', match: ['/library'], ready: true },
   { id: 'aar', label: 'After-action', href: '/aar/trends', match: ['/aar'], ready: true },
@@ -32,7 +32,7 @@ export const NAV: readonly NavItem[] = [
     href: '/record',
     match: ['/record'],
     traineeOnly: true,
-    ready: false,
+    ready: true,
   },
   {
     id: 'unit',
@@ -65,7 +65,7 @@ export function navFor(role: UserRole | undefined, items: readonly NavItem[] = N
 
 /** Where a role lands after sign-in and on the wordmark: trainees Home, staff the unit. */
 export const homeHref = (role: UserRole | undefined): string =>
-  isStaff(role) ? '/instructor' : NAV.find((n) => n.id === 'home')?.ready ? '/home' : '/train';
+  isStaff(role) ? '/instructor' : '/home';
 
 const under = (path: string, prefix: string) => path === prefix || path.startsWith(`${prefix}/`);
 

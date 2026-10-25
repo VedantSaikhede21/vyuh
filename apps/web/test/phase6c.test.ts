@@ -1,11 +1,20 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CLASS_PROFILES, ContactClass, type ScoringSummaryResponse } from '@vyuh/shared';
+import {
+  CLASS_PROFILES,
+  ContactClass,
+  type CriterionStatus,
+  type LevelStatus,
+  type ScoringSummaryResponse,
+  type StageRate,
+} from '@vyuh/shared';
 import { describe, expect, it } from 'vitest';
 import { GLOSSARY, scoringRows } from '@/lib/help';
+import { lossAnswer, stageLosses, worstStage } from '@/lib/home';
 import { LIBRARY, filterLibrary, formatRcs, isContactClass, libraryEntry } from '@/lib/library';
 import { homeHref, navFor } from '@/lib/nav';
 import { unreadLabel } from '@/lib/notices';
+import { criterionTarget, criterionValue, highestQualified, levelNote } from '@/lib/record';
 import { DEFAULT_SETTINGS, parseSettings } from '@/lib/settings';
 import { formatDate, formatDateTime } from '@/lib/strings';
 
@@ -76,7 +85,13 @@ describe('help', () => {
 
 describe('shell, settings, notices', () => {
   it('trainees see Home and Service record; staff land on the unit', () => {
-    expect(navFor('TRAINEE').map((n) => n.id)).toEqual(['training', 'library', 'aar']);
+    expect(navFor('TRAINEE').map((n) => n.id)).toEqual([
+      'home',
+      'training',
+      'library',
+      'aar',
+      'record',
+    ]);
     expect(navFor('INSTRUCTOR').map((n) => n.id)).toEqual([
       'training',
       'library',
@@ -84,7 +99,7 @@ describe('shell, settings, notices', () => {
       'unit',
       'builder',
     ]);
-    expect(homeHref('TRAINEE')).toBe('/train');
+    expect(homeHref('TRAINEE')).toBe('/home');
     expect(homeHref('ADMIN')).toBe('/instructor');
   });
 
@@ -104,5 +119,80 @@ describe('shell, settings, notices', () => {
     expect(formatDateTime(iso)).toBe('2026-10-05 07:03');
     expect(formatDate(iso)).toBe('2026-10-05');
     expect(formatDateTime('nope')).toBe('nope');
+  });
+});
+
+describe('service record wording', () => {
+  const crit = (over: Partial<CriterionStatus>): CriterionStatus => ({
+    id: 'x',
+    label: 'x',
+    value: 73,
+    target: 70,
+    unit: 'PCT',
+    comparison: 'AT_LEAST',
+    met: true,
+    ...over,
+  });
+  const level = (over: Partial<LevelStatus>): LevelStatus => ({
+    level: 'SENSOR_OPERATOR',
+    name: 'Sensor operator',
+    state: 'IN_PROGRESS',
+    criteriaMet: false,
+    reviewDue: false,
+    signoffBy: 'STAFF',
+    signoff: null,
+    criteria: [crit({}), crit({ met: false })],
+    ...over,
+  });
+
+  it('formats figures and targets by unit', () => {
+    expect(criterionValue(crit({}))).toBe('73 %');
+    expect(criterionValue(crit({ value: null }))).toBe('—');
+    expect(criterionValue(crit({ value: 12.44, unit: 'S' }))).toBe('12.4 s');
+    expect(criterionTarget(crit({ target: 15, unit: 'S', comparison: 'AT_MOST' }))).toBe(
+      '≤ 15.0 s',
+    );
+    expect(criterionTarget(crit({}))).toBe('≥ 70 %');
+    expect(criterionTarget(crit({ unit: 'COUNT', target: 0, comparison: 'AT_MOST' }))).toBe('None');
+  });
+
+  it('words each level state, review due and awaiting sign-off', () => {
+    expect(levelNote(level({}))).toBe('1 of 2 criteria still to meet');
+    expect(levelNote(level({ criteriaMet: true }))).toBe('Criteria met · awaiting sign-off');
+    expect(levelNote(level({ state: 'LOCKED' }))).toBe('Qualify the level below first.');
+    expect(levelNote(level({ state: 'QUALIFIED', criteriaMet: true }))).toBeNull();
+    expect(levelNote(level({ state: 'QUALIFIED', reviewDue: true }))).toMatch(/^Review due/);
+    const levels = [
+      level({ level: 'BASIC_OPERATOR', state: 'QUALIFIED' }),
+      level({}),
+      level({ state: 'LOCKED' }),
+    ];
+    expect(highestQualified(levels)?.level).toBe('BASIC_OPERATOR');
+    expect(highestQualified([level({})])).toBeNull();
+  });
+});
+
+describe('home: where am I losing points', () => {
+  const rate = (stage: StageRate['stage'], ok: number, total: number): StageRate => ({
+    stage,
+    ok,
+    total,
+    rate: total ? ok / total : null,
+  });
+
+  it('turns stage rates into losses and names the worst stage', () => {
+    const losses = stageLosses([
+      rate('DETECT', 9, 10),
+      rate('TRACK', 10, 10),
+      rate('RESPOND', 5, 10),
+      rate('ASSESS', 0, 0),
+    ]);
+    expect(losses.map((l) => l.lostPct)).toEqual([10, 0, 50, null]);
+    expect(worstStage(losses)?.stage).toBe('RESPOND');
+    expect(lossAnswer(losses)).toBe(
+      'Most points go at Respond: 50 % of threat contacts were not done right there.',
+    );
+    expect(lossAnswer(stageLosses([rate('DETECT', 0, 0)]))).toMatch(/^No Assessment sessions/);
+    expect(lossAnswer(stageLosses([rate('DETECT', 4, 4)]))).toMatch(/^Every stage/);
   });
 });
