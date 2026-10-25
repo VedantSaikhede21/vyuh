@@ -18,7 +18,8 @@ browser download.
 | `smoke.spec.ts`         | The landing page renders                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ```
-pnpm e2e                               # from the repo root: everything except @fps and @checkpoint
+pnpm e2e                               # from the repo root: everything except @fps, @checkpoint, @capture and @breakui
+pnpm --filter @vyuh/web e2e:breakui    # break-ui states (demo / worst / empty / one / many), see docs/plans/phase6b-break-ui.md
 pnpm --filter @vyuh/web e2e:fps        # FPS on this machine's GPU, 100 % scaling
 pnpm --filter @vyuh/web e2e:fps:150    # the same at 150 % (Windows display scaling)
 pnpm --filter @vyuh/web e2e:update     # regenerate the visual baselines
