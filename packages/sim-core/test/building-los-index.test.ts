@@ -78,6 +78,9 @@ describe('building LOS index (25 m cells, roof early-out, edge bands, ceiling sk
       };
       let blocked = 0;
       let byBuilding = 0;
+      // Mismatches are collected and checked once: an expect() per ray made the
+      // loop several times slower than the LOS walks it checks.
+      const wrong: number[] = [];
       for (let k = 0; k < 10_000; k++) {
         const b = blds[Math.floor(rand() * blds.length)]!;
         const cx = (b.minX + b.maxX) / 2;
@@ -89,8 +92,9 @@ describe('building LOS index (25 m cells, roof early-out, edge bands, ceiling sk
         const want = referenceLos(world, reference, from, to);
         if (!want) blocked++;
         if (!want && referenceLos(world, noBuildings, from, to)) byBuilding++;
-        expect(hasLineOfSight(world, from, to), `ray ${k}`).toBe(want);
+        if (hasLineOfSight(world, from, to) !== want) wrong.push(k);
       }
+      expect(wrong, 'rays whose LOS differs from the reference').toEqual([]);
       // The sample must exercise clear rays and rays only a building blocks.
       expect(byBuilding).toBeGreaterThan(25);
       expect(blocked).toBeLessThan(9_900);
@@ -111,6 +115,7 @@ describe('building LOS index (25 m cells, roof early-out, edge bands, ceiling sk
       });
       const big = [...blds].sort((a, b) => b.ring.length - a.ring.length).slice(0, 20);
       let blocked = 0;
+      const wrong: number[] = [];
       for (let k = 0; k < 2_000; k++) {
         let from: Vec3;
         let to: Vec3;
@@ -134,8 +139,9 @@ describe('building LOS index (25 m cells, roof early-out, edge bands, ceiling sk
         }
         const want = referenceLos(world, reference, from, to);
         if (!want) blocked++;
-        expect(hasLineOfSight(world, from, to), `ray ${k}`).toBe(want);
+        if (hasLineOfSight(world, from, to) !== want) wrong.push(k);
       }
+      expect(wrong, 'rays whose LOS differs from the reference').toEqual([]);
       expect(blocked).toBeGreaterThan(50);
       expect(blocked).toBeLessThan(1_950);
     }, 30_000);
@@ -148,6 +154,7 @@ describe('building LOS index (25 m cells, roof early-out, edge bands, ceiling sk
     const raw = mulberry32(99);
     const rand = () => raw() / 2 ** 32;
     let inside = 0;
+    const wrong: string[] = [];
     for (const b of big) {
       expect(b.bands).not.toBeNull();
       // Random points in the box plus every vertex (on-edge cases).
@@ -158,9 +165,10 @@ describe('building LOS index (25 m cells, roof early-out, edge bands, ceiling sk
       for (const [x, z] of pts) {
         const want = pointInRing(b.ring, x, z);
         if (want) inside++;
-        expect(pointInBands(b.bands!, x, z)).toBe(want);
+        if (pointInBands(b.bands!, x, z) !== want) wrong.push(`${x},${z}`);
       }
     }
+    expect(wrong, 'points where the bands disagree with pointInRing').toEqual([]);
     expect(inside).toBeGreaterThan(100);
   });
 });
