@@ -142,8 +142,32 @@ async function recordCrops(): Promise<void> {
     });
     console.log('wrote chain-decide.png');
   }
-  await heroReady(page, 's=S14&t=125&pause=1');
-  await crop(panel('Comms'), 'chain-respond.png');
+  // RESPOND: the first moment the visible Comms lines hold an order and its outcome,
+  // so the crop shows a response (decision 148: the old fixed time showed classify lines).
+  // The lines in view are kept for the caption and alt text.
+  for (let t = 80; t <= 200; t += 10) {
+    await heroReady(page, `s=S14&t=${t}&pause=1`);
+    const comms = panel('Comms');
+    const box = await comms.boundingBox();
+    const lines = await comms.locator('li').evaluateAll(
+      (els, b) =>
+        els
+          .filter((el) => {
+            const r = el.getBoundingClientRect();
+            return b !== null && r.top >= b.y && r.bottom <= b.y + b.height;
+          })
+          .map((el) => el.getAttribute('title') ?? ''),
+      box,
+    );
+    const ordered = lines.some((l) => /ORDERED/.test(l));
+    const outcome = lines.some((l) => /NEUTRALISED|MISSED|NO EFFECT|LINK LOST/.test(l));
+    if (ordered && outcome) {
+      respondLines = lines;
+      await crop(comms, 'chain-respond.png');
+      break;
+    }
+  }
+  if (!respondLines) throw new Error('No S14 moment with an order and its outcome in Comms');
 
   // Realism: terrain (S13 mountains), night/IR (S12), silent link (S13 RF), false contacts (S14 birds).
   await heroReady(page, 's=S13&t=60&pause=1');
@@ -181,18 +205,58 @@ async function recordCrops(): Promise<void> {
   await browser.close();
 }
 
-/** Pixel size of every PNG, for the landing page's <Image> width/height. */
+/** Facts for the hero's telemetry strip, read from the recorded scenario's own file. */
+function heroFacts(): Record<string, string | number> {
+  const file = resolve(import.meta.dirname, `../../api/app/seed/scenarios/${HERO.s}.json`);
+  const sc = JSON.parse(readFileSync(file, 'utf8')) as {
+    name: string;
+    terrain: { preset: string; origin: { lat: number; lon: number } };
+    environment: { date: string; time: string; weather: { visibilityM: number } };
+    roe: string;
+    contacts: unknown[];
+  };
+  return {
+    scenario: HERO.s,
+    name: sc.name,
+    preset: sc.terrain.preset,
+    lat: sc.terrain.origin.lat,
+    lon: sc.terrain.origin.lon,
+    date: sc.environment.date,
+    time: sc.environment.time,
+    roe: sc.roe,
+    visibilityKm: sc.environment.weather.visibilityM / 1000,
+    contacts: sc.contacts.length,
+  };
+}
+
+/** Comms lines shown in the Respond crop, captured when it is taken (P1-18 / decision 148). */
+let respondLines: string[] | null = null;
+
+/**
+ * manifest.json: every PNG's pixel size (for <Image> width / height), the hero's
+ * telemetry, and the Respond crop's real Comms lines, so its caption and alt text
+ * always describe the picture. --manifest-only keeps the last recorded lines.
+ */
 function writeManifest(): void {
-  const sizes: Record<string, { w: number; h: number }> = {};
+  const images: Record<string, { w: number; h: number }> = {};
   for (const f of readdirSync(OUT)
     .filter((x) => x.endsWith('.png'))
     .sort()) {
     const head = readFileSync(join(OUT, f)).subarray(16, 24);
-    sizes[f.replace(/\.png$/, '')] = { w: head.readUInt32BE(0), h: head.readUInt32BE(4) };
+    images[f.replace(/\.png$/, '')] = { w: head.readUInt32BE(0), h: head.readUInt32BE(4) };
   }
+  const file = join(OUT, 'manifest.json');
+  const previous = existsSync(file)
+    ? (JSON.parse(readFileSync(file, 'utf8')) as { respond?: { lines: string[] } })
+    : {};
+  const manifest = {
+    images,
+    hero: heroFacts(),
+    respond: { lines: respondLines ?? previous.respond?.lines ?? [] },
+  };
   writeFileSync(
-    join(OUT, 'manifest.json'),
-    `${JSON.stringify(sizes, null, 2)}
+    file,
+    `${JSON.stringify(manifest, null, 2)}
 `,
   );
   console.log('wrote manifest.json');

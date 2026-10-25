@@ -62,14 +62,16 @@ export function TelemetryStrip({
     <dl
       aria-label={ariaLabel}
       className={cn(
-        'flex min-w-0 flex-wrap items-center gap-y-1 border-y border-line-1 py-1 text-meta',
+        // Phones: two columns without dividers (a wrapped row would start with a rule);
+        // from 640 px one row split by 1 px rules.
+        'grid min-w-0 grid-cols-2 gap-x-3 gap-y-1 border-y border-line-1 py-1 text-meta sm:flex sm:flex-wrap sm:items-center sm:gap-x-0',
         className,
       )}
     >
       {items.map((it, i) => (
         <div
           key={i}
-          className="flex min-w-0 items-baseline gap-1.5 border-l border-line-1 px-3 first:border-l-0 first:pl-0"
+          className="flex min-w-0 items-baseline gap-1.5 sm:border-l sm:border-line-1 sm:px-3 sm:first:border-l-0 sm:first:pl-0"
         >
           {it.label && <dt>{it.label}</dt>}
           <dd className="truncate text-text-1">{it.value}</dd>

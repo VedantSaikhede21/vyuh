@@ -9,6 +9,7 @@ import { StateChip } from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
 import { Menu, type MenuItem } from '@/components/ui/menu';
 import { useAuth } from '@/lib/auth';
+import { env } from '@/lib/env';
 import { PUBLIC_PATHS, ROLE_LABEL, homeHref, isActive, isStaff, navFor } from '@/lib/nav';
 import { unreadLabel, useNoticeStore } from '@/lib/notices';
 import { cn } from '@/lib/utils';
@@ -150,27 +151,51 @@ export function ShellTopBar({
   );
 }
 
-/** Public pages keep their own simple header until the Phase 6C rework. */
+const PUBLIC_LINK =
+  'flex min-h-11 items-center text-panel-title text-text-2 transition-colors duration-150 ease-ui hover:text-text-1 md:min-h-0';
+
+/**
+ * Public pages (landing, login, sources, status, guest entry): wordmark, two
+ * reference links and one action. Touch targets are 44 px on phones (amendment 5).
+ */
 function PublicHeader() {
-  const { status } = useAuth();
-  const onLogin = usePathname() === '/login';
+  const { status, user } = useAuth();
+  const path = usePathname();
+  const action =
+    status === 'authenticated' ? (
+      <Link href={homeHref(user?.role)}>Open training</Link>
+    ) : env.guestMode && path !== '/demo' ? (
+      <Link href="/demo">Try the demo</Link>
+    ) : path === '/login' ? null : (
+      <Link href="/login">Sign in</Link>
+    );
   return (
-    <header className="relative z-10 border-b border-line-1 bg-bg-1">
-      <div className="mx-auto flex h-12 max-w-[1280px] items-center justify-between px-4">
-        <Link href="/" className={WORDMARK}>
+    <header className="relative z-10 border-b border-line-1 bg-bg-1" data-testid="public-header">
+      <div className="mx-auto flex min-h-12 max-w-[1280px] flex-wrap items-center gap-x-6 px-4">
+        <Link href="/" className={cn(WORDMARK, 'flex min-h-11 items-center md:min-h-0')}>
           VYUH
         </Link>
-        <nav className="flex items-center gap-3">
-          {status === 'authenticated' ? (
-            <Button asChild variant="secondary" size="sm">
-              <Link href="/train">Open training</Link>
-            </Button>
-          ) : onLogin ? null : (
-            <Button asChild variant="secondary" size="sm">
-              <Link href="/login">Sign in</Link>
-            </Button>
-          )}
+        <nav aria-label="Public" className="flex items-center gap-5">
+          <Link
+            href="/sources"
+            aria-current={path === '/sources' ? 'page' : undefined}
+            className={cn(PUBLIC_LINK, path === '/sources' && 'text-text-1')}
+          >
+            Sources
+          </Link>
+          <Link
+            href="/status"
+            aria-current={path === '/status' ? 'page' : undefined}
+            className={cn(PUBLIC_LINK, path === '/status' && 'text-text-1')}
+          >
+            Status
+          </Link>
         </nav>
+        {action && (
+          <Button asChild variant="secondary" size="sm" className="ml-auto min-h-11 md:min-h-0">
+            {action}
+          </Button>
+        )}
       </div>
     </header>
   );

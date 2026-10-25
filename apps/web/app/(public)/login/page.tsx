@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import {
@@ -14,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { useAuth } from '@/lib/auth';
+import { env } from '@/lib/env';
 import { homeHref } from '@/lib/nav';
 
 // Seeded by `uv run python -m app.seed.demo` (SPEC §22). Local/offline mode only.
@@ -54,7 +56,7 @@ function LoginForm() {
   }
 
   return (
-    <Panel className="w-full max-w-sm">
+    <Panel className="w-full">
       <PanelHeader title="Sign in">
         {mode === 'local' && <StateChip tone="muted">Local mode</StateChip>}
       </PanelHeader>
@@ -62,8 +64,13 @@ function LoginForm() {
         <form className="space-y-4" onSubmit={(e) => void onSubmit(e)}>
           {mode === 'local' ? (
             <div className="space-y-1">
-              <Label htmlFor="email">Demo account</Label>
-              <Select id="email" value={email} onChange={(e) => setEmail(e.target.value)}>
+              <Label htmlFor="email">Account</Label>
+              <Select
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-11 md:h-9"
+              >
                 {DEMO_ACCOUNTS.map((a) => (
                   <option key={a} value={a}>
                     {a}
@@ -71,7 +78,8 @@ function LoginForm() {
                 ))}
               </Select>
               <p className="text-small text-text-2">
-                Offline development only: no password. Disabled when the API runs with ENV=prod.
+                Offline unit install: choose your account. Accounts are set up by the administrator;
+                this mode has no passwords.
               </p>
             </div>
           ) : (
@@ -82,6 +90,7 @@ function LoginForm() {
                   id="email"
                   type="email"
                   autoComplete="username"
+                  className="h-11 md:h-9"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -93,6 +102,7 @@ function LoginForm() {
                   id="password"
                   type="password"
                   autoComplete="current-password"
+                  className="h-11 md:h-9"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -108,21 +118,33 @@ function LoginForm() {
           <Button
             type="submit"
             variant="primary"
-            className="w-full"
+            className="min-h-11 w-full"
             disabled={busy || status === 'loading'}
           >
             {busy ? 'Signing in…' : 'Sign in'}
           </Button>
         </form>
+        {env.guestMode && (
+          <p className="mt-4 border-t border-line-1 pt-3 text-small text-text-body">
+            No account?{' '}
+            <Link
+              href="/demo"
+              className="text-text-1 underline decoration-line-2 underline-offset-2 hover:decoration-text-2"
+            >
+              Try the demo instead
+            </Link>
+            : about five minutes, nothing to set up.
+          </p>
+        )}
       </PanelBody>
     </Panel>
   );
 }
 
 /**
- * Login (DESIGN §11.2): minimal, left-aligned form on a darkened hillshade of a
- * real terrain preset. "Try the demo instead" stays hidden until guest mode
- * exists (Phase 6).
+ * Login (DESIGN §11.2): left-aligned on a darkened hillshade of a real terrain
+ * preset, in the same sheet system as the landing page. "Try the demo instead"
+ * appears with guest mode (NEXT_PUBLIC_GUEST_MODE).
  */
 export default function LoginPage() {
   return (
@@ -136,12 +158,15 @@ export default function LoginPage() {
           className="h-full w-full object-cover object-center"
         />
       </div>
-      <div className="relative z-10 flex min-h-[calc(100vh-7.5rem)] flex-col justify-between gap-8 pt-6">
-        <div className="space-y-6">
-          <div className="max-w-md space-y-2">
-            <p className="text-label">VYUH · PS 26247</p>
-            <h1 className="text-h1">Counter-drone decision training</h1>
-            <p className="text-body text-text-2">
+      <div className="relative z-10 flex min-h-[calc(100dvh-7.5rem)] flex-col justify-between gap-10">
+        <div className="max-w-md space-y-6">
+          <div className="flex items-baseline justify-between gap-4 border-b border-line-1 pb-2 text-meta">
+            <span>PS 26247 · Ministry of Defence</span>
+            <span>Sign in</span>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-h1 text-text-1">Counter-drone decision training</h1>
+            <p className="text-body text-text-body">
               Detect, identify and respond to drone threats on real terrain, in a browser. Scored on
               the server; every session can be reviewed.
             </p>

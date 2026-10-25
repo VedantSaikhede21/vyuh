@@ -123,6 +123,9 @@ export function isRetryable(err: unknown): boolean {
 
 export const api = {
   me: (signal?: AbortSignal): Promise<MeResponseT> => apiFetch('/auth/me', MeResponse, { signal }),
+  /** POST /auth/guest (SPEC §11; the endpoint arrives in Phase 6E). */
+  guestLogin: (): Promise<TokenResponseT> =>
+    apiFetch('/auth/guest', TokenResponse, { method: 'POST', auth: false }),
   devLogin: (email: string): Promise<TokenResponseT> =>
     apiFetch('/auth/dev-login', TokenResponse, { method: 'POST', body: { email }, auth: false }),
   listScenarios: (signal?: AbortSignal) => apiFetch('/scenarios', ScenarioListResponse, { signal }),

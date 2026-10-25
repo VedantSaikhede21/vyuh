@@ -1,54 +1,71 @@
 {
-  "chain-assess": {
-    "w": 1104,
-    "h": 422
+  "images": {
+    "chain-assess": {
+      "w": 1104,
+      "h": 422
+    },
+    "chain-decide": {
+      "w": 638,
+      "h": 542
+    },
+    "chain-detect": {
+      "w": 638,
+      "h": 574
+    },
+    "chain-identify": {
+      "w": 862,
+      "h": 542
+    },
+    "chain-respond": {
+      "w": 638,
+      "h": 338
+    },
+    "chain-track": {
+      "w": 1228,
+      "h": 542
+    },
+    "hero-poster": {
+      "w": 1280,
+      "h": 720
+    },
+    "login-hillshade": {
+      "w": 1200,
+      "h": 1200
+    },
+    "measure-result": {
+      "w": 2240,
+      "h": 884
+    },
+    "realism-false-contacts": {
+      "w": 638,
+      "h": 574
+    },
+    "realism-night-ir": {
+      "w": 862,
+      "h": 542
+    },
+    "realism-silent": {
+      "w": 1228,
+      "h": 240
+    },
+    "realism-terrain": {
+      "w": 2092,
+      "h": 912
+    }
   },
-  "chain-decide": {
-    "w": 638,
-    "h": 542
+  "hero": {
+    "scenario": "S14",
+    "name": "Mixed Sky",
+    "preset": "PUNJAB_PLAINS",
+    "lat": 30.52,
+    "lon": 75.7,
+    "date": "2026-11-20",
+    "time": "10:30",
+    "roe": "WEAPONS_TIGHT",
+    "visibilityKm": 10,
+    "contacts": 8
   },
-  "chain-detect": {
-    "w": 638,
-    "h": 574
-  },
-  "chain-identify": {
-    "w": 862,
-    "h": 542
-  },
-  "chain-respond": {
-    "w": 638,
-    "h": 338
-  },
-  "chain-track": {
-    "w": 1228,
-    "h": 542
-  },
-  "hero-poster": {
-    "w": 1280,
-    "h": 720
-  },
-  "login-hillshade": {
-    "w": 1200,
-    "h": 1200
-  },
-  "measure-result": {
-    "w": 2240,
-    "h": 884
-  },
-  "realism-false-contacts": {
-    "w": 638,
-    "h": 574
-  },
-  "realism-night-ir": {
-    "w": 862,
-    "h": 542
-  },
-  "realism-silent": {
-    "w": 1228,
-    "h": 240
-  },
-  "realism-terrain": {
-    "w": 2092,
-    "h": 912
+  "respond": {
+    "lines": []
   }
 }

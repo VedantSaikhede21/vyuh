@@ -9,6 +9,10 @@ const API = process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
 // production build (E2E_BASE_URL) or the dev server.
 
 const OUT = 'e2e/checkpoint/6c';
+
+/** Horizontal overflow in px (public pages must have none from 360 px up). */
+const overflow = (page: Page) =>
+  page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 const SIZES = [
   { width: 1366, height: 768 },
   { width: 1920, height: 1080 },
@@ -173,16 +177,47 @@ for (const size of PUBLIC_SIZES) {
   test.describe(`public ${size.width}x${size.height}`, () => {
     test.use({ viewport: size });
 
+    test(`landing, login, sources @checkpoint @cp6c`, async ({ page }) => {
+      await page.goto('/');
+      await expect(page.getByTestId('chain-explorer')).toBeVisible({ timeout: 60_000 });
+      // Full page: the lazy pictures load as the page scrolls.
+      await page.evaluate(async () => {
+        for (let y = 0; y < document.body.scrollHeight; y += 600) {
+          window.scrollTo(0, y);
+          await new Promise((r) => setTimeout(r, 80));
+        }
+        window.scrollTo(0, 0);
+      });
+      await shot(page, 'landing');
+      await shot(page, 'landing-fold', false);
+      await page.getByRole('tab', { name: /Respond/ }).click();
+      await page.getByTestId('chain-explorer').scrollIntoViewIfNeeded();
+      await shot(page, 'landing-chain-respond', false);
+      expect(await overflow(page)).toBeLessThanOrEqual(0);
+      await page.goto('/login');
+      await expect(page.locator('#email')).toBeVisible({ timeout: 30_000 });
+      await shot(page, 'login', false);
+      expect(await overflow(page)).toBeLessThanOrEqual(0);
+      await page.goto('/sources');
+      await expect(page.getByTestId('sources-topic').first()).toBeVisible({ timeout: 30_000 });
+      await shot(page, 'sources');
+      expect(await overflow(page)).toBeLessThanOrEqual(0);
+      // Guest entry exists only with NEXT_PUBLIC_GUEST_MODE=true (switched on in 6E).
+      const demo = await page.goto('/demo');
+      if (demo?.status() === 200) {
+        await expect(page.getByTestId('demo-path')).toBeVisible();
+        await shot(page, 'demo');
+        expect(await overflow(page)).toBeLessThanOrEqual(0);
+      }
+    });
+
     test(`status @checkpoint @cp6c`, async ({ page }) => {
       await page.goto('/status');
       await expect(page.getByTestId('status-chip').nth(1)).toHaveText(/OK|Down/, {
         timeout: 30_000,
       });
       await shot(page, 'status');
-      const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      );
-      expect(overflow).toBeLessThanOrEqual(0);
+      expect(await overflow(page)).toBeLessThanOrEqual(0);
     });
   });
 }

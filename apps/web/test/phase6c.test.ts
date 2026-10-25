@@ -11,6 +11,9 @@ import {
 import { describe, expect, it } from 'vitest';
 import { GLOSSARY, scoringRows } from '@/lib/help';
 import { lossAnswer, stageLosses, worstStage } from '@/lib/home';
+import { CHAIN, latLon, respondAlt } from '@/lib/landing';
+import { SOURCE_TOPICS } from '@/lib/sources';
+import MEDIA from '@/public/landing/manifest.json';
 import { LIBRARY, filterLibrary, formatRcs, isContactClass, libraryEntry } from '@/lib/library';
 import { homeHref, navFor } from '@/lib/nav';
 import { unreadLabel } from '@/lib/notices';
@@ -194,5 +197,40 @@ describe('home: where am I losing points', () => {
     );
     expect(lossAnswer(stageLosses([rate('DETECT', 0, 0)]))).toMatch(/^No Assessment sessions/);
     expect(lossAnswer(stageLosses([rate('DETECT', 4, 4)]))).toMatch(/^Every stage/);
+  });
+});
+
+describe('public pages', () => {
+  it('every Sources row cites text that is in docs/realism-sources.md', () => {
+    const doc = readFileSync(join(__dirname, '../../../docs/realism-sources.md'), 'utf8');
+    const rows = SOURCE_TOPICS.flatMap((t) => t.rows);
+    expect(rows.length).toBeGreaterThan(15);
+    for (const r of rows) expect(doc, r.what).toContain(r.cite);
+  });
+
+  it('the Respond crop is described by the Comms lines recorded with it', () => {
+    expect(respondAlt([])).toBe('Comms log of the recorded session');
+    expect(respondAlt(['00:41 INTERCEPT ORDERED T004', '00:43 T004 NEUTRALISED'])).toBe(
+      'Comms log: 00:41 INTERCEPT ORDERED T004; 00:43 T004 NEUTRALISED',
+    );
+    const respond = CHAIN.find((c) => c.stage === 'RESPOND')!;
+    expect(respond.shot.alt).toBe(respondAlt(MEDIA.respond.lines));
+    expect(CHAIN.map((c) => c.stage)).toEqual([
+      'DETECT',
+      'TRACK',
+      'IDENTIFY',
+      'DECIDE',
+      'RESPOND',
+      'ASSESS',
+    ]);
+  });
+
+  it('hero telemetry comes from the recorded scenario file', () => {
+    const file = join(__dirname, `../../api/app/seed/scenarios/${MEDIA.hero.scenario}.json`);
+    const sc = JSON.parse(readFileSync(file, 'utf8'));
+    expect(MEDIA.hero.name).toBe(sc.name);
+    expect(MEDIA.hero.roe).toBe(sc.roe);
+    expect(MEDIA.hero.contacts).toBe(sc.contacts.length);
+    expect(latLon(30.52, 75.7)).toBe('30.52 N 75.70 E');
   });
 });

@@ -210,6 +210,34 @@
   html {
     color-scheme: dark;
     background: var(--bg-0);
+    /* Phones (Phase 6C, mobile-native): no grey tap flash (every control has its own
+       pressed state) and no font inflation in landscape. */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  /* Controls answer on touch at once (no double-tap-zoom wait); a long press on a
+     button does not select its label. Content text stays selectable. */
+  button,
+  a,
+  summary,
+  [role='button'],
+  [role='tab'] {
+    touch-action: manipulation;
+  }
+  button,
+  summary,
+  [role='tab'] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  /* iOS zooms into fields under 16 px and never zooms back out. */
+  @media (pointer: coarse) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
   }
   body {
     background: var(--bg-0);

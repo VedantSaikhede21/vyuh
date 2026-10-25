@@ -15,6 +15,8 @@ import { env } from './env';
 import { getSupabase } from './supabase';
 
 const LOCAL_TOKEN_KEY = 'vyuh.localToken';
+/** Guest demo token (POST /auth/guest, Phase 6E): used in either auth mode while present. */
+const GUEST_TOKEN_KEY = 'vyuh.guestToken';
 
 type AuthStatus = 'loading' | 'authenticated' | 'anonymous';
 
@@ -27,29 +29,36 @@ interface AuthContextValue {
   loginDev: (email: string) => Promise<void>;
   /** AUTH_MODE=supabase only. */
   loginSupabase: (email: string, password: string) => Promise<void>;
+  /** "Try the demo" (NEXT_PUBLIC_GUEST_MODE): a short-lived guest account from the API. */
+  loginGuest: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function readLocalToken(): string | null {
+function readToken(key: string): string | null {
   try {
-    return window.localStorage.getItem(LOCAL_TOKEN_KEY);
+    return window.localStorage.getItem(key);
   } catch {
     return null;
   }
 }
 
-function writeLocalToken(token: string | null): void {
+function writeToken(key: string, token: string | null): void {
   try {
-    if (token) window.localStorage.setItem(LOCAL_TOKEN_KEY, token);
-    else window.localStorage.removeItem(LOCAL_TOKEN_KEY);
+    if (token) window.localStorage.setItem(key, token);
+    else window.localStorage.removeItem(key);
   } catch {
     // storage unavailable (private mode) — session lasts until reload
   }
 }
 
+const readLocalToken = () => readToken(LOCAL_TOKEN_KEY);
+const writeLocalToken = (t: string | null) => writeToken(LOCAL_TOKEN_KEY, t);
+
 async function currentToken(): Promise<string | null> {
+  const guest = readToken(GUEST_TOKEN_KEY);
+  if (guest) return guest;
   if (env.authMode === 'local') return readLocalToken();
   const { data } = await getSupabase().auth.getSession();
   return data.session?.access_token ?? null;
@@ -77,8 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStatus('authenticated');
       setError(null);
     } catch (err) {
-      if (err instanceof ApiError && err.code === 'UNAUTHORIZED' && env.authMode === 'local') {
-        writeLocalToken(null);
+      if (err instanceof ApiError && err.code === 'UNAUTHORIZED') {
+        // An expired guest goes back to the public pages; a stale local token is dropped.
+        writeToken(GUEST_TOKEN_KEY, null);
+        if (env.authMode === 'local') writeLocalToken(null);
       }
       setUser(null);
       setStatus('anonymous');
@@ -128,7 +139,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [refresh],
   );
 
+  const loginGuest = useCallback(async () => {
+    setError(null);
+    try {
+      const token = await api.guestLogin();
+      writeToken(GUEST_TOKEN_KEY, token.accessToken);
+    } catch (err) {
+      setError(describe(err));
+      throw err;
+    }
+    await refresh();
+  }, [refresh]);
+
   const logout = useCallback(async () => {
+    writeToken(GUEST_TOKEN_KEY, null);
     if (env.authMode === 'local') writeLocalToken(null);
     else await getSupabase().auth.signOut();
     setUser(null);
@@ -136,8 +160,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ mode: env.authMode, status, user, error, loginDev, loginSupabase, logout }),
-    [status, user, error, loginDev, loginSupabase, logout],
+    () => ({
+      mode: env.authMode,
+      status,
+      user,
+      error,
+      loginDev,
+      loginSupabase,
+      loginGuest,
+      logout,
+    }),
+    [status, user, error, loginDev, loginSupabase, loginGuest, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
