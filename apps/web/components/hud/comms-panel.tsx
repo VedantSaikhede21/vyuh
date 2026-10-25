@@ -14,7 +14,16 @@ import { cn } from '@/lib/utils';
  * command rejections, and echoes of accepted commands that stay (QUEUED) only
  * until the sim applies them on its next tick.
  */
-export function CommsPanel({ runtime, className }: { runtime: SimRuntime; className?: string }) {
+export function CommsPanel({
+  runtime,
+  className,
+  enter = true,
+}: {
+  runtime: SimRuntime;
+  className?: string;
+  /** Animate new lines in; off in the AAR, where a seek brings in many at once. */
+  enter?: boolean;
+}) {
   const tMs = useHudStore((s) => s.hud?.tMs ?? 0);
   const local = useUiStore((s) => s.local);
   const builder = useMemo(
@@ -49,7 +58,7 @@ export function CommsPanel({ runtime, className }: { runtime: SimRuntime; classN
   return (
     <Panel className={cn('border-0', className)}>
       <PanelHeader title="Comms" />
-      <CommsLog lines={lines} max={30} className="flex-1" />
+      <CommsLog lines={lines} max={30} enter={enter} className="flex-1" />
     </Panel>
   );
 }

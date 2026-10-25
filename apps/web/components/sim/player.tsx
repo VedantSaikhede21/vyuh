@@ -148,7 +148,7 @@ export function SimPlayer({
               <RadarScope runtime={runtime} commands={commands} overlay={replay?.ppiOverlay} />
             </div>
           </Panel>
-          <CommsPanel runtime={runtime} className="min-h-0 flex-1" />
+          <CommsPanel runtime={runtime} enter={!replay} className="min-h-0 flex-1" />
         </aside>
       </div>
       {replay?.timeline}

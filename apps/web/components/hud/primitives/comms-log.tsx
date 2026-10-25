@@ -35,15 +35,18 @@ export function CommsLog({
   max = 8,
   className,
   empty = 'No traffic yet. Actions and sensor reports appear here.',
+  enter = true,
 }: {
   lines: readonly CommsLine[];
   max?: number;
   className?: string;
   empty?: string;
+  /** Animate new lines in (§7 Comms line entry). */
+  enter?: boolean;
 }) {
   const shown = lines.slice(-max);
-  // Lines already there on first render (a reload, the AAR) do not animate in;
-  // only traffic that arrives while the operator watches does (§7).
+  // Lines already there on first render (a reload) do not animate in; only
+  // traffic that arrives while the operator watches does (§7).
   const [initial] = useState<ReadonlySet<string>>(() => new Set(lines.map((l) => l.id)));
   const list = useRef<HTMLOListElement>(null);
   // Stay on the newest line unless the operator has scrolled up to read.
@@ -90,7 +93,7 @@ export function CommsLog({
           className={cn(
             'flex gap-3 py-px text-readout leading-4',
             l.pending && 'opacity-60',
-            !initial.has(l.id) && 'animate-comms-in',
+            enter && !initial.has(l.id) && 'animate-comms-in',
           )}
           title={`${formatClock(l.tMs)} ${l.tag ? `${l.tag} ` : ''}${l.text}${l.pending ? ' · QUEUED' : ''}`}
         >
