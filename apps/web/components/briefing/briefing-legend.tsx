@@ -49,7 +49,12 @@ export function BriefingLegend({
   width: number;
 }) {
   const hasBorder = scenario.zones.some((z) => z.kind === 'BORDER_LINE');
-  const hasZone = scenario.zones.some((z) => z.kind === 'NO_KINETIC');
+  // The map labels zones by id only; the legend names them ("Z1 village"), so an
+  // instructor's zone names reach the trainee (Phase 4b tech debt).
+  const zoneNames = scenario.zones
+    .filter((z) => z.kind === 'NO_KINETIC')
+    .map((z) => (z.name ? `${z.id} ${z.name}` : z.id));
+  const hasZone = zoneNames.length > 0;
   const hasInterceptor = scenario.effectors.some((e) => e.kind === 'INTERCEPT');
   return (
     <section
@@ -101,6 +106,7 @@ export function BriefingLegend({
         )}
         {hasZone && (
           <Item
+            wide={zoneNames.length > 1}
             symbol={
               <>
                 <defs>
@@ -124,7 +130,9 @@ export function BriefingLegend({
               </>
             }
           >
-            No-kinetic zone
+            <span title={zoneNames.join(', ')} data-testid="legend-zones">
+              No-kinetic · {zoneNames.join(', ')}
+            </span>
           </Item>
         )}
         {hasBorder && (

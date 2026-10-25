@@ -1,6 +1,7 @@
 import type { TrendPoint } from '@vyuh/shared';
 import { describe, expect, it } from 'vitest';
 import { difficultyRuns } from '@/lib/aar/answers';
+import { fieldErrors } from '@/lib/builder/field-errors';
 import { nextStep } from '@/lib/hud/next-step';
 import {
   azimuthBehind,
@@ -193,5 +194,14 @@ describe('trends difficulty runs (audit P1-15)', () => {
       { difficulty: 2, from: 6, to: 6 },
     ]);
     expect(difficultyRuns([])).toEqual([]);
+  });
+});
+
+describe('builder field errors (audit P1-17)', () => {
+  it('flags an empty name and a bad swarm size, accepts Auto', () => {
+    expect(fieldErrors({ name: 'Canal', swarmSize: '' })).toEqual({ name: null, swarmSize: null });
+    expect(fieldErrors({ name: '  ', swarmSize: '8' }).name).toBe('Give the scenario a name.');
+    for (const bad of ['0', '51', '2.5', 'abc'])
+      expect(fieldErrors({ name: 'x', swarmSize: bad }).swarmSize).toMatch(/1 to 50/);
   });
 });

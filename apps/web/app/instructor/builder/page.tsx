@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { api } from '@/lib/api';
+import { fieldErrors } from '@/lib/builder/field-errors';
 import { DEFAULT_ALTITUDE, sensorSites } from '@/lib/briefing/coverage';
 import { sections } from '@/lib/briefing/sections';
 import { useCoverage } from '@/lib/briefing/use-coverage';
@@ -104,11 +105,25 @@ function toRequest(f: Form, asset: Pt | null, zones: { name: string; polygon: Pt
   return req;
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  /** Shown under the field, next to what caused it (audit P1-17). */
+  error?: string | null;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block space-y-1">
       <span className="text-label">{label}</span>
       {children}
+      {error && (
+        <span className="block text-small text-warn" role="alert">
+          {error}
+        </span>
+      )}
     </label>
   );
 }
@@ -245,14 +260,16 @@ function Builder() {
   }, [draft, zoneName, zones.length]);
 
   useEffect(() => {
-    if (mode !== 'zone') return;
+    if (mode === 'view') return;
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement | null)?.closest('input, select, textarea')) return;
-      if (e.key === 'Enter') finishZone();
-      else if (e.key === 'Escape') {
+      // Esc leaves either tool (audit P1-17); Enter / Backspace only draw zones.
+      if (e.key === 'Escape') {
         setDraft([]);
         setMode('view');
-      } else if (e.key === 'Backspace') setDraft((d) => d.slice(0, -1));
+      } else if (mode !== 'zone') return;
+      else if (e.key === 'Enter') finishZone();
+      else if (e.key === 'Backspace') setDraft((d) => d.slice(0, -1));
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -269,7 +286,10 @@ function Builder() {
   const sites = useMemo(() => (shown ? sensorSites(shown) : []), [shown]);
   const coverage = useCoverage(shown?.terrain.preset ?? null, sites, DEFAULT_ALTITUDE);
   const problems = preview?.problems ?? [];
-  const canSave = !loading && preview?.scenario != null && problems.length === 0 && !saving;
+  const errors = fieldErrors(form);
+  const fieldsOk = !errors.name && !errors.swarmSize;
+  const canSave =
+    fieldsOk && !loading && preview?.scenario != null && problems.length === 0 && !saving;
 
   const save = () => {
     setSaving(true);
@@ -317,8 +337,9 @@ function Builder() {
         <Panel>
           <PanelHeader title="Request" />
           <PanelBody className="space-y-2.5">
-            <Field label="Name">
+            <Field label="Name" error={errors.name}>
               <Input
+                aria-invalid={!!errors.name}
                 value={form.name}
                 maxLength={80}
                 onChange={(e) => set('name', e.target.value)}
@@ -420,8 +441,9 @@ function Builder() {
                   ))}
                 </Select>
               </Field>
-              <Field label="Swarm size">
+              <Field label="Swarm size" error={errors.swarmSize}>
                 <Input
+                  aria-invalid={!!errors.swarmSize}
                   type="number"
                   min={1}
                   max={50}
@@ -524,7 +546,18 @@ function Builder() {
               </span>
             )}
           </div>
-          <div className="flex min-h-0 flex-1 items-center justify-center bg-bg-0 p-2">
+          <div className="relative flex min-h-0 flex-1 items-center justify-center bg-bg-0 p-2">
+            {mode !== 'view' && shown && (
+              // On the map itself, where the eye is while the tool is active (audit P1-17).
+              <p
+                className="pointer-events-none absolute left-1/2 top-3 z-[1] -translate-x-1/2 border border-line-2 bg-bg-2 px-2 py-1 text-small text-text-1 shadow-overlay"
+                data-testid="map-tool-hint"
+              >
+                {mode === 'asset'
+                  ? 'Click where the defended asset goes · Esc cancels'
+                  : `Click the corners · ${draft.length} placed · Enter closes · Esc cancels`}
+              </p>
+            )}
             {shown ? (
               <BriefingMap
                 scenario={shown}
@@ -598,7 +631,13 @@ function Builder() {
                   variant="primary"
                   disabled={!canSave}
                   onClick={save}
-                  title={canSave ? 'Save as an authored scenario' : 'Fix the problems first'}
+                  title={
+                    canSave
+                      ? 'Save as an authored scenario'
+                      : fieldsOk
+                        ? 'Fix the problems first'
+                        : 'Fix the marked fields first'
+                  }
                   data-testid="builder-save"
                 >
                   {saving ? 'Saving…' : 'Save scenario'}

@@ -68,10 +68,18 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 - API `scenario_code(row)` (`app/services/scenarios.py`): an authored scenario's `AUT-…` id is its list code (training list, assign form, trends, unit, assignments) — existing rows too, no migration. `test_builder_preview_checks_and_save` asserts the list and `assignments/mine` codes.
 - Captured `unit-full` at 1366 and reviewed. Web 205 tests; `test_phase4b.py` + `test_scenarios.py` green (full pytest at Checkpoint B).
 
+## Builder (2026-10-25, P1-17)
+
+- Hint on the map while a tool is active ("Click where the defended asset goes · Esc cancels" / "Click the corners · n placed · Enter closes · Esc cancels"), `data-testid="map-tool-hint"`.
+- Esc leaves the asset tool too (it only left the zone tool).
+- Inline errors under Name ("Give the scenario a name.") and Swarm size ("A whole number from 1 to 50, or empty for Auto." — invalid input was silently ignored); Save is disabled with "Fix the marked fields first". `lib/builder/field-errors.ts`, tested.
+- Briefing legend names the no-kinetic zones ("No-kinetic · Z1 village, Z2 school"). The instructor note already shows as a briefing section, so the legend does not repeat it.
+- Not captured yet with a tool active — add to `checkpoint-6b.spec.ts`. "Preview without jank" not touched (the map keeps the last good preview already).
+
 ## Still to do in 6B (from the plan, in order)
 
 2. Player: disabled reasons and title hovers checked in the break-ui pass. (Aids labelled: spectrogram "Aid · confirm on camera"; the AI chip tooltip already says it can be wrong.)
-4. Builder (P1-17 + legend), briefing labels (P2-3) + S01–S03 thumbnails + Generate secondary (P2-2), weight editor / From text copy (P1-9) and "/10" wording.
+4. Briefing labels (P2-3) + S01–S03 thumbnails + Generate secondary (P2-2), weight editor / From text copy (P1-9) and "/10" wording.
 5. Apply 6A primitives everywhere (Tabs, SegmentedControl, Table, PageHeader, ErrorState); one primary action per screen; keyboard focus order.
 6. Load `emil-design-eng` before the polish, `break-ui` before stress-testing; write the break-ui report.
 7. Checkpoint B: `checkpoint-6b.spec.ts` captures of every 6B screen at 1366×768 and 1920×1080 + break-ui report + FPS before / after → **stop for the user's OK**.
