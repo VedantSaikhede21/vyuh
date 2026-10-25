@@ -2,6 +2,7 @@ import type { TrendPoint } from '@vyuh/shared';
 import { describe, expect, it } from 'vitest';
 import { difficultyRuns } from '@/lib/aar/answers';
 import { fieldErrors } from '@/lib/builder/field-errors';
+import { bbox, placeLabel } from '@/lib/briefing/label-place';
 import { nextStep } from '@/lib/hud/next-step';
 import {
   azimuthBehind,
@@ -203,5 +204,28 @@ describe('builder field errors (audit P1-17)', () => {
     expect(fieldErrors({ name: '  ', swarmSize: '8' }).name).toBe('Give the scenario a name.');
     for (const bad of ['0', '51', '2.5', 'abc'])
       expect(fieldErrors({ name: 'x', swarmSize: bad }).swarmSize).toMatch(/1 to 50/);
+  });
+});
+
+describe('briefing label placement (audit P2-3)', () => {
+  const zone = bbox([
+    [100, 100],
+    [200, 100],
+    [200, 160],
+    [100, 160],
+  ]);
+  const right = { x: 150, y: 120, w: 60, h: 12 };
+  const left = { x: 20, y: 120, w: 60, h: 12 };
+  it('skips a candidate over a zone', () => {
+    expect(placeLabel([right, left], [zone], 400)).toBe(left);
+  });
+  it('keeps the first clear candidate and never leaves the map', () => {
+    expect(placeLabel([left, right], [zone], 400)).toBe(left);
+    const off = { x: 380, y: 10, w: 60, h: 12 };
+    expect(placeLabel([off, right], [], 400)).toBe(right);
+  });
+  it('falls back to the least overlap', () => {
+    const half = { x: 170, y: 120, w: 60, h: 12 };
+    expect(placeLabel([right, half], [zone], 400)).toBe(half);
   });
 });
