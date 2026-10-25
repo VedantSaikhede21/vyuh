@@ -54,10 +54,17 @@ Committed as `30272fa` (typecheck, lint, 24 files / 200 web tests green).
 - Stages, debrief mistakes (side panel) and timeline markers already jump; the AAR page already uses the 6A `ErrorState`.
 - Captured `aar-truth` at 1366 and reviewed. Web 24 files / 204 tests, lint clean.
 
+## Trends (2026-10-25, P1-15)
+
+- `QuestionPanel` gains `definition`: "Score components: points earned as a share of each component's maximum, per session." and "Kill-chain stages: how often each step was done right for a contact, across all sessions. Not the score."
+- `SeriesChart` draws every given tick (`interval={0}`): score axis 0 / 25 / 50 / 75 / 100; component mini charts 0 / 100.
+- Difficulty chart → step readout: "Next ■■■□□ D3 · Sessions 1–6 D2 → Session 7 D3" (`difficultyRuns`, tested).
+- Captured `trends-full` at 1366 (before the mini-chart tick change) and reviewed. Rating axis ticks stay auto (1015 / 1085 / 1155) — noted for the break-ui pass.
+
 ## Still to do in 6B (from the plan, in order)
 
 2. Player: disabled reasons and title hovers checked in the break-ui pass. (Aids labelled: spectrogram "Aid · confirm on camera"; the AI chip tooltip already says it can be wrong.)
-4. Trends (P1-15), unit dashboard + assignments (P1-16, P2-9), builder (P1-17 + legend), briefing labels (P2-3) + S01–S03 thumbnails + Generate secondary (P2-2), weight editor / From text copy (P1-9) and "/10" wording.
+4. Unit dashboard + assignments (P1-16, P2-9), builder (P1-17 + legend), briefing labels (P2-3) + S01–S03 thumbnails + Generate secondary (P2-2), weight editor / From text copy (P1-9) and "/10" wording.
 5. Apply 6A primitives everywhere (Tabs, SegmentedControl, Table, PageHeader, ErrorState); one primary action per screen; keyboard focus order.
 6. Load `emil-design-eng` before the polish, `break-ui` before stress-testing; write the break-ui report.
 7. Checkpoint B: `checkpoint-6b.spec.ts` captures of every 6B screen at 1366×768 and 1920×1080 + break-ui report + FPS before / after → **stop for the user's OK**.

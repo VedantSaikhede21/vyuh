@@ -17,6 +17,7 @@ import {
   accuracyAnswer,
   componentAnswer,
   difficultyAnswer,
+  difficultyRuns,
   latencyAnswer,
   mistakesAnswer,
   ratingAnswer,
@@ -172,6 +173,7 @@ export function TrendsView({
           question="Where do I lose points?"
           answer={componentAnswer(points)}
           testId="chart-components"
+          definition="Score components: points earned as a share of each component's maximum, per session."
         >
           <div className="grid grid-cols-2 gap-x-3 gap-y-1">
             {COMPONENTS.map((c) => {
@@ -189,7 +191,7 @@ export function TrendsView({
                   <SeriesChart
                     data={s}
                     domain={[0, 100]}
-                    ticks={[0, 50, 100]}
+                    ticks={[0, 100]}
                     unit="%"
                     height={58}
                     ariaLabel={`${COMPONENT_LABEL[c]} as a percentage of its maximum per session`}
@@ -233,6 +235,7 @@ export function TrendsView({
           question="Which kill-chain stage is weakest?"
           answer={weakestStageAnswer(data.stages)}
           testId="chart-stages"
+          definition="Kill-chain stages: how often each step was done right for a contact, across all sessions. Not the score."
         >
           <StageBars stages={data.stages} weakest={weakest} />
         </QuestionPanel>
@@ -283,14 +286,25 @@ export function TrendsView({
           testId="chart-difficulty"
           className="lg:col-span-2"
         >
-          <SeriesChart
-            data={series(points, (p) => p.recommendedDifficulty)}
-            domain={[1, 5]}
-            ticks={[1, 2, 3, 4, 5]}
-            step
-            height={96}
-            ariaLabel="Recommended next difficulty after each session"
-          />
+          {/* A step readout, not a chart: the value only moves in whole levels (audit P1-15). */}
+          <div className="flex flex-wrap items-center gap-6" data-testid="difficulty-steps">
+            <span className="flex items-center gap-2">
+              <span className="text-label">Next</span>
+              <Pips value={points.at(-1)!.recommendedDifficulty} />
+              <span className="text-readout-lg">D{points.at(-1)!.recommendedDifficulty}</span>
+            </span>
+            <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-small text-text-2">
+              {difficultyRuns(points).map((r, i) => (
+                <li key={r.from} className="flex items-center gap-2">
+                  {i > 0 && <span aria-hidden>→</span>}
+                  <span>
+                    {r.from === r.to ? `Session ${r.from}` : `Sessions ${r.from}–${r.to}`}{' '}
+                    <span className="font-mono tnum text-text-1">D{r.difficulty}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
         </QuestionPanel>
       </div>
       <Panel>

@@ -1,4 +1,6 @@
+import type { TrendPoint } from '@vyuh/shared';
 import { describe, expect, it } from 'vitest';
+import { difficultyRuns } from '@/lib/aar/answers';
 import { nextStep } from '@/lib/hud/next-step';
 import {
   azimuthBehind,
@@ -179,5 +181,17 @@ describe('selected-track framing (audit P0-6)', () => {
     expect(clampLabel(500, 300, 60, 16, 1000, 600)).toEqual({ left: 470, top: 284 });
     expect(clampLabel(10, 5, 60, 16, 1000, 600)).toEqual({ left: 4, top: 4 });
     expect(clampLabel(995, 700, 60, 16, 1000, 600)).toEqual({ left: 936, top: 580 });
+  });
+});
+
+describe('trends difficulty runs (audit P1-15)', () => {
+  const pts = (ds: number[]) => ds.map((d) => ({ recommendedDifficulty: d }) as TrendPoint);
+  it('groups sessions with the same recommendation', () => {
+    expect(difficultyRuns(pts([2, 2, 2, 3, 3, 2]))).toEqual([
+      { difficulty: 2, from: 1, to: 3 },
+      { difficulty: 3, from: 4, to: 5 },
+      { difficulty: 2, from: 6, to: 6 },
+    ]);
+    expect(difficultyRuns([])).toEqual([]);
   });
 });
