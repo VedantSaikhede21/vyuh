@@ -14,6 +14,17 @@ Plan: `docs/plans/phase6d-plan.md` (approved 2026-10-26). Decision 159.
 
 Unit tests: `apps/web/test/phase6d.test.ts` (sweep trail, first-render Comms lines, 120–180 ms tokens on `--ease-ui`, reduced-motion selectors). Web vitest 230.
 
+## FPS (production build, FPS_SELECT=1, fixed DPR, AMD Radeon integrated)
+
+| Case | Before (`0bb5880`) | After (HEAD) |
+|---|---|---|
+| S06 1920×1080 | 59 fps, p95 25.0 ms | 25, p95 58.5 — **invalid** |
+| URBAN D5 seed 2 1920×1080 | 36, p95 41.7 | 18 (windows 18 / 18 / 44) — **invalid** |
+| S06 1366×768 | 84, p95 16.8 | 43 — **invalid** |
+| URBAN D5 seed 2 1366×768 | 48, p95 49.5 | 65 — **invalid** |
+
+The after run (2026-10-26 ~20:10–20:30) overlapped another workload on this machine — a Vite dev server for `D:\Portfolio` (20:13) and a `scripts/shots.mjs` headless-Chrome screenshot job (20:33) — so it is not comparable; re-run both builds back to back on a quiet machine. The before run had the same API and no other load seen.
+
 ## FPS method (to run)
 
 Production stack with the dev servers stopped: `cd apps/web && pnpm build && npx next start --port 3000`; API `cd apps/api && uv run uvicorn app.main:create_app --factory --port 8000`. Then
