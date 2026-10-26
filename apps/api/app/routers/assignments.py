@@ -18,7 +18,7 @@ def create_assignment(
 @router.get("", response_model=AssignmentListResponse)
 def list_assignments(user: StaffUser, db: DbDep) -> AssignmentListResponse:
     """The latest assignments made by anyone (instructor view)."""
-    return AssignmentListResponse(items=assignments.all_assignments(db))
+    return AssignmentListResponse(items=assignments.all_assignments(db, user))
 
 
 @router.get("/mine", response_model=AssignmentListResponse)

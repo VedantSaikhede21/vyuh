@@ -113,6 +113,23 @@ def unit(db: Session) -> Unit:
 
 
 @pytest.fixture
+def staff_for(db: Session, make_user: Callable[..., User]) -> Callable[..., User]:
+    """An instructor of `subject`'s unit (instructors see their own unit only, Phase 6E);
+    gives the subject a unit first if it has none."""
+
+    def _make(subject: User, email: str = "instructor@test") -> User:
+        if subject.unit_id is None:
+            u = Unit(name=f"Unit of {subject.name}")
+            db.add(u)
+            db.flush()
+            subject.unit_id = u.id
+            db.commit()
+        return make_user(UserRole.INSTRUCTOR, email, unit_id=subject.unit_id)
+
+    return _make
+
+
+@pytest.fixture
 def auth_header(settings: Settings) -> Callable[[User], dict[str, str]]:
     def _header(user: User) -> dict[str, str]:
         return {"Authorization": f"Bearer {create_local_token(user.auth_id, settings)}"}

@@ -33,6 +33,7 @@ from app.schemas.generated import (
     UnitRef,
     UserRole,
 )
+from app.services.access import member_filter, require_unit
 from app.services.analytics.trends import STAGES, assessment_facts, weakest
 from app.services.assignments import assignments_of, item
 from app.services.display import display_int
@@ -163,9 +164,10 @@ def _unit(db: Session, unit_id: uuid.UUID) -> Unit:
     return unit
 
 
-def readiness(db: Session, unit_id: uuid.UUID) -> ReadinessResponse:
+def readiness(db: Session, viewer: User, unit_id: uuid.UUID) -> ReadinessResponse:
     """One row per trainee: level, sign-off waiting, last assessment, weakest stage, overdue."""
     unit = _unit(db, unit_id)
+    require_unit(viewer, unit.id)
     trainees = list(
         db.scalars(
             select(User)
@@ -206,9 +208,10 @@ def readiness(db: Session, unit_id: uuid.UUID) -> ReadinessResponse:
     return ReadinessResponse(unit=UnitRef(id=unit.id, name=unit.name), rows=rows)
 
 
-def active_sessions(db: Session, unit_id: uuid.UUID | None) -> ActiveSessionsResponse:
-    """ACTIVE sessions with a batch in the last minute. Read-only; no score (it is
-    computed on the server when the session completes)."""
+def active_sessions(db: Session, viewer: User, unit_id: uuid.UUID | None) -> ActiveSessionsResponse:
+    """ACTIVE sessions with a batch in the last minute, in the viewer's unit (all units
+    for admins). Read-only; no score (it is computed on the server when the session
+    completes)."""
     now = datetime.now(UTC)
     q = (
         select(TrainingSession, User, ScenarioRow)
@@ -222,7 +225,10 @@ def active_sessions(db: Session, unit_id: uuid.UUID | None) -> ActiveSessionsRes
     )
     if unit_id is not None:
         _unit(db, unit_id)
+        require_unit(viewer, unit_id)
         q = q.where(User.unit_id == unit_id)
+    else:
+        q = q.where(member_filter(viewer))
     items: list[ActiveSessionRow] = []
     for row, user, srow in db.execute(q):
         sim_t = db.scalar(

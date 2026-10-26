@@ -27,8 +27,8 @@ from app.schemas.generated import (
     SessionEnded,
     SessionMode,
     SessionStatus,
-    UserRole,
 )
+from app.services.access import can_view_user
 from app.services.display import display_int, display_round
 from app.services.plausibility import (
     LogState,
@@ -50,7 +50,6 @@ from app.services.scoring.versions import get_tree
 from app.services.terrain import preset_revision
 
 ACCEPTS_EVENTS = frozenset({SessionStatus.CREATED, SessionStatus.ACTIVE})
-VIEWER_ROLES = frozenset({UserRole.INSTRUCTOR, UserRole.ADMIN})
 #: An ACTIVE session with no batch (heartbeats count) for this long is ABANDONED (SPEC §4.5).
 IDLE_LIMIT = timedelta(minutes=15)
 
@@ -127,7 +126,7 @@ def get_owned_session(
 
 def get_viewable_session(db: Session, user: User, session_id: uuid.UUID) -> TrainingSession:
     row = _get(db, session_id)
-    if row.user_id != user.id and user.role not in VIEWER_ROLES:
+    if row.user_id != user.id and not can_view_user(user, db.get_one(User, row.user_id)):
         raise ApiError(ErrorCode.FORBIDDEN, "Not your session")
     if expire_if_stale(row):
         db.commit()

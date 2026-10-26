@@ -36,6 +36,7 @@ from app.schemas.generated import (
 from app.schemas.generated import (
     LevelSignoff as LevelSignoffOut,
 )
+from app.services.access import require_user
 from app.services.analytics.trends import SessionFacts, assessment_facts
 from app.services.display import display_int, display_opt
 from app.services.scoring import versions
@@ -407,6 +408,7 @@ def _subject(db: Session, viewer: User, user_id: uuid.UUID) -> User:
     subject = db.get(User, user_id)
     if subject is None:
         raise ApiError(ErrorCode.NOT_FOUND, "User not found")
+    require_user(viewer, subject)
     return subject
 
 

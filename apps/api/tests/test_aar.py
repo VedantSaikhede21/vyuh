@@ -42,6 +42,7 @@ def test_aar_for_owner_and_staff_after_completion_only(
     client: TestClient,
     scenarios: dict[str, ScenarioRow],
     make_user: Callable[..., User],
+    staff_for: Callable[..., User],
     auth_header: Headers,
     start_session: Callable[..., str],
 ) -> None:
@@ -63,10 +64,13 @@ def test_aar_for_owner_and_staff_after_completion_only(
     assert [r["contactId"] for r in body["killChain"]] == ["c01"]
     assert "null" not in json.dumps(body["killChain"])
 
-    staff = auth_header(make_user(UserRole.INSTRUCTOR, "i@test"))
+    staff = auth_header(staff_for(owner, "i@test"))
     assert client.get(url, headers=staff).status_code == 200
     stranger = auth_header(make_user(email="other@test"))
     assert_error(client.get(url, headers=stranger), 403, "FORBIDDEN")
+    # An instructor of another unit (here: none) does not see it (Phase 6E).
+    outside = auth_header(make_user(UserRole.INSTRUCTOR, "i2@test"))
+    assert_error(client.get(url, headers=outside), 403, "FORBIDDEN")
 
 
 def test_aar_returns_report_truth_events(

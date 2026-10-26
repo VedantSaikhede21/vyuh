@@ -40,7 +40,7 @@ def active_sessions(
 ) -> ActiveSessionsResponse:
     """Live monitor: ACTIVE sessions with a batch in the last minute (read-only, no score).
     Declared before /{session_id} so "active" is not parsed as an id."""
-    return portal.active_sessions(db, unit)
+    return portal.active_sessions(db, user, unit)
 
 
 @router.post("/{session_id}/events", response_model=EventBatchResponse)
@@ -75,4 +75,5 @@ def rescore_session(
     session_id: uuid.UUID, body: RescoreRequest, user: StaffUser, db: DbDep
 ) -> Score:
     """Re-score with another version of the scenario's tree; writes a new score row."""
+    sessions.get_viewable_session(db, user, session_id)  # own unit only
     return versions.rescore(db, session_id, body.tree_id)

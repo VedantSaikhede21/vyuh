@@ -7,15 +7,16 @@ from app.core.auth import DbDep, StaffUser
 from app.models import Unit, User
 from app.schemas.generated import ReadinessResponse, UnitListResponse, UnitMember, UnitSummary
 from app.services import portal
+from app.services.access import unit_filter
 
 router = APIRouter(prefix="/units", tags=["units"])
 
 
 @router.get("", response_model=UnitListResponse)
 def list_units(user: StaffUser, db: DbDep) -> UnitListResponse:
-    """Units with their members, for the unit selector and the assignment form."""
+    """The units a viewer may see (own unit; all for admins), with their members."""
     items = []
-    for unit in db.scalars(select(Unit).order_by(Unit.name)):
+    for unit in db.scalars(select(Unit).where(unit_filter(user)).order_by(Unit.name)):
         members = db.scalars(
             select(User)
             .where(User.unit_id == unit.id, User.is_guest.is_(False))
@@ -34,4 +35,4 @@ def list_units(user: StaffUser, db: DbDep) -> UnitListResponse:
 @router.get("/{unit_id}/readiness", response_model=ReadinessResponse)
 def readiness(unit_id: uuid.UUID, user: StaffUser, db: DbDep) -> ReadinessResponse:
     """One row per trainee: level, sign-off waiting, last assessment, weakest stage, overdue."""
-    return portal.readiness(db, unit_id)
+    return portal.readiness(db, user, unit_id)

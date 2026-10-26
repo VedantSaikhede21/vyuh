@@ -210,6 +210,7 @@ def test_get_session(
     client: TestClient,
     scenarios: dict[str, ScenarioRow],
     make_user: Callable[..., User],
+    staff_for: Callable[..., User],
     auth_header: Headers,
     start_session: Callable[..., str],
 ) -> None:
@@ -224,7 +225,7 @@ def test_get_session(
     assert body["score"] is None
     assert body["ended"] is None
 
-    instructor = make_user(UserRole.INSTRUCTOR, "instructor@test")
+    instructor = staff_for(owner)
     assert client.get(f"/api/v1/sessions/{sid}", headers=auth_header(instructor)).status_code == 200
     other = make_user(email="other@test")
     assert_error(

@@ -22,6 +22,7 @@ from app.schemas.generated import (
     SessionStatus,
     UserRole,
 )
+from app.services.access import member_filter, require_unit, require_user, unit_filter
 from app.services.scenarios import get_scenario_row, scenario_code
 
 
@@ -75,11 +76,13 @@ def create_assignments(
     if body.unit_id:
         if db.get(Unit, body.unit_id) is None:
             raise ApiError(ErrorCode.NOT_FOUND, "Unit not found")
+        require_unit(user, body.unit_id)
         rows.append(Assignment(scenario_id=scenario.id, unit_id=body.unit_id))
     for uid in dict.fromkeys(body.user_ids or []):
         target = db.get(User, uid)
         if target is None or target.role is not UserRole.TRAINEE:
             raise ApiError(ErrorCode.NOT_FOUND, "Trainee not found", {"userId": str(uid)})
+        require_user(user, target)
         rows.append(Assignment(scenario_id=scenario.id, user_id=uid))
     for r in rows:
         r.assigned_by = user.id
@@ -119,8 +122,14 @@ def unit_assignments(db: Session, unit_id: uuid.UUID) -> list[Assignment]:
     )
 
 
-def all_assignments(db: Session) -> list[AssignmentItem]:
+def all_assignments(db: Session, viewer: User) -> list[AssignmentItem]:
+    """The newest 100 assignments to the viewer's unit or its members (all for admins)."""
+    members = select(User.id).where(member_filter(viewer))
+    units = select(Unit.id).where(unit_filter(viewer))
     rows: Iterable[Assignment] = db.scalars(
-        select(Assignment).order_by(Assignment.created_at.desc()).limit(100)
+        select(Assignment)
+        .where(or_(Assignment.unit_id.in_(units), Assignment.user_id.in_(members)))
+        .order_by(Assignment.created_at.desc())
+        .limit(100)
     )
     return [item(db, a) for a in rows]

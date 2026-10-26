@@ -41,6 +41,7 @@ from app.schemas.generated import (
     UnitTraineeRow,
     UserRole,
 )
+from app.services.access import require_unit, require_user
 from app.services.analytics.ai_trust import ai_trust, combine
 from app.services.analytics.kill_chain import kill_chain
 from app.services.assignments import completed_session, unit_assignments
@@ -255,12 +256,11 @@ def _point(f: SessionFacts, current_rating: int) -> TrendPoint:
 
 
 def trainee_trends(db: Session, viewer: User, user_id: uuid.UUID) -> TraineeTrendsResponse:
-    """Self, or instructor / admin (SPEC §11)."""
-    if viewer.id != user_id and viewer.role not in (UserRole.INSTRUCTOR, UserRole.ADMIN):
-        raise ApiError(ErrorCode.FORBIDDEN, "Trends are visible to the trainee and instructors")
+    """Self, an instructor of the trainee's unit, or an admin (SPEC §11)."""
     user = db.get(User, user_id)
     if user is None:
         raise ApiError(ErrorCode.NOT_FOUND, "User not found")
+    require_user(viewer, user)
     facts = assessment_facts(db, [user.id])
     return TraineeTrendsResponse(
         user=TrendUser(id=user.id, name=user.name, unit_name=user.unit.name if user.unit else None),
@@ -280,10 +280,11 @@ def _change(totals: list[float]) -> float | None:
     return display_int(mean(totals[-k:]) - mean(totals[:k]))
 
 
-def unit_dashboard(db: Session, unit_id: uuid.UUID) -> UnitDashboardResponse:
+def unit_dashboard(db: Session, viewer: User, unit_id: uuid.UUID) -> UnitDashboardResponse:
     unit = db.get(Unit, unit_id)
     if unit is None:
         raise ApiError(ErrorCode.NOT_FOUND, "Unit not found")
+    require_unit(viewer, unit.id)
     trainees = list(
         db.scalars(
             select(User)

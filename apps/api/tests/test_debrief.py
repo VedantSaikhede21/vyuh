@@ -10,7 +10,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.models import Debrief, Scenario, User
-from app.schemas.generated import UserRole
 from app.services.ai.llm import LlmClient
 from tests.conftest import assert_error, fixture_log, make_settings
 from tests.test_sessions import post_batch
@@ -106,6 +105,7 @@ def test_llm_debrief_validated_and_cached(
     client: TestClient,
     auth_header: Headers,
     make_user: Callable[..., User],
+    staff_for: Callable[..., User],
     session_id: tuple[str, User],
 ) -> None:
     sid, user = session_id
@@ -161,7 +161,7 @@ def test_llm_debrief_validated_and_cached(
     # Decision 151: staff can discard it and build it again; the trainee cannot.
     regen = f"/api/v1/aar/sessions/{sid}/debrief/regenerate"
     assert_error(client.post(regen, headers=auth_header(user)), 403, "FORBIDDEN")
-    staff = make_user(UserRole.INSTRUCTOR, "instructor@test")
+    staff = staff_for(user)
     fresh = client.post(regen, headers=auth_header(staff))
     assert fresh.status_code == 200, fresh.text
     assert fresh.json()["source"] == "LLM"
@@ -233,18 +233,19 @@ def test_debrief_rules(
     client: TestClient,
     scenarios: dict[str, Scenario],
     make_user: Callable[..., User],
+    staff_for: Callable[..., User],
     auth_header: Headers,
     start_session: Callable[..., str],
     session_id: tuple[str, User],
 ) -> None:
-    sid, _ = session_id
+    sid, owner = session_id
     other = make_user(email="other@test")
     assert_error(
         client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=auth_header(other)),
         403,
         "FORBIDDEN",
     )
-    staff = make_user(UserRole.INSTRUCTOR, "instructor@test")
+    staff = staff_for(owner)
     r = client.post(f"/api/v1/aar/sessions/{sid}/debrief", headers=auth_header(staff))
     assert r.status_code == 200
     active = start_session(other, scenarios["S01"])
