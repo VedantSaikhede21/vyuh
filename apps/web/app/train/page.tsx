@@ -14,7 +14,9 @@ import { GeneratePanel } from '@/components/training/generate-panel';
 import { OwnGeneratedTable } from '@/components/training/own-generated';
 import { ScenarioTable } from '@/components/training/scenario-table';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
+import { isGuest } from '@/lib/nav';
 
 function OperatorPanel() {
   const { user } = useAuth();
@@ -35,7 +37,9 @@ function OperatorPanel() {
             {user.email ?? '—'}
           </dd>
           <dt className="text-label self-center">Unit</dt>
-          <dd data-testid="user-unit">{user.unit?.name ?? 'Unassigned'}</dd>
+          <dd data-testid="user-unit">
+            {isGuest(user.role) ? 'Demo guest' : (user.unit?.name ?? 'Unassigned')}
+          </dd>
         </dl>
         <Readout label="Rating" value={user.rating} flash={false} />
       </PanelBody>
@@ -45,7 +49,33 @@ function OperatorPanel() {
 
 function GenerateForUser() {
   const { user } = useAuth();
-  return user ? <GeneratePanel role={user.role} /> : null;
+  if (!user) return null;
+  // Guests do not generate freely (Phase 6E): the demo builds one scenario from text.
+  if (isGuest(user.role))
+    return (
+      <Panel data-testid="guest-generate">
+        <PanelHeader title="Generate" />
+        <PanelBody className="space-y-2">
+          <p className="text-small text-text-body">
+            In the demo, a scenario is built from one preset text.
+          </p>
+          <Link href="/instructor/text" className="text-label underline underline-offset-2">
+            Open From text
+          </Link>
+        </PanelBody>
+      </Panel>
+    );
+  return <GeneratePanel role={user.role} />;
+}
+
+function GuestHint() {
+  const { user } = useAuth();
+  if (!isGuest(user?.role)) return null;
+  return (
+    <p className="text-body text-text-body" data-testid="guest-hint">
+      Start with S15 Birds or Drone? in Practice: one quadcopter among birds.
+    </p>
+  );
 }
 
 export default function TrainPage() {
@@ -57,6 +87,7 @@ export default function TrainPage() {
           title="Training"
           context="Choose a scenario to open its briefing, or generate a new one."
         />
+        <GuestHint />
         <div className="grid items-start gap-4 lg:grid-cols-[17rem_minmax(0,1fr)]">
           <div className="space-y-4">
             <OperatorPanel />

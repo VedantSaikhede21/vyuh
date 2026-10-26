@@ -1,6 +1,11 @@
 'use client';
 
-import type { AiStatusResponse, FromTextResponse, GenerateRequest } from '@vyuh/shared';
+import {
+  DEMO_FROM_TEXT,
+  type AiStatusResponse,
+  type FromTextResponse,
+  type GenerateRequest,
+} from '@vyuh/shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -19,12 +24,16 @@ import { Button } from '@/components/ui/button';
 import { FIELD_CLASS } from '@/components/ui/input';
 import { Kbd } from '@/components/hud/primitives';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { isGuest } from '@/lib/nav';
 import { DISABLED_REASON, parameterRows } from '@/lib/ai/from-text';
 import { cn } from '@/lib/utils';
 
 // Text-to-scenario (SPEC §13.2): the LLM reads the text into generator parameters only;
 // the instructor checks them, then the deterministic generator builds the scenario and
 // its briefing opens. Off (with the reason) when the server has LLM_ENABLED=false.
+// A demo guest (Phase 6E) gets the one preset text, read-only; with the LLM off the
+// API answers with its stored reading (TEMPLATE), so the step still works.
 
 const EXAMPLES = [
   'night swarm of 8 from the north with 2 decoys, hard',
@@ -39,10 +48,12 @@ type Parse =
   | { kind: 'ok'; data: FromTextResponse; text: string };
 
 function FromText() {
+  const { user } = useAuth();
+  const guest = isGuest(user?.role);
   const router = useRouter();
   const [status, setStatus] = useState<AiStatusResponse | null>(null);
   const [statusError, setStatusError] = useState(false);
-  const [text, setText] = useState(EXAMPLES[0]!);
+  const [text, setText] = useState(guest ? DEMO_FROM_TEXT : EXAMPLES[0]!);
   const [parse, setParse] = useState<Parse>({ kind: 'idle' });
   const [gen, setGen] = useState<{ kind: 'idle' | 'busy' } | { kind: 'error'; message: string }>({
     kind: 'idle',
@@ -59,7 +70,8 @@ function FromText() {
     return () => ctrl.abort();
   }, []);
 
-  const off = status !== null && !status.llmEnabled;
+  // Guests are never off: the API has a stored reading of their text.
+  const off = !guest && status !== null && !status.llmEnabled;
   const read = async () => {
     if (off || text.trim().length < 3) return;
     setParse({ kind: 'busy' });
@@ -85,11 +97,17 @@ function FromText() {
   return (
     <div className="space-y-4" data-testid="from-text">
       <PageHeader
-        crumbs={[{ label: 'Unit', href: '/instructor' }, { label: 'Scenario builder' }]}
+        {...(guest
+          ? {}
+          : { crumbs: [{ label: 'Unit', href: '/instructor' }, { label: 'Scenario builder' }] })}
         title="Scenario from text"
-        context="Describe the scenario. The LLM reads it into generator parameters only; you check them, then the generator builds the scenario from them, the same way every time."
+        context={
+          guest
+            ? 'The LLM reads this text into generator parameters only; you check them, then the generator builds the scenario from them, the same way every time. Instructors write their own text.'
+            : 'Describe the scenario. The LLM reads it into generator parameters only; you check them, then the generator builds the scenario from them, the same way every time.'
+        }
       />
-      <BuilderNav />
+      {!guest && <BuilderNav />}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <Panel>
           <PanelHeader title="Describe the scenario">
@@ -103,6 +121,7 @@ function FromText() {
                 value={text}
                 maxLength={600}
                 disabled={off}
+                readOnly={guest}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -114,11 +133,17 @@ function FromText() {
                 data-testid="from-text-input"
               />
             </label>
-            <p id="text-hint" className="text-small text-text-2">
-              Threats, numbers, direction, time of day, weather, terrain, ROE, difficulty.{' '}
-              <span className="font-mono tnum">{text.length}</span> / 600
-            </p>
-            <div className="space-y-1">
+            {guest ? (
+              <p id="text-hint" className="text-small text-text-2">
+                The demo reads this one text.
+              </p>
+            ) : (
+              <p id="text-hint" className="text-small text-text-2">
+                Threats, numbers, direction, time of day, weather, terrain, ROE, difficulty.{' '}
+                <span className="font-mono tnum">{text.length}</span> / 600
+              </p>
+            )}
+            <div className={cn('space-y-1', guest && 'hidden')}>
               <p className="text-label">Examples</p>
               <ul className="space-y-1">
                 {EXAMPLES.map((ex) => (
@@ -171,7 +196,11 @@ function FromText() {
 
         <Panel data-testid="from-text-params">
           <PanelHeader title="Parsed parameters — check before generating">
-            {parse.kind === 'ok' && <span className="text-label">{parse.data.model}</span>}
+            {parse.kind === 'ok' && (
+              <span className="text-label" data-testid="from-text-source">
+                {parse.data.source === 'TEMPLATE' ? 'Template · stored reading' : parse.data.model}
+              </span>
+            )}
           </PanelHeader>
           {parse.kind === 'idle' && (
             <StatusNotice title="No parameters yet.">
@@ -251,7 +280,7 @@ function FromText() {
 
 export default function FromTextPage() {
   return (
-    <RequireStaff>
+    <RequireStaff allowGuest>
       <FromText />
     </RequireStaff>
   );

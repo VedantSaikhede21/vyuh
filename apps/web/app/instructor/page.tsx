@@ -34,6 +34,8 @@ import {
   weakestStageAnswer,
 } from '@/lib/aar/answers';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { isGuest } from '@/lib/nav';
 
 // Unit dashboard (SPEC §12 Phase 4, DESIGN §11.7): unit averages, leaderboard,
 // weakest kill-chain stage, common mistakes, assignment completion; rows drill
@@ -147,10 +149,13 @@ function Dashboard({
   d,
   unit,
   reload,
+  readOnly,
 }: {
   d: UnitDashboardResponse;
   unit: UnitSummary;
   reload: () => void;
+  /** A demo guest: everything to read, nothing to assign (Phase 6E). */
+  readOnly: boolean;
 }) {
   const c = d.components;
   const router = useRouter();
@@ -460,13 +465,26 @@ function Dashboard({
             </Table>
           )}
         </Panel>
-        <AssignForm unit={unit} onDone={reload} />
+        {readOnly ? (
+          <Panel data-testid="assign-read-only">
+            <PanelHeader title="Assign a scenario" />
+            <PanelBody>
+              <p className="text-small text-text-body">
+                Instructors assign scenarios here. This is a read-only view of demo data.
+              </p>
+            </PanelBody>
+          </Panel>
+        ) : (
+          <AssignForm unit={unit} onDone={reload} />
+        )}
       </div>
     </div>
   );
 }
 
 function UnitPage() {
+  const { user } = useAuth();
+  const guest = isGuest(user?.role);
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -507,9 +525,13 @@ function UnitPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        reference="Unit · Assessment sessions only"
+        reference={guest ? 'Unit · Demo data · read-only' : 'Unit · Assessment sessions only'}
         title={unit?.name ?? 'Unit'}
-        context="Compare trainees, see the weakest kill-chain stage and assign scenarios."
+        context={
+          guest
+            ? 'Compare the demo trainees and see the weakest kill-chain stage. Assessment sessions only.'
+            : 'Compare trainees, see the weakest kill-chain stage and assign scenarios.'
+        }
         actions={
           <div className="flex items-center gap-3">
             {units && units.length > 1 && (
@@ -531,13 +553,15 @@ function UnitPage() {
                 </Select>
               </label>
             )}
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/instructor/scoring">Scoring weights</Link>
-            </Button>
+            {!guest && (
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/instructor/scoring">Scoring weights</Link>
+              </Button>
+            )}
           </div>
         }
       />
-      <UnitNav />
+      {!guest && <UnitNav />}
       {error !== null && (
         <Panel>
           <ErrorState
@@ -561,7 +585,7 @@ function UnitPage() {
         <Skeleton label="Loading unit dashboard" />
       )}
       {data && unit && data.unit.id === unitId && (
-        <Dashboard d={data} unit={unit} reload={reload} />
+        <Dashboard d={data} unit={unit} reload={reload} readOnly={guest} />
       )}
     </div>
   );
@@ -569,7 +593,7 @@ function UnitPage() {
 
 export default function InstructorPage() {
   return (
-    <RequireStaff>
+    <RequireStaff allowGuest>
       <Suspense fallback={<Skeleton label="Loading unit dashboard" />}>
         <UnitPage />
       </Suspense>

@@ -11,9 +11,8 @@ export interface NavItem {
   match: readonly string[];
   /** Paths that must not activate it even though a prefix matches. */
   except?: readonly string[];
-  staffOnly?: boolean;
-  /** Trainee pages (own home and service record); staff reach records from Readiness. */
-  traineeOnly?: boolean;
+  /** Who sees it (no implicit hierarchy, like the API's require_role). */
+  roles: readonly UserRole[];
   /**
    * The page exists. Items for pages still to be built (Phase 6C) stay in the
    * config but are never shown: no placeholders (DESIGN §2).
@@ -21,17 +20,42 @@ export interface NavItem {
   ready: boolean;
 }
 
+const EVERYONE: readonly UserRole[] = ['TRAINEE', 'INSTRUCTOR', 'ADMIN', 'GUEST'];
+const STAFF: readonly UserRole[] = ['INSTRUCTOR', 'ADMIN'];
+
 export const NAV: readonly NavItem[] = [
-  { id: 'home', label: 'Home', href: '/home', match: ['/home'], traineeOnly: true, ready: true },
-  { id: 'training', label: 'Training', href: '/train', match: ['/train'], ready: true },
-  { id: 'library', label: 'Threat library', href: '/library', match: ['/library'], ready: true },
-  { id: 'aar', label: 'After-action', href: '/aar/trends', match: ['/aar'], ready: true },
+  // Trainee pages (own home and service record); staff reach records from Readiness.
+  { id: 'home', label: 'Home', href: '/home', match: ['/home'], roles: ['TRAINEE'], ready: true },
+  {
+    id: 'training',
+    label: 'Training',
+    href: '/train',
+    match: ['/train'],
+    roles: EVERYONE,
+    ready: true,
+  },
+  {
+    id: 'library',
+    label: 'Threat library',
+    href: '/library',
+    match: ['/library'],
+    roles: EVERYONE,
+    ready: true,
+  },
+  {
+    id: 'aar',
+    label: 'After-action',
+    href: '/aar/trends',
+    match: ['/aar'],
+    roles: EVERYONE,
+    ready: true,
+  },
   {
     id: 'record',
     label: 'Service record',
     href: '/record',
     match: ['/record'],
-    traineeOnly: true,
+    roles: ['TRAINEE'],
     ready: true,
   },
   {
@@ -40,7 +64,8 @@ export const NAV: readonly NavItem[] = [
     href: '/instructor',
     match: ['/instructor'],
     except: ['/instructor/builder', '/instructor/text'],
-    staffOnly: true,
+    // Guests: the demo units, read-only (Phase 6E).
+    roles: [...STAFF, 'GUEST'],
     ready: true,
   },
   {
@@ -48,7 +73,16 @@ export const NAV: readonly NavItem[] = [
     label: 'Builder',
     href: '/instructor/builder',
     match: ['/instructor/builder', '/instructor/text'],
-    staffOnly: true,
+    roles: STAFF,
+    ready: true,
+  },
+  {
+    // Guests: the one preset text (Phase 6E); staff reach it under Builder.
+    id: 'text',
+    label: 'From text',
+    href: '/instructor/text',
+    match: ['/instructor/text'],
+    roles: ['GUEST'],
     ready: true,
   },
 ];
@@ -56,16 +90,19 @@ export const NAV: readonly NavItem[] = [
 export const isStaff = (role: UserRole | undefined): boolean =>
   role === 'INSTRUCTOR' || role === 'ADMIN';
 
+export const isGuest = (role: UserRole | undefined): boolean => role === 'GUEST';
+
 /** The items a role sees, in order. */
 export function navFor(role: UserRole | undefined, items: readonly NavItem[] = NAV): NavItem[] {
-  return items.filter(
-    (it) => it.ready && (!it.staffOnly || isStaff(role)) && (!it.traineeOnly || !isStaff(role)),
-  );
+  return items.filter((it) => it.ready && role !== undefined && it.roles.includes(role));
 }
 
-/** Where a role lands after sign-in and on the wordmark: trainees Home, staff the unit. */
+/**
+ * Where a role lands after sign-in and on the wordmark: trainees Home, staff the
+ * unit, guests Training (the demo path starts with S15).
+ */
 export const homeHref = (role: UserRole | undefined): string =>
-  isStaff(role) ? '/instructor' : '/home';
+  isStaff(role) ? '/instructor' : isGuest(role) ? '/train' : '/home';
 
 const under = (path: string, prefix: string) => path === prefix || path.startsWith(`${prefix}/`);
 

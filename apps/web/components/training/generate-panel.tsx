@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { ApiError, api } from '@/lib/api';
+import { isStaff } from '@/lib/nav';
 import { terrainLabel } from '@/lib/scenario/library';
 
 // "Generate scenario" panel (DESIGN §11.3, plan Step 11): terrain, time, weather,
@@ -44,7 +45,7 @@ const FIELD = 'space-y-1';
 
 export function GeneratePanel({ role }: { role: UserRole }) {
   const router = useRouter();
-  const staff = role !== 'TRAINEE';
+  const staff = isStaff(role);
   const [preset, setPreset] = useState<string>(GENERATOR_PRESETS[0]);
   const [time, setTime] = useState<TimeBand | ''>('');
   const [weather, setWeather] = useState<WeatherPreset | ''>('');

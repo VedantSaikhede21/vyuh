@@ -28,6 +28,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { recordDemoStep } from '@/lib/demo-path';
+import { isGuest } from '@/lib/nav';
 import { REPLAY_FALLBACK_TEXT, penaltyHref, replayGate, type ReplayGate } from '@/lib/replay/gate';
 import { formatRating, primaryAction, scaleNote } from '@/lib/result-actions';
 import { displayScore } from '@/lib/score-display';
@@ -131,7 +134,12 @@ export function ResultScreen({
   ended: { reason: SessionEndReason; tMs: number } | null;
 }) {
   const router = useRouter();
+  const { user } = useAuth();
   const gate = useReplayGate(sessionId, scenarioId);
+  // The guest's demo path (Phase 6E): seeing a result completes "Score and debrief".
+  useEffect(() => {
+    if (user && isGuest(user.role)) recordDemoStep(user.id, 'result', sessionId);
+  }, [user, sessionId]);
   const [items, setItems] = useState<ScenarioListItem[] | null>(null);
   const [busy, setBusy] = useState<'retry' | 'next' | null>(null);
   const [error, setError] = useState<string | null>(null);

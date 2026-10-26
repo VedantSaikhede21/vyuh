@@ -5,12 +5,13 @@ import { Bell, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useSyncExternalStore } from 'react';
+import { DemoPathStrip } from '@/components/demo-path';
 import { StateChip } from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
 import { Menu, type MenuItem } from '@/components/ui/menu';
 import { useAuth } from '@/lib/auth';
 import { env } from '@/lib/env';
-import { PUBLIC_PATHS, ROLE_LABEL, homeHref, isActive, isStaff, navFor } from '@/lib/nav';
+import { PUBLIC_PATHS, ROLE_LABEL, homeHref, isActive, isGuest, isStaff, navFor } from '@/lib/nav';
 import { unreadLabel, useNoticeStore } from '@/lib/notices';
 import { cn } from '@/lib/utils';
 
@@ -211,8 +212,20 @@ export function AppHeader() {
   useEffect(() => {
     if (signedIn && !PUBLIC_PATHS.includes(path)) refresh();
   }, [signedIn, path, refresh]);
-  if (PUBLIC_PATHS.includes(path) || !signedIn) return <PublicHeader />;
-  return <ShellTopBar user={user} path={path} unread={unread} onSignOut={() => void logout()} />;
+  const header =
+    PUBLIC_PATHS.includes(path) || !signedIn ? (
+      <PublicHeader />
+    ) : (
+      <ShellTopBar user={user} path={path} unread={unread} onSignOut={() => void logout()} />
+    );
+  // Guests follow the demo path on every page, public ones included (Sources is a step).
+  if (!signedIn || !isGuest(user.role)) return header;
+  return (
+    <>
+      {header}
+      <DemoPathStrip userId={user.id} path={path} />
+    </>
+  );
 }
 
 /** First focusable element on every page (DESIGN §11.0). */

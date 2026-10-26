@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter
 from sqlalchemy import select
 
-from app.core.auth import DbDep, ViewerUser
+from app.core.auth import DbDep, StaffUser, ViewerUser
 from app.models import Unit, User
 from app.schemas.generated import ReadinessResponse, UnitListResponse, UnitMember, UnitSummary
 from app.services import portal
@@ -33,6 +33,6 @@ def list_units(user: ViewerUser, db: DbDep) -> UnitListResponse:
 
 
 @router.get("/{unit_id}/readiness", response_model=ReadinessResponse)
-def readiness(unit_id: uuid.UUID, user: ViewerUser, db: DbDep) -> ReadinessResponse:
+def readiness(unit_id: uuid.UUID, user: StaffUser, db: DbDep) -> ReadinessResponse:
     """One row per trainee: level, sign-off waiting, last assessment, weakest stage, overdue."""
     return portal.readiness(db, user, unit_id)
