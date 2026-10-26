@@ -121,6 +121,8 @@ TEST_TAG = "test"
 # trainee sees their own under "My generated" (`list_own_generated`, Phase 4a).
 GENERATED_TAG = "generated"
 STAFF_ROLES = frozenset({UserRole.INSTRUCTOR, UserRole.ADMIN})
+# Guests (Phase 6E) see only the curated demo scenarios and their own generated one.
+DEMO_TAG = "demo"
 #: Fields a trainee may set on POST /scenarios/generate (requirements 3a.6).
 TRAINEE_GENERATE_FIELDS = frozenset({"terrain_preset", "time_band", "difficulty", "seed"})
 
@@ -132,9 +134,12 @@ def list_scenarios(
     *,
     include_test: bool = True,
     user_id: uuid.UUID | None = None,
+    demo_only: bool = False,
 ) -> list[ScenarioListItem]:
     """Library list. Generated scenarios appear only when asked for by kind."""
     query = select(ScenarioRow).order_by(ScenarioRow.difficulty, ScenarioRow.code, ScenarioRow.name)
+    if demo_only:
+        query = query.where(ScenarioRow.tags.contains([DEMO_TAG]))
     if not include_test:
         query = query.where(~ScenarioRow.tags.contains([TEST_TAG]))
     if kind is not ScenarioKind.GENERATED:
@@ -159,9 +164,17 @@ def list_own_generated(db: Session, user_id: uuid.UUID) -> list[ScenarioListItem
 
 
 def get_scenario_row(db: Session, scenario_id: uuid.UUID, user: User) -> ScenarioRow:
-    """A scenario the user may open: a generated one only by its creator or staff
-    (others get NOT_FOUND, so ids of other people's runs are not confirmed)."""
+    """A scenario the user may open: a generated one only by its creator or staff, and
+    for a guest only a demo scenario or its own (others get NOT_FOUND, so ids of other
+    people's runs are not confirmed)."""
     row = db.get(ScenarioRow, scenario_id)
+    if (
+        row is not None
+        and user.role is UserRole.GUEST
+        and DEMO_TAG not in row.tags
+        and row.created_by != user.id
+    ):
+        row = None
     if row is None or (
         row.kind is ScenarioKind.GENERATED
         and row.created_by != user.id

@@ -106,7 +106,8 @@ export type Difficulty = z.infer<typeof Difficulty>;
 export const Roe = named('Roe', z.enum(['WEAPONS_FREE', 'WEAPONS_TIGHT', 'WEAPONS_HOLD']));
 export type Roe = z.infer<typeof Roe>;
 
-export const UserRole = named('UserRole', z.enum(['TRAINEE', 'INSTRUCTOR', 'ADMIN']));
+/** GUEST: a short-lived demo account (Phase 6E) — demo scenarios and read-only demo units. */
+export const UserRole = named('UserRole', z.enum(['TRAINEE', 'INSTRUCTOR', 'ADMIN', 'GUEST']));
 export type UserRole = z.infer<typeof UserRole>;
 
 export const ScenarioKind = named('ScenarioKind', z.enum(['SCRIPTED', 'GENERATED', 'AUTHORED']));

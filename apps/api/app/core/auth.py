@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.config import AuthMode, Settings
 from app.core.db import get_db
 from app.core.errors import ApiError
-from app.core.security import decode_token
+from app.core.security import GUEST_ISSUER, decode_token
 from app.models import User
 from app.schemas.generated import ErrorCode, UserRole
 
@@ -61,6 +61,9 @@ def get_current_user(
     auth_id = str(claims["sub"])
     user = db.scalar(select(User).where(User.auth_id == auth_id))
     if user is None:
+        if claims.get("iss") == GUEST_ISSUER:
+            # Cleaned up after GUEST_TTL_HOURS: never provisioned as a new user.
+            raise ApiError(ErrorCode.UNAUTHORIZED, "This demo session has ended")
         if settings.auth_mode is AuthMode.SUPABASE:
             return _provision_supabase_user(db, auth_id, claims)
         raise ApiError(ErrorCode.UNAUTHORIZED, "Unknown user")
@@ -94,3 +97,8 @@ def require_role(*roles: UserRole) -> Callable[[User], User]:
 
 #: Instructor or admin (Phase 4b staff routes).
 StaffUser = Annotated[User, Depends(require_role(UserRole.INSTRUCTOR, UserRole.ADMIN))]
+#: Read-only unit views: staff, and guests for the demo units (Phase 6E; the unit
+#: check itself is `services.access`).
+ViewerUser = Annotated[
+    User, Depends(require_role(UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.GUEST))
+]

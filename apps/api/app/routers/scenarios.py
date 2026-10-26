@@ -4,10 +4,12 @@ from typing import Annotated
 from fastapi import APIRouter, Query, Request, status
 
 from app.core.auth import CurrentUser, DbDep, StaffUser
+from app.core.errors import ApiError
 from app.schemas.generated import (
     AuthorPreviewResponse,
     AuthorScenarioRequest,
     AuthorScenarioResponse,
+    ErrorCode,
     FromTextRequest,
     FromTextResponse,
     GenerateRequest,
@@ -34,12 +36,17 @@ def list_scenarios(
     """The library; with `mine=true`, the caller's own generated scenarios, newest first."""
     if mine:
         return ScenarioListResponse(items=scenarios.list_own_generated(db, user.id))
-    include_test = user.role is not UserRole.TRAINEE
+    include_test = user.role in scenarios.STAFF_ROLES
     if kind is ScenarioKind.GENERATED and user.role not in scenarios.STAFF_ROLES:
         kind = None  # trainees list only their own generated runs, with `mine=true`
     return ScenarioListResponse(
         items=scenarios.list_scenarios(
-            db, kind, difficulty, include_test=include_test, user_id=user.id
+            db,
+            kind,
+            difficulty,
+            include_test=include_test,
+            user_id=user.id,
+            demo_only=user.role is UserRole.GUEST,
         )
     )
 
@@ -54,6 +61,8 @@ def list_scenarios(
 def generate_scenario(
     body: GenerateRequest, request: Request, user: CurrentUser, db: DbDep
 ) -> GenerateScenarioResponse:
+    if user.role is UserRole.GUEST:
+        raise ApiError(ErrorCode.FORBIDDEN, "The demo generates only from its preset text")
     request.app.state.generate_limiter.check(str(user.id))
     return scenarios.generate_scenario(db, user, body)
 

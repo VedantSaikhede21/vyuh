@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Request, status
 
-from app.core.auth import CurrentUser, DbDep, SettingsDep, StaffUser
+from app.core.auth import CurrentUser, DbDep, SettingsDep, StaffUser, ViewerUser
 from app.core.logging import TEST_DEBRIEF_HEADER
 from app.schemas.generated import (
     AarSessionResponse,
@@ -82,7 +82,7 @@ def user_trends(user_id: uuid.UUID, user: CurrentUser, db: DbDep) -> TraineeTren
 
 
 @router.get("/units/{unit_id}", response_model=UnitDashboardResponse)
-def unit_dashboard(unit_id: uuid.UUID, user: StaffUser, db: DbDep) -> UnitDashboardResponse:
+def unit_dashboard(unit_id: uuid.UUID, user: ViewerUser, db: DbDep) -> UnitDashboardResponse:
     """Unit averages, leaderboard, weakest kill-chain stage, mistakes, assignments."""
     return trends.unit_dashboard(db, user, unit_id)
 

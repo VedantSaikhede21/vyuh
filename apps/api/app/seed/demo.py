@@ -41,12 +41,14 @@ DEMO_USERS: list[tuple[str, str, UserRole, str]] = [
 
 
 def seed_units(db: Session, names: list[str] = UNITS) -> dict[str, Unit]:
+    """The named units; the demo units are marked so guests may view them (Phase 6E)."""
     units: dict[str, Unit] = {}
     for name in names:
         unit = db.scalar(select(Unit).where(Unit.name == name))
         if unit is None:
             unit = Unit(name=name)
             db.add(unit)
+        unit.is_demo = name in UNITS
         units[name] = unit
     db.flush()
     return units
@@ -71,7 +73,10 @@ def seed_all(factory: sessionmaker[Session], settings: Settings) -> str:
     fingerprint = seed_fingerprint()
     with factory() as db:
         units = seed_units(db)
-        created = seed_users(db, units) if settings.auth_mode is AuthMode.LOCAL else 0
+        # Demo users exist in every auth mode (Phase 6E): with Supabase they cannot
+        # sign in (their subjects are `local:` ids), but their history fills the
+        # guest's read-only trends and unit view.
+        created = seed_users(db, units)
         threats = seed_threat_types(db)
         scenarios = seed_scenarios(db)
         db.commit()
@@ -82,9 +87,9 @@ def seed_all(factory: sessionmaker[Session], settings: Settings) -> str:
             else 0
         )
         # Demo history for trends and the unit dashboard (SPEC §22, decision 125).
-        history = seed_demo_history(db) if settings.auth_mode is AuthMode.LOCAL else 0
+        history = seed_demo_history(db)
         # Demo sign-offs and remark for the service record (SPEC §9.7, Phase 6C).
-        signoffs = seed_demo_record(db) if settings.auth_mode is AuthMode.LOCAL else 0
+        signoffs = seed_demo_record(db)
         store_fingerprint(db, fingerprint)
         db.commit()
     return (

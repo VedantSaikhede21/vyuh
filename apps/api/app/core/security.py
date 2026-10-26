@@ -13,6 +13,8 @@ from app.schemas.generated import ErrorCode
 LOCAL_ISSUER = "vyuh-local"
 LOCAL_AUDIENCE = "vyuh"
 LOCAL_TOKEN_TTL = timedelta(hours=8)
+#: Guest demo tokens (Phase 6E): signed by this API in either auth mode.
+GUEST_ISSUER = "vyuh-guest"
 SUPABASE_ALGORITHMS = ["RS256", "ES256"]
 
 
@@ -32,6 +34,26 @@ def create_local_token(auth_id: str, settings: Settings, now: datetime | None = 
     return jwt.encode(claims, settings.local_jwt_secret.get_secret_value(), algorithm="HS256")
 
 
+def create_guest_token(auth_id: str, settings: Settings, now: datetime | None = None) -> str:
+    issued = now or datetime.now(UTC)
+    claims = {
+        "sub": auth_id,
+        "iss": GUEST_ISSUER,
+        "aud": LOCAL_AUDIENCE,
+        "iat": issued,
+        "exp": issued + timedelta(hours=settings.guest_ttl_hours),
+    }
+    return jwt.encode(claims, settings.local_jwt_secret.get_secret_value(), algorithm="HS256")
+
+
+def is_guest_token(token: str) -> bool:
+    """Unverified peek at the issuer, only to choose how to verify."""
+    try:
+        return jwt.decode(token, options={"verify_signature": False}).get("iss") == GUEST_ISSUER
+    except jwt.InvalidTokenError:
+        return False
+
+
 @lru_cache(maxsize=4)
 def get_jwks_client(jwks_url: str) -> jwt.PyJWKClient:
     return jwt.PyJWKClient(jwks_url, cache_keys=True, lifespan=600, timeout=5)
@@ -45,6 +67,17 @@ def decode_token(token: str, settings: Settings) -> dict[str, Any]:
     """Verify a bearer token and return its claims, or raise UNAUTHORIZED."""
     options = {"require": ["exp", "sub"]}
     try:
+        if is_guest_token(token):
+            if not settings.guest_mode_enabled:
+                raise _unauthorized("The demo is closed on this server")
+            return jwt.decode(
+                token,
+                settings.local_jwt_secret.get_secret_value(),
+                algorithms=["HS256"],
+                audience=LOCAL_AUDIENCE,
+                issuer=GUEST_ISSUER,
+                options=options,
+            )
         if settings.auth_mode is AuthMode.LOCAL:
             return jwt.decode(
                 token,

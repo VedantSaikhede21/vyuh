@@ -1318,6 +1318,7 @@ class UserRole(StrEnum):
     TRAINEE = "TRAINEE"
     INSTRUCTOR = "INSTRUCTOR"
     ADMIN = "ADMIN"
+    GUEST = "GUEST"
 
 
 class WaypointAction(StrEnum):

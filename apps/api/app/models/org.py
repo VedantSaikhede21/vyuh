@@ -16,6 +16,8 @@ class Unit(Base):
     id: Mapped[uuid.UUID] = uuid_pk()
     name: Mapped[str] = mapped_column(String(120), unique=True)
     parent_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("units.id", ondelete="SET NULL"))
+    #: Seeded demo unit: guests may view it read-only (Phase 6E).
+    is_demo: Mapped[bool] = mapped_column(server_default=text("false"))
     created_at: Mapped[datetime] = created_at()
 
 

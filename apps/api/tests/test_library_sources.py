@@ -15,7 +15,7 @@ from types import ModuleType
 import pytest
 
 from app.schemas.generated import Scenario
-from app.seed.scenarios import SCENARIO_DIR, SOURCE_DIR, scenario_tags
+from app.seed.scenarios import DEMO_CODES, SCENARIO_DIR, SOURCE_DIR, scenario_tags
 from app.services.generator import GENERATOR_VERSION
 from app.services.generator.briefing import REPORT_LINE
 from app.services.scoring.engine import score_session
@@ -49,7 +49,9 @@ def test_committed_scenario_matches_its_source(path: Path) -> None:
         "stale: cd apps/api && uv run python ../../scripts/scenarios/build_scripted.py"
     )
     assert source["request"]["seed"] == committed["seed"]
-    assert scenario_tags(source["id"]) == ["library"]
+    # The judge-path scenarios are also playable by guests (Phase 6E).
+    extra = ["demo"] if source["id"] in DEMO_CODES else []
+    assert scenario_tags(source["id"]) == ["library", *extra]
 
 
 # ---- Phase 4a Step 13: the contact report exercise (decision 115) -----------------------

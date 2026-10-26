@@ -284,7 +284,7 @@ def unit_dashboard(db: Session, viewer: User, unit_id: uuid.UUID) -> UnitDashboa
     unit = db.get(Unit, unit_id)
     if unit is None:
         raise ApiError(ErrorCode.NOT_FOUND, "Unit not found")
-    require_unit(viewer, unit.id)
+    require_unit(viewer, unit)
     trainees = list(
         db.scalars(
             select(User)

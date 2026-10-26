@@ -167,7 +167,7 @@ def _unit(db: Session, unit_id: uuid.UUID) -> Unit:
 def readiness(db: Session, viewer: User, unit_id: uuid.UUID) -> ReadinessResponse:
     """One row per trainee: level, sign-off waiting, last assessment, weakest stage, overdue."""
     unit = _unit(db, unit_id)
-    require_unit(viewer, unit.id)
+    require_unit(viewer, unit)
     trainees = list(
         db.scalars(
             select(User)
@@ -224,8 +224,7 @@ def active_sessions(db: Session, viewer: User, unit_id: uuid.UUID | None) -> Act
         .order_by(TrainingSession.started_at)
     )
     if unit_id is not None:
-        _unit(db, unit_id)
-        require_unit(viewer, unit_id)
+        require_unit(viewer, _unit(db, unit_id))
         q = q.where(User.unit_id == unit_id)
     else:
         q = q.where(member_filter(viewer))

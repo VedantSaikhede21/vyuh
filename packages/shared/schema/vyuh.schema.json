@@ -5982,7 +5982,8 @@
       "enum": [
         "TRAINEE",
         "INSTRUCTOR",
-        "ADMIN"
+        "ADMIN",
+        "GUEST"
       ]
     },
     "Waypoint": {

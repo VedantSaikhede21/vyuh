@@ -10,6 +10,7 @@
     "dev": "pnpm -r --parallel --filter \"./apps/*\" dev",
     "seed": "pnpm --filter @vyuh/api seed",
     "seed:reset-demo": "pnpm --filter @vyuh/api seed:reset-demo",
+    "guests:cleanup": "pnpm --filter @vyuh/api guests:cleanup",
     "lint": "pnpm lint:ts && pnpm --filter @vyuh/api lint",
     "lint:ts": "eslint . && prettier --check . && pnpm --filter @vyuh/web lint && pnpm -r --if-present typecheck",
     "format": "prettier --write .",

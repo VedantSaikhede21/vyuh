@@ -33,6 +33,7 @@ from app.routers import (
 )
 from app.seed.demo import seed_if_changed
 from app.services.ai.llm import LlmClient
+from app.services.guests import cleanup_expired
 from app.services.ratelimit import RateLimiter
 from app.services.sessions import expire_stale_sessions
 
@@ -50,6 +51,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         # Startup sweep: sessions left ACTIVE by closed tabs become ABANDONED (SPEC §4.5).
         with app.state.session_factory() as db:
             expire_stale_sessions(db)
+            # Guests past GUEST_TTL_HOURS (Phase 6E; also swept on each new guest).
+            cleanup_expired(db, settings.guest_ttl_hours)
         # Dev only: re-seed when the seed files changed (decision 119). Elsewhere run
         # `pnpm seed` after a deploy that changes seed data.
         if settings.env is Env.DEV:
@@ -72,6 +75,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.engine = make_engine(settings.database_url)
     app.state.session_factory = make_session_factory(app.state.engine)
     app.state.generate_limiter = RateLimiter(settings.generate_rate_limit_per_min)
+    # Phase 6E guest demo: new guests per address, sessions per guest (both per hour).
+    app.state.guest_limiter = RateLimiter(settings.guest_create_per_hour, window_s=3600)
+    app.state.guest_session_limiter = RateLimiter(settings.guest_sessions_per_hour, window_s=3600)
     app.state.llm = LlmClient(settings)
 
     install_error_handlers(app)

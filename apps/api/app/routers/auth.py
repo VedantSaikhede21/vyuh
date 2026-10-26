@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from sqlalchemy import select
 
 from app.core.auth import CurrentUser, DbDep, SettingsDep
@@ -12,6 +12,7 @@ from app.schemas.generated import (
     TokenResponse,
     UnitRef,
 )
+from app.services import guests
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -44,3 +45,14 @@ def dev_login(body: DevLoginRequest, settings: SettingsDep, db: DbDep) -> TokenR
         token_type="bearer",  # noqa: S106 — OAuth token type, not a secret
         expires_in=int(LOCAL_TOKEN_TTL.total_seconds()),
     )
+
+
+@router.post("/guest", response_model=TokenResponse)
+def guest(request: Request, settings: SettingsDep, db: DbDep) -> TokenResponse:
+    """A short-lived guest account for the public demo (SPEC §11, §20). Not found unless
+    GUEST_MODE_ENABLED; limited per client address and in guests alive at once."""
+    if not settings.guest_mode_enabled:
+        raise ApiError(ErrorCode.NOT_FOUND, "Not found")
+    address = request.client.host if request.client else "unknown"
+    request.app.state.guest_limiter.check(address)
+    return guests.create_guest(db, settings)

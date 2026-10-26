@@ -81,4 +81,5 @@ export const ROLE_LABEL: Readonly<Record<UserRole, string>> = {
   TRAINEE: 'Trainee',
   INSTRUCTOR: 'Instructor',
   ADMIN: 'Admin',
+  GUEST: 'Guest',
 };

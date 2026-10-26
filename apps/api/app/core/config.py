@@ -58,6 +58,11 @@ class Settings(BaseSettings):
     open_meteo_enabled: bool = False
     guest_mode_enabled: bool = False
     guest_ttl_hours: int = 24
+    #: New guest accounts per client address per hour, and guests alive at once.
+    guest_create_per_hour: int = 5
+    guest_max_active: int = 200
+    #: Per guest: sessions started per hour.
+    guest_sessions_per_hour: int = 30
     log_level: str = "INFO"
 
     #: POST /scenarios/generate calls per user per minute (in memory).
@@ -95,13 +100,16 @@ class Settings(BaseSettings):
     def _check_auth(self) -> Self:
         if self.env is Env.PROD and self.auth_mode is not AuthMode.SUPABASE:
             raise ValueError("ENV=prod requires AUTH_MODE=supabase")
-        if self.auth_mode is AuthMode.LOCAL:
-            if len(self.local_jwt_secret.get_secret_value().encode()) < MIN_LOCAL_SECRET_BYTES:
-                raise ValueError(
-                    f"AUTH_MODE=local requires LOCAL_JWT_SECRET of at least "
-                    f"{MIN_LOCAL_SECRET_BYTES} bytes"
-                )
-        else:
+        # Guest tokens are signed by this API in either auth mode (Phase 6E).
+        signs_tokens = self.auth_mode is AuthMode.LOCAL or self.guest_mode_enabled
+        if signs_tokens and len(self.local_jwt_secret.get_secret_value().encode()) < (
+            MIN_LOCAL_SECRET_BYTES
+        ):
+            raise ValueError(
+                f"AUTH_MODE=local or GUEST_MODE_ENABLED requires LOCAL_JWT_SECRET of at least "
+                f"{MIN_LOCAL_SECRET_BYTES} bytes"
+            )
+        if self.auth_mode is AuthMode.SUPABASE:
             if not self.supabase_jwks_url and self.supabase_url:
                 base = self.supabase_url.rstrip("/")
                 self.supabase_jwks_url = f"{base}/auth/v1/.well-known/jwks.json"

@@ -44,14 +44,22 @@ TAGS: dict[str, list[str]] = {
 }
 
 
+#: Library scenarios guests may play, on top of their own tags (SPEC §20 judge path:
+#: S15 first, S06 the urban follow-up; Phase 6E).
+DEMO_CODES = frozenset({"S06", "S15"})
+
+
 def scenario_tags(code: str, sources: Path = SOURCE_DIR) -> list[str]:
     """Tags of a scripted scenario: TAGS, else its library source's tags."""
     if code in TAGS:
         return TAGS[code]
     source = sources / f"{code}.json"
-    if source.is_file():
-        return list(json.loads(source.read_text(encoding="utf-8")).get("tags", []))
-    return []
+    tags = (
+        list(json.loads(source.read_text(encoding="utf-8")).get("tags", []))
+        if source.is_file()
+        else []
+    )
+    return [*tags, "demo"] if code in DEMO_CODES and "demo" not in tags else tags
 
 
 def load_scripted(directory: Path = SCENARIO_DIR) -> list[Scenario]:

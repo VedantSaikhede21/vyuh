@@ -74,9 +74,10 @@ def create_assignments(
     scenario = get_scenario_row(db, body.scenario_id, user)
     rows: list[Assignment] = []
     if body.unit_id:
-        if db.get(Unit, body.unit_id) is None:
+        target_unit = db.get(Unit, body.unit_id)
+        if target_unit is None:
             raise ApiError(ErrorCode.NOT_FOUND, "Unit not found")
-        require_unit(user, body.unit_id)
+        require_unit(user, target_unit)
         rows.append(Assignment(scenario_id=scenario.id, unit_id=body.unit_id))
     for uid in dict.fromkeys(body.user_ids or []):
         target = db.get(User, uid)

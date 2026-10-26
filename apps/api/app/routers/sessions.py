@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Request, status
 
 from app.core.auth import CurrentUser, DbDep, StaffUser
 from app.schemas.generated import (
@@ -13,6 +13,7 @@ from app.schemas.generated import (
     RescoreRequest,
     Score,
     SessionDetailResponse,
+    UserRole,
 )
 from app.services import portal, sessions
 from app.services.scoring import versions
@@ -29,8 +30,10 @@ router = APIRouter(prefix="/sessions", tags=["sessions"])
     status_code=status.HTTP_201_CREATED,
 )
 def create_session(
-    body: CreateSessionRequest, user: CurrentUser, db: DbDep
+    body: CreateSessionRequest, request: Request, user: CurrentUser, db: DbDep
 ) -> CreateSessionResponse:
+    if user.role is UserRole.GUEST:
+        request.app.state.guest_session_limiter.check(str(user.id))
     return sessions.create_session(db, user, body)
 
 
