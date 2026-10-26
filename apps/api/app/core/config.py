@@ -61,8 +61,9 @@ class Settings(BaseSettings):
     #: New guest accounts per client address per hour, and guests alive at once.
     guest_create_per_hour: int = 5
     guest_max_active: int = 200
-    #: Per guest: sessions started per hour.
+    #: Per guest per hour: sessions started, and text-to-scenario / generate calls.
     guest_sessions_per_hour: int = 30
+    guest_ai_per_hour: int = 3
     log_level: str = "INFO"
 
     #: POST /scenarios/generate calls per user per minute (in memory).

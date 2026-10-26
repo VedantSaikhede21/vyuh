@@ -184,12 +184,15 @@ def get_scenario_row(db: Session, scenario_id: uuid.UUID, user: User) -> Scenari
     return row
 
 
-def generate_scenario(db: Session, user: User, body: GenerateRequest) -> GenerateScenarioResponse:
-    """Generate a scenario, or return the user's existing copy of the same request."""
+def generate_scenario(
+    db: Session, user: User, body: GenerateRequest, *, any_fields: bool = False
+) -> GenerateScenarioResponse:
+    """Generate a scenario, or return the user's existing copy of the same request.
+    `any_fields`: a non-staff caller may set every field (the guest's checked preset)."""
     # Imported here: the generator loads terrain, which most routes never need.
     from app.services.generator import generate
 
-    if user.role not in STAFF_ROLES:
+    if user.role not in STAFF_ROLES and not any_fields:
         extra = sorted(
             body.model_fields[f].alias or f
             for f in body.model_fields_set - TRAINEE_GENERATE_FIELDS

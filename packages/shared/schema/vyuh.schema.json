@@ -2309,6 +2309,9 @@
         },
         "model": {
           "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/DebriefSource"
         }
       },
       "required": [

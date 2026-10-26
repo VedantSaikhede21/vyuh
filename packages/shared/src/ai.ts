@@ -57,6 +57,13 @@ export type AiStatusResponse = z.infer<typeof AiStatusResponse>;
 
 // ---- Text-to-scenario (§13.2) ---------------------------------------------------
 
+/**
+ * The one text a guest may turn into a scenario (Phase 6E, SPEC §20 step 7). The API
+ * accepts it from guests only in this wording (case and spacing ignored) and has a
+ * fixed parse of it for when the LLM is off.
+ */
+export const DEMO_FROM_TEXT = 'Night swarm of 8 from the north with 2 decoys, hard';
+
 export const FromTextRequest = named(
   'FromTextRequest',
   z.object({ text: z.string().trim().min(3).max(600) }),
@@ -74,6 +81,8 @@ export const FromTextResponse = named(
     /** What was clamped, defaulted or ignored, in plain words. */
     notes: z.array(z.string()),
     model: z.string(),
+    /** TEMPLATE: the guest preset's fixed parse, used when the LLM is off or failed. */
+    source: DebriefSource.optional(),
   }),
 );
 export type FromTextResponse = z.infer<typeof FromTextResponse>;

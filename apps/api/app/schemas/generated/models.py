@@ -2171,6 +2171,7 @@ class FromTextResponse(BaseModel):
     request: GenerateRequest
     notes: list[str]
     model: str
+    source: DebriefSource | None = None
 
 
 class HomeResponse(BaseModel):

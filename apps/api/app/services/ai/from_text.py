@@ -11,7 +11,13 @@ import json
 from typing import Any
 
 from app.core.errors import ApiError
-from app.schemas.generated import ErrorCode, FromTextResponse, GenerateRequest, ThreatClass
+from app.schemas.generated import (
+    DebriefSource,
+    ErrorCode,
+    FromTextResponse,
+    GenerateRequest,
+    ThreatClass,
+)
 from app.services.ai.llm import LlmClient, LlmError, prompt
 
 PRESETS = ("PUNJAB_PLAINS", "JK_MOUNTAIN", "URBAN_GENERIC")
@@ -174,3 +180,48 @@ def parse_text(llm: LlmClient, user_key: str, text: str) -> FromTextResponse:
             {"reason": err.reason},
         ) from err
     return FromTextResponse(request=req, notes=notes, model=llm.model)
+
+
+# ---- Guest preset (Phase 6E, SPEC §20 step 7) --------------------------------------------
+
+#: packages/shared DEMO_FROM_TEXT (a test checks they match).
+DEMO_TEXT = "Night swarm of 8 from the north with 2 decoys, hard"
+#: The stored reading of DEMO_TEXT, used when the LLM is off or fails.
+DEMO_TEMPLATE: dict[str, Any] = {
+    "timeBand": "NIGHT",
+    "swarmSize": 8,
+    "approachBearingDeg": 0,
+    "decoys": 2,
+    "difficulty": 4,
+}
+
+
+def is_demo_text(text: str) -> bool:
+    return text_seed(text) == text_seed(DEMO_TEXT)
+
+
+def demo_seed() -> int:
+    return text_seed(DEMO_TEXT)
+
+
+def parse_for_guest(llm: LlmClient, user_key: str, text: str) -> FromTextResponse:
+    """The guest's one text: through the LLM when it works, else its stored reading
+    (labelled TEMPLATE), so the demo step never ends on an error."""
+    if not is_demo_text(text):
+        raise ApiError(ErrorCode.FORBIDDEN, "The demo reads only its preset text")
+    reason = "The LLM is off on this server"
+    if llm.enabled:
+        try:
+            parsed = parse_text(llm, user_key, text)
+            return parsed.model_copy(update={"source": DebriefSource.LLM})
+        except ApiError as err:
+            if err.code is not ErrorCode.LLM_UNAVAILABLE and err.code is not ErrorCode.RATE_LIMITED:
+                raise
+            reason = "The LLM did not answer"
+    req, notes = clamp_request(DEMO_TEMPLATE, DEMO_TEXT)
+    return FromTextResponse(
+        request=req,
+        notes=[f"{reason}: showing the stored reading of this text.", *notes],
+        model="template",
+        source=DebriefSource.TEMPLATE,
+    )

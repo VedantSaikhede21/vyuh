@@ -78,6 +78,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Phase 6E guest demo: new guests per address, sessions per guest (both per hour).
     app.state.guest_limiter = RateLimiter(settings.guest_create_per_hour, window_s=3600)
     app.state.guest_session_limiter = RateLimiter(settings.guest_sessions_per_hour, window_s=3600)
+    app.state.guest_ai_limiter = RateLimiter(settings.guest_ai_per_hour, window_s=3600)
     app.state.llm = LlmClient(settings)
 
     install_error_handlers(app)

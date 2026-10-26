@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Iterator
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -14,6 +15,7 @@ from app.core.config import AuthMode
 from app.main import create_app
 from app.models import Scenario, TrainingSession, Unit, User
 from app.schemas.generated import UserRole
+from app.services.ai.from_text import DEMO_TEXT
 from app.services.guests import cleanup_expired
 from tests.conftest import assert_error, make_settings
 
@@ -177,3 +179,56 @@ def test_guest_token_works_in_supabase_mode_and_never_provisions(db: Session) ->
         assert db.scalar(select(User).where(User.role == UserRole.TRAINEE)) is None
     finally:
         app.state.engine.dispose()
+
+
+def test_guest_text_to_scenario_preset_with_the_llm_off(gclient: TestClient, db: Session) -> None:
+    h = new_guest(gclient)
+    url = "/api/v1/scenarios/from-text"
+    other = gclient.post(url, json={"text": "ten fixed-wing drones at dawn"}, headers=h)
+    assert_error(other, 403, "FORBIDDEN")
+    res = gclient.post(
+        url, json={"text": "  night SWARM of 8 from the north with 2 decoys, hard "}, headers=h
+    )
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["source"] == "TEMPLATE" and body["model"] == "template"
+    assert body["notes"][0].startswith("The LLM is off on this server")
+    req = body["request"]
+    assert (req["timeBand"], req["swarmSize"], req["decoys"], req["difficulty"]) == (
+        "NIGHT",
+        8,
+        2,
+        4,
+    )
+
+    gen = gclient.post("/api/v1/scenarios/generate", json=req, headers=h)
+    assert gen.status_code == 201, gen.text
+    sid = gen.json()["scenarioId"]
+    assert gclient.get(f"/api/v1/scenarios/{sid}", headers=h).status_code == 200
+    mine = gclient.get("/api/v1/scenarios?mine=true", headers=h).json()["items"]
+    assert [s["id"] for s in mine] == [sid]
+    # Any other seed is free generation: refused. Three AI calls per hour in all.
+    assert_error(
+        gclient.post("/api/v1/scenarios/generate", json={**req, "seed": 1}, headers=h),
+        403,
+        "FORBIDDEN",
+    )
+    assert gclient.post(url, json={"text": DEMO_TEXT}, headers=h).status_code == 200
+    assert_error(gclient.post(url, json={"text": DEMO_TEXT}, headers=h), 429, "RATE_LIMITED")
+
+    # The generated scenario goes with the guest.
+    db.execute(
+        update(User)
+        .where(User.is_guest.is_(True))
+        .values(created_at=datetime(2000, 1, 1, tzinfo=UTC))
+    )
+    db.commit()
+    cleanup_expired(db, 24)
+    assert db.scalar(select(Scenario).where(Scenario.id == sid)) is None
+
+
+def test_demo_text_matches_the_shared_constant() -> None:
+    ai_ts = (Path(__file__).resolve().parents[3] / "packages/shared/src/ai.ts").read_text(
+        encoding="utf-8"
+    )
+    assert f"export const DEMO_FROM_TEXT = '{DEMO_TEXT}';" in ai_ts
