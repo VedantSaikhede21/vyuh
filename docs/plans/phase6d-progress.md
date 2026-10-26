@@ -25,6 +25,10 @@ Unit tests: `apps/web/test/phase6d.test.ts` (sweep trail, first-render Comms lin
 
 The after run (2026-10-26 ~20:10–20:30) overlapped another workload on this machine — a Vite dev server for `D:\Portfolio` (20:13) and a `scripts/shots.mjs` headless-Chrome screenshot job (20:33) — so it is not comparable; re-run both builds back to back on a quiet machine. The before run had the same API and no other load seen.
 
+## Part boundary (2026-10-26)
+
+User: "start with next part" — taken as Checkpoint D approved, FPS after-run moved to 6F. Visual baselines: no regeneration needed (screenshots run with `animations: 'disabled'`; every 1366×768 visual test passed unchanged). `pnpm e2e` **not green yet, environmental**: run 1 23 failed (log lost), run 2 16 / 23 — the 4 × 1920×1080 visual tests got `ERR_CONNECTION_REFUSED` (the Next dev server died) and 3 a11y tests timed out, with 658 MB of 6 GB free and two `D:\Portfolio` Vite servers running. Re-run `pnpm e2e` on a quiet machine before closing 6D in CLAUDE.md §14.
+
 ## FPS method (to run)
 
 Production stack with the dev servers stopped: `cd apps/web && pnpm build && npx next start --port 3000`; API `cd apps/api && uv run uvicorn app.main:create_app --factory --port 8000`. Then
