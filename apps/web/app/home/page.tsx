@@ -27,6 +27,7 @@ import { lossAnswer, stageLosses, worstStage } from '@/lib/home';
 import { NOTICE_KIND_LABEL } from '@/lib/notices';
 import { criterionTarget, criterionValue, levelNote } from '@/lib/record';
 import { formatCount, formatDate, formatDateTime } from '@/lib/strings';
+import { requestTours } from '@/lib/tour';
 import { useApiData } from '@/lib/use-api-data';
 
 // Operator home (Phase 6C, UI-PREP §2): what to do next, where points go, what
@@ -87,11 +88,22 @@ function NextUp({ data, firstRun }: { data: HomeResponse; firstRun: boolean }) {
               runs count towards your record.
             </p>
           </div>
-          <Button asChild variant="primary" data-testid="home-primary">
-            <Link href={s01 ? `/train/scenario/${s01.id}` : '/train'}>
-              {s01 ? 'Open S01 briefing' : 'Open training'}
-            </Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* The console tour (Phase 6E) opens in the first Practice run when asked for. */}
+            <Button asChild variant="ghost" data-testid="home-tour">
+              <Link
+                href={s01 ? `/train/scenario/${s01.id}` : '/train'}
+                onClick={() => requestTours()}
+              >
+                With the console tour
+              </Link>
+            </Button>
+            <Button asChild variant="primary" data-testid="home-primary">
+              <Link href={s01 ? `/train/scenario/${s01.id}` : '/train'}>
+                {s01 ? 'Open S01 briefing' : 'Open training'}
+              </Link>
+            </Button>
+          </div>
         </PanelBody>
       </Panel>
     );

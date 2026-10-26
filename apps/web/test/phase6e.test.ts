@@ -9,6 +9,7 @@ import {
   type DemoPathState,
 } from '@/lib/demo-path';
 import { homeHref, navFor } from '@/lib/nav';
+import { TOURS, overlaps, parseTourProgress, placeCard, shouldOpen } from '@/lib/tour';
 
 describe('guest navigation (Phase 6E)', () => {
   it('guests see training, library, after-action, the read-only unit and From text', () => {
@@ -59,5 +60,62 @@ describe('demo path (SPEC §20)', () => {
       done: ['play'],
       lastSession: 'x',
     });
+  });
+});
+
+describe('guided tour (Phase 6E)', () => {
+  const view = { w: 1366, h: 768 };
+  const card = { w: 300, h: 190 };
+  // Approximate sim-player regions at 1366×768 (player.tsx grid).
+  const regions = {
+    tactical: { x: 0, y: 40, w: 1046, h: 468 },
+    radar: { x: 1046, y: 40, w: 320, h: 330 },
+    eo: { x: 0, y: 508, w: 432, h: 260 },
+    tracks: { x: 432, y: 508, w: 614, h: 260 },
+    actions: { x: 1046, y: 508, w: 320, h: 260 },
+    report: { x: 1054, y: 640, w: 304, h: 28 },
+    ai: { x: 1250, y: 512, w: 100, h: 20 },
+  };
+
+  it('never puts the card over the region it explains, and keeps it on screen', () => {
+    for (const [name, r] of Object.entries(regions)) {
+      const p = placeCard(r, card, view);
+      const box = { x: p.x, y: p.y, w: card.w, h: card.h };
+      expect(overlaps(box, r), name).toBe(false);
+      expect(p.x >= 0 && p.y >= 0 && p.x + card.w <= view.w && p.y + card.h <= view.h, name).toBe(
+        true,
+      );
+    }
+  });
+
+  it('centres the card when the region is not on screen', () => {
+    expect(placeCard(null, card, view)).toEqual({ x: 533, y: 289, side: 'center' });
+  });
+
+  it('every tour has 3–8 steps; the player tour covers the seven regions of SPEC §20', () => {
+    expect(TOURS.player.map((s) => s.target.match(/"(\w+)"/)?.[1])).toEqual([
+      'tactical',
+      'radar',
+      'tracks',
+      'eo',
+      'actions',
+      'report',
+      'ai',
+    ]);
+    for (const t of Object.values(TOURS)) {
+      expect(t.length).toBeGreaterThanOrEqual(3);
+      expect(t.length).toBeLessThanOrEqual(8);
+    }
+  });
+
+  it('opens by itself only when asked for or never seen with auto, and resumes', () => {
+    expect(shouldOpen({}, 'player', true)).toBe(true);
+    expect(shouldOpen({}, 'player', false)).toBe(false);
+    expect(shouldOpen({ player: { step: 3, status: 'skipped' } }, 'player', true)).toBe(false);
+    expect(shouldOpen({ player: { step: 3, status: 'open' } }, 'player', false)).toBe(true);
+    expect(parseTourProgress('{"player":{"step":99,"status":"open"},"x":1}')).toEqual({
+      player: { step: 6, status: 'open' },
+    });
+    expect(parseTourProgress('{')).toEqual({});
   });
 });

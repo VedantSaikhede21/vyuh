@@ -38,6 +38,8 @@ interface UiStore {
   interceptArmed: boolean;
   endArmed: boolean;
   cheatSheet: boolean;
+  /** A guided tour is open over the player (Phase 6E): holds the Practice clock. */
+  tour: boolean;
   /** Threat-library dialog (L): the class shown, or null for the class picker; null = closed. */
   library: { cls: ContactClass | null } | null;
   /** Contact report being filled in (R), or null. */
@@ -72,6 +74,7 @@ export const useUiStore = create<UiStore>((set) => ({
   interceptArmed: false,
   endArmed: false,
   cheatSheet: false,
+  tour: false,
   library: null,
   report: null,
   local: [],
@@ -108,6 +111,7 @@ export const useUiStore = create<UiStore>((set) => ({
       interceptArmed: false,
       endArmed: false,
       cheatSheet: false,
+      tour: false,
       library: null,
       report: null,
       local: [],

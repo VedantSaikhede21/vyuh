@@ -7,7 +7,10 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DemoBadge, Tooltip } from '@/components/hud/primitives';
 import { SimPlayer } from '@/components/sim/player';
+import { GuidedTour } from '@/components/tour/guided-tour';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/auth';
+import { isGuest } from '@/lib/nav';
 import { readOnlyCommands } from '@/lib/replay/commands';
 import { ReplayController } from '@/lib/replay/controller';
 import { timelineMarkers } from '@/lib/replay/gate';
@@ -120,6 +123,7 @@ export function ReplayView({
   }, [controller, rt]);
 
   useReplayKeys(controller, markers, seek);
+  const { user } = useAuth();
 
   const ppiOverlay = useMemo(() => truthPpiOverlay(rt), [rt]);
   const trackColumn = useMemo(() => truthColumn(rt, truth), [rt, truth]);
@@ -157,6 +161,14 @@ export function ReplayView({
         }}
       />
       <ReplayHelp />
+      {/* Guided tour (Phase 6E): playback stops while it is open. */}
+      <GuidedTour
+        id="aar"
+        auto={isGuest(user?.role)}
+        onOpenChange={(open) => {
+          if (open) controller.pause();
+        }}
+      />
     </>
   );
 }

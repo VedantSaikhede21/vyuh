@@ -94,6 +94,10 @@ export class ReplayController {
     this.playing = true;
   }
 
+  pause(): void {
+    this.playing = false;
+  }
+
   togglePlay(): void {
     if (this.playing) this.playing = false;
     else this.play();

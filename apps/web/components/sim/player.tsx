@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ActionBar } from '@/components/hud/action-bar';
 import { CommsPanel } from '@/components/hud/comms-panel';
 import { EoPanel } from '@/components/hud/eo-view';
@@ -17,6 +17,9 @@ import type { BatcherStatus } from '@/lib/sim/event-batcher';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useHudStore } from '@/lib/sim/store';
 import { LibraryDialog } from '@/components/library/library-dialog';
+import { GuidedTour } from '@/components/tour/guided-tour';
+import { useAuth } from '@/lib/auth';
+import { isGuest } from '@/lib/nav';
 import { readSettings } from '@/lib/settings';
 import { useUiStore } from '@/lib/sim/ui-store';
 import { cn } from '@/lib/utils';
@@ -104,6 +107,9 @@ export function SimPlayer({
   usePracticeHints(runtime, !replay);
   const cheatSheet = useUiStore((s) => s.cheatSheet);
   const library = useUiStore((s) => s.library);
+  const tour = useUiStore((s) => s.tour);
+  const { user } = useAuth();
+  const setTour = useCallback((open: boolean) => useUiStore.getState().set({ tour: open }), []);
   const setUi = useUiStore((s) => s.set);
   // Settings: open the shortcut list when a Practice run starts (it holds the clock).
   useEffect(() => {
@@ -111,8 +117,8 @@ export function SimPlayer({
       useUiStore.getState().set({ cheatSheet: true });
     }
   }, [runtime, replay]);
-  // Reading a reference sheet holds the Practice clock (never Assessment).
-  const overlay = cheatSheet || library !== null;
+  // Reading a reference sheet or the tour holds the Practice clock (never Assessment).
+  const overlay = cheatSheet || library !== null || tour;
   useEffect(() => {
     runtime.setOverlayHold(overlay);
     return () => runtime.setOverlayHold(false);
@@ -133,13 +139,14 @@ export function SimPlayer({
           ref={tactical}
           className="relative min-w-0 flex-1 overflow-hidden"
           aria-label="Tactical view"
+          data-tour="tactical"
         >
           <ZoneLabels runtime={runtime} />
           <TrackLabels />
           {replay?.tacticalOverlay}
         </div>
         <aside className="flex w-[320px] shrink-0 flex-col border-l border-line-1 bg-bg-1">
-          <Panel className="shrink-0 border-0 border-b">
+          <Panel className="shrink-0 border-0 border-b" data-tour="radar">
             <PanelHeader title="Radar PPI">
               <span className="text-label">{ppiRangeKm(runtime)} km · rings 1 km</span>
             </PanelHeader>
@@ -153,13 +160,13 @@ export function SimPlayer({
       </div>
       {replay?.timeline}
       <div className={cn('flex shrink-0 border-t border-line-1 bg-bg-1', BOTTOM_ROW)}>
-        <div className="w-[432px] shrink-0 border-r border-line-1">
+        <div className="w-[432px] shrink-0 border-r border-line-1" data-tour="eo">
           <EoPanel ref={eo} runtime={runtime} commands={commands} />
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1" data-tour="tracks">
           <TrackTabs commands={commands} column={replay?.trackColumn} />
         </div>
-        <div className="w-[320px] shrink-0 border-l border-line-1">
+        <div className="w-[320px] shrink-0 border-l border-line-1" data-tour="actions">
           {replay ? replay.side : <ActionBar runtime={runtime} commands={commands} />}
         </div>
       </div>
@@ -172,6 +179,13 @@ export function SimPlayer({
         tacticalExtra={replay?.tacticalScene}
       />
       {!replay && <CheatSheet practice={runtime.mode === 'PRACTICE'} />}
+      {/* Guided tour (Phase 6E): by itself for guests, from Help for everyone; Practice only. */}
+      <GuidedTour
+        id="player"
+        auto={isGuest(user?.role)}
+        enabled={!replay && runtime.mode === 'PRACTICE'}
+        onOpenChange={setTour}
+      />
       {replay ? (
         <LargerScreenNotice
           what="The after-action replay"

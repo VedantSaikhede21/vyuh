@@ -181,13 +181,15 @@ export function ActionBar({ runtime, commands }: { runtime: SimRuntime; commands
         }
       >
         {selected ? (
-          <span className="flex min-w-0 items-center gap-2">
+          <span className="flex min-w-0 items-center gap-2" data-tour="ai">
             <AiChip track={selected} commands={commands} />
             {/* While a suggestion waits for Y / X the id stays on the row and 3D label. */}
             {!aiPending && <StateChip tone="active">{selected.id}</StateChip>}
           </span>
         ) : (
-          <StateChip tone="muted">No track</StateChip>
+          <StateChip tone="muted" data-tour="ai">
+            No track
+          </StateChip>
         )}
       </PanelHeader>
       {classifyMenu && st.CLASSIFY.enabled && <ClassifyMenu commands={commands} />}
@@ -250,7 +252,7 @@ export function ActionBar({ runtime, commands }: { runtime: SimRuntime; commands
               </Action>
             </div>
             {/* A report is a response too (CLAUDE.md §2 rule 9); decision 114. */}
-            <div className="col-span-2">
+            <div className="col-span-2" data-tour="report">
               <Action
                 state={st.REPORT}
                 hint="Send a contact report on the selected track (then 1–5, Enter)"

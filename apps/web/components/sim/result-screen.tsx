@@ -24,6 +24,7 @@ import {
   StatusNotice,
 } from '@/components/hud/primitives';
 import { DebriefPanel } from '@/components/aar/debrief-panel';
+import { GuidedTour } from '@/components/tour/guided-tour';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -189,6 +190,7 @@ export function ResultScreen({
   return (
     // Revealed once, as one block, when the score arrives (§7: no stagger, no count-up).
     <div className="animate-fade-in-slow space-y-4" data-testid="result-screen">
+      <GuidedTour id="result" auto={isGuest(user?.role)} />
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
           <p className="text-label">Debrief · {mode.toLowerCase()}</p>
@@ -264,7 +266,7 @@ export function ResultScreen({
 
       {/* Story order (audit, plan 6B): score → debrief (went well, mistakes, drill)
           → penalties with replay links → per contact. Actions stay in the header. */}
-      <Panel>
+      <Panel data-tour="score">
         <PanelHeader title="Score">
           <span className="text-label">Scored on the server</span>
         </PanelHeader>

@@ -2,6 +2,7 @@
 
 import type { ScoringSummaryResponse } from '@vyuh/shared';
 import Link from 'next/link';
+import { useState } from 'react';
 import {
   ErrorState,
   Kbd,
@@ -12,10 +13,12 @@ import {
   SkeletonRows,
 } from '@/components/hud/primitives';
 import { RequireAuth } from '@/components/require-auth';
+import { Button } from '@/components/ui/button';
 import { Table, Td, Th, Tr } from '@/components/ui/table';
 import { api } from '@/lib/api';
 import { COMPONENT_LABEL, GLOSSARY, scoringRows } from '@/lib/help';
 import { SHORTCUTS } from '@/lib/strings';
+import { requestTours } from '@/lib/tour';
 import { useApiData } from '@/lib/use-api-data';
 
 // Help & controls (Phase 6C): shortcut reference, how scoring works, glossary.
@@ -103,6 +106,30 @@ function Scoring({ s }: { s: ScoringSummaryResponse }) {
   );
 }
 
+/** Phase 6E: the guided tours open again (player in Practice, result, replay). */
+function ToursAgain() {
+  const [asked, setAsked] = useState(false);
+  return (
+    <div className="flex flex-wrap items-center gap-3" data-testid="help-tours">
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => {
+          requestTours();
+          setAsked(true);
+        }}
+      >
+        Show the console tours again
+      </Button>
+      <span className="text-small text-text-2" role="status">
+        {asked
+          ? 'They open next time you play in Practice, see a result and open a replay.'
+          : 'A short tour of the player, the result screen and the replay.'}
+      </span>
+    </div>
+  );
+}
+
 function Help() {
   const summary = useApiData('scoring-summary', (signal) => api.scoringSummary(signal));
   return (
@@ -129,6 +156,7 @@ function Help() {
           System status
         </Link>
       </nav>
+      <ToursAgain />
       <div className="grid gap-4 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <Panel id="shortcuts" className="scroll-mt-16 self-start">
           <PanelHeader title="Shortcuts · sim player" />
