@@ -28,9 +28,13 @@ Fixed from the captures:
 
 Run notes: two workers at once crashed a Next compile (`Unexpected end of JSON input`, 500 on `/instructor`) — one worker only. Each run makes a guest; locally raise `GUEST_CREATE_PER_HOUR` (default 5) for repeated runs. Looked at and left: tour cards cover non-target controls (by design, the rest is dimmed); PPI labels overlap where tracks are close (pre-existing).
 
-## Not done yet
+## Close-out (2026-10-27)
 
-1. **E10 Checkpoint E** — run and fixed (above); **waiting for the user's approval** of the captures in `apps/web/e2e/checkpoint/6e/`. Commands used:
+Checkpoint E approved by the user ("next"). `pnpm e2e` **23 / 23** (2.7 min) on a Turbopack dev server (`npx next dev` in apps/web, API with the normal `.env`); no visual baseline changed, so none were regenerated. On `next dev --webpack` the trainee keyboard test failed twice with a ChunkLoadError on `app/layout.js` — use Turbopack for e2e. SPEC §10, §11, §12, §20, §22 and CLAUDE.md §14 updated. **Part 6E closed.**
+
+## History
+
+1. **E10 Checkpoint E** — run and fixed (above), approved. Commands used:
    - API: `cd apps/api && GUEST_MODE_ENABLED=true LLM_ENABLED=false uv run uvicorn app.main:create_app --factory --port 8000` (LLM off to save OpenRouter credit; debrief and from-text show their TEMPLATE path)
    - Web (dev server, for the `__vyuhE2E` hook): `cd apps/web && NEXT_PUBLIC_GUEST_MODE=true npx next dev --webpack --port 3000` (Turbopack aborted with exit 134 under memory pressure)
    - Run: `cd apps/web && E2E_SKIP_DEMO_RESET=1 npx playwright test e2e/checkpoint-6e.spec.ts`

@@ -505,8 +505,8 @@ Rules (Phase 4a, `default_v4`, `services/scoring/report.py`, decision 115):
 
 | Table | Columns (key ones) |
 |---|---|
-| `units` | id, name, parent_id (nullable), created_at |
-| `users` | id, auth_id (unique), name, email, role, unit_id, rating (int, default 1000), is_guest, notices_seen_at (timestamptz, nullable: unread-notice marker; migration 0007), created_at |
+| `units` | id, name, parent_id (nullable), is_demo (bool: the seeded demo units a guest may view read-only; migration 0008), created_at |
+| `users` | id, auth_id (unique), name, email, role (TRAINEE / INSTRUCTOR / ADMIN / GUEST; GUEST added by migration 0008), unit_id, rating (int, default 1000), is_guest, notices_seen_at (timestamptz, nullable: unread-notice marker; migration 0007), created_at |
 | `threat_types` | code (pk), name, category, is_threat, size_m, rcs_m2, max_speed_mps, thermal_signature, control_links (text[]), model_path, source_ref |
 | `terrain_presets` | code (pk), name, meta (jsonb), attribution |
 | `scenarios` | id, code (nullable unique, e.g. `S04`), name, kind (SCRIPTED/GENERATED/AUTHORED), seed, difficulty, tags (text[], e.g. `demo`, `tutorial`), request (jsonb), content (jsonb), schema_version, created_by, created_at |
@@ -531,7 +531,7 @@ The API owns all DB access (Supabase service key stays server-side; no client-si
 |---|---|---|
 | GET `/health` | any | Liveness |
 | GET `/auth/me` | any | Current user + role + unit |
-| POST `/auth/guest` | public | Create guest user, return token (demo mode) |
+| POST `/auth/guest` | public | Create a GUEST user ("Guest 4F2A", no email) and return an HS256 token (issuer `vyuh-guest`, TTL `GUEST_TTL_HOURS`, signed with `LOCAL_JWT_SECRET` in either auth mode). 404 unless `GUEST_MODE_ENABLED`; `RATE_LIMITED` past 5 / h per address or 200 live guests. Expired guests are deleted here, at API startup and by `pnpm guests:cleanup` (decision 161) |
 | GET `/threats` | any | Threat library |
 | GET `/terrain-presets` | any | Presets + meta |
 | GET `/scenarios` | any | List (filter: kind, difficulty, assigned; `mine=true`: the caller's own generated scenarios, newest first, with best scores) |
@@ -673,6 +673,7 @@ All errors: `{ "error": { "code": "...", "message": "...", "details": {} } }`
 - Realism sources page in-app; user study (5–10 people × 3 sessions) with improvement chart for the pitch.
 **Done when:** a judge with only the URL can understand and play a scenario in under 2 minutes; offline build runs on a laptop with no internet.
 - **Status (2026-10-26, Part 6C):** built — threat library, notices, help, settings, public status, AAR remarks, service record with sign-off (§9.7), operator home, unit readiness and live sessions, public landing / login / sources, guest entry behind `NEXT_PUBLIC_GUEST_MODE`. Decisions 153–158.
+- **Status (2026-10-27, Parts 6D–6E):** 6D motion pass built (decision 159). 6E built — instructors scoped to their own unit (decision 160); GUEST role, `POST /auth/guest`, demo-tagged scenarios S01 / S02 / S06 / S15, read-only demo unit view, preset text-to-scenario, demo path strip, guided tours for the player, result and replay (decision 161). Checkpoint E: guest judge path to the first radar track in 48 s from opening the URL, whole path 80 s with the run fast-forwarded after the first track.
 
 ---
 
@@ -830,13 +831,13 @@ Rules: one branch per feature; **`packages/shared` changes go through one owner 
 ## §20. Judge demo flow (what the hosted link must support)
 
 A judge should get through this in about 5 minutes without help:
-1. **Landing:** one-screen problem statement, the kill chain diagram, "Try demo" button.
-2. **Guided tour** of the sim player (6–8 steps: tactical view, radar, EO/IR, track list, actions, report, AI assist).
+1. **Landing:** one-screen problem statement, the kill chain diagram, "Try the demo" → `/demo` (what the demo shows) → "Start the demo" makes a guest account (`POST /auth/guest`, needs `NEXT_PUBLIC_GUEST_MODE` and `GUEST_MODE_ENABLED`). A demo path strip under the top bar then names the six steps (play S15, score and debrief, replay, unit view, scenario from text, sources), checks each one off and links to the next.
+2. **Guided tour** of the sim player (7 steps: tactical view, radar, EO/IR, track list, actions, report, AI assist), shown automatically to guests and from Help for everyone; it holds the Practice clock. The result (3 steps) and replay (4 steps) have their own tours.
 3. **Pick S15 "Birds or Drone?"** in the training list, read its briefing (map, coverage, ROE), and play it in practice mode (≈ 3 min) — shows false contacts, EO identification, the **Spectrogram tab** (blade flashes on the quad, a slow wingbeat ripple on the large birds) and the **AI chip** (one bird is wrongly suggested as a small quad: accepting it shows up as over-trust in the AAR). S06 "Crowded Skies" is the urban follow-up (civilian drones, no-kinetic town).
 4. **Result screen:** score breakdown, feedback lines, rating change, LLM debrief (template when the LLM is off, labelled), recommended next difficulty from the rating.
 5. **AAR replay** with the ground-truth toggle — "here is what was really there" — and the Debrief and AI trust tabs.
-6. **Trends and unit dashboard** using labelled demo data (§22) to show progress over sessions.
-7. **Instructor:** From text → type a scenario in plain text → check the parsed parameters → Generate and open briefing (needs the LLM; the Builder form is the offline route).
+6. **Trends and unit dashboard** using labelled demo data (§22) to show progress over sessions. Guests see the demo units read-only, with staff actions replaced by a one-line reason.
+7. **Instructor:** From text → type a scenario in plain text → check the parsed parameters → Generate and open briefing (needs the LLM; the Builder form is the offline route). Guests get one preset text ("Night swarm of 8 from the north with 2 decoys, hard") through the real LLM path, or its stored reading labelled TEMPLATE when the LLM is off, 3 AI calls per hour.
 8. **Realism Sources page:** every model, dataset and incident inspiration, cited.
 
 Pitch storyline: *problem (costly, too few reps) → our loop (realistic kill chain) → realism (terrain, night, silent drones, false contacts, ROE) → measurement (decision-tree scoring, AAR, over-trust) → evidence (user study improvement) → deployability (browser, low-end PCs, offline build, near-zero cost).*
@@ -871,13 +872,13 @@ Pitch storyline: *problem (costly, too few reps) → our loop (realistic kill ch
 
 ## §22. Seed & demo data
 
-- **Units:** `Demo Unit Alpha`, `Demo Unit Bravo`.
+- **Units:** `Demo Unit Alpha`, `Demo Unit Bravo`, both `is_demo = true` (the only units a guest can view).
 - **Users (local/offline + staging only):** `admin@demo`, `instructor@demo`, `trainee1..6@demo` (passwords from env, never hard-coded in the repo).
   - `users` has no password column. In `AUTH_MODE=local` the seed script creates DB rows (`auth_id = local:<email>`) and `POST /auth/dev-login` (disabled when `ENV=prod`) issues a token by email. In `AUTH_MODE=supabase` the demo users are created in the Supabase dashboard; their `users` row is auto-provisioned as TRAINEE on first request and roles are set in the DB, never taken from token claims.
 - **Content:** full threat library (§7), all terrain presets built so far, scripted scenarios S01–S10 as they are completed, scoring tree `default_v1`.
 - **Demo history:** a script generates ~40 synthetic completed sessions across demo trainees with a plausible improvement curve, so trends and the unit dashboard are not empty. These rows are flagged `is_demo = true`, shown with a "Demo data" badge, and excluded from any real study numbers. Built in Part 4b (decision 125): 42 real sim logs from a skill-scaled trainee policy, scored by the server when seeded and replayable; `pnpm seed:reset-demo --yes` removes non-demo sessions from @demo accounts (decision 126).
 - **Service record (Part 6C, decision 155):** `seed_demo_record` signs L1 from instructor@demo for each demo trainee who meets it (4 sign-offs, `is_demo`) and adds one demo remark, so the record, readiness and AAR Remarks views are not empty (§9.7).
-- **Guests:** created on demand, can only run scenarios tagged `demo`, cleaned up after `GUEST_TTL_HOURS`.
+- **Guests:** created on demand (`POST /auth/guest`), can only run scenarios tagged `demo` (S01, S02, S06, S15) plus the one they build from the preset text, 30 sessions per hour each, and are deleted with their sessions and generated scenarios after `GUEST_TTL_HOURS` (decision 161). Demo users and their history are seeded in every auth mode; in Supabase mode they are data only and cannot sign in.
 
 ---
 
