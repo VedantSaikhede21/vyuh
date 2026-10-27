@@ -9,19 +9,20 @@ import { env } from '@/lib/env';
 
 export const metadata: Metadata = { title: 'Try the demo — VYUH' };
 
+// The same six steps as the demo path strip (lib/demo-path.ts), in its words.
 const PATH: readonly [string, string][] = [
-  ['A short tour of the console', 'Radar, camera, track list, actions and the report form.'],
   [
-    'S15 Birds or Drone?, in Practice',
-    'About three minutes: one quadcopter among birds. Use the camera and the spectrogram before you engage.',
+    'Play S15 in Practice',
+    'A short tour of the console first, then about three minutes: one quadcopter among birds. Use the camera and the spectrogram before you engage.',
   ],
-  ['Your score and debrief', 'Scored on the server, with what went well and what to fix.'],
-  ['The replay with ground truth', 'What was really there, stage by stage.'],
+  ['Score and debrief', 'Scored on the server, with what went well and what to fix.'],
+  ['Replay with ground truth', 'What was really there, stage by stage.'],
   [
-    'Trends and the unit view',
-    'Progress over sessions and the unit dashboard, on labelled demo data, read-only.',
+    'Unit view, demo data',
+    "A unit's progress and weakest stage, on labelled demo data, read-only.",
   ],
-  ['A scenario from text', 'Describe a threat in plain words and get a briefing.'],
+  ['Scenario from text', 'Plain words read into generator parameters, then a briefing.'],
+  ['Sources', 'Where every model and number comes from.'],
 ];
 
 export default function DemoPage() {
@@ -50,7 +51,7 @@ export default function DemoPage() {
         <ol
           className="border border-line-1"
           aria-label="What the demo shows"
-          data-testid="demo-path"
+          data-testid="demo-outline"
         >
           {PATH.map(([head, body], i) => (
             <li

@@ -5,6 +5,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Panel, PanelHeader, Skeleton, StatusNotice } from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { isGuest } from '@/lib/nav';
 import { ScenarioRowsTable, useTimeOfDay } from './scenario-table';
 
 // "My generated" (Phase 4a Step 1): the trainee's own generated scenarios, newest
@@ -14,6 +16,7 @@ import { ScenarioRowsTable, useTimeOfDay } from './scenario-table';
 export const GENERATED_PAGE = 20;
 
 export function OwnGeneratedTable() {
+  const { user } = useAuth();
   const [items, setItems] = useState<ScenarioListItem[] | null>(null);
   const [shown, setShown] = useState(GENERATED_PAGE);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +59,9 @@ export function OwnGeneratedTable() {
       {items === null && !error && <Skeleton label="Loading your generated scenarios" />}
       {items?.length === 0 && (
         <StatusNotice title="No generated scenarios yet.">
-          Use Generate to create one; it is listed here afterwards.
+          {isGuest(user?.role)
+            ? 'Build one in From text; it is listed here afterwards.'
+            : 'Use Generate to create one; it is listed here afterwards.'}
         </StatusNotice>
       )}
       {items && items.length > 0 && (

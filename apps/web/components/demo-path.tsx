@@ -70,8 +70,12 @@ export function DemoPathStrip({ userId, path }: { userId: string; path: string }
             <Link href={stepHref(next, state)}>Next · {DEMO_STEPS[at]!.label}</Link>
           </Button>
         ) : (
-          <span className="text-small text-text-2" data-testid="demo-done">
-            All six steps seen. The guest account is deleted automatically.
+          <span
+            className="shrink-0 text-small text-text-2"
+            data-testid="demo-done"
+            title="The guest account is deleted automatically."
+          >
+            Path complete
           </span>
         )}
       </div>

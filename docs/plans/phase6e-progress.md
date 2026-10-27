@@ -15,9 +15,22 @@ Plan: `docs/plans/phase6e-plan.md` (approved 2026-10-26, "next"). Decisions 160,
 
 Checks at the last commit: API pytest all pass; web `tsc`, eslint, prettier clean; web vitest 27 files / 238 tests (`test/phase6e.test.ts`).
 
+## Checkpoint E run (2026-10-27)
+
+`checkpoint-6e.spec.ts` green: 1366×768 judge path (1.6 min) and 1920×1080 pass (1.2 min), one worker. Judge path from opening the landing URL, dev server: guest + training list 24 s (6.5 s with `/demo` already compiled), S15 briefing 26 s, player 37 s, tour done 41 s, first radar track 48 s, result 50 s (run fast-forwarded after the first track), replay 58 s, unit view 66 s, from text parsed 73 s, generated briefing 75 s, sources / path complete 80 s.
+
+Fixed from the captures:
+- `/demo` outline list used `data-testid="demo-path"`, the strip's id → renamed `demo-outline` (6C spec updated).
+- Outline listed different steps from the strip (tour, trends, no Sources) → now the strip's six steps in its words.
+- Done message overlapped step 06 at 1366 px → "Path complete" (deletion note as title; it is on `/demo`).
+- Guest "My generated" empty state said "Use Generate" (guests have no Generator) → "Build one in From text".
+- Spec: wait for `/demo` and for the debrief URL after "Back to debrief" (a click lost on the starved dev server once); wait for hydration before "Start the demo" in the 1920 pass.
+
+Run notes: two workers at once crashed a Next compile (`Unexpected end of JSON input`, 500 on `/instructor`) — one worker only. Each run makes a guest; locally raise `GUEST_CREATE_PER_HOUR` (default 5) for repeated runs. Looked at and left: tour cards cover non-target controls (by design, the rest is dimmed); PPI labels overlap where tracks are close (pre-existing).
+
 ## Not done yet
 
-1. **E10 Checkpoint E** — `apps/web/e2e/checkpoint-6e.spec.ts` is written (judge path at 1366×768 with video + timings, tour step captures, 1920×1080 pass) but **never run successfully**. It needs:
+1. **E10 Checkpoint E** — run and fixed (above); **waiting for the user's approval** of the captures in `apps/web/e2e/checkpoint/6e/`. Commands used:
    - API: `cd apps/api && GUEST_MODE_ENABLED=true LLM_ENABLED=false uv run uvicorn app.main:create_app --factory --port 8000` (LLM off to save OpenRouter credit; debrief and from-text show their TEMPLATE path)
    - Web (dev server, for the `__vyuhE2E` hook): `cd apps/web && NEXT_PUBLIC_GUEST_MODE=true npx next dev --webpack --port 3000` (Turbopack aborted with exit 134 under memory pressure)
    - Run: `cd apps/web && E2E_SKIP_DEMO_RESET=1 npx playwright test e2e/checkpoint-6e.spec.ts`

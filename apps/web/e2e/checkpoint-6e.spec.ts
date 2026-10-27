@@ -47,8 +47,9 @@ test.describe('1366x768', () => {
     await page.goto('/');
     await shot(page, '01-landing');
     await page.getByRole('link', { name: 'Try the demo' }).first().click();
+    await page.waitForURL('**/demo', { timeout: 60_000 });
+    await expect(page.getByTestId('start-demo')).toBeVisible({ timeout: 60_000 });
     await expect(page.getByTestId('demo-path')).toHaveCount(0); // not a guest yet
-    await expect(page.getByTestId('start-demo')).toBeVisible();
     await shot(page, '02-demo-entry');
     await page.getByTestId('start-demo').click();
     await expect(page.getByTestId('scenario-S15')).toBeVisible({ timeout: 60_000 });
@@ -89,6 +90,7 @@ test.describe('1366x768', () => {
 
     // From here the demo path strip leads.
     await page.getByRole('link', { name: 'Back to debrief' }).click();
+    await page.waitForURL('**/train/session/**', { timeout: 60_000 });
     await expect(page.getByTestId('demo-next')).toContainText('Unit view');
     await page.getByTestId('demo-next').click();
     await expect(page.getByTestId('assign-read-only')).toBeVisible({ timeout: 60_000 });
@@ -125,6 +127,7 @@ test.describe('1920x1080', () => {
   test('guest screens and the player tour @checkpoint @cp6e', async ({ page }) => {
     test.setTimeout(300_000);
     await page.goto('/demo');
+    await page.waitForLoadState('networkidle'); // hydrated, or the click is lost
     await page.getByTestId('start-demo').click();
     await expect(page.getByTestId('scenario-S15')).toBeVisible({ timeout: 60_000 });
     await shot(page, '03-training-guest');

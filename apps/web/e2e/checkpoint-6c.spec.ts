@@ -205,7 +205,7 @@ for (const size of PUBLIC_SIZES) {
       // Guest entry exists only with NEXT_PUBLIC_GUEST_MODE=true (switched on in 6E).
       const demo = await page.goto('/demo');
       if (demo?.status() === 200) {
-        await expect(page.getByTestId('demo-path')).toBeVisible();
+        await expect(page.getByTestId('demo-outline')).toBeVisible();
         await shot(page, 'demo');
         expect(await overflow(page)).toBeLessThanOrEqual(0);
       }
