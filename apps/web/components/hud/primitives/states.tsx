@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { ApiError } from '@/lib/api';
+import { ApiError } from '@/lib/api-core';
 import { errorCopy } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 

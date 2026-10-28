@@ -7,12 +7,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
-import { ApiError, api, setTokenGetter } from './api';
+import { ApiError, setTokenGetter } from './api-core';
 import { env } from './env';
-import { getSupabase } from './supabase';
+import { getSupabase, hasStoredSupabaseSession } from './supabase';
 
 const LOCAL_TOKEN_KEY = 'vyuh.localToken';
 /** Guest demo token (POST /auth/guest, Phase 6E): used in either auth mode while present. */
@@ -53,6 +54,9 @@ function writeToken(key: string, token: string | null): void {
   }
 }
 
+/** The API client (zod and the shared schemas) loads on first call, not with every page. */
+const loadApi = () => import('./api').then((m) => m.api);
+
 const readLocalToken = () => readToken(LOCAL_TOKEN_KEY);
 const writeLocalToken = (t: string | null) => writeToken(LOCAL_TOKEN_KEY, t);
 
@@ -60,7 +64,8 @@ async function currentToken(): Promise<string | null> {
   const guest = readToken(GUEST_TOKEN_KEY);
   if (guest) return guest;
   if (env.authMode === 'local') return readLocalToken();
-  const { data } = await getSupabase().auth.getSession();
+  if (!hasStoredSupabaseSession()) return null;
+  const { data } = await (await getSupabase()).auth.getSession();
   return data.session?.access_token ?? null;
 }
 
@@ -82,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      setUser(await api.me());
+      setUser(await (await loadApi()).me());
       setStatus('authenticated');
       setError(null);
     } catch (err) {
@@ -97,25 +102,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Supabase auth events, watched once the client is loaded: at mount when a
+  // session is stored, else after signing in.
+  const unwatch = useRef<(() => void) | null>(null);
+  const watchSupabase = useCallback(async () => {
+    if (unwatch.current) return;
+    unwatch.current = () => undefined;
+    const { data } = (await getSupabase()).auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        void refresh();
+      }
+    });
+    unwatch.current = () => data.subscription.unsubscribe();
+  }, [refresh]);
+
   useEffect(() => {
     setTokenGetter(currentToken);
     // Initial session check after mount; refresh() sets state once the API answers.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void refresh();
-    if (env.authMode !== 'supabase') return;
-    const { data } = getSupabase().auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-        void refresh();
-      }
-    });
-    return () => data.subscription.unsubscribe();
-  }, [refresh]);
+    if (env.authMode === 'supabase' && hasStoredSupabaseSession()) void watchSupabase();
+    return () => {
+      unwatch.current?.();
+      unwatch.current = null;
+    };
+  }, [refresh, watchSupabase]);
 
   const loginDev = useCallback(
     async (email: string) => {
       setError(null);
       try {
-        const token = await api.devLogin(email);
+        const token = await (await loadApi()).devLogin(email);
         writeLocalToken(token.accessToken);
       } catch (err) {
         setError(describe(err));
@@ -129,20 +146,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginSupabase = useCallback(
     async (email: string, password: string) => {
       setError(null);
-      const { error: authError } = await getSupabase().auth.signInWithPassword({ email, password });
+      const { error: authError } = await (
+        await getSupabase()
+      ).auth.signInWithPassword({ email, password });
       if (authError) {
         setError(authError.message);
         throw authError;
       }
+      void watchSupabase();
       await refresh();
     },
-    [refresh],
+    [refresh, watchSupabase],
   );
 
   const loginGuest = useCallback(async () => {
     setError(null);
     try {
-      const token = await api.guestLogin();
+      const token = await (await loadApi()).guestLogin();
       writeToken(GUEST_TOKEN_KEY, token.accessToken);
     } catch (err) {
       setError(describe(err));
@@ -154,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     writeToken(GUEST_TOKEN_KEY, null);
     if (env.authMode === 'local') writeLocalToken(null);
-    else await getSupabase().auth.signOut();
+    else if (hasStoredSupabaseSession()) await (await getSupabase()).auth.signOut();
     setUser(null);
     setStatus('anonymous');
   }, []);

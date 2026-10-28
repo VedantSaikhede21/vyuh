@@ -35,7 +35,6 @@ import {
   SessionDetailResponse,
   TokenResponse,
   type ClientMeta,
-  type ErrorCode,
   type GenerateRequest,
   type MeResponse as MeResponseT,
   type SessionMode,
@@ -44,29 +43,10 @@ import {
 } from '@vyuh/shared';
 import { SIM_VERSION } from '@vyuh/sim-core';
 import { z } from 'zod';
+import { ApiError, currentAccessToken, setTokenGetter } from './api-core';
 import { env } from './env';
 
-/** An API error in the SPEC §11.2 envelope (or NETWORK when the API is unreachable). */
-export class ApiError extends Error {
-  constructor(
-    readonly code: ErrorCode | 'NETWORK' | 'BAD_RESPONSE',
-    message: string,
-    readonly status: number,
-    readonly details: Record<string, unknown> = {},
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
-
-type TokenGetter = () => Promise<string | null>;
-
-let getToken: TokenGetter = async () => null;
-
-/** The auth provider registers how to obtain the current access token. */
-export function setTokenGetter(getter: TokenGetter): void {
-  getToken = getter;
-}
+export { ApiError, setTokenGetter };
 
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -83,7 +63,7 @@ export async function apiFetch<S extends z.ZodType>(
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (auth) {
-    const token = await getToken();
+    const token = await currentAccessToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 

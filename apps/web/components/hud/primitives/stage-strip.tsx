@@ -1,4 +1,4 @@
-import { KillChainStage } from '@vyuh/shared';
+import type { KillChainStage } from '@vyuh/shared';
 import type { ReactNode } from 'react';
 import { STAGE_LABEL } from '@/lib/aar/answers';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,20 @@ export interface StageCell {
   state?: StageState;
 }
 
-const STAGES = KillChainStage.options;
+/**
+ * The six stages in order, as a typed list rather than `KillChainStage.options`:
+ * the strip sits in the top bar (demo path), and a value import from
+ * @vyuh/shared would put zod on every public page (Phase 6F). Kept equal to the
+ * shared enum by test/phase6f.test.ts.
+ */
+export const STAGES = [
+  'DETECT',
+  'TRACK',
+  'IDENTIFY',
+  'DECIDE',
+  'RESPOND',
+  'ASSESS',
+] as const satisfies readonly KillChainStage[];
 
 /**
  * The kill chain as a numbered 01–06 ruled strip (UI-PREP §1), reused on the

@@ -26,6 +26,18 @@ const nextConfig: NextConfig = {
   // Dev-only routes (/dev/ui, /dev/hero) are `page.dev.tsx` and do not exist in
   // production builds (decision 63).
   pageExtensions: isProd ? ['tsx', 'ts'] : ['tsx', 'ts', 'dev.tsx'],
+  // Terrain presets (up to ~4 MB each), spectrogram templates and landing media
+  // are re-fetched on every visit with Next's default `max-age=0`. Their paths are
+  // not content-hashed, so a day plus a week of stale-while-revalidate, not
+  // `immutable`: a re-built preset reaches users within a day (Phase 6F).
+  async headers() {
+    const cache = [
+      { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+    ];
+    return ['/terrain/:path*', '/signatures/:path*', '/landing/:path*', '/models/:path*'].map(
+      (source) => ({ source, headers: cache }),
+    );
+  },
 };
 
 export default nextConfig;

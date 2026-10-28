@@ -14,6 +14,9 @@ export interface Shot {
 
 export const imageSize = (k: ImageKey) => MEDIA.images[k];
 
+/** The served file: the WebP where scripts/landing-webp.ts found it smaller, else the PNG. */
+export const imageSrc = (k: ImageKey) => `/landing/${k}.${MEDIA.images[k].webp ? 'webp' : 'png'}`;
+
 /** The hero clip's facts, written by the recorder from the scenario file. */
 export const HERO = MEDIA.hero;
 

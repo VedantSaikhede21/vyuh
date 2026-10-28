@@ -273,6 +273,9 @@ function writeManifest(): void {
 `,
   );
   console.log('wrote manifest.json');
+  execFileSync(process.execPath, [join(import.meta.dirname, 'landing-webp.ts')], {
+    stdio: 'inherit',
+  });
 }
 
 mkdirSync(OUT, { recursive: true });

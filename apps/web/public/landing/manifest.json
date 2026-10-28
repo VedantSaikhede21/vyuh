@@ -2,55 +2,68 @@
   "images": {
     "chain-assess": {
       "w": 2496,
-      "h": 356
+      "h": 356,
+      "webp": false
     },
     "chain-decide": {
       "w": 638,
-      "h": 542
+      "h": 542,
+      "webp": false
     },
     "chain-detect": {
       "w": 638,
-      "h": 538
+      "h": 538,
+      "webp": true
     },
     "chain-identify": {
       "w": 862,
-      "h": 542
+      "h": 542,
+      "webp": true
     },
     "chain-respond": {
       "w": 638,
-      "h": 374
+      "h": 374,
+      "webp": false
     },
     "chain-track": {
       "w": 1228,
-      "h": 542
+      "h": 542,
+      "webp": false
     },
     "hero-poster": {
       "w": 1280,
-      "h": 720
+      "h": 720,
+      "webp": true
     },
     "login-hillshade": {
       "w": 1200,
-      "h": 1200
+      "h": 1200,
+      "webp": true
     },
     "measure-result": {
       "w": 2496,
-      "h": 1400
+      "h": 1400,
+      "webp": false
     },
     "realism-false-contacts": {
       "w": 638,
-      "h": 538
+      "h": 538,
+      "webp": true
     },
     "realism-night-ir": {
       "w": 862,
-      "h": 542
+      "h": 542,
+      "webp": true
     },
     "realism-silent": {
       "w": 1228,
-      "h": 240
+      "h": 240,
+      "webp": false
     },
     "realism-terrain": {
       "w": 2092,
-      "h": 912
+      "h": 912,
+      "webp": true
     }
   },
   "hero": {

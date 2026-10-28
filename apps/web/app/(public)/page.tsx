@@ -5,7 +5,7 @@ import { ChainExplorer } from '@/components/landing/chain-explorer';
 import { HeroVideo } from '@/components/landing/hero-video';
 import { Button } from '@/components/ui/button';
 import { env } from '@/lib/env';
-import { DEPLOY, HERO, REALISM, imageSize, latLon, type ImageKey } from '@/lib/landing';
+import { DEPLOY, HERO, REALISM, imageSize, imageSrc, latLon, type ImageKey } from '@/lib/landing';
 
 // Landing (DESIGN §11.1, Phase 6C): a printed briefing pack in six sheets. The
 // hero is the product itself; every picture is a crop of the real simulator and
@@ -28,7 +28,7 @@ function Crop({
   const { w, h } = imageSize(src);
   return (
     <Image
-      src={`/landing/${src}.png`}
+      src={imageSrc(src)}
       width={w}
       height={h}
       alt={alt}

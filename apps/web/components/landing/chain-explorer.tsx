@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useRef, useState, type KeyboardEvent } from 'react';
 import { rovingIndex } from '@/components/ui/tabs';
 import { STAGE_LABEL } from '@/lib/aar/answers';
-import { CHAIN, imageSize } from '@/lib/landing';
+import { CHAIN, imageSize, imageSrc } from '@/lib/landing';
 import { useFadeOnChange } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
@@ -76,7 +76,7 @@ export function ChainExplorer() {
         <div className="flex aspect-[16/10] items-center justify-center border border-line-1 bg-bg-1 p-3">
           <Image
             key={cur.shot.src}
-            src={`/landing/${cur.shot.src}.png`}
+            src={imageSrc(cur.shot.src)}
             width={size.w}
             height={size.h}
             alt={cur.shot.alt}

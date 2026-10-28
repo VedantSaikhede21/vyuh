@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ApiError } from '@/lib/api';
+import { ApiError } from '@/lib/api-core';
 import { useAuth } from '@/lib/auth';
 
 /** "Start the demo": a guest account from the API, then Training (the tour is 6E). */
