@@ -5,6 +5,7 @@ import { useMemo, type RefObject } from 'react';
 import { QUALITY_FEATURES, resolveQuality } from '@/lib/gpu-tier';
 import { useSettings } from '@/lib/settings';
 import { environmentLook } from '@/lib/sim/environment-look';
+import { CAMERA_START } from '@/lib/sim/framing';
 import { BuildingsMesh, roofStyleOf } from './buildings-mesh';
 import { Drones } from './drones';
 import { Environment } from './environment';
@@ -16,9 +17,6 @@ import { SelectedFraming } from './selected-framing';
 import { TrackLabelAnchors } from './track-labels';
 import { TrackMarkers } from './track-markers';
 import { ZoneMarkers } from './zone-markers';
-
-/** Starting camera offset from the defended position (x east, z north, metres). */
-const CAMERA_START = { x: -1400, z: -1900, height: 1100 };
 
 /**
  * Centre 3D view (SPEC §15): orbit camera over the defended position. Lives in

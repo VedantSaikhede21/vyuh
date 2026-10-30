@@ -5,6 +5,9 @@
 // Three.js frame: x east, y up, z = −north. The orbit camera sits on a sphere
 // around its target: position = target + r · (sin φ sin θ, cos φ, sin φ cos θ).
 
+/** The tactical view's first camera: offset from the origin, x east, z north, metres. */
+export const CAMERA_START = { x: -1400, z: -1900, height: 1100 };
+
 export interface Orbit {
   /** Azimuth θ, radians (three.js Spherical convention). */
   theta: number;

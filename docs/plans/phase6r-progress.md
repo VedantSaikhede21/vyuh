@@ -7,4 +7,5 @@ Order (overview §3): R1 → T0–T3 → R2 → R3 → R4 → R5 → T4–T6 →
 | Step | State |
 |---|---|
 | R1 tokens, Archivo, primitives, S6, S8 | Committed 30e4136 |
+| R2 render kit, R3 landing / login / demo, R4 shell + Home, R5 gallery + 3D briefing + camera flight | Committed. Still open: coverage drape on the 3D briefing (stays on the Map view), classify-the-clip and pinned scroll on the landing, shared-element view transitions |
 | T1–T6 terrain: Sentinel-2 albedo, cover, AO, normals, detail, sky, height haze, baked shadows, trees, roofs, IR by cover, quality tiers | Committed; T4–T6 ran before R2 so renders are made once. Not done from the plan: PUNJAB tree rows (NDVI cannot separate wheat from trees in Feb–Mar) and OSM roads / water painting (the imagery already shows them) |

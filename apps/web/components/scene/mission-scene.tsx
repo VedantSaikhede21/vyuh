@@ -4,7 +4,8 @@ import { PerspectiveCamera } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import type { Scenario } from '@vyuh/shared';
 import { sampleHeight, type World } from '@vyuh/sim-core';
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { Vector3 } from 'three';
 import { BuildingsMesh, roofStyleOf } from '@/components/sim/buildings-mesh';
 import { Environment } from '@/components/sim/environment';
 import { SimRuntimeContext } from '@/components/sim/sim-context';
@@ -16,12 +17,16 @@ import { QUALITY_FEATURES, resolveQuality } from '@/lib/gpu-tier';
 import { shotPose, type Shot } from '@/lib/scene/shots';
 import { useSettings } from '@/lib/settings';
 import { environmentLook } from '@/lib/sim/environment-look';
+import { CAMERA_START } from '@/lib/sim/framing';
 import { SimRuntime } from '@/lib/sim/runtime';
 
 /** Radians per second of the slow orbit around the look-at point. */
 const ORBIT_RATE = 0.012;
+const FLIGHT_S = 1.2;
 
-function CameraRig({ world, scenario, shot, orbit }: Props) {
+const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
+
+function CameraRig({ world, scenario, shot, orbit, flying }: Props) {
   const camera = useThree((s) => s.camera);
   const invalidate = useThree((s) => s.invalidate);
   const pose = useMemo(() => shotPose(scenario, shot), [scenario, shot]);
@@ -32,7 +37,32 @@ function CameraRig({ world, scenario, shot, orbit }: Props) {
     camera.lookAt(pose.targetX, sampleHeight(map, pose.targetX, pose.targetZ), -pose.targetZ);
     invalidate();
   }, [camera, map, pose, invalidate]);
+  const flight = useRef<{ from: Vector3; lookFrom: Vector3; t: number } | null>(null);
   useFrame((_, dt) => {
+    if (flying) {
+      // To the player's first camera, so the cut into the session is invisible.
+      flight.current ??= {
+        from: camera.position.clone(),
+        lookFrom: new Vector3(
+          pose.targetX,
+          sampleHeight(map, pose.targetX, pose.targetZ),
+          -pose.targetZ,
+        ),
+        t: 0,
+      };
+      const f = flight.current;
+      f.t = Math.min(1, f.t + dt / FLIGHT_S);
+      const k = easeInOut(f.t);
+      const ground = sampleHeight(map, CAMERA_START.x, CAMERA_START.z);
+      camera.position.lerpVectors(
+        f.from,
+        new Vector3(CAMERA_START.x, Math.max(CAMERA_START.height, ground + 600), -CAMERA_START.z),
+        k,
+      );
+      camera.lookAt(new Vector3().lerpVectors(f.lookFrom, new Vector3(0, 0, 0), k));
+      return;
+    }
+    flight.current = null;
     if (!orbit) return;
     const tx = pose.targetX;
     const tz = -pose.targetZ;
@@ -52,6 +82,8 @@ interface Props {
   shot: Shot;
   /** Slow orbit (the briefing). False holds the frame: stills use less GPU. */
   orbit?: boolean;
+  /** Begin was pressed: fly to the player's start pose. */
+  flying?: boolean;
 }
 
 /**
@@ -65,6 +97,7 @@ export function MissionScene({
   world,
   shot,
   orbit = false,
+  flying = false,
   children,
 }: Props & { children?: ReactNode }) {
   const runtime = useMemo(() => new SimRuntime(scenario, world, 'PRACTICE'), [scenario, world]);
@@ -80,7 +113,7 @@ export function MissionScene({
     >
       <SimRuntimeContext.Provider value={runtime}>
         <PerspectiveCamera makeDefault fov={pose.fovDeg} near={5} far={40_000} />
-        <CameraRig scenario={scenario} world={world} shot={shot} orbit={orbit} />
+        <CameraRig scenario={scenario} world={world} shot={shot} orbit={orbit} flying={flying} />
         <Environment env={env} variant="tactical" />
         <TerrainMesh world={world} look={look} quality={quality} edgeFade encoded />
         <BuildingsMesh index={world.buildings} roofStyle={roofStyleOf(world)} />

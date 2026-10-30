@@ -10,10 +10,13 @@ import { timeOfDayAt } from '@vyuh/sim-core';
 import { Moon, Sun, Sunrise, Sunset } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { Panel, PanelHeader, Pips, Skeleton, StatusNotice } from '@/components/hud/primitives';
+import { Panel, Pips, Skeleton, StatusNotice } from '@/components/hud/primitives';
 import { Badge } from '@/components/ui/badge';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Select } from '@/components/ui/select';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { isStaff } from '@/lib/nav';
 import { assignmentBadge, assignmentFor } from '@/lib/scenario/assignments';
 import {
   conditions,
@@ -28,14 +31,16 @@ import {
   type ListFilters,
   type SortKey,
 } from '@/lib/scenario/library';
+import { renderFor } from '@/lib/renders';
 import { loadPresetMeta } from '@/lib/terrain/load-world';
 import { cn } from '@/lib/utils';
+import { MissionCards } from './mission-cards';
 
 // Training list (DESIGN §11.3, plan Step 11): a dense table, filters and sort
 // kept in the URL, arrows + Enter to open a briefing.
 
-const TH = 'h-7 bg-bg-2 px-2 text-left text-label font-medium whitespace-nowrap';
-const TD = 'h-8 px-2 whitespace-nowrap';
+const TH = 'h-9 bg-bg-2 px-3 text-left text-label font-medium whitespace-nowrap';
+const TD = 'h-11 px-3 whitespace-nowrap';
 
 const TIME_ICON: Record<TimeBandLabel, typeof Sun> = {
   Day: Sun,
@@ -64,7 +69,7 @@ function FilterSelect({
       </label>
       <Select
         id={id}
-        className="h-7 w-auto py-0 pr-7 text-small"
+        className="h-9 w-auto py-0 pr-7 text-small"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
@@ -192,19 +197,20 @@ export function ScenarioRowsTable({
               onKeyDown={(e) => onKey(e, i)}
               onFocus={() => setFocus(i)}
               className={cn(
-                'cursor-pointer border-t border-line-1 transition-colors duration-150 ease-ui hover:bg-bg-2 focus-visible:bg-bg-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-select',
+                'cursor-pointer border-t border-line-1 transition-colors duration-150 ease-ui hover:bg-bg-2 focus-visible:bg-bg-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--focus)',
                 opening === s.id && 'bg-bg-3',
               )}
             >
-              <td className="h-8 w-[3.25rem] min-w-[3.25rem] py-0 pl-2">
+              <td className="h-11 w-[4.5rem] min-w-[4.5rem] py-1 pl-3">
                 {/* Decorative: the terrain is named in the row's Conditions tooltip. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`/terrain/${s.terrainPreset}/thumb.png`}
+                  src={renderFor(s.code, s.terrainPreset).w640}
                   width={64}
-                  height={40}
+                  height={36}
                   alt=""
-                  className="block h-[26px] w-[42px] max-w-none shrink-0 rounded-sm border border-line-1 object-cover"
+                  loading="lazy"
+                  className="block h-9 w-16 max-w-none shrink-0 rounded-sm object-cover"
                 />
               </td>
               {/* Wraps to two lines, never widens the table (break-ui 2): names may run to 200 characters. */}
@@ -293,6 +299,10 @@ export function ScenarioTable() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  const { user } = useAuth();
+  // Trainees pick by place, staff scan facts (DESIGN §11.3).
+  const [view, setView] = useState<'GALLERY' | 'TABLE' | null>(null);
+  const shown = view ?? (isStaff(user?.role) ? 'TABLE' : 'GALLERY');
   const { filters, sort } = useMemo(
     () => readQuery(new URLSearchParams(params.toString())),
     [params],
@@ -359,15 +369,8 @@ export function ScenarioTable() {
   const openAssigned = assignments.filter((a) => !a.completed).length;
 
   return (
-    <Panel>
-      <PanelHeader title="Scenarios">
-        {items && (
-          <span className="text-label" data-testid="scenario-count">
-            {rows.length} of {items.length}
-          </span>
-        )}
-      </PanelHeader>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line-1 px-3 py-2">
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <FilterSelect
           id="f-difficulty"
           label="Difficulty"
@@ -429,6 +432,22 @@ export function ScenarioTable() {
             { value: 'best', label: 'Best score' },
           ]}
         />
+        <div className="ml-auto flex items-center gap-3">
+          {items && (
+            <span className="text-label" data-testid="scenario-count">
+              {rows.length} of {items.length}
+            </span>
+          )}
+          <SegmentedControl
+            label="Scenario view"
+            value={shown}
+            onChange={setView}
+            items={[
+              { value: 'GALLERY', label: 'Gallery', testId: 'view-gallery' },
+              { value: 'TABLE', label: 'Table', testId: 'view-table' },
+            ]}
+          />
+        </div>
       </div>
       {error && (
         <StatusNotice
@@ -471,21 +490,32 @@ export function ScenarioTable() {
           }
         />
       )}
-      {rows.length > 0 && (
-        <ScenarioRowsTable
-          rows={rows}
-          ariaLabel="Scenarios"
-          testId="scenario-table"
-          timeOf={timeOf}
-          label={label}
-          assignments={assignments}
-        />
-      )}
+      {rows.length > 0 &&
+        (shown === 'GALLERY' ? (
+          <MissionCards
+            rows={rows}
+            ariaLabel="Scenarios"
+            testId="scenario-table"
+            label={label}
+            assignments={assignments}
+          />
+        ) : (
+          <Panel>
+            <ScenarioRowsTable
+              rows={rows}
+              ariaLabel="Scenarios"
+              testId="scenario-table"
+              timeOf={timeOf}
+              label={label}
+              assignments={assignments}
+            />
+          </Panel>
+        ))}
       {filtered && rows.length > 0 && (
-        <p className="border-t border-line-1 px-3 py-1.5 text-small text-text-2">
+        <p className="text-small text-text-2">
           Filtered: {rows.length} of {items?.length ?? 0} scenarios shown.
         </p>
       )}
-    </Panel>
+    </div>
   );
 }

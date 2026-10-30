@@ -1,51 +1,16 @@
 'use client';
 
-import { Suspense } from 'react';
-import {
-  PageHeader,
-  Panel,
-  PanelBody,
-  PanelHeader,
-  Readout,
-  Skeleton,
-} from '@/components/hud/primitives';
+import { Suspense, useState } from 'react';
+import { PageHeader, Panel, PanelBody, PanelHeader, Skeleton } from '@/components/hud/primitives';
 import { RequireAuth } from '@/components/require-auth';
 import { GeneratePanel } from '@/components/training/generate-panel';
 import { OwnGeneratedTable } from '@/components/training/own-generated';
 import { ScenarioTable } from '@/components/training/scenario-table';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { isGuest } from '@/lib/nav';
-
-function OperatorPanel() {
-  const { user } = useAuth();
-  if (!user) return null;
-  return (
-    <Panel>
-      <PanelHeader title="Operator">
-        <Badge tone="strong" data-testid="role">
-          {user.role}
-        </Badge>
-      </PanelHeader>
-      <PanelBody className="space-y-3">
-        <dl className="grid grid-cols-[5rem_1fr] gap-y-1.5 text-body">
-          <dt className="text-label self-center">Name</dt>
-          <dd data-testid="user-name">{user.name}</dd>
-          <dt className="text-label self-center">Email</dt>
-          <dd className="truncate" data-testid="user-email">
-            {user.email ?? '—'}
-          </dd>
-          <dt className="text-label self-center">Unit</dt>
-          <dd data-testid="user-unit">
-            {isGuest(user.role) ? 'Demo guest' : (user.unit?.name ?? 'Unassigned')}
-          </dd>
-        </dl>
-        <Readout label="Rating" value={user.rating} flash={false} />
-      </PanelBody>
-    </Panel>
-  );
-}
 
 function GenerateForUser() {
   const { user } = useAuth();
@@ -78,28 +43,35 @@ function GuestHint() {
   );
 }
 
+/** Generate lives in a dialog: the gallery is the page (DESIGN §11.3). */
+function GenerateAction() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="secondary" onClick={() => setOpen(true)} data-testid="open-generate">
+        Generate scenario
+      </Button>
+      <Dialog open={open} onClose={() => setOpen(false)} title="Generate scenario">
+        <GenerateForUser />
+      </Dialog>
+    </>
+  );
+}
+
 export default function TrainPage() {
   return (
     <RequireAuth>
       <div className="space-y-6">
         <PageHeader
-          reference="Training · scenarios and briefings"
           title="Training"
-          context="Choose a scenario to open its briefing, or generate a new one."
+          context="Choose a mission to open its briefing, or generate a new one."
+          actions={<GenerateAction />}
         />
         <GuestHint />
-        <div className="grid items-start gap-4 lg:grid-cols-[17rem_minmax(0,1fr)]">
-          <div className="space-y-4">
-            <OperatorPanel />
-            <GenerateForUser />
-          </div>
-          <div className="space-y-4">
-            <Suspense fallback={<Skeleton label="Loading scenarios" />}>
-              <ScenarioTable />
-            </Suspense>
-            <OwnGeneratedTable />
-          </div>
-        </div>
+        <Suspense fallback={<Skeleton label="Loading scenarios" />}>
+          <ScenarioTable />
+        </Suspense>
+        <OwnGeneratedTable />
       </div>
     </RequireAuth>
   );
