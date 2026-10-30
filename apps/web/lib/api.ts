@@ -33,6 +33,7 @@ import {
   ScenarioListResponse,
   Score,
   SessionDetailResponse,
+  StudyResultsResponse,
   TokenResponse,
   type ClientMeta,
   type GenerateRequest,
@@ -129,6 +130,15 @@ export const api = {
     }),
   resumeSession: (sessionId: string) =>
     apiFetch(`/sessions/${sessionId}/resume`, SessionDetailResponse, { method: 'POST' }),
+  studyCsv: async (): Promise<string> => {
+    const token = await currentAccessToken();
+    const res = await fetch(`${env.apiUrl}/study/results.csv`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new ApiError('NETWORK', 'Could not export the results', res.status);
+    return res.text();
+  },
+  study: (signal?: AbortSignal) => apiFetch('/study/results', StudyResultsResponse, { signal }),
   completeSession: (sessionId: string, endTMs: number, clientMeta: ClientMeta) =>
     apiFetch(`/sessions/${sessionId}/complete`, Score, {
       method: 'POST',

@@ -1,0 +1,12 @@
+**/node_modules
+**/.next
+**/.git
+**/test-results
+**/__pycache__
+apps/api
+apps/web/e2e
+scripts
+docs
+docker
+.env*
+**/.env*

@@ -11,7 +11,7 @@ export const SESSION_COOKIE_MAX_AGE_S = 7 * 24 * 3600;
 const SIGNED_IN = ['/home', '/train', '/aar', '/instructor', '/record', '/library', '/notices'];
 const SIGNED_IN_EXACT = ['/settings', '/help'];
 /** Staff pages a guest may open on demo data (Phase 6E). */
-const STAFF_ONLY = ['/instructor/builder', '/instructor/scoring'];
+const STAFF_ONLY = ['/instructor/builder', '/instructor/scoring', '/instructor/study'];
 
 const under = (path: string, prefix: string) => path === prefix || path.startsWith(`${prefix}/`);
 

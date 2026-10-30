@@ -1101,6 +1101,23 @@ class StatusResponse(BaseModel):
     versions: Versions
 
 
+class StagePct(RootModel[int]):
+    root: Annotated[int, Field(ge=-9007199254740991, le=9007199254740991)]
+
+
+class StudyRow(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    participant: str
+    run: Annotated[int, Field(ge=1, le=9007199254740991)]
+    scenario: str
+    total: float
+    detection_latency_s: Annotated[float | None, Field(alias="detectionLatencyS")]
+    exact_classification: Annotated[float | None, Field(alias="exactClassification")]
+    stage_pct: Annotated[dict[str, StagePct | None], Field(alias="stagePct")]
+
+
 class SunAzEl(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -2067,6 +2084,14 @@ class SignoffRequest(BaseModel):
         populate_by_name=True,
     )
     level: TrainingLevel
+
+
+class StudyResultsResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    participants: Annotated[int, Field(ge=0, le=9007199254740991)]
+    rows: list[StudyRow]
 
 
 class TraineeTrendsResponse(BaseModel):

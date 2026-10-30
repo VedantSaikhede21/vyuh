@@ -58,6 +58,7 @@ const UNIT_LINKS = [
   { href: '/instructor', label: 'Dashboard' },
   { href: '/instructor/readiness', label: 'Readiness' },
   { href: '/instructor/live', label: 'Live sessions' },
+  { href: '/instructor/study', label: 'User study' },
 ] as const;
 
 function UnitNavWithUnit() {

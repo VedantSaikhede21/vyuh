@@ -5230,6 +5230,84 @@
       ],
       "additionalProperties": false
     },
+    "StudyResultsResponse": {
+      "type": "object",
+      "properties": {
+        "participants": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StudyRow"
+          }
+        }
+      },
+      "required": [
+        "participants",
+        "rows"
+      ]
+    },
+    "StudyRow": {
+      "type": "object",
+      "properties": {
+        "participant": {
+          "type": "string"
+        },
+        "run": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "scenario": {
+          "type": "string"
+        },
+        "total": {
+          "type": "number"
+        },
+        "detectionLatencyS": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "exactClassification": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "stagePct": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "participant",
+        "run",
+        "scenario",
+        "total",
+        "detectionLatencyS",
+        "exactClassification",
+        "stagePct"
+      ]
+    },
     "SunAzEl": {
       "type": "object",
       "properties": {

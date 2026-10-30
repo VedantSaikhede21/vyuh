@@ -1,17 +1,20 @@
-# Local development: `docker compose up -d` starts Postgres only.
-# `docker compose --profile api up -d --build` also runs the API image on :8000
-# (stop `pnpm dev`'s API first). The web service is added in Phase 6.
-# Known issue: an older container holding :5432 (CLAUDE.md §14) blocks `up`.
+# Offline full stack: `docker compose up` starts Postgres, the API and the web app
+# with local auth and the LLM off. Open http://localhost:3000. No network needed
+# once the images are built; all terrain, renders and fonts are in the images.
+#
+# Development: `docker compose up -d postgres` starts the database only.
+# Known issue: an older container holding :5432 (CLAUDE.md §14) blocks `up`; set
+# POSTGRES_PORT to another port for the offline stack (only the host port changes).
 services:
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: vyuh
-      POSTGRES_PASSWORD: vyuh # local dev only — never used outside this container
+      POSTGRES_PASSWORD: vyuh # local only: never used outside this container
       POSTGRES_DB: vyuh
     ports:
-      - '5432:5432'
+      - '${POSTGRES_PORT:-5432}:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
@@ -22,10 +25,10 @@ services:
       retries: 30
 
   api:
-    profiles: ['api']
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
@@ -33,12 +36,28 @@ services:
       ENV: offline
       DATABASE_URL: postgresql+psycopg://vyuh:vyuh@postgres:5432/vyuh
       AUTH_MODE: local
-      LOCAL_JWT_SECRET: ${LOCAL_JWT_SECRET:?set LOCAL_JWT_SECRET (>= 32 bytes) in the shell or a root .env}
+      # One machine, no network: a fixed local secret is fine here and only here.
+      LOCAL_JWT_SECRET: ${LOCAL_JWT_SECRET:-offline-local-only-secret-change-for-shared-use}
       CORS_ORIGINS: http://localhost:3000
       LLM_ENABLED: 'false'
       OPEN_METEO_ENABLED: 'false'
+      GUEST_MODE_ENABLED: 'false'
     ports:
       - '8000:8000'
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+        NEXT_PUBLIC_AUTH_MODE: local
+        NEXT_PUBLIC_GUEST_MODE: 'false'
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - '3000:3000'
 
 volumes:
   pgdata:

@@ -31,6 +31,7 @@ from app.routers import (
     scenarios,
     scoring,
     sessions,
+    study,
     units,
 )
 from app.seed.demo import seed_if_changed
@@ -105,6 +106,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(health.router, prefix=API_PREFIX)
     app.include_router(client_errors.router, prefix=API_PREFIX)
+    app.include_router(study.router, prefix=API_PREFIX)
     app.include_router(auth.router, prefix=API_PREFIX)
     app.include_router(scenarios.router, prefix=API_PREFIX)
     app.include_router(sessions.router, prefix=API_PREFIX)

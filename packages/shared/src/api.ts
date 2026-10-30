@@ -144,6 +144,28 @@ export const SessionEnded = named(
 export type SessionEnded = z.infer<typeof SessionEnded>;
 
 /** GET /sessions/{id}. `score` is null until the session is COMPLETED. */
+/** One Assessment run in the user study (Part 6I): a code, never a name. */
+export const StudyRow = named(
+  'StudyRow',
+  z.object({
+    participant: z.string(),
+    run: z.int().min(1),
+    scenario: z.string(),
+    total: z.number(),
+    detectionLatencyS: z.number().nullable(),
+    exactClassification: z.number().nullable(),
+    /** Stage → % of contacts done right; null where the stage did not apply. */
+    stagePct: z.record(z.string(), z.int().nullable()),
+  }),
+);
+export type StudyRow = z.infer<typeof StudyRow>;
+
+export const StudyResultsResponse = named(
+  'StudyResultsResponse',
+  z.object({ participants: z.int().min(0), rows: z.array(StudyRow) }),
+);
+export type StudyResultsResponse = z.infer<typeof StudyResultsResponse>;
+
 /** POST /client-errors: no names, no e-mail (system plan S9). */
 export const ClientErrorReport = named(
   'ClientErrorReport',

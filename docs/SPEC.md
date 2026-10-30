@@ -720,6 +720,10 @@ All errors: `{ "error": { "code": "...", "message": "...", "details": {} } }`
 
 ---
 
+### 14.x Display-only terrain files (Part 6R)
+
+`scripts/terrain/build_display.py` adds `albedo.jpg` (our Sentinel-2 L2A median composite, 1536², one season per preset), `cover.png` (land cover), `ao.png` (sky view, curvature) and, on JK_MOUNTAIN, `vegetation.bin` (conifers placed from the land cover), plus `_detail/detail.png`. Display only: the sim, LOS and scoring never read them; `heightmap.u16`, `buildings.geojson` and `meta.revision` do not change. `meta.imagery` records scenes, dates and processing; `displayHash` busts the cache for display files. Trees do not block LOS (decision 170). Quality tiers High / Medium / Low (Settings; Auto reads the GPU) scale detail, baked shadows and trees.
+
 ## §15. UI / UX
 
 Visual and UX rules are defined in `docs/DESIGN.md` and are binding.
@@ -732,6 +736,8 @@ Visual and UX rules are defined in `docs/DESIGN.md` and are binding.
 - **Sim player layout:** centre 3D tactical view; right radar PPI; bottom-left EO/IR view (slewable, zoom); bottom-centre contact list with track state (UNKNOWN → classified, affiliation colour); bottom-right action bar + response buttons with cooldown/ammo; top bar clock, ROE state, alerts; RF panel and spectrogram as tabs; AI-assist chip on the selected track.
 - **Keyboard shortcuts** for core actions (operators work fast).
 - **Assessment mode:** no pause, fixed time. **Practice mode:** pause and hints allowed.
+
+The visual design and player layout are in `docs/DESIGN.md` §0 (Part 6R), which supersedes the layout description above: one main view with a picture-in-picture, a track card in place of the action bar, a live 3D briefing, a training gallery.
 
 ### 15.1 Keyboard shortcuts (defaults; shown in an on-screen cheat sheet with `?`)
 | Key | Action |
@@ -827,6 +833,10 @@ Rules: one branch per feature; **`packages/shared` changes go through one owner 
 - **Fake evidence:** demo data (§22) is always labelled as demo; only the real user study is presented as results.
 
 ---
+
+Session resume (Part 6R): a reloaded run rebuilds from the tab's stored commands (determinism), with the rebuilt log checked; `POST /sessions/{id}/resume` counts it, and the AAR shows "Resumed ×n". Offered only in the same tab, and only while the session is ACTIVE.
+
+Operations (Part 6G): `POST /client-errors` (open, limited, no PII) and `GET /client-errors` (admin); rate limits and a daily LLM token budget in Postgres (`LLM_DAILY_TOKEN_BUDGET`, fallback reason `BUDGET`); request bodies ≤ 64 KB, event batches ≤ 512 KB.
 
 ## §20. Judge demo flow (what the hosted link must support)
 

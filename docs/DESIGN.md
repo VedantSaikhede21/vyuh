@@ -5,6 +5,46 @@
 
 ---
 
+## 0. Version 2, direction "Mission Software" (Part 6R, binding)
+
+The user chose this direction on 2026-10-28 and approved building it on 2026-10-29. **Where this section differs from §1–§12, this section wins.** Sections it doesn't mention still apply: colour is information, APP-6 shape + letter + colour, every number has a unit, military brevity, the 100 ms Comms acknowledgement, disabled controls explain why, worded empty and error states, full keyboard, 1366×768 with no horizontal scroll.
+
+**Intent:** a modern mission system. The real terrain is always present, surfaces are deep and layered, type is large and calm, colour lives on data, and motion shows what changed. Not sci-fi, neon, glowing or game-like.
+
+**Two scales.** Pages use the app scale. `data-ui="hud"` on the sim player and AAR replay switches to the console scale through CSS variables, so the same utilities and primitives serve both; a `hud:` Tailwind variant covers shape differences. The HUD stays dense and monospaced: operators need aligned figures. That is function, not costume.
+
+| | App | HUD |
+|---|---|---|
+| Label | 13 px, sentence case | 11 px, uppercase condensed |
+| Body | 16 / 25 | 14 / 21 |
+| Radius | 6 controls, 8 surfaces, 12 hero and overlays | 2 |
+| Focus ring | 2 px `--data` | 2 px `--select` |
+| Row height | 44 px | 28–32 px |
+
+**Tokens** live only in `apps/web/lib/theme/tokens.ts`; `pnpm --filter @vyuh/web gen:tokens` writes `app/tokens.generated.css`, and CI checks it. `test/tokens-contrast.test.ts` holds every text colour to 4.5:1 on `--bg-0`…`--bg-3`.
+
+**Colour.** Surfaces step by lightness (`--bg-0` #050607 → `--bg-4` #282D32) and need no border. `--data` #4FD1C5 is the one data hue: chart series, selection and focus outside the HUD. It never appears in the player or AAR replay, where white selection and affiliation colours rule. The primary button is inverted: off-white fill, near-black text. One per screen.
+
+**Type.** Archivo (variable, one file) for all words; IBM Plex Mono for HUD numbers, ids and seeds only. Added roles: `text-statement` (landing, once), `text-figure-xl` (score, 64 px), `text-figure-l` (KPIs, 40 px), `text-h3`. H1 is 32 px, display `clamp(36, 5vw, 64)`.
+
+**Shape.** Tables keep hairlines; panels on pages have none. Floating cards over terrain use `shadow-float`; overlays `shadow-overlay` with a 1 px light edge. Chips are full round. Page container 1280 px, 1440 px above 1600 px wide.
+
+**Imagery.** The product's own pictures: `pnpm --filter @vyuh/web render:stills` renders every library scenario from the real scene into `public/renders/`. Hero pages put one behind `--scrim-1`; **text is never on raw imagery**: it sits on the scrim, or on a card. Re-run after any terrain or scene change.
+
+**Motion.** Route fade 180 ms. The one signature move: Begin on the briefing flies the camera to the player's first pose while the session is created, so the cut is invisible. Reduced motion skips it. Everything else follows §7.
+
+**Templates.** Hero page (Home, Briefing, Result, Demo): a full-bleed terrain band with the subject on it. Workspace page (everything else): `PageHeader` and surfaces. Full-bleed 3D (Player, AAR replay): no shell.
+
+**Player layout** (supersedes §11.5): top bar; one main view with the other view as a picture-in-picture; PPI and the track card on the right; tracks and Comms along the bottom. `V` swaps map and camera, `W` widens the radar, `.` opens More. The track card shows what fits the selected track's kill-chain stage; `stageActions()` only orders actions, `actionStates()` stays the one authority, and every key works at every stage. A larger grid applies at ≥ 1600 × 860.
+
+**Briefing** (supersedes §11.4): live 3D by default, the 2D map (with LOS coverage) one click away and the default on the Low quality tier; a floating mission card with mode and Begin always in view.
+
+**Training** (supersedes §11.3): a gallery of mission stills for trainees, the table for staff, one toggle apart. Generate is a dialog.
+
+**Added to the §13 checklist:** text over imagery has a scrim; the page works under reduced motion; a 3D page has a still or 2D fallback; imagery carries its credit.
+
+---
+
 ## 1. Design intent
 
 **One sentence:** *A calm, dense, precise tactical console where colour means something, every number has a unit, and every action gets an immediate answer.*

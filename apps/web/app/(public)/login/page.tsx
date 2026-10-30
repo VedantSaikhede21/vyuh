@@ -36,6 +36,7 @@ function LoginForm() {
   const router = useRouter();
   const next = safeNext(useSearchParams().get('next'));
   const [email, setEmail] = useState(mode === 'local' ? 'trainee1@demo' : '');
+  const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -47,7 +48,7 @@ function LoginForm() {
     event.preventDefault();
     setBusy(true);
     try {
-      if (mode === 'local') await loginDev(email);
+      if (mode === 'local') await loginDev(code ? `${code.trim().toLowerCase()}@study` : email);
       else await loginSupabase(email, password);
     } catch {
       // error is shown from auth context
@@ -82,6 +83,17 @@ function LoginForm() {
                 Offline unit install: choose your account. Accounts are set up by the administrator;
                 this mode has no passwords.
               </p>
+              <Label htmlFor="participant" className="pt-2">
+                Study participant code (optional)
+              </Label>
+              <Input
+                id="participant"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                autoComplete="off"
+                placeholder="P001"
+                className="h-11 md:h-9"
+              />
             </div>
           ) : (
             <>

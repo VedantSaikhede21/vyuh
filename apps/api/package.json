@@ -9,6 +9,7 @@
     "gen:pydantic": "uv run python scripts/gen_pydantic.py",
     "seed": "uv run python -m app.seed.demo",
     "seed:reset-demo": "uv run python -m app.seed.reset_demo",
-    "guests:cleanup": "uv run python -m app.seed.cleanup_guests"
+    "guests:cleanup": "uv run python -m app.seed.cleanup_guests",
+    "study:enrol": "uv run python -m app.seed.study"
   }
 }

@@ -37,14 +37,13 @@ Run pnpm seed after any deploy that changes seed data. (With `ENV=dev` the API a
 
 Run `pnpm graph` to regenerate the code map (output is git-ignored).
 
-## API in Docker (optional)
+## Offline build
 
 ```bash
-docker build -f apps/api/Dockerfile -t vyuh-api .        # build from the repo root
-LOCAL_JWT_SECRET=<≥ 32 bytes> docker compose --profile api up -d --build
+docker compose up --build        # Postgres + API + web on http://localhost:3000
 ```
 
-The `api` profile runs migrations, seeds demo data and serves on :8000 (stop `pnpm dev`'s API first). Plain `docker compose up -d` still starts Postgres only. Known issue: an older container holding port 5432 (`sih-2026-postgres-1`) makes `up` fail until it is stopped.
+Local auth, LLM off, all terrain in the images; no network needed once built. For development, `docker compose up -d postgres` starts the database only. If port 5432 is taken, set `POSTGRES_PORT`. Hosted setup is in `docs/DEPLOY.md`.
 
 ## Checks
 

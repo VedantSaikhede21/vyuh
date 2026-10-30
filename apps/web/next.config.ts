@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { execSync } from 'node:child_process';
 import type { NextConfig } from 'next';
 
@@ -19,7 +20,9 @@ function buildId(): string {
 /** Security headers (system plan S10). The app needs inline scripts from Next and WebGL
  *  workers; everything else stays same-origin plus the API and Supabase. */
 function securityHeaders() {
-  const api = process.env.NEXT_PUBLIC_API_URL ? new URL(process.env.NEXT_PUBLIC_API_URL).origin : '';
+  const api = process.env.NEXT_PUBLIC_API_URL
+    ? new URL(process.env.NEXT_PUBLIC_API_URL).origin
+    : '';
   const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
   const csp = [
     "default-src 'self'",
@@ -49,6 +52,10 @@ const nextConfig: NextConfig = {
   transpilePackages: ['@vyuh/shared', '@vyuh/sim-core'],
   reactStrictMode: true,
   poweredByHeader: false,
+  // Docker image (offline build): a self-contained server, traced from the repo root.
+  ...(process.env.VYUH_STANDALONE
+    ? { output: 'standalone' as const, outputFileTracingRoot: join(import.meta.dirname, '../..') }
+    : {}),
   devIndicators: false,
   env: { NEXT_PUBLIC_WEB_BUILD: buildId() },
   // Dev-only routes (/dev/ui, /dev/hero) are `page.dev.tsx` and do not exist in
