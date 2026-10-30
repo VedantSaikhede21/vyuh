@@ -5,7 +5,7 @@ import type { SimSnapshot, World } from '@vyuh/sim-core';
 import { CircleHelp } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { DemoBadge, Tooltip } from '@/components/hud/primitives';
+import { DemoBadge, StateChip, Tooltip } from '@/components/hud/primitives';
 import { SimPlayer } from '@/components/sim/player';
 import { GuidedTour } from '@/components/tour/guided-tour';
 import { Button } from '@/components/ui/button';
@@ -143,6 +143,11 @@ export function ReplayView({
           topBarExtra: (
             <>
               {data.session.isDemo && <DemoBadge />}
+              {data.session.resumeCount > 0 && (
+                <StateChip tone="warn" data-testid="resumed-chip">
+                  Resumed ×{data.session.resumeCount}
+                </StateChip>
+              )}
               <Tooltip content="Replay controls and markers" shortcut="?" align="end" side="bottom">
                 <Button
                   size="hud"

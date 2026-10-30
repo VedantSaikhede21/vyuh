@@ -98,6 +98,7 @@ describe('guided tour (Phase 6E)', () => {
       'radar',
       'tracks',
       'eo',
+      'views',
       'actions',
       'report',
       'ai',
@@ -114,7 +115,7 @@ describe('guided tour (Phase 6E)', () => {
     expect(shouldOpen({ player: { step: 3, status: 'skipped' } }, 'player', true)).toBe(false);
     expect(shouldOpen({ player: { step: 3, status: 'open' } }, 'player', false)).toBe(true);
     expect(parseTourProgress('{"player":{"step":99,"status":"open"},"x":1}')).toEqual({
-      player: { step: 6, status: 'open' },
+      player: { step: 7, status: 'open' },
     });
     expect(parseTourProgress('{')).toEqual({});
   });

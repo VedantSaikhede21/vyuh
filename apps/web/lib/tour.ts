@@ -38,7 +38,7 @@ export const TOURS: Readonly<Record<TourId, readonly TourStep[]>> = {
       body: 'Space cues the camera to the selected track. Identify the shape here before you act. T switches to thermal; + and − zoom.',
     },
     {
-      target: '[data-testid="view-eo"]',
+      target: '[data-tour="views"]',
       title: 'Views',
       body: 'One view is large at a time. V swaps the map and the camera; W makes the radar large when a swarm crowds it.',
     },

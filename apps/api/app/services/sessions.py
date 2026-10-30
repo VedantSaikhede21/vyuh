@@ -229,6 +229,21 @@ def stored_events(db: Session, session_id: uuid.UUID) -> list[dict[str, Any]]:
     return events
 
 
+def resume_session(db: Session, user: User, session_id: uuid.UUID) -> SessionDetailResponse:
+    """Record that the owner picked an interrupted run back up (SPEC §4.5)."""
+    row = get_owned_session(db, user, session_id, for_update=True)
+    if row.status is not SessionStatus.ACTIVE:
+        raise ApiError(
+            ErrorCode.SESSION_NOT_ACTIVE, "Session is not active", {"status": row.status.value}
+        )
+    now = datetime.now(UTC)
+    row.resume_count += 1
+    row.resumed_at = [*row.resumed_at, now.isoformat()]
+    row.last_batch_at = now
+    db.commit()
+    return session_detail(db, row)
+
+
 def complete_session(
     db: Session, user: User, session_id: uuid.UUID, body: CompleteSessionRequest
 ) -> Score:
@@ -448,6 +463,7 @@ def session_detail(db: Session, row: TrainingSession) -> SessionDetailResponse:
         ended_at=row.ended_at,
         sim_version=row.sim_version,
         terrain_revision=row.terrain_revision,
+        resume_count=row.resume_count,
         score=latest_score(db, row.id),
         ended=session_ended(db, row.id),
         is_demo=row.is_demo,

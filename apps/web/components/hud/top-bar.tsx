@@ -73,17 +73,19 @@ function ViewControl() {
   const mainView = useUiStore((s) => s.mainView);
   const set = useUiStore((s) => s.set);
   return (
-    <SegmentedControl<MainView>
-      label="Main view"
-      size="hud"
-      value={mainView}
-      onChange={(v) => set({ mainView: v })}
-      items={[
-        { value: 'TACTICAL', label: 'Map', hint: 'Tactical map · V', testId: 'view-tactical' },
-        { value: 'EO', label: 'Camera', hint: 'EO/IR camera · V', testId: 'view-eo' },
-        { value: 'RADAR', label: 'Radar', hint: 'Wide radar · W', testId: 'view-radar' },
-      ]}
-    />
+    <div data-tour="views">
+      <SegmentedControl<MainView>
+        label="Main view"
+        size="hud"
+        value={mainView}
+        onChange={(v) => set({ mainView: v })}
+        items={[
+          { value: 'TACTICAL', label: 'Map', hint: 'Tactical map · V', testId: 'view-tactical' },
+          { value: 'EO', label: 'Camera', hint: 'EO/IR camera · V', testId: 'view-eo' },
+          { value: 'RADAR', label: 'Radar', hint: 'Wide radar · W', testId: 'view-radar' },
+        ]}
+      />
+    </div>
   );
 }
 

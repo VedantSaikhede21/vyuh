@@ -11,6 +11,7 @@ import { Panel, PanelBody, Skeleton } from '@/components/hud/primitives';
 import { useCommands } from '@/lib/sim/commands';
 import { useSimLoop } from '@/lib/sim/use-sim-loop';
 import { useTrainingSession } from '@/lib/sim/use-training-session';
+import { formatClock } from '@/lib/strings';
 import { useUiStore } from '@/lib/sim/ui-store';
 
 // WebGL only exists in the browser.
@@ -20,7 +21,7 @@ const SimPlayer = dynamic(() => import('@/components/sim/player').then((m) => m.
 });
 
 function Session({ sessionId }: { sessionId: string }) {
-  const { phase, upload, start, finish, recordFrame } = useTrainingSession(sessionId);
+  const { phase, upload, start, resume, finish, recordFrame } = useTrainingSession(sessionId);
   const runtime = phase.kind === 'running' || phase.kind === 'submitting' ? phase.runtime : null;
   const commands = useCommands(runtime);
   // The briefing page created this session with Begin, so it starts straight away
@@ -92,13 +93,46 @@ function Session({ sessionId }: { sessionId: string }) {
           ended={phase.ended}
         />
       );
+    case 'resume':
+      return (
+        <Panel className="mx-auto max-w-xl" data-testid="resume-screen">
+          <PanelBody className="space-y-3 pt-4 text-body">
+            <p className="text-h2 text-text-1">
+              Session interrupted at {formatClock(phase.run.tMs)}
+            </p>
+            <p className="text-text-body">
+              {phase.mode === 'ASSESSMENT'
+                ? 'You can carry on from where it stopped. The resume is shown to your instructor in the replay.'
+                : 'You can carry on from where it stopped.'}
+            </p>
+            {phase.progress === null ? (
+              <div className="flex gap-2">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={() => void resume()}
+                  autoFocus
+                  data-testid="resume-session"
+                >
+                  Resume
+                </Button>
+                <Button asChild variant="secondary" size="lg">
+                  <Link href="/train">Back to scenarios</Link>
+                </Button>
+              </div>
+            ) : (
+              <Skeleton label="Restoring session" progress={phase.progress} className="p-0" />
+            )}
+          </PanelBody>
+        </Panel>
+      );
     case 'interrupted':
       return (
         <Panel className="mx-auto max-w-xl">
           <PanelBody className="space-y-3 pt-4 text-body">
             <p>
-              This session was interrupted (the page was reloaded or closed mid-run) and cannot be
-              resumed.
+              This session was interrupted and cannot be resumed from this browser tab. It ends by
+              itself after 15 minutes without activity.
             </p>
             <Button asChild variant="primary">
               <Link href="/train">Start a new session</Link>

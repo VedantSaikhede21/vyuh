@@ -14,6 +14,7 @@ import {
 import { Panel, PanelHeader } from '@/components/hud/primitives';
 import { STAGE_LABEL } from '@/lib/aar/answers';
 import { UI } from '@/lib/theme/scene-colours';
+import { interaction } from '@/lib/theme/tokens';
 import { cn } from '@/lib/utils';
 
 // Trends and unit charts (DESIGN §11.7): a panel titled with a question, a one-line
@@ -151,10 +152,10 @@ export function SeriesChart({
           <Line
             type={step ? 'stepAfter' : 'linear'}
             dataKey="value"
-            stroke={UI.text1}
+            stroke={interaction.data}
             strokeWidth={1.5}
-            dot={{ r: 2.5, fill: UI.text1, stroke: 'none' }}
-            activeDot={{ r: 4, fill: UI.select, stroke: 'none' }}
+            dot={{ r: 2.5, fill: interaction.data, stroke: 'none' }}
+            activeDot={{ r: 4, fill: interaction['data-strong'], stroke: 'none' }}
             connectNulls
             isAnimationActive={false}
           />

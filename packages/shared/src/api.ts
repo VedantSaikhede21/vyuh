@@ -158,6 +158,8 @@ export const SessionDetailResponse = named(
     simVersion: z.int().min(1).nullable(),
     /** Terrain preset `meta.revision` at session creation; null before Phase 4a. */
     terrainRevision: z.int().min(1).nullable(),
+    /** Times the trainee resumed this run after a reload (shown in the AAR). */
+    resumeCount: z.int().min(0),
     score: Score.nullable(),
     /** Null until the log holds a SESSION_ENDED event. */
     ended: SessionEnded.nullable(),

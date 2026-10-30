@@ -127,6 +127,8 @@ export const api = {
       method: 'POST',
       body: { batchSeq, events },
     }),
+  resumeSession: (sessionId: string) =>
+    apiFetch(`/sessions/${sessionId}/resume`, SessionDetailResponse, { method: 'POST' }),
   completeSession: (sessionId: string, endTMs: number, clientMeta: ClientMeta) =>
     apiFetch(`/sessions/${sessionId}/complete`, Score, {
       method: 'POST',

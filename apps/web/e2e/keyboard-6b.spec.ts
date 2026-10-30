@@ -93,6 +93,7 @@ test('trainee screens @keyboard', async ({ page }) => {
   expect(train[0]!.name).toContain('Skip to content');
 
   await openBriefing(page, 'S06');
+  await page.getByTestId('briefing-view-map').click();
   await expect(page.getByTestId('coverage-status')).toHaveText(/^LOS coverage ·/, {
     timeout: 120_000,
   });

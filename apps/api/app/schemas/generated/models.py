@@ -2005,6 +2005,7 @@ class SessionDetailResponse(BaseModel):
     ended_at: Annotated[AwareDatetime | None, Field(alias="endedAt")]
     sim_version: Annotated[SimVersion | None, Field(alias="simVersion")]
     terrain_revision: Annotated[TerrainRevision | None, Field(alias="terrainRevision")]
+    resume_count: Annotated[int, Field(alias="resumeCount", ge=0, le=9007199254740991)]
     score: Score | None
     ended: SessionEnded | None
     is_demo: Annotated[bool, Field(alias="isDemo")]

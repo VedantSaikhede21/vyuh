@@ -53,6 +53,14 @@ def append_events(
     return sessions.ingest_batch(db, user, session_id, body)
 
 
+@router.post(
+    "/{session_id}/resume", response_model=SessionDetailResponse, response_model_exclude_unset=True
+)
+def resume_session(session_id: uuid.UUID, user: CurrentUser, db: DbDep) -> SessionDetailResponse:
+    """Count a resume after a reload; the client rebuilds the run from its own copy."""
+    return sessions.resume_session(db, user, session_id)
+
+
 @router.post("/{session_id}/complete", response_model=Score, response_model_exclude_unset=True)
 def complete_session(
     session_id: uuid.UUID, body: CompleteSessionRequest, user: CurrentUser, db: DbDep

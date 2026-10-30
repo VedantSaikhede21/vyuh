@@ -32,6 +32,17 @@ export interface BatcherOptions {
   heartbeatMs?: number;
   backoffMs?: readonly number[];
   onStatus?: (status: BatcherStatus) => void;
+  /** Called when a batch is formed, before it is sent (session resume). */
+  onFormed?: (position: BatcherPosition) => void;
+  /** Continue a run after a reload from its saved position. */
+  restore?: BatcherPosition;
+}
+
+/** Where the upload stands. A formed batch resends with the same seq and content. */
+export interface BatcherPosition {
+  nextBatchSeq: number;
+  sentUpTo: number;
+  formedUpTo: number;
 }
 
 export interface BatcherStatus {
@@ -57,7 +68,27 @@ export class EventBatcher {
   /** Wall time of the last successful send (or of start). */
   private lastSentAt = 0;
 
-  constructor(private readonly opts: BatcherOptions) {}
+  constructor(private readonly opts: BatcherOptions) {
+    const r = opts.restore;
+    if (!r) return;
+    this.nextBatchSeq = r.nextBatchSeq;
+    this.sentUpTo = r.sentUpTo;
+    this.formedUpTo = r.formedUpTo;
+    if (r.formedUpTo > r.sentUpTo) {
+      this.current = {
+        seq: r.nextBatchSeq - 1,
+        events: opts.getEvents().slice(r.sentUpTo, r.formedUpTo),
+      };
+    }
+  }
+
+  get position(): BatcherPosition {
+    return {
+      nextBatchSeq: this.nextBatchSeq,
+      sentUpTo: this.sentUpTo,
+      formedUpTo: this.formedUpTo,
+    };
+  }
 
   start(): void {
     this.stopped = false;
@@ -123,6 +154,7 @@ export class EventBatcher {
       const events = all.slice(this.formedUpTo, this.formedUpTo + MAX_EVENTS_PER_BATCH);
       this.current = { seq: this.nextBatchSeq++, events };
       this.formedUpTo += events.length;
+      this.opts.onFormed?.(this.position);
     }
     return this.sendCurrent();
   }

@@ -13,6 +13,7 @@ import type {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SIM_VERSION } from '@vyuh/sim-core';
+import { HeroBand } from '@/components/layout/hero';
 import { useEffect, useState } from 'react';
 import {
   AffiliationSymbol,
@@ -191,77 +192,84 @@ export function ResultScreen({
     // Revealed once, as one block, when the score arrives (§7: no stagger, no count-up).
     <div className="animate-fade-in-slow space-y-4" data-testid="result-screen">
       <GuidedTour id="result" auto={isGuest(user?.role)} />
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="space-y-1">
-          <p className="text-label">Debrief · {mode.toLowerCase()}</p>
-          <h1 className="text-h1">{scenarioName}</h1>
-          {ended && (
-            <p className="text-small text-text-2" data-testid="result-ended">
-              {END_LABEL[ended.reason]} at{' '}
-              <span className="font-mono tnum">{formatClock(ended.tMs)}</span>
+      <HeroBand
+        code={current?.code}
+        preset={current?.terrainPreset}
+        className="min-h-[220px]"
+        data-testid="result-hero"
+      >
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <div className="space-y-1">
+            <p className="text-body text-text-1">Debrief · {mode.toLowerCase()}</p>
+            <h1 className="text-display text-text-1 [overflow-wrap:anywhere]">{scenarioName}</h1>
+            {ended && (
+              <p className="text-small text-text-1" data-testid="result-ended">
+                {END_LABEL[ended.reason]} at{' '}
+                <span className="font-mono tnum">{formatClock(ended.tMs)}</span>
+              </p>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="ghost" asChild>
+              <Link href="/train">Back to training</Link>
+            </Button>
+            {gate && !gate.ok ? (
+              <>
+                <Tooltip content={`${REPLAY_FALLBACK_TEXT} ${gate.why}`} align="end">
+                  <Button disabled data-testid="open-replay">
+                    Replay (AAR)
+                  </Button>
+                </Tooltip>
+                <Button variant="ghost" asChild data-testid="open-timeline">
+                  <Link href={`/aar/session/${sessionId}`}>Event timeline</Link>
+                </Button>
+              </>
+            ) : (
+              <Button asChild data-testid="open-replay">
+                <Link href={`/aar/session/${sessionId}`}>Replay (AAR)</Link>
+              </Button>
+            )}
+            <Button
+              variant={primary === 'retry' ? 'primary' : 'secondary'}
+              disabled={busy !== null || !scenarioId}
+              onClick={() => void start('retry', scenarioId)}
+              data-testid="retry"
+            >
+              {busy === 'retry' ? 'Starting…' : 'Retry same seed'}
+            </Button>
+            <Button
+              variant={primary === 'next' ? 'primary' : 'secondary'}
+              data-testid="next"
+              disabled={busy !== null || !next}
+              onClick={() => {
+                // Next opens that scenario's briefing (plan answer 9); retry starts directly.
+                if (!next) return;
+                setBusy('next');
+                router.push(`/train/scenario/${next.id}`);
+              }}
+              title={next ? undefined : 'No other scenario in the library'}
+            >
+              {busy === 'next'
+                ? 'Opening briefing…'
+                : next
+                  ? `Next · ${[next.code, next.name].filter(Boolean).join(' ')}`
+                  : 'Next scenario'}
+            </Button>
+          </div>
+          {primary === 'retry' && (
+            <p className="basis-full text-right text-small text-text-1" data-testid="drill-hint">
+              Retry, then work through the{' '}
+              <a
+                href="#debrief"
+                className="underline decoration-line-2 underline-offset-2 hover:text-text-1"
+              >
+                drill in the debrief
+              </a>
+              .
             </p>
           )}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="ghost" asChild>
-            <Link href="/train">Back to training</Link>
-          </Button>
-          {gate && !gate.ok ? (
-            <>
-              <Tooltip content={`${REPLAY_FALLBACK_TEXT} ${gate.why}`} align="end">
-                <Button disabled data-testid="open-replay">
-                  Replay (AAR)
-                </Button>
-              </Tooltip>
-              <Button variant="ghost" asChild data-testid="open-timeline">
-                <Link href={`/aar/session/${sessionId}`}>Event timeline</Link>
-              </Button>
-            </>
-          ) : (
-            <Button asChild data-testid="open-replay">
-              <Link href={`/aar/session/${sessionId}`}>Replay (AAR)</Link>
-            </Button>
-          )}
-          <Button
-            variant={primary === 'retry' ? 'primary' : 'secondary'}
-            disabled={busy !== null || !scenarioId}
-            onClick={() => void start('retry', scenarioId)}
-            data-testid="retry"
-          >
-            {busy === 'retry' ? 'Starting…' : 'Retry same seed'}
-          </Button>
-          <Button
-            variant={primary === 'next' ? 'primary' : 'secondary'}
-            data-testid="next"
-            disabled={busy !== null || !next}
-            onClick={() => {
-              // Next opens that scenario's briefing (plan answer 9); retry starts directly.
-              if (!next) return;
-              setBusy('next');
-              router.push(`/train/scenario/${next.id}`);
-            }}
-            title={next ? undefined : 'No other scenario in the library'}
-          >
-            {busy === 'next'
-              ? 'Opening briefing…'
-              : next
-                ? `Next · ${[next.code, next.name].filter(Boolean).join(' ')}`
-                : 'Next scenario'}
-          </Button>
-        </div>
-        {primary === 'retry' && (
-          <p className="basis-full text-right text-small text-text-2" data-testid="drill-hint">
-            Retry, then work through the{' '}
-            <a
-              href="#debrief"
-              className="underline decoration-line-2 underline-offset-2 hover:text-text-1"
-            >
-              drill in the debrief
-            </a>
-            .
-          </p>
-        )}
-      </header>
+        </header>
+      </HeroBand>
       {error && <StatusNotice tone="error" title={`Could not start the session: ${error}`} />}
 
       {/* Story order (audit, plan 6B): score → debrief (went well, mistakes, drill)
@@ -272,13 +280,13 @@ export function ResultScreen({
         </PanelHeader>
         <PanelBody className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div className="flex flex-wrap content-start items-end gap-8">
-            <Readout
-              label="Total"
-              value={<span data-testid="score-total">{shown.total}</span>}
-              unit="/ 100"
-              size="lg"
-              flash={false}
-            />
+            <div>
+              <p className="text-figure-xl text-text-1">
+                <span data-testid="score-total">{shown.total}</span>
+                <span className="ml-2 text-h2 font-normal text-text-2">/ 100</span>
+              </p>
+              <p className="text-label">Total</p>
+            </div>
             {score.recommendedDifficulty !== undefined && (
               <div className="flex flex-col gap-1">
                 <span className="text-label">Recommended next difficulty</span>
