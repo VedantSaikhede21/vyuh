@@ -135,13 +135,13 @@ export function terrainMaterial(opts: TerrainMaterialOptions): {
         `#include <aomap_fragment>
         #ifdef USE_T_AO
           float tAo = texture2D(uAoMap, tUv).r;
-          tAo = mix(1.0, tAo * tAo, uBlend);
+          tAo = mix(1.0, 0.25 + 0.75 * tAo, uBlend);
           reflectedLight.indirectDiffuse *= tAo;
           reflectedLight.directDiffuse *= mix(1.0, tAo, 0.35);
         #endif
         if (uShadowOn > 0.0) {
           float tShadow = texture2D(uShadowMap, tUv).r;
-          reflectedLight.directDiffuse *= mix(1.0, tShadow, uShadowOn * uBlend);
+          reflectedLight.directDiffuse *= mix(1.0, 0.2 + 0.8 * tShadow, uShadowOn * uBlend);
         }`,
       )
       .replace(

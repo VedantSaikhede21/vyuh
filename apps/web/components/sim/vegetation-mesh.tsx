@@ -118,7 +118,7 @@ function loadTrees(world: World): Promise<TreeTile[]> {
 }
 
 const GEOMETRY = coniferGeometry();
-const MATERIAL = new MeshLambertMaterial({ color: GROUND.conifer, flatShading: true });
+const MATERIAL = new MeshLambertMaterial({ flatShading: true });
 const SHADE_LOW = new Color(GROUND.coniferDark);
 const SHADE_HIGH = new Color(GROUND.conifer);
 

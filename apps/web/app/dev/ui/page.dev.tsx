@@ -164,14 +164,14 @@ export default function DesignGallery() {
         <h2 className="text-panel-title">Shell (§11.0) · trainee, instructor</h2>
         <div className="border border-line-1">
           <ShellTopBar
-            user={{ name: 'Trainee 1', role: 'TRAINEE' }}
+            user={{ id: 'demo-user', name: 'Trainee 1', role: 'TRAINEE' }}
             path="/aar/trends"
             onSignOut={() => undefined}
           />
         </div>
         <div className="border border-line-1">
           <ShellTopBar
-            user={{ name: 'Instructor (demo)', role: 'INSTRUCTOR' }}
+            user={{ id: 'demo-user', name: 'Instructor (demo)', role: 'INSTRUCTOR' }}
             path="/instructor/text"
             onSignOut={() => undefined}
           />

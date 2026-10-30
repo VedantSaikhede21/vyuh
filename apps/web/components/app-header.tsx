@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useSyncExternalStore } from 'react';
 import { DemoPathStrip } from '@/components/demo-path';
-import { StateChip } from '@/components/hud/primitives';
+import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Menu, type MenuItem } from '@/components/ui/menu';
 import { useAuth } from '@/lib/auth';
@@ -15,7 +15,7 @@ import { PUBLIC_PATHS, ROLE_LABEL, homeHref, isActive, isGuest, isStaff, navFor 
 import { unreadLabel, useNoticeStore } from '@/lib/notices';
 import { cn } from '@/lib/utils';
 
-const WORDMARK = 'text-h2 tracking-[0.2em] text-text-1';
+const WORDMARK = 'font-sans text-[19px] leading-6 font-semibold tracking-[0.18em] text-text-1';
 
 // Local wall-clock time, HH:MM, as an external store: the server renders
 // nothing, the client re-reads every 30 s.
@@ -47,7 +47,7 @@ export function ShellTopBar({
   onSignOut,
   unread = null,
 }: {
-  user: { name: string; role: UserRole };
+  user: { id: string; name: string; role: UserRole };
   path: string;
   onSignOut: () => void;
   /** Unread notices; null until known (nothing is shown). */
@@ -55,6 +55,8 @@ export function ShellTopBar({
 }) {
   const staff = isStaff(user.role);
   const items: MenuItem[] = [
+    { kind: 'heading', label: `${user.name} · ${ROLE_LABEL[user.role]}`, testId: 'shell-role' },
+    { kind: 'separator' },
     { kind: 'link', label: 'Settings', href: '/settings', testId: 'menu-settings' },
     { kind: 'link', label: 'Help & controls', href: '/help', testId: 'menu-help' },
     ...(staff
@@ -71,11 +73,8 @@ export function ShellTopBar({
     { kind: 'action', label: 'Sign out', onSelect: onSignOut, testId: 'menu-sign-out' },
   ];
   return (
-    <header
-      className="relative z-10 border-b border-line-1 bg-bg-1 print:hidden"
-      data-testid="shell-top-bar"
-    >
-      <div className="mx-auto flex h-12 max-w-[1280px] items-stretch gap-6 px-4">
+    <header className="relative z-10 bg-bg-0 print:hidden" data-testid="shell-top-bar">
+      <div className="mx-auto flex h-14 max-w-[1280px] items-stretch gap-8 px-6 min-[1600px]:max-w-[1440px] min-[1600px]:px-12">
         <Link
           href={homeHref(user.role)}
           className={cn(WORDMARK, 'self-center')}
@@ -94,9 +93,9 @@ export function ShellTopBar({
                     aria-current={on ? 'page' : undefined}
                     data-testid={`nav-${it.id}`}
                     className={cn(
-                      'flex items-center border-b-2 pt-0.5 text-panel-title transition-colors duration-150 ease-ui focus-visible:outline-offset-0',
+                      'flex items-center border-b-2 pt-0.5 text-panel-title font-medium transition-colors duration-150 ease-ui focus-visible:outline-offset-0',
                       on
-                        ? 'border-select text-text-1'
+                        ? 'border-data text-text-1'
                         : 'border-transparent text-text-2 hover:text-text-1',
                     )}
                   >
@@ -108,9 +107,6 @@ export function ShellTopBar({
           </ul>
         </nav>
         <div className="ml-auto flex items-center gap-4">
-          <StateChip tone="neutral" data-testid="shell-role">
-            {ROLE_LABEL[user.role]}
-          </StateChip>
           {unread !== null && (
             <Link
               href="/notices"
@@ -118,12 +114,12 @@ export function ShellTopBar({
               aria-label={unread > 0 ? `Notices: ${unread} unread` : 'Notices: none unread'}
               aria-current={path === '/notices' ? 'page' : undefined}
               className={cn(
-                'flex h-8 items-center gap-1.5 rounded-sm border border-transparent px-2 text-panel-title transition-colors duration-150 ease-ui hover:border-line-2 hover:bg-bg-2',
+                'flex h-9 items-center gap-1.5 rounded-sm px-2 text-panel-title font-medium transition-colors duration-150 ease-ui hover:bg-bg-2',
                 path === '/notices' ? 'text-text-1' : 'text-text-2 hover:text-text-1',
               )}
             >
-              <Bell aria-hidden size={16} strokeWidth={1.5} />
-              Notices
+              <Bell aria-hidden size={18} strokeWidth={1.5} />
+              <span className="sr-only">Notices</span>
               {unread > 0 && (
                 <span className="text-readout text-text-1" data-testid="shell-unread">
                   {unreadLabel(unread)}
@@ -135,15 +131,16 @@ export function ShellTopBar({
           <Menu
             label={
               <>
-                <span className="max-w-40 truncate" data-testid="user-menu-name">
+                <Avatar name={user.name} id={user.id} />
+                <span className="sr-only" data-testid="user-menu-name">
                   {user.name}
                 </span>
-                <ChevronDown aria-hidden size={16} strokeWidth={1.5} />
+                <ChevronDown aria-hidden size={16} strokeWidth={1.5} className="text-text-2" />
               </>
             }
             aria-label={`Account: ${user.name}`}
             buttonTestId="user-menu"
-            buttonClassName="flex h-8 items-center gap-1 rounded-sm border border-transparent px-2 text-body text-text-1 transition-colors duration-150 ease-ui hover:border-line-2 hover:bg-bg-2 aria-expanded:border-line-2 aria-expanded:bg-bg-2"
+            buttonClassName="flex h-10 items-center gap-1 rounded-full px-1 text-body text-text-1 transition-colors duration-150 ease-ui hover:bg-bg-2 aria-expanded:bg-bg-2"
             items={items}
           />
         </div>
@@ -153,7 +150,7 @@ export function ShellTopBar({
 }
 
 const PUBLIC_LINK =
-  'flex min-h-11 items-center text-panel-title text-text-2 transition-colors duration-150 ease-ui hover:text-text-1 md:min-h-0';
+  'flex min-h-11 items-center text-panel-title font-medium text-text-2 transition-colors duration-150 ease-ui hover:text-text-1 md:min-h-0';
 
 /**
  * Public pages (landing, login, sources, status, guest entry): wordmark, two
@@ -171,8 +168,8 @@ function PublicHeader() {
       <Link href="/login">Sign in</Link>
     );
   return (
-    <header className="relative z-10 border-b border-line-1 bg-bg-1" data-testid="public-header">
-      <div className="mx-auto flex min-h-12 max-w-[1280px] flex-wrap items-center gap-x-6 px-4">
+    <header className="relative z-10 bg-bg-0" data-testid="public-header">
+      <div className="mx-auto flex min-h-14 max-w-[1280px] flex-wrap items-center gap-x-8 px-6 min-[1600px]:max-w-[1440px] min-[1600px]:px-12">
         <Link href="/" className={cn(WORDMARK, 'flex min-h-11 items-center md:min-h-0')}>
           VYUH
         </Link>

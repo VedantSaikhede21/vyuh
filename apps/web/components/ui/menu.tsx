@@ -8,6 +8,7 @@ import { rovingIndex } from './tabs';
 export type MenuItem =
   | { kind: 'link'; label: ReactNode; href: string; testId?: string }
   | { kind: 'action'; label: ReactNode; onSelect: () => void; testId?: string }
+  | { kind: 'heading'; label: ReactNode; testId?: string }
   | { kind: 'separator' };
 
 /**
@@ -42,7 +43,9 @@ export function Menu({
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const itemRefs = useRef<(HTMLElement | null)[]>([]);
-  const focusable = items.flatMap((it, i) => (it.kind === 'separator' ? [] : [i]));
+  const focusable = items.flatMap((it, i) =>
+    it.kind === 'separator' || it.kind === 'heading' ? [] : [i],
+  );
 
   useEffect(() => {
     if (!open) {
@@ -119,6 +122,17 @@ export function Menu({
           {items.map((it, i) => {
             if (it.kind === 'separator')
               return <div key={i} role="separator" className="my-1 border-t border-line-1" />;
+            if (it.kind === 'heading')
+              return (
+                <div
+                  key={i}
+                  role="presentation"
+                  data-testid={it.testId}
+                  className="max-w-64 truncate px-3 py-1.5 text-small text-text-2"
+                >
+                  {it.label}
+                </div>
+              );
             const ref = (el: HTMLElement | null) => {
               itemRefs.current[i] = el;
             };

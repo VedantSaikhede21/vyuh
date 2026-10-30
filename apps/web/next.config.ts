@@ -34,9 +34,13 @@ const nextConfig: NextConfig = {
     const cache = [
       { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
     ];
-    return ['/terrain/:path*', '/signatures/:path*', '/landing/:path*', '/models/:path*'].map(
-      (source) => ({ source, headers: cache }),
-    );
+    return [
+      '/terrain/:path*',
+      '/signatures/:path*',
+      '/landing/:path*',
+      '/models/:path*',
+      '/renders/:path*',
+    ].map((source) => ({ source, headers: cache }));
   },
 };
 

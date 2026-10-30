@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run",
     "gen:tokens": "node scripts/gen-tokens.ts",
+    "render:stills": "node scripts/render-stills.ts",
     "e2e": "playwright test --grep-invert \"@fps|@checkpoint|@capture|@breakui\"",
     "e2e:update": "playwright test --grep-invert \"@fps|@checkpoint|@capture|@breakui\" --update-snapshots",
     "e2e:fps": "playwright test --grep @fps --grep-invert @fps150",

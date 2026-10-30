@@ -29,11 +29,8 @@ export function DemoPathStrip({ userId, path }: { userId: string; path: string }
   const next = nextStep(state);
   const at = next ? DEMO_STEPS.findIndex((s) => s.id === next) : DEMO_STEPS.length;
   return (
-    <div
-      className="relative z-10 border-b border-line-1 bg-bg-1 print:hidden"
-      data-testid="demo-path"
-    >
-      <div className="mx-auto flex h-9 max-w-[1280px] items-center gap-4 px-4">
+    <div className="relative z-10 bg-bg-1 print:hidden" data-testid="demo-path">
+      <div className="mx-auto flex h-10 max-w-[1280px] items-center gap-4 px-6 min-[1600px]:max-w-[1440px] min-[1600px]:px-12">
         <span className="text-label text-text-2">Demo</span>
         <ol aria-label="Demo path" className="hidden min-w-0 flex-1 items-center gap-4 xl:flex">
           {DEMO_STEPS.map((s, i) => {
@@ -44,11 +41,11 @@ export function DemoPathStrip({ userId, path }: { userId: string; path: string }
                 key={s.id}
                 aria-current={current ? 'step' : undefined}
                 className={cn(
-                  'flex h-9 items-center gap-1.5 border-b-2 text-small whitespace-nowrap',
-                  current ? 'border-select text-text-1' : 'border-transparent text-text-2',
+                  'flex h-10 items-center gap-1.5 border-b-2 text-small whitespace-nowrap',
+                  current ? 'border-data text-text-1' : 'border-transparent text-text-2',
                 )}
               >
-                <span className="text-meta">{String(i + 1).padStart(2, '0')}</span>
+                <span className="tnum">{i + 1}</span>
                 {s.label}
                 {done && (
                   <>

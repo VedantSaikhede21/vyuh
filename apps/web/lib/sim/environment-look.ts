@@ -99,7 +99,7 @@ export function environmentLook(env: SimEnvironment, variant: EnvironmentVariant
     sunIntensity: mapLight ? TACTICAL_MAP_LIGHT : sunIntensity,
     hemiSky: HEMI_SKY_NIGHT.clone().lerp(HEMI_SKY_DAY, ambient),
     hemiGround: HEMI_GROUND_NIGHT.clone().lerp(HEMI_GROUND_DAY, ambient),
-    hemiIntensity: Math.max(0.04, 0.9 * ambient),
+    hemiIntensity: Math.max(0.04, (variant === 'tactical' ? 1.25 : 0.9) * ambient),
     background: skyHorizon.clone(),
     skyZenith,
     skyHorizon,

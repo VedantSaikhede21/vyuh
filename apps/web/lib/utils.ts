@@ -3,9 +3,13 @@ import { extendTailwindMerge } from 'tailwind-merge';
 
 /** DESIGN §4 type roles (utilities in app/globals.css). */
 export const TYPE_ROLES = [
+  'statement',
   'display',
+  'figure-xl',
+  'figure-l',
   'h1',
   'h2',
+  'h3',
   'panel-title',
   'label',
   'body',

@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       lang="en"
       className={`dark ${archivo.variable} ${plexMono.variable}`}
     >
-      <body className="min-h-screen">
+      <body className="min-h-screen overflow-x-clip">
         <SkipLink />
         <MotionAttribute />
         <AuthProvider>
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <main
             id="main"
             tabIndex={-1}
-            className="mx-auto w-full max-w-[1280px] px-4 py-6 outline-none"
+            className="mx-auto w-full max-w-[1280px] px-6 py-6 outline-none min-[1600px]:max-w-[1440px] min-[1600px]:px-12"
           >
             {children}
           </main>
