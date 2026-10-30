@@ -22,6 +22,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint:ts
+      - run: pnpm --filter @vyuh/web gen:tokens --check
       - run: pnpm test
 
   python:

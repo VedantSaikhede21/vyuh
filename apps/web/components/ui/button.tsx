@@ -3,16 +3,16 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import type { ComponentProps } from 'react';
 import { cn } from '@/lib/utils';
 
-// DESIGN §2/§5/§9/§12: flat, 1 px border, radius 2 px, Condensed UPPER label.
-// Sizes: hud 28 px and sm 32 px for the dense HUD, md 36 px for primary actions
-// elsewhere. Pressed = 1 px downward offset. Disabled never uses opacity: every
+// DESIGN §5/§9/§12: filled surfaces, radius from the scale (2 px in the HUD).
+// Sizes: hud 28 px and sm 32 px for dense places, md 36 px, lg 40 px for the one
+// primary action. Pressed = 1 px downward offset. Disabled never uses opacity: every
 // variant falls back to the same bg-1 / line-1 / text-2 look (DESIGN §9), so a
 // disabled danger control is not drawn in --crit (audit P1-4) and a disabled
 // primary is not a muddy bone block (P1-10). `loading` sets aria-busy and blocks
 // clicks; the caller's label says what is happening ("Starting…").
 const buttonVariants = cva(
   [
-    'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-sm border text-panel-title',
+    'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-sm border border-transparent text-panel-title',
     'transition-[background-color,border-color,color,transform] duration-150 ease-ui',
     'enabled:active:translate-y-px aria-busy:cursor-progress',
     'disabled:cursor-not-allowed disabled:border-line-1 disabled:bg-bg-1 disabled:text-text-2',
@@ -20,16 +20,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary:
-          'border-primary-bg bg-primary-bg text-primary-fg hover:border-select hover:bg-select',
-        secondary: 'border-line-2 bg-bg-2 text-text-1 hover:border-text-2 hover:bg-bg-3',
-        ghost: 'border-transparent bg-transparent text-text-2 hover:bg-bg-2 hover:text-text-1',
+        primary: 'bg-primary-bg text-primary-fg hover:bg-primary-hover active:bg-primary-pressed',
+        secondary:
+          'bg-bg-3 text-text-1 hover:bg-bg-4 hud:border-line-2 hud:bg-bg-2 hud:hover:border-text-2 hud:hover:bg-bg-3',
+        ghost: 'bg-transparent text-text-2 hover:bg-bg-2 hover:text-text-1',
         danger: 'border-crit bg-transparent text-crit hover:bg-bg-3',
       },
       size: {
         hud: 'h-7 px-2',
         sm: 'h-8 px-3',
         md: 'h-9 px-4',
+        lg: 'h-10 px-5',
       },
     },
     defaultVariants: { variant: 'secondary', size: 'md' },

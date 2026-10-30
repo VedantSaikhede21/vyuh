@@ -87,7 +87,7 @@ const SWATCH: Record<string, string> = {
 };
 
 const TYPE: [string, string, string][] = [
-  ['text-display-xl', 'Display XL 44–96', 'Detect. Decide.'],
+  ['text-statement', 'Display XL 44–96', 'Detect. Decide.'],
   ['text-display', 'Display 40/44', 'Counter-drone training'],
   ['text-h1', 'H1 24/30', 'Training'],
   ['text-h2', 'H2 18/24', 'Kill-chain breakdown'],

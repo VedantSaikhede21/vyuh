@@ -34,7 +34,7 @@ export function Skeleton({
         {/* Determinate: scaleX, not width, so the fill stays on the compositor (§7 progress). */}
         <div
           className={cn(
-            'h-full bg-text-2',
+            'h-full bg-data hud:bg-text-2',
             pct === null
               ? 'w-1/4 motion-safe:animate-pulse'
               : 'w-full origin-left transition-transform duration-150 ease-ui',

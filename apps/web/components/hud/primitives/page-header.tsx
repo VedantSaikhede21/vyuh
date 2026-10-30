@@ -12,7 +12,7 @@ export interface Crumb {
 export function Breadcrumbs({ items, className }: { items: readonly Crumb[]; className?: string }) {
   return (
     <nav aria-label="Breadcrumb" className={className}>
-      <ol className="flex min-w-0 flex-wrap items-center text-meta">
+      <ol className="flex min-w-0 flex-wrap items-center text-small text-text-2">
         {items.map((c, i) => {
           const last = i === items.length - 1;
           return (
@@ -56,14 +56,9 @@ export interface Fact {
  */
 export function FactStrip({ facts, className }: { facts: readonly Fact[]; className?: string }) {
   return (
-    <dl
-      className={cn(
-        'grid auto-cols-fr grid-flow-col gap-px border border-line-1 bg-line-1',
-        className,
-      )}
-    >
+    <dl className={cn('grid auto-cols-fr grid-flow-col gap-2', className)}>
       {facts.map((f) => (
-        <div key={f.label} className="flex min-w-0 flex-col gap-1 bg-bg-1 px-3 py-2">
+        <div key={f.label} className="flex min-w-0 flex-col gap-1 rounded-md bg-bg-1 px-4 py-2.5">
           <dt className="text-label truncate">{f.label}</dt>
           <dd
             className={cn(
@@ -105,16 +100,13 @@ export function PageHeader({
 }) {
   return (
     <header
-      className={cn(
-        'grid items-end gap-x-6 gap-y-3 border-b border-line-1 pb-4 lg:grid-cols-[minmax(0,1fr)_auto]',
-        className,
-      )}
+      className={cn('grid items-end gap-x-6 gap-y-3 lg:grid-cols-[minmax(0,1fr)_auto]', className)}
     >
       <div className="min-w-0 space-y-1">
         {crumbs ? (
           <Breadcrumbs items={crumbs} />
         ) : (
-          reference && <p className="text-meta">{reference}</p>
+          reference && <p className="text-small text-text-2">{reference}</p>
         )}
         <h1 className="text-h1 text-text-1">{title}</h1>
         {context && <p className="max-w-prose-ui text-body text-text-body">{context}</p>}

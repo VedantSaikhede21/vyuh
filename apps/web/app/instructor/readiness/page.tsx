@@ -120,7 +120,9 @@ function Board({ d }: { d: ReadinessResponse }) {
 
 function Readiness() {
   const scope = useUnitScope();
-  const board = useApiData(scope.unitId, (signal) => api.readiness(scope.unitId!, signal));
+  const board = useApiData(scope.unitId ? `readiness:${scope.unitId}` : null, (signal) =>
+    api.readiness(scope.unitId!, signal),
+  );
   const d = board.data && board.data.unit.id === scope.unitId ? board.data : null;
   const error = scope.error ?? board.error;
   return (

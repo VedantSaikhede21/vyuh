@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 // Static label with a tone. Status tones only; affiliation is shown with
 // AffiliationSymbol (shape + letter), never as a coloured badge.
 const badgeVariants = cva(
-  'inline-flex h-5 items-center gap-1 rounded-sm border px-1.5 text-label leading-none',
+  'inline-flex h-6 items-center gap-1 rounded-full border px-2.5 text-label leading-none hud:h-5 hud:rounded-sm hud:px-1.5',
   {
     variants: {
       tone: {

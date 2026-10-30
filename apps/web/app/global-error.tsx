@@ -1,6 +1,6 @@
 'use client';
 
-import { plexCondensed, plexMono, plexSans } from './fonts';
+import { archivo, plexMono } from './fonts';
 import './globals.css';
 
 // Last-resort boundary when the root layout itself fails: replaces the whole
@@ -15,7 +15,7 @@ export default function GlobalError({
   return (
     <html
       lang="en"
-      className={`dark ${plexSans.variable} ${plexCondensed.variable} ${plexMono.variable}`}
+      className={`dark ${archivo.variable} ${plexMono.variable}`}
     >
       <body className="min-h-screen">
         <main className="mx-auto w-full max-w-md space-y-3 px-6 py-16">

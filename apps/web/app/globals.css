@@ -1,50 +1,72 @@
 @import 'tailwindcss';
 
+@import './tokens.generated.css';
+
+/* Console look inside the sim player and AAR replay (DESIGN §4). */
+@custom-variant hud (&:where([data-ui='hud'] *));
+
 /*
- * VYUH design tokens — docs/DESIGN.md §3–§7 (binding).
- * Colour is information: monochrome chrome; colour only for affiliation,
- * status and the single cue accent. Components use these tokens through
- * Tailwind (bg-bg-1, text-text-2, border-line-1, text-aff-hostile …); raw hex
- * is allowed only here and in lib/theme/scene-colours.ts (decision 62).
+ * VYUH design tokens: docs/DESIGN.md §3–§7 (binding). Colours and motion come
+ * from lib/theme/tokens.ts through tokens.generated.css (decision 164). Colour is
+ * information: it lives on data, affiliation, status and the one primary action.
+ * Components use these through Tailwind (bg-bg-1, text-text-2 …); raw hex is
+ * allowed only in lib/theme/.
+ *
+ * Two scales share one set of utilities. The app scale is the default;
+ * [data-ui='hud'] (sim player, AAR replay) switches to the dense console scale:
+ * small uppercase labels, 2 px radius, white focus (DESIGN §4).
  */
 
 :root {
-  /* 3.1 surfaces & text */
-  --bg-0: #0a0d0c;
-  --bg-1: #101513;
-  --bg-2: #161d1a;
-  --bg-3: #1e2723;
-  --line-1: #26312c;
-  --line-2: #34423b;
-  --text-1: #dce4df;
-  --text-body: #c3cec8; /* long descriptions (Phase 6 amendment 3) */
-  --text-2: #9aa9a1;
-  /* non-text only: borders, dividers, inactive marks — fails 4.5:1 for words */
-  --text-3: #627069;
+  --fs-h1: 32px;
+  --lh-h1: 38px;
+  --fw-h1: 650;
+  --fs-h2: 22px;
+  --lh-h2: 28px;
+  --fs-h3: 17px;
+  --lh-h3: 24px;
+  --fs-title: 15px;
+  --lh-title: 20px;
+  --fs-label: 13px;
+  --lh-label: 16px;
+  --fs-body: 16px;
+  --lh-body: 25px;
+  --fs-small: 13px;
+  --lh-small: 19px;
+  --caps: none;
+  --caps-track: 0;
+  --stretch-label: 100%;
+  --r-control: 6px;
+  --r-surface: 8px;
+  --r-hero: 12px;
+  --focus: var(--data);
+}
 
-  /* 3.2 interaction */
-  --select: #f2f5f3;
-  --cue: #d46bc8;
-  --primary-bg: #e7e2d3;
-  --primary-fg: #0a0d0c;
-
-  /* 3.3 affiliation — always paired with shape + letter */
-  --aff-hostile: #ff6b6b;
-  --aff-friendly: #5cc8ff;
-  --aff-neutral: #6fd08c;
-  --aff-unknown: #f2d45c;
-
-  /* 3.4 status */
-  --ok: #6fd08c;
-  --warn: #f0a94b;
-  --crit: #ff5a5f;
-  --info: #9aa9a1;
-
-  /* §5 overlay shadow (menus, modals, tooltips only) */
-  --shadow-overlay: 0 8px 24px rgba(0, 0, 0, 0.5);
-
-  /* §7 motion */
-  --ease-ui: cubic-bezier(0.2, 0, 0, 1);
+[data-ui='hud'] {
+  --fs-h1: 24px;
+  --lh-h1: 30px;
+  --fw-h1: 600;
+  --fs-h2: 18px;
+  --lh-h2: 24px;
+  --fs-h3: 14px;
+  --lh-h3: 20px;
+  --fs-title: 12px;
+  --lh-title: 16px;
+  --fs-label: 11px;
+  --lh-label: 14px;
+  --fs-body: 14px;
+  --lh-body: 21px;
+  --fs-small: 12px;
+  --lh-small: 17px;
+  --caps: uppercase;
+  --caps-track: 0.06em;
+  --stretch-label: 80%;
+  --r-control: 2px;
+  --r-surface: 2px;
+  --r-hero: 4px;
+  --focus: var(--select);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
 }
 
 @theme inline {
@@ -55,6 +77,7 @@
   --color-bg-1: var(--bg-1);
   --color-bg-2: var(--bg-2);
   --color-bg-3: var(--bg-3);
+  --color-bg-4: var(--bg-4);
   --color-line-1: var(--line-1);
   --color-line-2: var(--line-2);
   --color-text-1: var(--text-1);
@@ -64,7 +87,14 @@
   --color-select: var(--select);
   --color-cue: var(--cue);
   --color-primary-bg: var(--primary-bg);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-pressed: var(--primary-pressed);
   --color-primary-fg: var(--primary-fg);
+  --color-data: var(--data);
+  --color-data-strong: var(--data-strong);
+  --color-data-weak: var(--data-weak);
+  --color-scrim-1: var(--scrim-1);
+  --color-scrim-2: var(--scrim-2);
   --color-aff-hostile: var(--aff-hostile);
   --color-aff-friendly: var(--aff-friendly);
   --color-aff-neutral: var(--aff-neutral);
@@ -76,25 +106,29 @@
 
   /* §4 families */
   --font-*: initial;
-  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
-  --font-cond: var(--font-plex-condensed), var(--font-plex-sans), system-ui, sans-serif;
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-cond: var(--font-archivo), system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
   /* §4 sizes: only the DESIGN scale exists (use the text-<role> utilities below) */
   --text-*: initial;
 
-  /* §5 radius: 2 px default, 4 px overlays; rounded-full only for chips ≤ 20 px */
+  /* §5 radius: xs for HUD marks, sm controls, md surfaces, lg hero and overlays. */
   --radius-*: initial;
   --radius-xs: 2px;
-  --radius-sm: 2px;
-  --radius-md: 4px;
+  --radius-sm: var(--r-control);
+  --radius-md: var(--r-surface);
+  --radius-lg: var(--r-hero);
 
-  /* §5 shadows: none, except overlays */
+  /* §5 shadows: floating cards over terrain, and overlays. */
   --shadow-*: initial;
+  --shadow-float: var(--shadow-float);
   --shadow-overlay: var(--shadow-overlay);
 
   --ease-*: initial;
   --ease-ui: var(--ease-ui);
+  --ease-in-out: var(--ease-in-out);
+  --ease-in: var(--ease-in);
 
   /* §7 value-change flash: --bg-3 for 300 ms, no colour change. Runs on an
      --bg-3 ::after layer's opacity so the HUD stays transform/opacity only. */
@@ -148,61 +182,93 @@
  * §4 type scale. One utility per role sets family, size, line height, weight
  * and case together, so a role can't be half-applied.
  */
-/* Public pages only, one headline per page (Phase 6 amendment 1). */
-@utility text-display-xl {
-  font-family: var(--font-cond);
-  font-size: clamp(44px, 9vw, 96px);
-  line-height: 0.92;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: -0.01em;
+/* Landing first screen only. */
+@utility text-statement {
+  font-family: var(--font-sans);
+  font-size: clamp(48px, 11vw, 168px);
+  line-height: 0.9;
+  font-weight: 700;
+  font-stretch: 112%;
+  letter-spacing: -0.035em;
   text-wrap: balance;
 }
+/* One per public section, and the Home hero. */
 @utility text-display {
-  font-family: var(--font-cond);
+  font-family: var(--font-sans);
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 1;
+  font-weight: 650;
+  font-stretch: 106%;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+/* Score total, rating. */
+@utility text-figure-xl {
+  font-family: var(--font-sans);
+  font-size: 64px;
+  line-height: 64px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+/* KPIs. */
+@utility text-figure-l {
+  font-family: var(--font-sans);
   font-size: 40px;
   line-height: 44px;
   font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 @utility text-h1 {
-  font-family: var(--font-cond);
-  font-size: 24px;
-  line-height: 30px;
-  font-weight: 600;
+  font-family: var(--font-sans);
+  font-size: var(--fs-h1);
+  line-height: var(--lh-h1);
+  font-weight: var(--fw-h1);
+  letter-spacing: -0.015em;
 }
 @utility text-h2 {
-  font-family: var(--font-cond);
-  font-size: 18px;
-  line-height: 24px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+@utility text-h3 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
   font-weight: 600;
 }
 @utility text-panel-title {
   font-family: var(--font-cond);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-stretch: var(--stretch-label);
+  text-transform: var(--caps);
+  letter-spacing: var(--caps-track);
 }
 @utility text-label {
   font-family: var(--font-cond);
-  font-size: 11px;
-  line-height: 14px;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-stretch: var(--stretch-label);
+  text-transform: var(--caps);
+  letter-spacing: var(--caps-track);
   color: var(--text-2);
 }
 @utility text-body {
   font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 21px;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   font-weight: 400;
 }
 @utility text-small {
   font-family: var(--font-sans);
-  font-size: 12px;
-  line-height: 17px;
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
   font-weight: 400;
 }
 @utility text-readout {
@@ -279,15 +345,15 @@
     background: var(--bg-0);
     color: var(--text-1);
     font-family: var(--font-sans);
-    font-size: 14px;
-    line-height: 21px;
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
     -webkit-font-smoothing: antialiased;
-    /* Only the loaded Plex weights; never faux bold or italic. */
+    /* Never faux bold or italic. */
     font-synthesis: none;
   }
-  /* §10: visible 2 px --select focus ring. */
+  /* §10: visible 2 px focus ring: --data, or --select inside the HUD. */
   :focus-visible {
-    outline: 2px solid var(--select);
+    outline: 2px solid var(--focus);
     outline-offset: 2px;
   }
   h1,
@@ -356,7 +422,7 @@
   background: var(--select);
 }
 .replay-scrubber:focus-visible {
-  outline: 2px solid var(--select);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
@@ -369,6 +435,7 @@
     --bg-1: #ffffff;
     --bg-2: #f1f3f2;
     --bg-3: #e6e9e7;
+    --bg-4: #dfe3e0;
     --line-1: #c9d0cc;
     --line-2: #9aa59f;
     --text-1: #101513;

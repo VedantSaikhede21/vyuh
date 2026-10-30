@@ -129,6 +129,7 @@ export function SimPlayer({
   return (
     <div
       ref={container}
+      data-ui="hud"
       className="fixed inset-0 z-20 flex flex-col bg-bg-0"
       data-testid="sim-player"
     >

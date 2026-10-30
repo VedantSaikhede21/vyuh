@@ -1,4 +1,5 @@
 import type { SimEnvironment } from '@vyuh/sim-core';
+import { UI } from '../lib/theme/scene-colours';
 import { describe, expect, it } from 'vitest';
 import { environmentLook } from '../lib/sim/environment-look';
 
@@ -32,7 +33,7 @@ describe('environmentLook', () => {
     for (const el of [36, -30]) {
       const tac = environmentLook(env(el), 'tactical');
       expect(tac.showStars).toBe(false);
-      expect(`#${tac.background.getHexString()}`).toBe('#0a0d0c');
+      expect(`#${tac.background.getHexString()}`).toBe(UI.bg0);
     }
   });
 

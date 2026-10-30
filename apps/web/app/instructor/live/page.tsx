@@ -79,7 +79,7 @@ function Live() {
     const id = setInterval(() => setTick((t) => t + 1), POLL_MS);
     return () => clearInterval(id);
   }, []);
-  const live = useApiData(scope.unitId ? `${scope.unitId}:${tick}` : null, (signal) =>
+  const live = useApiData(scope.unitId ? `live:${scope.unitId}:${tick}` : null, (signal) =>
     api.activeSessions(scope.unitId!, signal),
   );
   const error = scope.error ?? live.error;

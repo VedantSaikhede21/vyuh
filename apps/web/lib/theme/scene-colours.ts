@@ -1,32 +1,33 @@
-// Single source for colours drawn by WebGL (three.js) and 2D canvas, which
-// cannot read CSS variables (decision 62). DOM components use the Tailwind
-// tokens in app/globals.css instead. Values in UI groups mirror DESIGN.md §3
-// exactly; keep them in sync with globals.css.
+// Colours drawn by WebGL (three.js) and 2D canvas, which cannot read CSS
+// variables. UI groups come from lib/theme/tokens.ts, the one source (decision
+// 164); only physical-look colours (sky, ground, IR) are defined here.
 
-/** DESIGN §3.1–§3.4 values for canvas/WebGL UI overlays (PPI, track markers). */
+import { affiliation, interaction, status, surfaces, text } from './tokens';
+
+/** DESIGN §3 values for canvas/WebGL UI overlays (PPI, track markers). */
 export const UI = {
-  bg0: '#0a0d0c',
-  bg1: '#101513',
-  bg2: '#161d1a',
-  bg3: '#1e2723',
-  line1: '#26312c',
-  line2: '#34423b',
-  text1: '#dce4df',
-  text2: '#9aa9a1',
-  text3: '#627069',
-  select: '#f2f5f3',
-  cue: '#d46bc8',
-  ok: '#6fd08c',
-  warn: '#f0a94b',
-  crit: '#ff5a5f',
+  bg0: surfaces['bg-0'],
+  bg1: surfaces['bg-1'],
+  bg2: surfaces['bg-2'],
+  bg3: surfaces['bg-3'],
+  line1: surfaces['line-1'],
+  line2: surfaces['line-2'],
+  text1: text['text-1'],
+  text2: text['text-2'],
+  text3: text['text-3'],
+  select: interaction.select,
+  cue: interaction.cue,
+  ok: status.ok,
+  warn: status.warn,
+  crit: status.crit,
 } as const;
 
-/** DESIGN §3.3 affiliation colours (always paired with shape + letter). */
+/** DESIGN §3 affiliation colours (always paired with shape + letter). */
 export const AFFILIATION_HEX = {
-  HOSTILE: '#ff6b6b',
-  FRIENDLY: '#5cc8ff',
-  NEUTRAL: '#6fd08c',
-  UNKNOWN: '#f2d45c',
+  HOSTILE: affiliation['aff-hostile'],
+  FRIENDLY: affiliation['aff-friendly'],
+  NEUTRAL: affiliation['aff-neutral'],
+  UNKNOWN: affiliation['aff-unknown'],
 } as const;
 
 /** RF strobes: chrome, not a signal colour, so they never read as H/F/N/U (approved 3.0). */

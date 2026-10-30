@@ -57,7 +57,7 @@ function rows(data: StatusResponse | null, failed: boolean): [string, string, St
 export default function StatusPage() {
   const [checked, setChecked] = useState(() => new Date().toISOString());
   // The check time is the key: a new time fetches again.
-  const { data, error } = useApiData(checked, (signal) => api.status(signal));
+  const { data, error } = useApiData(`status:${checked}`, (signal) => api.status(signal));
   const failed = error !== null;
   const versions: [string, string][] = [
     ['Web build', WEB_BUILD],

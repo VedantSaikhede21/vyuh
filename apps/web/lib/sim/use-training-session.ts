@@ -4,6 +4,7 @@ import type { Scenario, Score, SessionEndReason, SessionMode } from '@vyuh/share
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, api, isRetryable } from '@/lib/api';
 import { loadWorld } from '@/lib/terrain/load-world';
+import { invalidate } from '@/lib/use-api-data';
 import { EventBatcher, FatalBatchError, type BatcherStatus } from './event-batcher';
 import { SimRuntime } from './runtime';
 
@@ -123,6 +124,8 @@ export function useTrainingSession(sessionId: string) {
             ...(gpu ? { gpu } : {}),
             browser: navigator.userAgent.slice(0, 200),
           });
+          invalidate('home');
+          invalidate('record');
           const st = runtime.sim.getState();
           setPhase({
             kind: 'result',

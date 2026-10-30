@@ -241,7 +241,7 @@ function Record() {
   const params = useSearchParams();
   const userId = params.get('user') ?? user?.id ?? null;
   const staff = isStaff(user?.role);
-  const loaded = useApiData(userId, (signal) => api.record(userId!, signal));
+  const loaded = useApiData(userId ? `record:${userId}` : null, (signal) => api.record(userId!, signal));
   const [signed, setSigned] = useState<ServiceRecordResponse | null>(null);
   const data =
     signed && loaded.data && signed.user.id === loaded.data.user.id ? signed : loaded.data;

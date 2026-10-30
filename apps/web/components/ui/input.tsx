@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
  * aria-invalid draws the --crit border, with a FieldError under the field.
  */
 export const FIELD_CLASS =
-  'h-9 w-full rounded-sm border border-line-2 bg-bg-3 px-3 text-body text-text-1 transition-[border-color,background-color] duration-150 ease-ui placeholder:text-text-2 hover:border-text-2 disabled:cursor-not-allowed disabled:border-line-1 disabled:bg-bg-1 disabled:text-text-2 aria-[invalid=true]:border-crit';
+  'h-10 w-full rounded-sm border border-transparent bg-bg-3 px-3 text-body text-text-1 transition-[border-color,background-color] duration-150 ease-ui placeholder:text-text-2 hover:bg-bg-4 hud:h-9 hud:border-line-2 hud:hover:border-text-2 hud:hover:bg-bg-3 disabled:cursor-not-allowed disabled:border-line-1 disabled:bg-bg-1 disabled:text-text-2 aria-[invalid=true]:border-crit';
 
 export function Input({ className, ...props }: ComponentProps<'input'>) {
   return <input className={cn(FIELD_CLASS, className)} {...props} />;

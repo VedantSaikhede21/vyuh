@@ -41,7 +41,7 @@ const MODE: Record<'PRACTICE' | 'ASSESSMENT', string> = {
 function NextUp({ data, firstRun }: { data: HomeResponse; firstRun: boolean }) {
   const a = data.assignment;
   // First run: the tutorial scenario's id comes from the list (only then).
-  const s01 = useApiData(firstRun && !a ? 'home-s01' : null, (signal) =>
+  const s01 = useApiData(firstRun && !a ? 'home:s01' : null, (signal) =>
     api.listScenarios(signal),
   ).data?.items.find((s) => s.code === 'S01');
   if (a) {
@@ -309,7 +309,7 @@ function HomeNotices({ data }: { data: HomeResponse }) {
 
 function Home() {
   const { user } = useAuth();
-  const { data, error, reload } = useApiData(user?.id ?? null, (signal) => api.home(signal));
+  const { data, error, reload } = useApiData(user ? `home:${user.id}` : null, (signal) => api.home(signal));
   const firstRun = data !== null && data.recent.length === 0 && data.assessments === 0;
   return (
     <div className="space-y-6">

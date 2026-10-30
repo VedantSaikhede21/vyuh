@@ -104,7 +104,7 @@ export function Tooltip({
         role="tooltip"
         hidden={!visible}
         className={cn(
-          'pointer-events-none absolute z-50 w-max max-w-64 rounded-md border border-line-2 bg-bg-2 px-2 py-1 text-small normal-case tracking-normal text-text-1 shadow-overlay',
+          'pointer-events-none absolute z-50 w-max max-w-64 rounded-md border border-(--edge-overlay) bg-bg-2 px-2.5 py-1.5 text-small normal-case tracking-normal text-text-1 shadow-overlay',
           fade && !forceOpen && 'animate-fade-in',
           SIDE[side],
           ALIGN[align],

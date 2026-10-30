@@ -81,7 +81,7 @@ export function Menu({
   };
 
   const itemClass =
-    'flex h-8 w-full items-center px-3 text-left text-body text-text-1 outline-none transition-colors duration-150 ease-ui hover:bg-bg-3 focus-visible:bg-bg-3 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-select';
+    'flex h-9 w-full items-center rounded-sm px-3 text-left text-body text-text-1 outline-none hud:h-8 hud:rounded-none transition-colors duration-150 ease-ui hover:bg-bg-3 focus-visible:bg-bg-3 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--focus)';
 
   return (
     <div ref={root} className="relative">
@@ -110,7 +110,7 @@ export function Menu({
           role="menu"
           onKeyDown={onListKey}
           className={cn(
-            'absolute top-full z-40 mt-1 min-w-48 rounded-md border border-line-2 bg-bg-2 py-1 shadow-overlay',
+            'absolute top-full z-40 mt-1 min-w-48 rounded-lg border border-(--edge-overlay) bg-bg-2 p-1 shadow-overlay hud:rounded-md hud:border-line-2 hud:p-0 hud:py-1',
             // Grows from the button's corner; closing is instant (§7).
             align === 'end' ? 'right-0 origin-top-right' : 'left-0 origin-top-left',
             !defaultOpen && 'animate-pop-in',

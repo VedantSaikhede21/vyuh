@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 
-/** Difficulty as filled squares (DESIGN §11.3), with a text alternative. */
+/** Difficulty as a segmented bar (DESIGN §11.3), with a text alternative. */
 export function Pips({
   value,
   max = 5,
@@ -16,14 +16,14 @@ export function Pips({
     <span
       role="img"
       aria-label={`${label} ${value} of ${max}`}
-      className={cn('inline-flex items-center gap-0.5', className)}
+      className={cn('inline-flex items-center gap-[3px]', className)}
     >
       {Array.from({ length: max }, (_, i) => (
         <span
           key={i}
           className={cn(
-            'h-2 w-2 rounded-xs border',
-            i < value ? 'border-text-1 bg-text-1' : 'border-line-2',
+            'h-1.5 w-3.5 rounded-xs hud:h-2 hud:w-2',
+            i < value ? 'bg-text-1' : 'bg-bg-4',
           )}
         />
       ))}

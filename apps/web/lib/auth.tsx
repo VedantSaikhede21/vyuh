@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import { ApiError, setTokenGetter } from './api-core';
+import { invalidate } from './use-api-data';
 import { env } from './env';
 import { getSupabase, hasStoredSupabaseSession } from './supabase';
 
@@ -172,6 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const logout = useCallback(async () => {
+    invalidate();
     writeToken(GUEST_TOKEN_KEY, null);
     if (env.authMode === 'local') writeLocalToken(null);
     else if (hasStoredSupabaseSession()) await (await getSupabase()).auth.signOut();

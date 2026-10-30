@@ -69,12 +69,13 @@ const VARIANT = {
     on: 'bg-bg-1 text-text-1',
     off: 'text-text-2 hover:bg-bg-3 hover:text-text-1',
   },
-  // Page-level: labels on a hairline with a 2 px --select underline (same as the nav).
+  // Page-level: a pill track with a raised selected cell; in the HUD, labels on a
+  // hairline with a 2 px --select underline.
   underline: {
-    list: 'flex h-8 shrink-0 gap-4 border-b border-line-1',
-    tab: '-mb-px h-full border-b-2 text-label font-medium focus-visible:outline-offset-0',
-    on: 'border-select text-text-1',
-    off: 'border-transparent text-text-2 hover:text-text-1',
+    list: 'inline-flex h-10 shrink-0 gap-1 rounded-full bg-bg-2 p-1 hud:flex hud:h-8 hud:gap-4 hud:rounded-none hud:border-b hud:border-line-1 hud:bg-transparent hud:p-0',
+    tab: 'h-full rounded-full px-4 text-label font-medium hud:-mb-px hud:rounded-none hud:border-b-2 hud:px-0 hud:focus-visible:outline-offset-0',
+    on: 'bg-bg-4 text-text-1 hud:border-select hud:bg-transparent',
+    off: 'text-text-2 hover:text-text-1 hud:border-transparent',
   },
 } as const;
 

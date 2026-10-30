@@ -4,7 +4,7 @@ import { AppHeader, SkipLink } from '@/components/app-header';
 import { AuthProvider } from '@/lib/auth';
 import { MotionAttribute } from '@/lib/settings';
 import { UI } from '@/lib/theme/scene-colours';
-import { plexCondensed, plexMono, plexSans } from './fonts';
+import { archivo, plexMono } from './fonts';
 import './globals.css';
 
 const TITLE = 'VYUH — Counter-Drone Threat Trainer';
@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      className={`dark ${plexSans.variable} ${plexCondensed.variable} ${plexMono.variable}`}
+      className={`dark ${archivo.variable} ${plexMono.variable}`}
     >
       <body className="min-h-screen">
         <SkipLink />

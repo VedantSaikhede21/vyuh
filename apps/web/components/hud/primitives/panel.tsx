@@ -1,13 +1,16 @@
 import type { ComponentProps, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-// DESIGN §5 panel anatomy: 28 px --bg-2 header strip with a Condensed UPPER
-// title and an optional status/actions slot, --bg-1 body, 1 px --line-1 border.
+// DESIGN §5: a --bg-1 surface with a title row and an optional status/actions
+// slot. In the HUD: 1 px border and a 28 px --bg-2 header strip.
 
 export function Panel({ className, ...props }: ComponentProps<'section'>) {
   return (
     <section
-      className={cn('flex min-h-0 flex-col border border-line-1 bg-bg-1', className)}
+      className={cn(
+        'flex min-h-0 flex-col rounded-md bg-bg-1 hud:rounded-none hud:border hud:border-line-1',
+        className,
+      )}
       {...props}
     />
   );
@@ -28,7 +31,7 @@ export function PanelHeader({
   return (
     <header
       className={cn(
-        'flex h-7 shrink-0 items-center gap-2 border-b border-line-1 bg-bg-2 px-3',
+        'flex h-12 shrink-0 items-center gap-2 rounded-t-md border-b border-line-1 px-4 hud:h-7 hud:rounded-none hud:bg-bg-2 hud:px-3',
         className,
       )}
     >
@@ -45,5 +48,5 @@ export function PanelBody({
   flush = false,
   ...props
 }: ComponentProps<'div'> & { flush?: boolean }) {
-  return <div className={cn('min-h-0 flex-1', !flush && 'p-3', className)} {...props} />;
+  return <div className={cn('min-h-0 flex-1', !flush && 'p-4 hud:p-3', className)} {...props} />;
 }

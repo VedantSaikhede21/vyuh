@@ -72,7 +72,7 @@ export default function LandingPage() {
       <SheetFrame sheet={1} of={SHEETS} reference={REF} className="border-t-0 pt-0">
         <div className="grid items-end gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           <div className="space-y-6">
-            <h1 className="text-display-xl text-text-1">
+            <h1 className="text-statement text-text-1">
               Detect.
               <br />
               Identify.

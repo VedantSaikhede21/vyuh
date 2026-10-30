@@ -1,26 +1,16 @@
 import localFont from 'next/font/local';
 
-// IBM Plex, self-hosted (decision 60): committed woff2 files from IBM's npm
-// packages (@ibm/plex-sans 1.1.0, @ibm/plex-sans-condensed 2.0.0,
-// @ibm/plex-mono 2.5.0), SIL OFL 1.1 — see fonts/OFL.txt. Weights are only
-// those the DESIGN §4 scale uses.
+// Self-hosted, SIL OFL 1.1 (decisions 60, 164). Archivo (one variable file: wght
+// 100-900, wdth 62-125, licence fonts/OFL-Archivo.txt) is every word; IBM Plex
+// Mono (fonts/OFL.txt, subset by scripts/fonts) is HUD numbers, ids and seeds.
 
-export const plexSans = localFont({
-  src: [
-    { path: './fonts/IBMPlexSans-Regular.woff2', weight: '400', style: 'normal' },
-    { path: './fonts/IBMPlexSans-SemiBold.woff2', weight: '600', style: 'normal' },
-  ],
-  variable: '--font-plex-sans',
+export const archivo = localFont({
+  src: './fonts/Archivo-Variable.woff2',
+  weight: '100 900',
+  style: 'normal',
+  variable: '--font-archivo',
   display: 'swap',
-});
-
-export const plexCondensed = localFont({
-  src: [
-    { path: './fonts/IBMPlexSansCondensed-Medium.woff2', weight: '500', style: 'normal' },
-    { path: './fonts/IBMPlexSansCondensed-SemiBold.woff2', weight: '600', style: 'normal' },
-  ],
-  variable: '--font-plex-condensed',
-  display: 'swap',
+  declarations: [{ prop: 'font-stretch', value: '62% 125%' }],
 });
 
 export const plexMono = localFont({
@@ -30,4 +20,5 @@ export const plexMono = localFont({
   ],
   variable: '--font-plex-mono',
   display: 'swap',
+  preload: false,
 });
