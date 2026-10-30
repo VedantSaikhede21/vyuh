@@ -8,6 +8,7 @@ RUN corepack enable
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY packages/ packages/
 COPY apps/web/ apps/web/
+ARG NODE_HEAP_MB=2048
 ARG NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 ARG NEXT_PUBLIC_AUTH_MODE=local
 ARG NEXT_PUBLIC_GUEST_MODE=false
@@ -21,7 +22,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
     NEXT_TELEMETRY_DISABLED=1 \
     VYUH_STANDALONE=1
 RUN pnpm install --frozen-lockfile --filter @vyuh/web...
-RUN pnpm --filter @vyuh/web build
+RUN NODE_OPTIONS=--max-old-space-size=${NODE_HEAP_MB} pnpm --filter @vyuh/web build
 
 FROM node:24-slim
 WORKDIR /app

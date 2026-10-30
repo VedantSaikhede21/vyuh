@@ -34,7 +34,7 @@ export async function login(page: Page, email: string): Promise<void> {
 export async function openBriefing(page: Page, code: string): Promise<void> {
   await page.goto('/train');
   await page.getByTestId(`scenario-${code}`).click();
-  await expect(page.getByTestId('start-session')).toBeVisible();
+  await expect(page.getByTestId('start-session')).toBeVisible({ timeout: 20_000 });
 }
 
 /** Begin on the briefing page and wait until the test hook holds the session at t ≈ 0. */

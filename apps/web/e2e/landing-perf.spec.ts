@@ -101,6 +101,7 @@ for (const vp of [
     const result = { ...median, runs: runs.map((r) => `${r.lcpMs} ms`) };
     console.log(`landing ${vp.width}×${vp.height}: ${JSON.stringify(result)}`);
     test.info().annotations.push({ type: 'lcp', description: JSON.stringify(result) });
+    console.log(`${vp.width}: LCP ${median.lcpMs} ms, JS ${median.jsKb} KB`);
     expect(median.lcpMs).toBeLessThan(2500);
     expect(median.jsKb).toBeLessThanOrEqual(200);
   });

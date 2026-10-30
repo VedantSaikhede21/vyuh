@@ -184,10 +184,15 @@ pnpm lint
 cd apps/api && uv run pytest
 cd apps/api && uv run alembic upgrade head
 pnpm e2e                 # Playwright
+pnpm --filter @vyuh/web gen:tokens     # lib/theme/tokens.ts → app/tokens.generated.css (CI checks it)
+pnpm --filter @vyuh/web render:stills  # stills of every library scenario into public/renders (dev server running)
+cd scripts/terrain && .venv/Scripts/python build_display.py --name JK_MOUNTAIN --season 08-10 --trees  # display-only terrain files
+cd scripts/fonts && uv run python subset.py   # subset woff2 into apps/web/app/fonts
+pnpm study:enrol N       # user-study participants P001…
 pnpm sweep:generator     # generate 50 scenarios per difficulty + sim-core validator (≤ 2 % fail)
 cd scripts/signatures && uv run python gen_spectrograms.py   # micro-Doppler templates → apps/web/public/signatures
 pnpm --filter @vyuh/sim-core validate <file|dir> [--max-fail-pct N] [--json]
-docker compose up        # offline full stack
+docker compose up --build   # offline full stack (Docker needs ≥ 3 GB; `up -d postgres` for development)
 ```
 
 ---
@@ -320,7 +325,7 @@ docker compose up        # offline full stack
 - [x] 5 AI layer (on `feat/phase5`)
 - [ ] 6 Polish & deploy
 
-- Current phase: **6 — Polish & deploy.** Parts 6.0–6C and 6E closed; 6D (motion) built; **Part 6F (performance) built 2026-10-28, Checkpoint F open** (plan `docs/plans/phase6f-plan.md`, progress `docs/plans/phase6f-progress.md`, decisions 162–163) — waiting on the user's font-subsetting decision. Intel integrated-GPU FPS **skipped by the user** (decision 162). Next: 6G (deployment and offline build). Full e2e, FPS and generator sweeps run in 6H.
+- Current phase: **6 — Polish & deploy.** **Resume from `docs/plans/phase6r-progress.md`.** Part 6R redesign (direction B, DESIGN.md §0, decisions 164–172), 6F fonts, 6G hardening and 6I study kit are built on `main` (2026-10-31), with their captures not yet shown to the user. Not verified: FPS on the new terrain, full `pnpm e2e` and baselines since the redesign, the web Docker image (Docker here has ~900 MB). Next: those, then hosted deploy (`docs/DEPLOY.md`, needs the user's accounts), then 6H. Intel integrated-GPU FPS **skipped by the user** (decision 162).
 - Phase 6F evidence (2026-10-28, production build, AMD integrated): live FPS at 1920×1080 S06 61–71, URBAN D5 seed 2 52–64, S14 77, PUNJAB D5 60-entity cap 70 (1366×768 all ≥ 108; 150 % scaling S06 48, URBAN D5 41); S06 replay 42 / 55 (1920 / 1366); sim tick max ≤ 0.78 ms on JK / URBAN / PUNJAB (60 contacts). Landing on Slow 4G + 4× CPU (`e2e/landing-perf.spec.ts`, `@fps-lcp`): LCP 13.7 → 3.5 s, page JS 304 → 178 KB gzipped, other bytes 3.85 MB → 618 KB; static media cached a day. `pnpm lint` clean, web vitest 250, **`pnpm e2e` 23 / 23** (4.9 min, no baseline changed).
 - Tech debt (Phase 6F): landing LCP 3.5 s against the 2.5 s budget — the six Plex fonts (~360 KB) are most of the gap (subsetting needs `fonttools`, user decision); replay playback costs ~4 ms / frame over paused (React at 20 Hz), above budget so unchanged; the reduced FPS set was run, not all 36 cases (6H runs the full set); `THREE.Clock` warning (R3F internals) and the per-request trends kill-chain recompute left as logged.
 - Last completed: **Phase 6 Part 6E — guest demo, guided tour, onboarding** (2026-10-27, `main`, plan `docs/plans/phase6e-plan.md`, progress `docs/plans/phase6e-progress.md`, decisions 160–161). Instructors see their own unit only, admins every unit (`services/access.py`); `GUEST` role (migration 0008, `units.is_demo`), `POST /auth/guest` behind `GUEST_MODE_ENABLED` (HS256 `vyuh-guest` token in both auth modes, limits, lazy cleanup and `pnpm guests:cleanup`); guests see S01 / S02 / S06 / S15 and the read-only demo unit view; guest text-to-scenario on one preset text (TEMPLATE stored reading with the LLM off); role-based nav, guest training page, demo path strip; in-house guided tours (player 7, result 3, replay 4 steps; hold the Practice clock, keys, resumable); first-run welcome on Home. Demo users seeded in every auth mode.
@@ -366,13 +371,13 @@ docker compose up        # offline full stack
 
 ---
 
-## 15. UX & visual design (summary — full guide in docs/DESIGN.md)
+## 15. UX & visual design (summary — full guide in docs/DESIGN.md, §0 overrides the rest)
 
-- **Intent:** a calm, dense, precise tactical console; colour means something; every number has a unit; every action gets an immediate answer.
+- **Intent (v2):** a modern mission system: real terrain always present, deep layered surfaces, large calm type, colour on data, motion that shows what changed. The HUD stays a dense console via `data-ui="hud"`.
 - **Banned patterns:** see DESIGN.md §2. If one appears, it is a bug.
 - **Colour is information.** Monochrome chrome; colour only for affiliation, status and the single cue accent. Tokens only (CSS variables mapped into Tailwind); no raw hex in components.
-- **Type:** IBM Plex Sans Condensed (labels, UPPERCASE), IBM Plex Sans (body), IBM Plex Mono (all numbers, tabular, with muted units). Sizes only from the DESIGN.md §4 scale.
-- **Shape:** panels with header strips, 1 px hairlines, radius 2 px, no shadows except overlays, no glow.
+- **Type:** Archivo (all words), IBM Plex Mono (HUD numbers, ids, seeds). Sentence case outside the HUD. Sizes only from the DESIGN.md scale.
+- **Shape:** tone-stepped surfaces, radius 6 / 8 / 12 (2 in the HUD), hairlines only in tables and the HUD, shadows only on floating layers, no glow. Text never on raw imagery.
 - **Feedback:** every trainee action acknowledged within 100 ms in the Comms log; disabled controls explain why; labelled loading; worded empty and error states.
 - **Copy:** military brevity, consistent vocabulary (contact vs track, bearing, range, ROE, effector); no marketing language, no exclamation marks.
 - **Access:** works at 1366×768 without horizontal scroll; full keyboard control; affiliation readable without colour (shape + letter).

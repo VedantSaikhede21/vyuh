@@ -1,5 +1,3 @@
-import { SIM_VERSION_LABEL } from './report-error-meta';
-
 // Client error reports (system plan S9): no third-party service. One report per
 // message per page load, trimmed, with no names or e-mails; failure to report is
 // ignored, because this runs when something is already wrong.
@@ -30,7 +28,7 @@ export function reportError(error: unknown, route?: string): void {
         stack: (err.stack ?? '').slice(0, MAX_STACK),
         userAgent: navigator.userAgent.slice(0, 200),
         webBuild: process.env.NEXT_PUBLIC_WEB_BUILD ?? 'dev',
-        simVersion: SIM_VERSION_LABEL,
+        simVersion: '',
       }),
     }).catch(() => undefined);
   } catch {
