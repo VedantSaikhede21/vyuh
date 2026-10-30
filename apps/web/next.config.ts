@@ -16,6 +16,34 @@ function buildId(): string {
   }
 }
 
+/** Security headers (system plan S10). The app needs inline scripts from Next and WebGL
+ *  workers; everything else stays same-origin plus the API and Supabase. */
+function securityHeaders() {
+  const api = process.env.NEXT_PUBLIC_API_URL ? new URL(process.env.NEXT_PUBLIC_API_URL).origin : '';
+  const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  const csp = [
+    "default-src 'self'",
+    `script-src 'self' 'unsafe-inline'${isProd ? '' : " 'unsafe-eval'"}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "media-src 'self' blob:",
+    "font-src 'self'",
+    `connect-src 'self' ${api} ${supabase}${isProd ? '' : ' ws: http://localhost:*'}`.trim(),
+    "worker-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join('; ');
+  return [
+    { key: 'Content-Security-Policy', value: csp },
+    { key: 'X-Content-Type-Options', value: 'nosniff' },
+    { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+    { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+    { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+  ];
+}
+
 const nextConfig: NextConfig = {
   // Workspace packages ship TypeScript source.
   transpilePackages: ['@vyuh/shared', '@vyuh/sim-core'],
@@ -34,13 +62,14 @@ const nextConfig: NextConfig = {
     const cache = [
       { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
     ];
-    return [
+    const media = [
       '/terrain/:path*',
       '/signatures/:path*',
       '/landing/:path*',
       '/models/:path*',
       '/renders/:path*',
     ].map((source) => ({ source, headers: cache }));
+    return [...media, { source: '/:path*', headers: securityHeaders() }];
   },
 };
 

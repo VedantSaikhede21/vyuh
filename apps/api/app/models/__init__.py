@@ -9,6 +9,7 @@ from app.models.content import (
     TerrainPreset,
     ThreatType,
 )
+from app.models.ops import ClientError, LlmUsage, RateHit
 from app.models.org import Unit, User
 from app.models.training import (
     Debrief,
@@ -23,8 +24,11 @@ from app.models.training import (
 __all__ = [
     "Assignment",
     "Base",
+    "ClientError",
     "Debrief",
     "LevelSignoff",
+    "LlmUsage",
+    "RateHit",
     "RatingHistory",
     "Scenario",
     "ScoreRow",

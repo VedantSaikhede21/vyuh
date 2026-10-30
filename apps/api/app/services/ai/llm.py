@@ -17,7 +17,7 @@ from typing import Any, TypeVar
 
 from app.core.config import Settings
 from app.core.errors import ApiError
-from app.services.ratelimit import RateLimiter
+from app.services.ratelimit import LlmBudget, RateLimiter
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,8 @@ class LlmClient:
         self.transport: Transport = transport or urllib_transport
         self.limiter = RateLimiter(settings.llm_rate_limit_per_min)
         self.pause: Callable[[float], None] = time.sleep
+        #: Daily token budget (S4); set by the app, absent in plain unit tests.
+        self.budget: LlmBudget | None = None
 
     @property
     def enabled(self) -> bool:
@@ -89,6 +91,8 @@ class LlmClient:
         attempt gives a valid one. `parse` raises ValueError on invalid output."""
         if not self.enabled:
             raise LlmError("LLM_DISABLED", "LLM features are off (LLM_ENABLED=false)")
+        if self.budget is not None and self.budget.exceeded():
+            raise LlmError("BUDGET", "The daily LLM budget is used up")
         try:
             self.limiter.check(user_key)
         except ApiError as err:
@@ -138,11 +142,20 @@ class LlmClient:
                 logger.warning("LLM attempt %d: %s", attempt, message)
                 continue
             try:
-                return parse(_content_json(raw))
+                result = parse(_content_json(raw))
+                if self.budget is not None:
+                    self.budget.add(_tokens_used(raw, max_tokens))
+                return result
             except (ValueError, KeyError, TypeError) as err:
                 reason, message = "INVALID_OUTPUT", f"LLM output rejected: {err}"
                 logger.warning("LLM attempt %d: %s", attempt, message)
         raise LlmError(reason, message)
+
+
+def _tokens_used(raw: str, fallback: int) -> int:
+    """Tokens the provider reports; the request cap when it reports none."""
+    usage = json.loads(raw).get("usage") or {}
+    return int(usage.get("total_tokens") or fallback)
 
 
 def _content_json(raw: str) -> dict[str, Any]:

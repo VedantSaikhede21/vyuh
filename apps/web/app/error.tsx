@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect } from 'react';
 import { ErrorState, PageHeader } from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
+import { reportError } from '@/lib/report-error';
 
 // Route error boundary (audit P1-7): plain words and a retry; the error itself
 // (message, stack) is never shown — only Next's digest, to quote when reporting it.
@@ -13,6 +15,7 @@ export default function RouteError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => reportError(error), [error]);
   return (
     <div className="space-y-6">
       <PageHeader reference="Error" title="This page stopped working" />

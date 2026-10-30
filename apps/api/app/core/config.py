@@ -54,6 +54,8 @@ class Settings(BaseSettings):
     openrouter_api_key: SecretStr = SecretStr("")
     llm_timeout_s: float = 20
     llm_rate_limit_per_min: int = 10
+    #: Tokens per UTC day across all users; 0 = no budget (S4).
+    llm_daily_token_budget: int = 200_000
 
     open_meteo_enabled: bool = False
     guest_mode_enabled: bool = False

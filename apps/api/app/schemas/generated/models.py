@@ -175,6 +175,36 @@ class ClassificationResult(StrEnum):
     WRONG = "WRONG"
 
 
+class ClientErrorItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    route: str
+    message: str
+    user_agent: Annotated[str, Field(alias="userAgent")]
+    web_build: Annotated[str, Field(alias="webBuild")]
+    created_at: Annotated[AwareDatetime, Field(alias="createdAt")]
+
+
+class ClientErrorListResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    items: list[ClientErrorItem]
+
+
+class ClientErrorReport(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    route: Annotated[str, Field(max_length=200)]
+    message: Annotated[str, Field(max_length=500)]
+    stack: Annotated[str, Field(max_length=4000)]
+    user_agent: Annotated[str, Field(alias="userAgent", max_length=200)]
+    web_build: Annotated[str, Field(alias="webBuild", max_length=64)]
+    sim_version: Annotated[str, Field(alias="simVersion", max_length=16)]
+
+
 class ClientMeta(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -342,6 +372,7 @@ class DebriefFallbackReason(StrEnum):
     INVALID_OUTPUT = "INVALID_OUTPUT"
     ERROR = "ERROR"
     RATE_LIMITED = "RATE_LIMITED"
+    BUDGET = "BUDGET"
 
 
 class DebriefMistake(BaseModel):

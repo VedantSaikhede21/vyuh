@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import { ApiError, setTokenGetter } from './api-core';
+import { writeGuardCookies } from './route-guard';
 import { invalidate } from './use-api-data';
 import { env } from './env';
 import { getSupabase, hasStoredSupabaseSession } from './supabase';
@@ -83,12 +84,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     if (!(await currentToken())) {
+      writeGuardCookies(null);
       setUser(null);
       setStatus('anonymous');
       return;
     }
     try {
-      setUser(await (await loadApi()).me());
+      const me = await (await loadApi()).me();
+      writeGuardCookies(me.role);
+      setUser(me);
       setStatus('authenticated');
       setError(null);
     } catch (err) {
@@ -174,6 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     invalidate();
+    writeGuardCookies(null);
     writeToken(GUEST_TOKEN_KEY, null);
     if (env.authMode === 'local') writeLocalToken(null);
     else if (hasStoredSupabaseSession()) await (await getSupabase()).auth.signOut();

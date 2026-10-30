@@ -242,7 +242,7 @@ export type DebriefSource = z.infer<typeof DebriefSource>;
 /** Why a debrief fell back to the template. */
 export const DebriefFallbackReason = named(
   'DebriefFallbackReason',
-  z.enum(['LLM_DISABLED', 'TIMEOUT', 'INVALID_OUTPUT', 'ERROR', 'RATE_LIMITED']),
+  z.enum(['LLM_DISABLED', 'TIMEOUT', 'INVALID_OUTPUT', 'ERROR', 'RATE_LIMITED', 'BUDGET']),
 );
 export type DebriefFallbackReason = z.infer<typeof DebriefFallbackReason>;
 

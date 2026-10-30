@@ -144,6 +144,38 @@ export const SessionEnded = named(
 export type SessionEnded = z.infer<typeof SessionEnded>;
 
 /** GET /sessions/{id}. `score` is null until the session is COMPLETED. */
+/** POST /client-errors: no names, no e-mail (system plan S9). */
+export const ClientErrorReport = named(
+  'ClientErrorReport',
+  z.object({
+    route: z.string().max(200),
+    message: z.string().max(500),
+    stack: z.string().max(4000),
+    userAgent: z.string().max(200),
+    webBuild: z.string().max(64),
+    simVersion: z.string().max(16),
+  }),
+);
+export type ClientErrorReport = z.infer<typeof ClientErrorReport>;
+
+export const ClientErrorItem = named(
+  'ClientErrorItem',
+  z.object({
+    route: z.string(),
+    message: z.string(),
+    userAgent: z.string(),
+    webBuild: z.string(),
+    createdAt: z.iso.datetime({ offset: true }),
+  }),
+);
+export type ClientErrorItem = z.infer<typeof ClientErrorItem>;
+
+export const ClientErrorListResponse = named(
+  'ClientErrorListResponse',
+  z.object({ items: z.array(ClientErrorItem) }),
+);
+export type ClientErrorListResponse = z.infer<typeof ClientErrorListResponse>;
+
 export const SessionDetailResponse = named(
   'SessionDetailResponse',
   z.object({

@@ -10,6 +10,7 @@ from contextvars import ContextVar
 from datetime import UTC, datetime
 
 from fastapi import Request, Response
+from fastapi.responses import JSONResponse
 
 request_id_ctx: ContextVar[str | None] = ContextVar("request_id", default=None)
 
@@ -82,3 +83,21 @@ async def request_id_middleware(
             },
         )
         request_id_ctx.reset(token)
+
+
+#: Request bodies (S10): event batches are the only large ones.
+MAX_BODY_BYTES = 64 * 1024
+MAX_EVENTS_BODY_BYTES = 512 * 1024
+
+
+async def body_limit_middleware(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
+    limit = MAX_EVENTS_BODY_BYTES if request.url.path.endswith("/events") else MAX_BODY_BYTES
+    length = request.headers.get("content-length")
+    if length is not None and length.isdigit() and int(length) > limit:
+        return JSONResponse(
+            status_code=413,
+            content={"error": {"code": "VALIDATION_ERROR", "message": "Request body too large"}},
+        )
+    return await call_next(request)

@@ -23,6 +23,7 @@ export const FALLBACK_TEXT: Record<DebriefFallbackReason, string> = {
   INVALID_OUTPUT: 'LLM answer failed validation',
   ERROR: 'LLM unavailable',
   RATE_LIMITED: 'LLM rate limit reached',
+  BUDGET: 'Daily LLM budget used up',
 };
 
 export function sourceLabel(d: DebriefResponse): { chip: string; detail: string } {

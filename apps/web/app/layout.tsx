@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { AppHeader, SkipLink } from '@/components/app-header';
+import { AppEffects } from '@/components/app-effects';
 import { AuthProvider } from '@/lib/auth';
 import { MotionAttribute } from '@/lib/settings';
 import { UI } from '@/lib/theme/scene-colours';
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="min-h-screen overflow-x-clip">
         <SkipLink />
         <MotionAttribute />
+        <AppEffects />
         <AuthProvider>
           <AppHeader />
           <main
