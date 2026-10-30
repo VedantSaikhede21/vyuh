@@ -442,7 +442,7 @@ export const EoPanel = forwardRef<HTMLDivElement, { runtime: SimRuntime; command
     };
 
     return (
-      <Panel className="h-full border-0">
+      <Panel className="h-full border-0 bg-bg-0">
         <PanelHeader title={`EO/IR · ${eo.id}`}>
           <Tooltip content="Day camera or thermal (white-hot)" shortcut="T" side="bottom">
             <StateChip tone="neutral" tabIndex={0}>
@@ -451,26 +451,29 @@ export const EoPanel = forwardRef<HTMLDivElement, { runtime: SimRuntime; command
           </Tooltip>
           <EoStateChip />
         </PanelHeader>
-        <div
-          ref={ref}
-          data-testid="eo-picture"
-          className="relative aspect-video w-full cursor-grab touch-none select-none overflow-hidden active:cursor-grabbing"
-          onPointerDown={(e) => {
-            e.currentTarget.setPointerCapture(e.pointerId);
-            drag.current = { x: e.clientX, y: e.clientY };
-          }}
-          onPointerMove={onPointerMove}
-          onPointerUp={() => {
-            if (drag.current) commands.endSlew();
-            drag.current = null;
-          }}
-          onWheel={(e) => commands.zoom(e.deltaY < 0 ? 1 : -1)}
-          aria-label="EO/IR camera view. Drag to slew, scroll to zoom, Space to cue on the selected track, T for thermal."
-        >
-          {/* Above the shared WebGL canvas (z-5, decision 40). */}
-          <div className="pointer-events-none absolute inset-0 z-10">
-            <EoCueOverlay rt={runtime} />
-            <EoReadout fovMax={eo.fovDegMax} />
+        {/* The sensor picture stays 16:9 in any frame: enlarged, never stretched. */}
+        <div className="grid min-h-0 flex-1 place-items-center [container-type:size]">
+          <div
+            ref={ref}
+            data-testid="eo-picture"
+            className="relative aspect-video w-[min(100cqw,calc(100cqh*16/9))] cursor-grab touch-none select-none overflow-hidden active:cursor-grabbing"
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId);
+              drag.current = { x: e.clientX, y: e.clientY };
+            }}
+            onPointerMove={onPointerMove}
+            onPointerUp={() => {
+              if (drag.current) commands.endSlew();
+              drag.current = null;
+            }}
+            onWheel={(e) => commands.zoom(e.deltaY < 0 ? 1 : -1)}
+            aria-label="EO/IR camera view. Drag to slew, scroll to zoom, Space to cue on the selected track, T for thermal."
+          >
+            {/* Above the shared WebGL canvas (z-5, decision 40). */}
+            <div className="pointer-events-none absolute inset-0 z-10">
+              <EoCueOverlay rt={runtime} />
+              <EoReadout fovMax={eo.fovDegMax} />
+            </div>
           </div>
         </div>
       </Panel>

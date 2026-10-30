@@ -1,7 +1,7 @@
 'use client';
 
+import type { Asset } from '@vyuh/shared';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { ActionBar } from '@/components/hud/action-bar';
 import { CommsPanel } from '@/components/hud/comms-panel';
 import { EoPanel } from '@/components/hud/eo-view';
 import { LargerScreenNotice, Panel, PanelHeader } from '@/components/hud/primitives';
@@ -10,6 +10,7 @@ import { RfPanel } from '@/components/hud/rf-panel';
 import { CheatSheet, useShortcuts } from '@/components/hud/shortcuts';
 import { SpectrogramPanel } from '@/components/hud/spectrogram-panel';
 import { TopBar } from '@/components/hud/top-bar';
+import { TrackCard } from '@/components/hud/track-card';
 import { TabPanel, Tabs } from '@/components/ui/tabs';
 import { TrackList, type TrackColumn } from '@/components/hud/track-list';
 import type { Commands } from '@/lib/sim/commands';
@@ -21,7 +22,7 @@ import { GuidedTour } from '@/components/tour/guided-tour';
 import { useAuth } from '@/lib/auth';
 import { isGuest } from '@/lib/nav';
 import { readSettings } from '@/lib/settings';
-import { useUiStore } from '@/lib/sim/ui-store';
+import { useUiStore, type MainView } from '@/lib/sim/ui-store';
 import { cn } from '@/lib/utils';
 import { SimCanvas } from './sim-canvas';
 import { usePracticeHints } from './use-practice-hints';
@@ -29,12 +30,27 @@ import { TrackLabels } from './track-labels';
 import { TerrainCredit } from './terrain-credit';
 import { ZoneLabels } from './zone-labels';
 
-/** Bottom row height: 28 px header + a 16:9 EO picture 432 px wide (243 px) + border. */
-const BOTTOM_ROW = 'h-[272px]';
+/**
+ * Player frames (player plan §4). The three views are absolutely placed siblings,
+ * so swapping them changes classes only: drei's <View> follows its element's
+ * rectangle every frame, and no canvas, control or sweep is rebuilt.
+ */
+const FRAME = {
+  MAIN: 'left-0 top-0 right-[360px] bottom-[200px] wide:right-[440px] wide:bottom-[248px]',
+  PIP: 'left-2 bottom-[208px] z-20 h-[172px] w-[256px] border border-line-2 shadow-float wide:bottom-[256px] wide:h-[244px] wide:w-[384px]',
+  SIDE: 'right-0 top-0 h-[calc(100%-428px)] w-[360px] wide:h-[calc(100%-560px)] wide:w-[440px]',
+} as const;
+type Slot = keyof typeof FRAME;
+
+const SLOTS: Record<MainView, { tactical: Slot; eo: Slot; radar: Slot }> = {
+  TACTICAL: { tactical: 'MAIN', eo: 'PIP', radar: 'SIDE' },
+  EO: { tactical: 'PIP', eo: 'MAIN', radar: 'SIDE' },
+  RADAR: { tactical: 'SIDE', eo: 'PIP', radar: 'MAIN' },
+};
 
 /**
  * What the AAR replay (Phase 4a) puts into the same player: a timeline strip,
- * the kill-chain panel in place of the action bar, and ground-truth overlays —
+ * the kill-chain panel in place of the track card, and ground-truth overlays —
  * all built outside the HUD folders, which never read truth (decision 108).
  */
 export interface ReplaySlots {
@@ -51,7 +67,15 @@ export interface ReplaySlots {
 }
 
 /** Track list, RF strobes and the spectrogram as tabs in one panel (SPEC §15). */
-function TrackTabs({ commands, column }: { commands: Commands; column?: TrackColumn }) {
+function TrackTabs({
+  commands,
+  column,
+  assets,
+}: {
+  commands: Commands;
+  column?: TrackColumn;
+  assets: readonly Asset[];
+}) {
   const [tab, setTab] = useState<'TRACKS' | 'RF' | 'SPECTRO'>('TRACKS');
   const nTracks = useHudStore(
     (s) => s.hud?.tracks.filter((t) => t.status === 'ACTIVE').length ?? 0,
@@ -75,7 +99,7 @@ function TrackTabs({ commands, column }: { commands: Commands; column?: TrackCol
       />
       <TabPanel idBase="track-tabs" id={tab} className="min-h-0 flex-1 overflow-y-auto">
         {tab === 'TRACKS' ? (
-          <TrackList commands={commands} column={column} />
+          <TrackList commands={commands} column={column} assets={assets} />
         ) : tab === 'RF' ? (
           <RfPanel />
         ) : (
@@ -87,9 +111,10 @@ function TrackTabs({ commands, column }: { commands: Commands; column?: TrackCol
 }
 
 /**
- * Sim player (DESIGN §11.5, SPEC §15): a fixed full-viewport grid — top bar;
- * tactical 3D view with PPI and Comms on the right; EO/IR, tracks and actions
- * along the bottom. Sized for 1366×768 without scrolling.
+ * Sim player (DESIGN §11.5, player plan §4): a fixed full-viewport grid — top bar;
+ * one main view with the camera as a picture-in-picture; PPI and the track card
+ * on the right; tracks and Comms along the bottom. V and W change what is large.
+ * Sized for 1366×768 without scrolling.
  */
 export function SimPlayer({
   runtime,
@@ -112,6 +137,8 @@ export function SimPlayer({
   const { user } = useAuth();
   const setTour = useCallback((open: boolean) => useUiStore.getState().set({ tour: open }), []);
   const setUi = useUiStore((s) => s.set);
+  const mainView = useUiStore((s) => s.mainView);
+  const slots = SLOTS[mainView];
   // Settings: open the shortcut list when a Practice run starts (it holds the clock).
   useEffect(() => {
     if (!replay && runtime.mode === 'PRACTICE' && readSettings().shortcutsOnStart) {
@@ -135,44 +162,53 @@ export function SimPlayer({
       data-testid="sim-player"
     >
       <TopBar runtime={runtime} upload={upload} commands={commands} replay={replay?.topBarExtra} />
-      <div className="flex min-h-0 flex-1">
+      <div className="relative min-h-0 flex-1 bg-bg-0">
         {/* overflow-hidden: 3D track labels portal in here and must not spill over the top bar. */}
         <div
           ref={tactical}
-          className="relative min-w-0 flex-1 overflow-hidden"
+          className={cn('absolute overflow-hidden', FRAME[slots.tactical])}
           aria-label="Tactical view"
           data-tour="tactical"
         >
           <ZoneLabels runtime={runtime} />
-          <TerrainCredit world={runtime.world} />
+          {slots.tactical === 'MAIN' && <TerrainCredit world={runtime.world} />}
           <TrackLabels />
           {replay?.tacticalOverlay}
         </div>
-        <aside className="flex w-[320px] shrink-0 flex-col border-l border-line-1 bg-bg-1">
-          <Panel className="shrink-0 border-0 border-b" data-tour="radar">
-            <PanelHeader title="Radar PPI">
-              <span className="text-label">{ppiRangeKm(runtime)} km · rings 1 km</span>
-            </PanelHeader>
-            {/* Leave the Comms log at least 8 lines at 768 px height (audit P1-2). */}
-            <div className="mx-auto w-[min(318px,calc(100vh-536px))] py-1">
-              <RadarScope runtime={runtime} commands={commands} overlay={replay?.ppiOverlay} />
-            </div>
-          </Panel>
-          <CommsPanel runtime={runtime} enter={!replay} className="min-h-0 flex-1" />
-        </aside>
-      </div>
-      {replay?.timeline}
-      <div className={cn('flex shrink-0 border-t border-line-1 bg-bg-1', BOTTOM_ROW)}>
-        <div className="w-[432px] shrink-0 border-r border-line-1" data-tour="eo">
+        <div className={cn('absolute overflow-hidden', FRAME[slots.eo])} data-tour="eo">
           <EoPanel ref={eo} runtime={runtime} commands={commands} />
         </div>
-        <div className="min-w-0 flex-1" data-tour="tracks">
-          <TrackTabs commands={commands} column={replay?.trackColumn} />
+        <Panel
+          className={cn('absolute border-0 border-l bg-bg-1', FRAME[slots.radar])}
+          data-tour="radar"
+        >
+          <PanelHeader title="Radar PPI">
+            <span className="text-label">{ppiRangeKm(runtime)} km · rings 1 km</span>
+          </PanelHeader>
+          <div className="grid min-h-0 flex-1 place-items-center p-1 [container-type:size]">
+            <div className="w-[min(100cqw,100cqh)]">
+              <RadarScope runtime={runtime} commands={commands} overlay={replay?.ppiOverlay} />
+            </div>
+          </div>
+        </Panel>
+        <div
+          className="absolute bottom-[200px] right-0 h-[228px] w-[360px] border-l border-t border-line-1 bg-bg-1 wide:bottom-[248px] wide:h-[312px] wide:w-[440px]"
+          data-tour="actions"
+        >
+          {replay ? replay.side : <TrackCard runtime={runtime} commands={commands} />}
         </div>
-        <div className="w-[320px] shrink-0 border-l border-line-1" data-tour="actions">
-          {replay ? replay.side : <ActionBar runtime={runtime} commands={commands} />}
+        <div className="absolute inset-x-0 bottom-0 flex h-[200px] border-t border-line-1 bg-bg-1 wide:h-[248px]">
+          <div className="min-w-0 flex-[47]" data-tour="tracks">
+            <TrackTabs
+              commands={commands}
+              column={replay?.trackColumn}
+              assets={runtime.scenario.assets}
+            />
+          </div>
+          <CommsPanel runtime={runtime} enter={!replay} className="min-w-0 flex-[53] border-l" />
         </div>
       </div>
+      {replay?.timeline}
       <SimCanvas
         runtime={runtime}
         container={container}

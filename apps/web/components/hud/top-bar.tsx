@@ -3,15 +3,24 @@
 import type { Affiliation } from '@vyuh/shared';
 import type { ReactNode } from 'react';
 import { Keyboard, Pause, Play } from 'lucide-react';
-import { AffiliationSymbol, Banner, Kbd, StateChip, Tooltip } from '@/components/hud/primitives';
+import {
+  AffiliationSymbol,
+  Banner,
+  CooldownRing,
+  Kbd,
+  StateChip,
+  Tooltip,
+} from '@/components/hud/primitives';
 import { Button } from '@/components/ui/button';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { AFFILIATION_STYLE } from '@/lib/affiliation';
+import { formatKm } from '@/lib/hud/derive';
 import type { Commands } from '@/lib/sim/commands';
 import type { BatcherStatus } from '@/lib/sim/event-batcher';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useHudStore } from '@/lib/sim/store';
-import { useUiStore } from '@/lib/sim/ui-store';
-import { ROE_LABEL, formatClock } from '@/lib/strings';
+import { useUiStore, type MainView } from '@/lib/sim/ui-store';
+import { EFFECTOR_LABEL, ROE_LABEL, formatClock } from '@/lib/strings';
 import { pickBanner } from './use-hud-derived';
 
 const AFFILIATIONS: Affiliation[] = ['HOSTILE', 'UNKNOWN', 'FRIENDLY', 'NEUTRAL'];
@@ -28,6 +37,53 @@ function Connection({ upload }: { upload: BatcherStatus | null | undefined }) {
         Synced {upload.sentEvents}
       </StateChip>
     </Tooltip>
+  );
+}
+
+/** Effector readiness at a glance; the numbers are in each pip's tooltip. */
+function EffectorPips() {
+  const effectors = useHudStore((s) => s.hud?.effectors);
+  const tMs = useHudStore((s) => s.hud?.tMs ?? 0);
+  return (
+    <ul className="flex items-center gap-2" aria-label="Effectors" data-testid="effector-pips">
+      {effectors?.map((e) => {
+        const left = Math.max(0, e.readyAtMs - tMs);
+        const ready = left > 0 ? `${(left / 1000).toFixed(1)} s` : 'Ready';
+        const rounds = e.ammo === null ? 'unlimited rounds' : `${e.ammo} rounds`;
+        return (
+          <li key={e.id}>
+            <Tooltip
+              content={`${EFFECTOR_LABEL[e.kind]}: ${ready} · ${rounds} · ${formatKm(e.rangeM)} km`}
+              side="bottom"
+            >
+              <span className="flex items-center gap-1" tabIndex={0}>
+                <CooldownRing remaining={e.cooldownMs ? left / e.cooldownMs : 0} size={12} />
+                <span className="text-label text-text-1">{EFFECTOR_LABEL[e.kind]}</span>
+                {e.ammo !== null && <span className="text-readout text-text-2">{e.ammo}</span>}
+              </span>
+            </Tooltip>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function ViewControl() {
+  const mainView = useUiStore((s) => s.mainView);
+  const set = useUiStore((s) => s.set);
+  return (
+    <SegmentedControl<MainView>
+      label="Main view"
+      size="hud"
+      value={mainView}
+      onChange={(v) => set({ mainView: v })}
+      items={[
+        { value: 'TACTICAL', label: 'Map', hint: 'Tactical map · V', testId: 'view-tactical' },
+        { value: 'EO', label: 'Camera', hint: 'EO/IR camera · V', testId: 'view-eo' },
+        { value: 'RADAR', label: 'Radar', hint: 'Wide radar · W', testId: 'view-radar' },
+      ]}
+    />
   );
 }
 
@@ -61,7 +117,9 @@ export function TopBar({
         {runtime.scenario.name}
       </span>
       <span className="flex items-baseline gap-2" aria-label="Session clock">
-        <span className="text-readout-lg text-text-1">{formatClock(hud.tMs)}</span>
+        <span className="font-mono text-[24px] leading-none font-medium tracking-tight text-text-1 tnum">
+          {formatClock(hud.tMs)}
+        </span>
         <span className="text-readout text-text-2">−{formatClock(hud.durationMs - hud.tMs)}</span>
       </span>
       <StateChip>{ROE_LABEL[hud.roe]}</StateChip>
@@ -78,9 +136,11 @@ export function TopBar({
           </li>
         ))}
       </ul>
+      <EffectorPips />
       <div className="min-w-0 flex-1">
         {banner && <Banner tone={banner.tone}>{banner.text}</Banner>}
       </div>
+      <ViewControl />
       <Connection upload={upload} />
       {replay !== undefined ? replay : <LiveControls runtime={runtime} commands={commands} />}
     </div>

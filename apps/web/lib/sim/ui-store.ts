@@ -32,8 +32,13 @@ export interface LocalLine extends CommsLine {
 
 const MAX_LOCAL = 20;
 
+/** What fills the player's main view (V swaps camera and map, W widens the radar). */
+export type MainView = 'TACTICAL' | 'EO' | 'RADAR';
+
 interface UiStore {
   eo: EoPointing;
+  mainView: MainView;
+  moreOpen: boolean;
   classifyMenu: boolean;
   interceptArmed: boolean;
   endArmed: boolean;
@@ -61,6 +66,8 @@ interface UiStore {
 let nextLocal = 0;
 
 export const useUiStore = create<UiStore>((set) => ({
+  mainView: 'TACTICAL',
+  moreOpen: false,
   eo: {
     azDeg: 0,
     elDeg: 0,
@@ -106,6 +113,8 @@ export const useUiStore = create<UiStore>((set) => ({
     ),
   reset: (eo) =>
     set({
+      mainView: 'TACTICAL',
+      moreOpen: false,
       eo: { ...eo, cueSinceTMs: null },
       classifyMenu: false,
       interceptArmed: false,

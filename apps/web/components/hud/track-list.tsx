@@ -1,7 +1,9 @@
 'use client';
 
+import type { Asset } from '@vyuh/shared';
 import { memo, useEffect, useState, type ReactNode } from 'react';
 import { AffiliationSymbol, StatusNotice } from '@/components/hud/primitives';
+import { threatOrder } from '@/lib/hud/stage-actions';
 import { ALTITUDE_BAND_LABEL, altitudeBand, formatBearing, formatKm } from '@/lib/hud/derive';
 import { rfBadgeText } from '@/lib/rf';
 import type { Commands } from '@/lib/sim/commands';
@@ -12,7 +14,7 @@ import { CLASS_LABEL } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 
 const HEAD = 'sticky top-0 z-[1] h-7 bg-bg-2 px-2 text-left text-label font-medium';
-const CELL = 'h-8 px-2 whitespace-nowrap';
+const CELL = 'h-7 px-2 whitespace-nowrap';
 
 /**
  * Track list — the primary control surface (DESIGN §11.5): symbol, id, class,
@@ -25,7 +27,16 @@ export interface TrackColumn {
   cell: (trackId: string) => ReactNode;
 }
 
-export function TrackList({ commands, column }: { commands: Commands; column?: TrackColumn }) {
+export function TrackList({
+  commands,
+  column,
+  assets = [],
+}: {
+  commands: Commands;
+  column?: TrackColumn;
+  /** Defended assets: the list reads most urgent first. */
+  assets?: readonly Asset[];
+}) {
   const hud = useHudStore((s) => s.hud);
   // Row elements by track id (stable for the list's life; written by the rows' refs).
   const [rows] = useState(() => new Map<string, HTMLTableRowElement>());
@@ -41,7 +52,7 @@ export function TrackList({ commands, column }: { commands: Commands; column?: T
     row.scrollIntoView({ block: 'nearest' });
   }, [rows, selectedId]);
 
-  const tracks = hud?.tracks ?? [];
+  const tracks = threatOrder(hud?.tracks ?? [], assets);
   if (tracks.length === 0) {
     return (
       <StatusNotice title="No radar tracks yet.">
@@ -60,8 +71,8 @@ export function TrackList({ commands, column }: { commands: Commands; column?: T
           <th className={HEAD}>Class</th>
           <th className={cn(HEAD, 'text-right')}>Range</th>
           <th className={cn(HEAD, 'text-right')}>Brg</th>
-          <th className={HEAD}>Alt</th>
-          <th className={HEAD}>RF</th>
+          <th className={cn(HEAD, 'hidden wide:table-cell')}>Alt</th>
+          <th className={cn(HEAD, 'hidden wide:table-cell')}>RF</th>
           <th className={HEAD}>State</th>
           {column && <th className={HEAD}>{column.header}</th>}
         </tr>
@@ -165,8 +176,10 @@ const TrackRow = memo(
           <span className="ml-1 text-text-2">km</span>
         </td>
         <td className={cn(CELL, 'text-right')}>{formatBearing(t.bearingDeg)}</td>
-        <td className={CELL}>{ALTITUDE_BAND_LABEL[altitudeBand(t.altitudeAglM)]}</td>
-        <td className={cn(CELL, 'text-text-2')}>
+        <td className={cn(CELL, 'hidden wide:table-cell')}>
+          {ALTITUDE_BAND_LABEL[altitudeBand(t.altitudeAglM)]}
+        </td>
+        <td className={cn(CELL, 'hidden text-text-2 wide:table-cell')}>
           {t.rf ? `RF ${rfBadgeText(t.rf)}` : <span className="text-text-2">—</span>}
         </td>
         <td className={cn(CELL, 'text-label')}>

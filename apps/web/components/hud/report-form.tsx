@@ -16,7 +16,7 @@ import { CLASS_MENU } from '@/lib/strings';
 import { cn } from '@/lib/utils';
 
 // Contact report form (DESIGN §11.5 Report group, SPEC §4.3). Opens over the
-// action bar with R, prefilled from the selected track; the trainee picks the
+// track card with R, prefilled from the selected track; the trainee picks the
 // activity (1–5) and sends with Enter — three keys in all. Esc cancels.
 
 const FIELD = 'h-7 px-2 text-small';

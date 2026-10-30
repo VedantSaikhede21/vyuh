@@ -25,7 +25,7 @@ import { TruthAnchors, TruthLabels, truthColumn, truthPpiOverlay } from './truth
 /**
  * AAR replay (DESIGN §11.7, Phase 4a Step 8): the player's own panels, read-only,
  * re-running the logged commands. A timeline strip sits above the bottom row and
- * the kill-chain panel takes the action bar's place.
+ * the kill-chain panel takes the track card's place.
  */
 export function ReplayView({
   data,

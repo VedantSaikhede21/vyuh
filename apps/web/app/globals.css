@@ -4,6 +4,8 @@
 
 /* Console look inside the sim player and AAR replay (DESIGN §4). */
 @custom-variant hud (&:where([data-ui='hud'] *));
+/* The player's larger grid (player plan §4.3). */
+@custom-variant wide (@media (min-width: 1600px) and (min-height: 860px));
 
 /*
  * VYUH design tokens: docs/DESIGN.md §3–§7 (binding). Colours and motion come

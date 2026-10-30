@@ -77,6 +77,9 @@ export const SHORTCUTS: { keys: string; action: string }[] = [
   { keys: 'Esc', action: 'Cancel current action' },
   { keys: 'P', action: 'Pause (practice only)' },
   { keys: 'L', action: 'Threat library entry for the selected track' },
+  { keys: 'V', action: 'Swap the map and the camera' },
+  { keys: 'W', action: 'Wide radar' },
+  { keys: '.', action: 'More actions' },
   { keys: '?', action: 'Show / hide this list' },
 ];
 

@@ -68,6 +68,9 @@ export function useShortcuts(commands: Commands | null): void {
       else if (k === 'p') commands.togglePause();
       else if (k === 't') commands.toggleEoMode();
       else if (k === 'l') commands.openLibrary();
+      else if (k === 'v') ui.set({ mainView: ui.mainView === 'EO' ? 'TACTICAL' : 'EO' });
+      else if (k === 'w') ui.set({ mainView: ui.mainView === 'RADAR' ? 'TACTICAL' : 'RADAR' });
+      else if (e.key === '.') ui.set({ moreOpen: !ui.moreOpen });
       else handled = false;
       if (handled) e.preventDefault();
     };

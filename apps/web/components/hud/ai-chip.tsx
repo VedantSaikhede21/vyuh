@@ -20,7 +20,7 @@ export function aiLabel(ai: NonNullable<TrackView['ai']>): string {
   return `AI SUGGESTS · ${aiClass(ai)} · ${aiPct(ai.confidence)}`;
 }
 
-/** In the action bar header: the suggestion with Y / X controls. */
+/** In the track card header: the suggestion with Y / X controls. */
 export function AiChip({ track, commands }: { track: TrackView; commands: Commands }) {
   const ai = track.ai;
   if (!ai) return null;

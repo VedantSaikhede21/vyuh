@@ -11,6 +11,7 @@ import {
   startPixelRatio,
 } from '@/lib/sim/pixel-ratio';
 import type { SimRuntime } from '@/lib/sim/runtime';
+import { useUiStore } from '@/lib/sim/ui-store';
 import { SimRuntimeContext } from './sim-context';
 import { TacticalScene } from './tactical-view';
 
@@ -57,6 +58,8 @@ export function SimCanvas({
   tacticalExtra?: ReactNode;
 }) {
   const [adaptive] = useState(adaptivePixelRatioEnabled);
+  // The map as a picture-in-picture over the camera draws after it.
+  const tacticalOnTop = useUiStore((s) => s.mainView === 'EO');
   const [dpr] = useState(() => startPixelRatio(deviceRatio()));
   return (
     <Canvas
@@ -67,7 +70,7 @@ export function SimCanvas({
     >
       {adaptive && <AdaptivePixelRatio />}
       <SimRuntimeContext.Provider value={runtime}>
-        <View track={tactical as RefObject<HTMLElement>} index={1}>
+        <View track={tactical as RefObject<HTMLElement>} index={tacticalOnTop ? 3 : 1}>
           <TacticalScene element={tactical} onSelectTrack={onSelectTrack} />
           {tacticalExtra}
         </View>

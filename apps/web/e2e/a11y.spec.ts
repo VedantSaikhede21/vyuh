@@ -66,33 +66,26 @@ for (const vp of [
   { width: 1366, height: 768 },
   { width: 1920, height: 1080 },
 ]) {
-  test(`action bar shows every effector without scrolling at ${vp.width}×${vp.height}`, async ({
-    page,
-  }) => {
+  test(`top bar shows every effector at ${vp.width}×${vp.height}`, async ({ page }) => {
     await page.setViewportSize(vp);
     // S14 has all three effectors (interceptor, jammer, spoofer).
     await login(page, 'instructor@demo');
     await openBriefing(page, 'S14');
     await beginSession(page);
-    const strip = page.getByLabel('Effectors', { exact: true });
-    await expect(strip.getByRole('group')).toHaveCount(3);
-    const { overflow, bottom } = await strip.evaluate((el) => {
-      const body = el.parentElement!;
-      return {
-        overflow: body.scrollHeight - body.clientHeight,
-        bottom: el.getBoundingClientRect().bottom,
-      };
-    });
-    expect(overflow, 'action bar content overflows').toBeLessThanOrEqual(0);
-    expect(bottom).toBeLessThanOrEqual(vp.height);
+    const pips = page.getByTestId('effector-pips');
+    await expect(pips.getByRole('listitem')).toHaveCount(3);
+    await expect(pips).toBeInViewport({ ratio: 1 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      vp.width,
+    );
   });
 }
 
 test('core actions by keyboard alone', async ({ page }) => {
   await login(page, 'trainee1@demo');
   // Open the briefing and begin without the mouse.
-  // Rows are focusable (arrows move between them); Enter opens the briefing page.
-  await page.getByRole('row', { name: 'S01 First Contact: open the briefing' }).focus();
+  // Cards are focusable (arrows move between them); Enter opens the briefing page.
+  await page.getByRole('button', { name: 'S01 First Contact: open the briefing' }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('start-session')).toBeFocused();
   await page.keyboard.press('Enter');

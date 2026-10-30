@@ -38,9 +38,14 @@ export const TOURS: Readonly<Record<TourId, readonly TourStep[]>> = {
       body: 'Space cues the camera to the selected track. Identify the shape here before you act. T switches to thermal; + and − zoom.',
     },
     {
+      target: '[data-testid="view-eo"]',
+      title: 'Views',
+      body: 'One view is large at a time. V swaps the map and the camera; W makes the radar large when a swarm crowds it.',
+    },
+    {
       target: '[data-tour="actions"]',
-      title: 'Actions',
-      body: 'Identify first: mark D, classify C, affiliation H, F or N. Then respond: monitor M, jam J, intercept I and Enter. A disabled action says why.',
+      title: 'Track card',
+      body: 'The selected track: what it is, how far, how long until it reaches the asset, and the actions that fit this stage. Every other action is under More (the . key), and every shortcut works at any time. A disabled action says why.',
     },
     {
       target: '[data-tour="report"]',
