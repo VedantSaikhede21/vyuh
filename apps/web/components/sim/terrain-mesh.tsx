@@ -2,10 +2,16 @@
 
 import type { Heightmap, World } from '@vyuh/sim-core';
 import { toThree } from '@vyuh/sim-core';
-import { useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { useEffect, useMemo, useState } from 'react';
 import { BufferAttribute, BufferGeometry, Color, LOD, Mesh, MeshLambertMaterial } from 'three';
+import { QUALITY_FEATURES, type GraphicsQuality } from '@/lib/gpu-tier';
+import { useShadowMask } from '@/lib/terrain/use-shadow-mask';
+import { terrainTextures, type TerrainTextures } from '@/lib/terrain/display';
+import { irTerrainMaterial, terrainMaterial } from '@/lib/terrain/terrain-material';
 import { IR_MATERIALS } from '@/lib/sim/ir-materials';
-import { GROUND, UI } from '@/lib/theme/scene-colours';
+import type { EnvironmentLook } from '@/lib/sim/environment-look';
+import { GROUND } from '@/lib/theme/scene-colours';
 
 // Chunked terrain with LOD (SPEC §16): CHUNKS × CHUNKS tiles, each with levels
 // sampling every 1/2/4/8 grid nodes, plus skirts that hide cracks where
@@ -191,65 +197,84 @@ export function terrainTiles(map: Heightmap, originElevM = 0): TerrainTile[] {
   return tiles;
 }
 
-const DAY_MATERIAL = new MeshLambertMaterial({ vertexColors: true });
+const PLAIN_MATERIAL = new MeshLambertMaterial({ vertexColors: true });
 
 /**
- * The tactical map fades into the background between these fractions of the
- * half-width, radially. Perspective squeezes the far edge into a few pixels,
- * so the fade has to start well inside the map to read as a fade.
+ * The tactical map fades into the sky between these fractions of the half-width,
+ * radially. Perspective squeezes the far edge into a few pixels, so the fade has
+ * to start well inside the map to read as a fade.
  */
 export const EDGE_FADE_START = 0.55;
 export const EDGE_FADE_END = 0.97;
 
-/**
- * Tactical-map terrain material: Lambert, then a fade to --bg-0 near the preset
- * boundary (radial, by world x/z), so the 14 km map has no hard slab edge
- * (approved 3.0). Tied to the map, not the camera, so zooming never fogs it.
- */
-function edgeFadeMaterial(halfSizeM: number): MeshLambertMaterial {
-  const m = new MeshLambertMaterial({ vertexColors: true });
-  m.onBeforeCompile = (shader) => {
-    shader.uniforms.uFadeStart = { value: halfSizeM * EDGE_FADE_START };
-    shader.uniforms.uFadeEnd = { value: halfSizeM * EDGE_FADE_END };
-    // Mixed in after <colorspace_fragment> (it precedes <fog_fragment>), so the
-    // colour must already be sRGB-encoded to match the --bg-0 clear colour.
-    shader.uniforms.uEdgeColor = { value: new Color(UI.bg0).convertLinearToSRGB() };
-    shader.vertexShader = shader.vertexShader
-      .replace(
-        '#include <common>',
-        `#include <common>
-        uniform float uFadeStart;
-        uniform float uFadeEnd;
-        varying float vEdgeFade;`,
-      )
-      .replace(
-        '#include <project_vertex>',
-        `#include <project_vertex>
-        vec4 vfWorld = modelMatrix * vec4(transformed, 1.0);
-        vEdgeFade = smoothstep(uFadeStart, uFadeEnd, length(vfWorld.xz));`,
-      );
-    shader.fragmentShader = shader.fragmentShader
-      .replace(
-        '#include <common>',
-        `#include <common>
-        uniform vec3 uEdgeColor;
-        varying float vEdgeFade;`,
-      )
-      .replace(
-        '#include <fog_fragment>',
-        `#include <fog_fragment>
-        gl_FragColor.rgb = mix(gl_FragColor.rgb, uEdgeColor, vEdgeFade);`,
-      );
-  };
-  m.customProgramCacheKey = () => 'terrain-edge-fade';
-  return m;
-}
+const BLEND_PER_S = 1 / 0.4;
 
-export function TerrainMesh({ world, edgeFade = false }: { world: World; edgeFade?: boolean }) {
+/**
+ * Terrain for a view. It draws at once with vertex colours; the satellite look
+ * cross-fades in when its textures arrive, and a failed texture simply leaves
+ * less of it (terrain plan §13). `look` drives haze and shadows.
+ */
+export function TerrainMesh({
+  world,
+  look,
+  quality,
+  edgeFade = false,
+  encoded,
+}: {
+  world: World;
+  look: EnvironmentLook;
+  quality: GraphicsQuality;
+  edgeFade?: boolean;
+  /** Output goes straight to the screen: haze colours must be sRGB-encoded. */
+  encoded: boolean;
+}) {
   const map = world.heightmap;
-  const material = useMemo(
-    () => (edgeFade ? edgeFadeMaterial(map.sizeM / 2) : DAY_MATERIAL),
-    [edgeFade, map.sizeM],
+  const features = QUALITY_FEATURES[quality];
+  const [textures, setTextures] = useState<TerrainTextures | null>(null);
+  useEffect(() => {
+    let live = true;
+    void terrainTextures(map, world.meta ?? undefined).then((t) => {
+      if (live) setTextures(t);
+    });
+    return () => {
+      live = false;
+    };
+  }, [map, world.meta]);
+
+  const display = useMemo(() => {
+    if (!textures) return null;
+    let floorM = Infinity;
+    for (const v of map.heights) floorM = Math.min(floorM, v);
+    return terrainMaterial({
+      textures,
+      sizeM: map.sizeM,
+      floorM,
+      edgeFade,
+      fadeRange: [EDGE_FADE_START, EDGE_FADE_END],
+      detail: features.detail,
+    });
+  }, [textures, map, edgeFade, features.detail]);
+
+  const shadow = useShadowMask(map, look, features.shadowPx);
+
+  useEffect(() => {
+    if (!display) return;
+    const horizon = look.skyHorizon.clone();
+    display.uniforms.uHorizon.value = encoded ? horizon.convertLinearToSRGB() : horizon;
+    display.uniforms.uShadow.value = shadow;
+    display.uniforms.uShadowOn.value = shadow ? look.shadowStrength : 0;
+  }, [display, look, encoded, shadow]);
+
+  useFrame((_, dt) => {
+    if (display && display.uniforms.uBlend.value < 1) {
+      display.uniforms.uBlend.value = Math.min(1, display.uniforms.uBlend.value + dt * BLEND_PER_S);
+    }
+  });
+
+  const material = display?.material ?? PLAIN_MATERIAL;
+  const irMaterial = useMemo(
+    () => (textures?.cover ? irTerrainMaterial(textures.cover, map.sizeM) : IR_MATERIALS.terrain),
+    [textures, map.sizeM],
   );
   const lods = useMemo(() => {
     const tiles = terrainTiles(map, world.meta?.originElevM ?? 0);
@@ -258,12 +283,12 @@ export function TerrainMesh({ world, edgeFade = false }: { world: World; edgeFad
       lod.position.set(...tile.centre);
       tile.levels.forEach((geo, i) => {
         const mesh = new Mesh(geo, material);
-        mesh.userData.irMaterial = IR_MATERIALS.terrain;
+        mesh.userData.irMaterial = irMaterial;
         lod.addLevel(mesh, LEVEL_DISTANCE_FRACTIONS[i]! * map.sizeM);
       });
       return lod;
     });
-  }, [map, world.meta?.originElevM, material]);
+  }, [map, world.meta?.originElevM, material, irMaterial]);
   // Geometry is cached per heightmap and shared by every view; the LOD wrappers are
   // garbage-collected (no cleanup that empties them: StrictMode re-runs effects).
   return (

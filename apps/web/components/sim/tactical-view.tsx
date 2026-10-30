@@ -2,12 +2,16 @@
 
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useMemo, type RefObject } from 'react';
-import { BuildingsMesh } from './buildings-mesh';
+import { QUALITY_FEATURES, resolveQuality } from '@/lib/gpu-tier';
+import { useSettings } from '@/lib/settings';
+import { environmentLook } from '@/lib/sim/environment-look';
+import { BuildingsMesh, roofStyleOf } from './buildings-mesh';
 import { Drones } from './drones';
 import { Environment } from './environment';
 import { useSimRuntime } from './sim-context';
 import { SiteMarkers } from './site-markers';
 import { TerrainMesh } from './terrain-mesh';
+import { VegetationMesh } from './vegetation-mesh';
 import { SelectedFraming } from './selected-framing';
 import { TrackLabelAnchors } from './track-labels';
 import { TrackMarkers } from './track-markers';
@@ -33,12 +37,16 @@ export function TacticalScene({
     const ground = runtime.groundHeight(CAMERA_START.x, CAMERA_START.z);
     return [CAMERA_START.x, Math.max(CAMERA_START.height, ground + 600), -CAMERA_START.z];
   }, [runtime]);
+  const env = runtime.sim.getState().environment;
+  const look = useMemo(() => environmentLook(env, 'tactical'), [env]);
+  const quality = resolveQuality(useSettings().graphics);
   return (
     <>
       <PerspectiveCamera makeDefault position={start} fov={50} near={5} far={40_000} />
-      <Environment env={runtime.sim.getState().environment} variant="tactical" />
-      <TerrainMesh world={runtime.world} edgeFade />
-      <BuildingsMesh index={runtime.world.buildings} />
+      <Environment env={env} variant="tactical" />
+      <TerrainMesh world={runtime.world} look={look} quality={quality} edgeFade encoded />
+      <BuildingsMesh index={runtime.world.buildings} roofStyle={roofStyleOf(runtime.world)} />
+      <VegetationMesh world={runtime.world} viewM={QUALITY_FEATURES[quality].treeViewM} />
       <SiteMarkers />
       <ZoneMarkers />
       <Drones />

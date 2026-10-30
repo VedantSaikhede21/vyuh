@@ -16,9 +16,32 @@ export const TerrainPresetFiles = named(
     preview: z.string().min(1).optional(),
     /** GeoJSON FeatureCollection of Polygons in local metres [x, z]. */
     buildings: z.string().min(1),
+    /** Display only, absent on older presets: Sentinel-2 ground colour, north up. */
+    albedo: z.string().min(1).optional(),
+    /** Display only: land cover, north up. R water, G vegetation, B bare, A snow. */
+    cover: z.string().min(1).optional(),
+    /** Display only, north up: R sky view, G curvature. */
+    ao: z.string().min(1).optional(),
+    /** Display only: tree positions (see the vegetation loader). */
+    vegetation: z.string().min(1).optional(),
   }),
 );
 export type TerrainPresetFiles = z.infer<typeof TerrainPresetFiles>;
+
+export const TerrainImagery = named(
+  'TerrainImagery',
+  z.object({
+    product: z.string().min(1),
+    scenes: z.array(z.string().min(1)).min(1),
+    dateFrom: z.string().min(1),
+    dateTo: z.string().min(1),
+    processing: z.string().min(1),
+    licence: z.string().min(1),
+    /** The credit line shown wherever the imagery appears. */
+    credit: z.string().min(1),
+  }),
+);
+export type TerrainImagery = z.infer<typeof TerrainImagery>;
 
 export const TerrainPresetMeta = named(
   'TerrainPresetMeta',
@@ -51,6 +74,10 @@ export const TerrainPresetMeta = named(
        * heights or buildings, so a replay can tell which terrain a session ran on.
        */
       revision: z.int().min(1).optional(),
+      /** Where the display imagery came from; absent on presets without it. */
+      imagery: TerrainImagery.optional(),
+      /** Cache-buster for display files. Independent of `revision`, which is sim content. */
+      displayHash: z.string().min(1).optional(),
     })
     .superRefine((m, ctx) => {
       if (m.relMaxM < m.relMinM) {

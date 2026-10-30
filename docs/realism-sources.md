@@ -17,6 +17,14 @@ Every data source, model, asset and incident inspiration used in VYUH is listed 
 - **Line of sight:** straight-segment sampling every ~10 m against the bilinear heightmap and building footprints (point-in-polygon + roof height), a standard terrain-masking approach (e.g. viewshed analysis in GIS). Representative: no Earth curvature or refraction (negligible within 14 km for this purpose).
 - **Snow on the 3D terrain** above 4,300 m is a rendering choice (representative western-Himalayan snow line), not data.
 
+### Satellite ground colour (display only, Part 6R)
+
+- **Sentinel-2 Level-2A**, collection `sentinel-2-c1-l2a` from the public Earth Search STAC catalogue (Element 84, data on AWS open data). Bands B02, B03, B04, B08, B11 and SCL, reprojected onto each preset's AEQD grid at 1536² (9.1 m/px). Per-pixel median after masking cloud and cloud shadow by SCL; pixels with no strict sample (steep terrain shadow is often classed as cloud shadow) fall back to the non-cloud samples. One fixed display curve for all presets (highlight shoulder, gamma, mild saturation), recorded in each `meta.json` with scene ids and dates.
+- **Licence:** Copernicus Sentinel data legal notice: free, full and open; modification allowed; attribution required. Credit: "Contains modified Copernicus Sentinel data <years>, processed by VYUH". Shown in `meta.json` `attribution`, on the tactical and briefing views, on the Sources page.
+- **Season per preset:** JK_MOUNTAIN Aug–Oct (snow-free valleys), PUNJAB_PLAINS Feb–Mar (green wheat), URBAN_GENERIC Oct–Nov (dry). Representative: not current imagery and not an intelligence product.
+- **Terrain relief and detail noise** (`ao.png`, `_detail/detail.png`) are computed by `scripts/terrain/build_display.py` from our own heightmap and a seeded generator; no third-party asset. The plan's CC0 detail textures were not needed.
+- **Manual review:** each composite is viewed at build time for visible installations; presets were already vetted against OSM (SPEC §14).
+
 ## Sun, weather
 
 - **Sun position: suncalc 1.9.0** (V. Agafonkin, BSD-2-Clause), which implements the formulas from *Astronomy Answers* (https://aa.quae.nl/en/reken/zonpositie.html). Computed at the preset origin with the preset's UTC offset (IST = UTC+5:30).

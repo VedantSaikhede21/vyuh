@@ -31,6 +31,14 @@ export const SOURCE_TOPICS: readonly SourceTopic[] = [
         cite: 'Copernicus DEM GLO-30',
       },
       {
+        what: 'Ground colour of each terrain preset',
+        model:
+          'Our own median composite of cloud-masked Sentinel-2 L2A scenes, one season per preset. Display only; representative, not current imagery',
+        source: 'Copernicus Sentinel-2 (ESA), via the Earth Search STAC catalogue',
+        licence: 'Copernicus Sentinel data terms, attribution',
+        cite: 'Contains modified Copernicus Sentinel data',
+      },
+      {
         what: 'Building footprints',
         model: 'Footprints with heights from tags, else two storeys',
         source: 'OpenStreetMap contributors',

@@ -5177,6 +5177,52 @@
         "REPORT_TRUTH"
       ]
     },
+    "TerrainImagery": {
+      "type": "object",
+      "properties": {
+        "product": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scenes": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "dateFrom": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dateTo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "processing": {
+          "type": "string",
+          "minLength": 1
+        },
+        "licence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "credit": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "product",
+        "scenes",
+        "dateFrom",
+        "dateTo",
+        "processing",
+        "licence",
+        "credit"
+      ]
+    },
     "TerrainPresetFiles": {
       "type": "object",
       "properties": {
@@ -5189,6 +5235,22 @@
           "minLength": 1
         },
         "buildings": {
+          "type": "string",
+          "minLength": 1
+        },
+        "albedo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cover": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ao": {
+          "type": "string",
+          "minLength": 1
+        },
+        "vegetation": {
           "type": "string",
           "minLength": 1
         }
@@ -5268,6 +5330,13 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 9007199254740991
+        },
+        "imagery": {
+          "$ref": "#/$defs/TerrainImagery"
+        },
+        "displayHash": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "required": [

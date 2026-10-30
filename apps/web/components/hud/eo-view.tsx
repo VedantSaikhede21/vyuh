@@ -4,12 +4,16 @@ import { createPortal, useFrame, type RootState } from '@react-three/fiber';
 import { toThree, type Vec3 } from '@vyuh/sim-core';
 import { forwardRef, useEffect, useMemo, useRef } from 'react';
 import { HalfFloatType, PerspectiveCamera, Scene, ShaderMaterial, WebGLRenderTarget } from 'three';
-import { BuildingsMesh } from '@/components/sim/buildings-mesh';
+import { BuildingsMesh, roofStyleOf } from '@/components/sim/buildings-mesh';
 import { Drones } from '@/components/sim/drones';
 import { Environment } from '@/components/sim/environment';
 import { useSimRuntime } from '@/components/sim/sim-context';
 import { TerrainMesh } from '@/components/sim/terrain-mesh';
+import { VegetationMesh } from '@/components/sim/vegetation-mesh';
 import { eoSensor, type Commands } from '@/lib/sim/commands';
+import { QUALITY_FEATURES, resolveQuality } from '@/lib/gpu-tier';
+import { useSettings } from '@/lib/settings';
+import { environmentLook } from '@/lib/sim/environment-look';
 import { swapToIr } from '@/lib/sim/ir-materials';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useUiStore } from '@/lib/sim/ui-store';
@@ -174,6 +178,8 @@ export function EoScene() {
   const fovMax = eo?.kind === 'EO_IR' ? eo.fovDegMax : 30;
   const mode = useUiStore((s) => s.eo.mode);
   const env = rt.sim.getState().environment;
+  const look = useMemo(() => environmentLook(env, 'eo'), [env]);
+  const quality = resolveQuality(useSettings().graphics);
 
   const eoScene = useMemo(() => new Scene(), []);
   const camera = useMemo(
@@ -231,8 +237,9 @@ export function EoScene() {
       {createPortal(
         <>
           <Environment env={env} variant="eo" ir={mode === 'IR'} />
-          <TerrainMesh world={rt.world} />
-          <BuildingsMesh index={rt.world.buildings} />
+          <TerrainMesh world={rt.world} look={look} quality={quality} encoded={false} />
+          <BuildingsMesh index={rt.world.buildings} roofStyle={roofStyleOf(rt.world)} />
+          <VegetationMesh world={rt.world} viewM={QUALITY_FEATURES[quality].treeViewM} />
           <Drones />
         </>,
         eoScene,

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { PageHeader, Panel, PanelHeader } from '@/components/hud/primitives';
 import { RequireAuth } from '@/components/require-auth';
 import { SegmentedControl } from '@/components/ui/segmented-control';
+import type { GraphicsSetting } from '@/lib/gpu-tier';
 import { useSettings, writeSettings, type MotionSetting } from '@/lib/settings';
 
 // Settings (Phase 6C). Kept in this browser; no account-wide settings, and no
@@ -45,6 +46,22 @@ function Settings() {
               ]}
               value={s.motion}
               onChange={(motion) => writeSettings({ motion })}
+            />
+          </Row>
+          <Row
+            title="Graphics quality"
+            help="Terrain detail, shadows and trees in the 3D views. Sensors and scoring are the same at every level. Auto reads your graphics card; pick a lower level if the view stutters."
+          >
+            <SegmentedControl<GraphicsSetting>
+              label="Graphics quality"
+              items={[
+                { value: 'AUTO', label: 'Auto', testId: 'graphics-auto' },
+                { value: 'HIGH', label: 'High', testId: 'graphics-high' },
+                { value: 'MEDIUM', label: 'Medium', testId: 'graphics-medium' },
+                { value: 'LOW', label: 'Low', testId: 'graphics-low' },
+              ]}
+              value={s.graphics}
+              onChange={(graphics) => writeSettings({ graphics })}
             />
           </Row>
           <Row

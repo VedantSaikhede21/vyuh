@@ -10,6 +10,7 @@ export const IR_MATERIALS = {
   /** Cool ground; sun-facing slopes read slightly warmer through Lambert shading. */
   terrain: new MeshLambertMaterial({ color: IR.terrain }),
   buildings: new MeshLambertMaterial({ color: IR.buildings }),
+  trees: new MeshLambertMaterial({ color: IR.trees }),
   /** Contacts: per-instance colour = thermal contrast (white = hot). */
   contacts: new MeshBasicMaterial({ color: IR.contacts }),
 } as const satisfies Record<string, Material>;

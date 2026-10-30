@@ -18,13 +18,33 @@
   "files": {
     "heightmap": "heightmap.u16",
     "preview": "heightmap.png",
-    "buildings": "buildings.geojson"
+    "buildings": "buildings.geojson",
+    "ao": "ao.png",
+    "albedo": "albedo.jpg",
+    "cover": "cover.png"
   },
   "source": "Copernicus DEM GLO-30 (Copernicus_DSM_COG_10_N30_00_E075_00_DEM); local AEQD grid, bilinear",
   "attribution": [
     "Copernicus DEM GLO-30: © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved",
     "Building footprints © OpenStreetMap contributors, ODbL 1.0",
-    "Building footprints © Microsoft, Global ML Building Footprints (github.com/microsoft/GlobalMLBuildingFootprints), ODbL 1.0"
+    "Building footprints © Microsoft, Global ML Building Footprints (github.com/microsoft/GlobalMLBuildingFootprints), ODbL 1.0",
+    "Contains modified Copernicus Sentinel data 2024-2025, processed by VYUH"
   ],
-  "revision": 2
+  "revision": 2,
+  "imagery": {
+    "product": "Sentinel-2 L2A median composite",
+    "scenes": [
+      "S2A_T43REP_20240216T054950_L2A",
+      "S2A_T43REP_20240307T054532_L2A",
+      "S2C_T43REP_20250322T054243_L2A",
+      "S2C_T43REP_20250302T054536_L2A",
+      "S2B_T43REP_20250205T054313_L2A"
+    ],
+    "dateFrom": "2024-02-16",
+    "dateTo": "2025-03-22",
+    "processing": "Per-pixel median of 5 scenes after SCL masking of cloud and shadow; reflectance shoulder 0.35, gamma 1.6, saturation 1.12",
+    "licence": "Copernicus Sentinel data terms (free, full and open; attribution required)",
+    "credit": "Contains modified Copernicus Sentinel data 2024-2025, processed by VYUH"
+  },
+  "displayHash": "4b175cda3b"
 }

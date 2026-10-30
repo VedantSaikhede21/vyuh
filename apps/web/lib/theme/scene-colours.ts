@@ -59,6 +59,9 @@ export const SKY = {
   night: '#0b1020',
   dusk: '#b4876a',
   haze: '#a9adb0',
+  zenithDay: '#4f7ba6',
+  zenithNight: '#05070f',
+  zenithDusk: '#3a4a6e',
   hemiSkyDay: '#dfe9f0',
   hemiSkyNight: '#27324d',
   hemiGroundDay: '#3a3a2a',
@@ -75,14 +78,25 @@ export const GROUND = {
   fieldHigh: '#6a6a3e',
   rock: '#6e6a62',
   snow: '#e6eaee',
-  buildings: '#9a9284',
   droneBody: '#1a1d21',
+  conifer: '#46583a',
+  coniferDark: '#33472f',
+} as const;
+
+/** Buildings by a stable hash of their index (terrain plan §9.2). */
+export const BUILDING_LOOK = {
+  walls: ['#8b8378', '#a39a8c', '#b5ad9f', '#7c766c'],
+  /** Corrugated tin of a hill village. */
+  tinRoofs: ['#7a3b2e', '#42604a', '#6d7378', '#4e5358', '#8a4a34'],
+  /** Flat concrete roofs of the plains and towns. */
+  concreteRoofs: ['#8c8a84', '#a09e96', '#76746e', '#96948a'],
 } as const;
 
 /** White-hot thermal materials. */
 export const IR = {
   terrain: '#6a6a6a',
   buildings: '#8a8a8a',
+  trees: '#5e5e5e',
   contacts: '#ffffff',
 } as const;
 

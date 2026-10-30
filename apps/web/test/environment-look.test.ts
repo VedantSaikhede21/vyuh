@@ -1,5 +1,4 @@
 import type { SimEnvironment } from '@vyuh/sim-core';
-import { UI } from '../lib/theme/scene-colours';
 import { describe, expect, it } from 'vitest';
 import { environmentLook } from '../lib/sim/environment-look';
 
@@ -29,12 +28,18 @@ describe('environmentLook', () => {
     expect(tac.sunIntensity).toBeGreaterThanOrEqual(1.2); // overhead map light, not a moon
   });
 
-  it('draws the tactical map on --bg-0 with no sky dome or stars, day or night', () => {
-    for (const el of [36, -30]) {
-      const tac = environmentLook(env(el), 'tactical');
-      expect(tac.showStars).toBe(false);
-      expect(`#${tac.background.getHexString()}`).toBe(UI.bg0);
-    }
+  it('gives the tactical map a dimmed sky, and stars only at night (decision 167)', () => {
+    const tac = environmentLook(env(36), 'tactical');
+    const eo = environmentLook(env(36), 'eo');
+    expect(tac.showStars).toBe(false);
+    expect(environmentLook(env(-30), 'tactical').showStars).toBe(true);
+    expect(tac.skyHorizon.r).toBeLessThan(eo.skyHorizon.r);
+  });
+
+  it('bakes shadows only while the real sun lights the view', () => {
+    expect(environmentLook(env(36), 'tactical').shadowStrength).toBeGreaterThan(0);
+    expect(environmentLook(env(-30), 'tactical').shadowStrength).toBe(0);
+    expect(environmentLook(env(-30), 'eo').shadowStrength).toBe(0);
   });
 
   it('fogs the EO view at the true visibility and the tactical map more gently', () => {

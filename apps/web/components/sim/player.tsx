@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { SimCanvas } from './sim-canvas';
 import { usePracticeHints } from './use-practice-hints';
 import { TrackLabels } from './track-labels';
+import { TerrainCredit } from './terrain-credit';
 import { ZoneLabels } from './zone-labels';
 
 /** Bottom row height: 28 px header + a 16:9 EO picture 432 px wide (243 px) + border. */
@@ -143,6 +144,7 @@ export function SimPlayer({
           data-tour="tactical"
         >
           <ZoneLabels runtime={runtime} />
+          <TerrainCredit world={runtime.world} />
           <TrackLabels />
           {replay?.tacticalOverlay}
         </div>

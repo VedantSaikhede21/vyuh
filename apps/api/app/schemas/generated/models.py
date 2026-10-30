@@ -1094,6 +1094,23 @@ class SystemEventType(StrEnum):
     REPORT_TRUTH = "REPORT_TRUTH"
 
 
+class Scene(RootModel[str]):
+    root: Annotated[str, Field(min_length=1)]
+
+
+class TerrainImagery(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    product: Annotated[str, Field(min_length=1)]
+    scenes: Annotated[list[Scene], Field(min_length=1)]
+    date_from: Annotated[str, Field(alias="dateFrom", min_length=1)]
+    date_to: Annotated[str, Field(alias="dateTo", min_length=1)]
+    processing: Annotated[str, Field(min_length=1)]
+    licence: Annotated[str, Field(min_length=1)]
+    credit: Annotated[str, Field(min_length=1)]
+
+
 class TerrainPresetFiles(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -1101,6 +1118,10 @@ class TerrainPresetFiles(BaseModel):
     heightmap: Annotated[str, Field(min_length=1)]
     preview: Annotated[str | None, Field(min_length=1)] = None
     buildings: Annotated[str, Field(min_length=1)]
+    albedo: Annotated[str | None, Field(min_length=1)] = None
+    cover: Annotated[str | None, Field(min_length=1)] = None
+    ao: Annotated[str | None, Field(min_length=1)] = None
+    vegetation: Annotated[str | None, Field(min_length=1)] = None
 
 
 class AttributionItem(RootModel[str]):
@@ -1128,6 +1149,8 @@ class TerrainPresetMeta(BaseModel):
     source: Annotated[str, Field(min_length=1)]
     attribution: Annotated[list[AttributionItem], Field(min_length=1)]
     revision: Annotated[int | None, Field(ge=1, le=9007199254740991)] = None
+    imagery: TerrainImagery | None = None
+    display_hash: Annotated[str | None, Field(alias="displayHash", min_length=1)] = None
 
 
 class TerrainRef(BaseModel):

@@ -1,7 +1,7 @@
 import type { SimEnvironment } from '@vyuh/sim-core';
 import { toThree } from '@vyuh/sim-core';
 import { Color } from 'three';
-import { SKY, UI } from '@/lib/theme/scene-colours';
+import { SKY } from '@/lib/theme/scene-colours';
 
 // One environment for every view (SPEC §14): sun direction / colour / intensity
 // from the sim's computed sun, sky by day and stars by night, fog from
@@ -21,8 +21,11 @@ const HEMI_GROUND_DAY = new Color(SKY.hemiGroundDay);
 const HEMI_GROUND_NIGHT = new Color(SKY.hemiGroundNight);
 const SUN_LOW = new Color(SKY.sunLow);
 const SUN_HIGH = new Color(SKY.sunHigh);
-/** The tactical map is a C2 display: it sits on --bg-0 (DESIGN §3.1), with no sky dome. */
-const TACTICAL_BACKGROUND = new Color(UI.bg0);
+const ZENITH_DAY = new Color(SKY.zenithDay);
+const ZENITH_NIGHT = new Color(SKY.zenithNight);
+const ZENITH_DUSK = new Color(SKY.zenithDusk);
+/** The tactical map keeps its sky dim, so it stays a map with bright symbols on it. */
+const TACTICAL_SKY_DIM = 0.42;
 /** Intensity of the tactical map's overhead display light when the real sun is weaker. */
 const TACTICAL_MAP_LIGHT = 1.2;
 const MAP_LIGHT_DIR: [number, number, number] = [0.3, 0.9, 0.3];
@@ -44,6 +47,13 @@ export interface EnvironmentLook {
   hemiGround: Color;
   hemiIntensity: number;
   background: Color;
+  skyZenith: Color;
+  skyHorizon: Color;
+  /** Unit vector to the real sun, whatever light the map uses. */
+  trueSunDir: [number, number, number];
+  sunVisible: boolean;
+  /** How strong baked terrain shadows are: 0 when the real sun is not lighting the view. */
+  shadowStrength: number;
   fogNear: number;
   fogFar: number;
   showStars: boolean;
@@ -69,6 +79,13 @@ export function environmentLook(env: SimEnvironment, variant: EnvironmentVariant
     .lerp(SKY_DAY, day)
     .lerp(SKY_DUSK, dusk * 0.5);
   background.lerp(HAZE, haze * day * 0.7);
+  const dim = variant === 'tactical' ? TACTICAL_SKY_DIM : 1;
+  const skyHorizon = background.clone().multiplyScalar(dim);
+  const skyZenith = ZENITH_NIGHT.clone()
+    .lerp(ZENITH_DAY, day)
+    .lerp(ZENITH_DUSK, dusk * 0.4)
+    .lerp(HAZE, haze * day * 0.8)
+    .multiplyScalar(dim);
   // The tactical map is a C2 display: its ambient light never drops below a dusk-like level.
   const ambient = variant === 'tactical' ? Math.max(day, TACTICAL_MIN_DAYLIGHT) : day;
   const sunIntensity = 1.8 * smoothstep(-2, 15, elDeg) * (1 - 0.6 * cloud);
@@ -83,9 +100,14 @@ export function environmentLook(env: SimEnvironment, variant: EnvironmentVariant
     hemiSky: HEMI_SKY_NIGHT.clone().lerp(HEMI_SKY_DAY, ambient),
     hemiGround: HEMI_GROUND_NIGHT.clone().lerp(HEMI_GROUND_DAY, ambient),
     hemiIntensity: Math.max(0.04, 0.9 * ambient),
-    background: variant === 'tactical' ? TACTICAL_BACKGROUND.clone() : background,
+    background: skyHorizon.clone(),
+    skyZenith,
+    skyHorizon,
+    trueSunDir: [d.x, d.y, d.z],
+    sunVisible: elDeg > -1 && cloud < 0.85 && vis > 3000,
+    shadowStrength: mapLight ? 0 : smoothstep(0, 8, elDeg) * (1 - 0.75 * cloud),
     fogNear: variant === 'eo' ? vis * 0.05 : Math.max(vis, 4000) * 0.6,
     fogFar: variant === 'eo' ? Math.max(vis, 50) : Math.max(vis * 2.5, 9000),
-    showStars: variant === 'eo' && elDeg <= -6,
+    showStars: elDeg <= -6,
   };
 }

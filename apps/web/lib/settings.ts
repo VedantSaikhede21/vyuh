@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useSyncExternalStore } from 'react';
+import type { GraphicsSetting } from './gpu-tier';
 
 // Per-browser settings (Phase 6C): conveniences only, so browser storage is
 // right; every read and write survives blocked storage (private windows).
@@ -12,9 +13,15 @@ export interface UserSettings {
   motion: MotionSetting;
   /** Open the shortcut list (?) when a Practice run starts. */
   shortcutsOnStart: boolean;
+  /** Terrain and vegetation detail; AUTO reads the graphics card (lib/gpu-tier.ts). */
+  graphics: GraphicsSetting;
 }
 
-export const DEFAULT_SETTINGS: UserSettings = { motion: 'SYSTEM', shortcutsOnStart: false };
+export const DEFAULT_SETTINGS: UserSettings = {
+  motion: 'SYSTEM',
+  shortcutsOnStart: false,
+  graphics: 'AUTO',
+};
 
 const KEY = 'vyuh.settings.v1';
 const EVENT = 'vyuh:settings';
@@ -26,6 +33,10 @@ export function parseSettings(raw: string | null): UserSettings {
     return {
       motion: v.motion === 'REDUCE' ? 'REDUCE' : 'SYSTEM',
       shortcutsOnStart: v.shortcutsOnStart === true,
+      graphics:
+        v.graphics === 'HIGH' || v.graphics === 'MEDIUM' || v.graphics === 'LOW'
+          ? v.graphics
+          : 'AUTO',
     };
   } catch {
     return DEFAULT_SETTINGS;

@@ -112,6 +112,7 @@ describe('shell, settings, notices', () => {
     expect(parseSettings('{"motion":"REDUCE","shortcutsOnStart":true}')).toEqual({
       motion: 'REDUCE',
       shortcutsOnStart: true,
+      graphics: 'AUTO',
     });
     expect(parseSettings('{"motion":"FAST","shortcutsOnStart":"yes"}')).toEqual(DEFAULT_SETTINGS);
   });
