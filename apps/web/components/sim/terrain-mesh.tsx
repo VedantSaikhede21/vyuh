@@ -8,7 +8,12 @@ import { BufferAttribute, BufferGeometry, Color, LOD, Mesh, MeshLambertMaterial 
 import { QUALITY_FEATURES, type GraphicsQuality } from '@/lib/gpu-tier';
 import { useShadowMask } from '@/lib/terrain/use-shadow-mask';
 import { terrainTextures, type TerrainTextures } from '@/lib/terrain/display';
-import { irTerrainMaterial, terrainMaterial } from '@/lib/terrain/terrain-material';
+import {
+  irTerrainMaterial,
+  stepTerrainBlend,
+  syncTerrainUniforms,
+  terrainMaterial,
+} from '@/lib/terrain/terrain-material';
 import { IR_MATERIALS } from '@/lib/sim/ir-materials';
 import type { EnvironmentLook } from '@/lib/sim/environment-look';
 import { GROUND } from '@/lib/theme/scene-colours';
@@ -259,16 +264,11 @@ export function TerrainMesh({
 
   useEffect(() => {
     if (!display) return;
-    const horizon = look.skyHorizon.clone();
-    display.uniforms.uHorizon.value = encoded ? horizon.convertLinearToSRGB() : horizon;
-    display.uniforms.uShadow.value = shadow;
-    display.uniforms.uShadowOn.value = shadow ? look.shadowStrength : 0;
+    syncTerrainUniforms(display.uniforms, look, encoded, shadow);
   }, [display, look, encoded, shadow]);
 
   useFrame((_, dt) => {
-    if (display && display.uniforms.uBlend.value < 1) {
-      display.uniforms.uBlend.value = Math.min(1, display.uniforms.uBlend.value + dt * BLEND_PER_S);
-    }
+    if (display) stepTerrainBlend(display.uniforms, dt * BLEND_PER_S);
   });
 
   const material = display?.material ?? PLAIN_MATERIAL;

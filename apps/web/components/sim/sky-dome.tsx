@@ -1,8 +1,8 @@
 'use client';
 
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
-import { BackSide, Color, ShaderMaterial, Vector3, type Mesh } from 'three';
+import { BackSide, ShaderMaterial, Vector3, type Color, type Mesh } from 'three';
 import type { EnvironmentLook } from '@/lib/sim/environment-look';
 
 const VERTEX = `
@@ -37,7 +37,6 @@ void main() {
  * EO render target.
  */
 export function SkyDome({ look, encoded }: { look: EnvironmentLook; encoded: boolean }) {
-  const camera = useThree((s) => s.camera);
   const mesh = useRef<Mesh>(null);
   const material = useMemo(() => {
     const prep = (c: Color) => (encoded ? c.clone().convertLinearToSRGB() : c.clone());
@@ -58,7 +57,7 @@ export function SkyDome({ look, encoded }: { look: EnvironmentLook; encoded: boo
       },
     });
   }, [look, encoded]);
-  useFrame(() => {
+  useFrame(({ camera }) => {
     mesh.current?.position.copy(camera.position);
   });
   return (

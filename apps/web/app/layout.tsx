@@ -23,10 +23,7 @@ export const viewport: Viewport = { themeColor: UI.bg0, colorScheme: 'dark' };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`dark ${archivo.variable} ${plexMono.variable}`}
-    >
+    <html lang="en" className={`dark ${archivo.variable} ${plexMono.variable}`}>
       <body className="min-h-screen overflow-x-clip">
         <SkipLink />
         <MotionAttribute />

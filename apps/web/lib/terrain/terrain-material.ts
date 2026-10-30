@@ -1,4 +1,6 @@
-import { Color, MeshLambertMaterial, Texture, type IUniform } from 'three';
+import type { Texture } from 'three';
+import { Color, MeshLambertMaterial, type IUniform } from 'three';
+import type { EnvironmentLook } from '@/lib/sim/environment-look';
 import type { TerrainTextures } from './display';
 
 // Terrain look (terrain plan T1–T3): Lambert plus satellite colour, baked sky
@@ -54,6 +56,24 @@ function fragmentHead(): string {
   varying vec3 vWorldPos;
   varying float vZoom;
   `;
+}
+
+/** Haze colour and shadow strength for this view's environment. */
+export function syncTerrainUniforms(
+  u: TerrainUniforms,
+  look: EnvironmentLook,
+  encoded: boolean,
+  shadow: Texture | null,
+): void {
+  const horizon = look.skyHorizon.clone();
+  u.uHorizon.value = encoded ? horizon.convertLinearToSRGB() : horizon;
+  u.uShadow.value = shadow;
+  u.uShadowOn.value = shadow ? look.shadowStrength : 0;
+}
+
+/** Advance the cross-fade from the plain look. */
+export function stepTerrainBlend(u: TerrainUniforms, step: number): void {
+  if (u.uBlend.value < 1) u.uBlend.value = Math.min(1, u.uBlend.value + step);
 }
 
 export function terrainMaterial(opts: TerrainMaterialOptions): {

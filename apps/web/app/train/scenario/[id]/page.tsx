@@ -13,16 +13,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { BriefingMap } from '@/components/briefing/briefing-map';
 import { ModeToggle } from '@/components/briefing/mode-toggle';
-import {
-  ErrorState,
-  Kbd,
-  Panel,
-  PanelBody,
-  PanelHeader,
-  Pips,
-  Skeleton,
-  StateChip,
-} from '@/components/hud/primitives';
+import { ErrorState, Kbd, Panel, Pips, Skeleton, StateChip } from '@/components/hud/primitives';
 import { RequireAuth } from '@/components/require-auth';
 import { TerrainCredit } from '@/components/sim/terrain-credit';
 import { Button } from '@/components/ui/button';

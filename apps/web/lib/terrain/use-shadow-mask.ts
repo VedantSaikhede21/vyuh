@@ -15,17 +15,15 @@ export function useShadowMask(
   look: EnvironmentLook,
   px: number,
 ): DataTexture | null {
-  const [texture, setTexture] = useState<DataTexture | null>(null);
+  const [baked, setBaked] = useState<{ key: string; texture: DataTexture } | null>(null);
   const on = px > 0 && look.shadowStrength > 0;
   const [sx, sy, sz] = look.trueSunDir;
+  const key = `${px}:${sx}:${sy}:${sz}`;
   useEffect(() => {
-    if (!on) {
-      setTexture(null);
-      return;
-    }
+    if (!on) return;
     const worker = new Worker(new URL('./shadow-worker.ts', import.meta.url), { type: 'module' });
     worker.onmessage = (e: MessageEvent<Uint8Array<ArrayBuffer>>) => {
-      setTexture(shadowTexture(e.data, px));
+      setBaked({ key, texture: shadowTexture(e.data, px) });
       worker.terminate();
     };
     worker.onerror = () => worker.terminate();
@@ -39,6 +37,6 @@ export function useShadowMask(
     };
     worker.postMessage(job);
     return () => worker.terminate();
-  }, [map, on, px, sx, sy, sz]);
-  return texture;
+  }, [map, on, key, px, sx, sy, sz]);
+  return on && baked?.key === key ? baked.texture : null;
 }

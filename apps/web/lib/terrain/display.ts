@@ -1,5 +1,6 @@
 import type { TerrainPresetMeta } from '@vyuh/shared';
 import type { Heightmap } from '@vyuh/sim-core';
+import type { Texture } from 'three';
 import {
   ClampToEdgeWrapping,
   DataTexture,
@@ -9,7 +10,6 @@ import {
   RGBAFormat,
   RedFormat,
   SRGBColorSpace,
-  Texture,
   TextureLoader,
 } from 'three';
 import { presetFileUrl } from './load-world';

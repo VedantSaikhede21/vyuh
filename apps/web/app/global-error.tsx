@@ -13,10 +13,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <html
-      lang="en"
-      className={`dark ${archivo.variable} ${plexMono.variable}`}
-    >
+    <html lang="en" className={`dark ${archivo.variable} ${plexMono.variable}`}>
       <body className="min-h-screen">
         <main className="mx-auto w-full max-w-md space-y-3 px-6 py-16">
           <p className="text-meta">VYUH · Error</p>

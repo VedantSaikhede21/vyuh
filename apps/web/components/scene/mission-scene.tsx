@@ -27,18 +27,17 @@ const FLIGHT_S = 1.2;
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 
 function CameraRig({ world, scenario, shot, orbit, flying }: Props) {
-  const camera = useThree((s) => s.camera);
-  const invalidate = useThree((s) => s.invalidate);
+  const get = useThree((s) => s.get);
   const pose = useMemo(() => shotPose(scenario, shot), [scenario, shot]);
   const map = world.heightmap;
   useEffect(() => {
+    const { camera } = get();
     const y = sampleHeight(map, pose.x, pose.z) + pose.aboveGroundM;
     camera.position.set(pose.x, y, -pose.z);
     camera.lookAt(pose.targetX, sampleHeight(map, pose.targetX, pose.targetZ), -pose.targetZ);
-    invalidate();
-  }, [camera, map, pose, invalidate]);
+  }, [get, map, pose]);
   const flight = useRef<{ from: Vector3; lookFrom: Vector3; t: number } | null>(null);
-  useFrame((_, dt) => {
+  useFrame(({ camera }, dt) => {
     if (flying) {
       // To the player's first camera, so the cut into the session is invisible.
       flight.current ??= {

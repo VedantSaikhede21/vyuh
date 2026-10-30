@@ -31,6 +31,7 @@ export function HeroBand({
         className,
       )}
     >
+      {/* eslint-disable-next-line @next/next/no-img-element -- a static still with its own srcset */}
       <img
         src={src.w1920}
         srcSet={`${src.w640} 640w, ${src.w1920} 1920w`}
