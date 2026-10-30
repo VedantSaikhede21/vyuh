@@ -1,0 +1,24 @@
+[project]
+name = "vyuh-fonts"
+version = "0.1.0"
+description = "Subset the IBM Plex woff2 files to the glyphs VYUH uses (Part 6F, landing LCP)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fonttools[woff]>=4.59",
+]
+
+[dependency-groups]
+dev = [
+  "ruff==0.17.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "S", "SIM", "RUF", "ANN"]
+ignore = ["ANN401"]
