@@ -2,7 +2,7 @@
 // variables. UI groups come from lib/theme/tokens.ts, the one source (decision
 // 164); only physical-look colours (sky, ground, IR) are defined here.
 
-import { affiliation, interaction, status, surfaces, text } from './tokens';
+import { affiliation, interaction, status, surfaces, text } from './tokens.ts';
 
 /** DESIGN §3 values for canvas/WebGL UI overlays (PPI, track markers). */
 export const UI = {
