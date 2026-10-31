@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import {
   HIDE_WEBGL,
+  awaitSession,
   beginSession,
   login,
   openBriefing,
@@ -89,8 +90,7 @@ test('core actions by keyboard alone', async ({ page }) => {
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('start-session')).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(page.getByTestId('sim-player')).toBeVisible();
-  await page.waitForFunction(() => window.__vyuhE2E !== undefined);
+  await awaitSession(page);
 
   await stepUntilTracked(page, 'c01');
   const step = async () => stepTo(page, (await tMs(page)) + 50);
