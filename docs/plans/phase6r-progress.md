@@ -24,9 +24,9 @@ Session of 2026-10-29 to 31. User decisions: do 6R before 6G; drafts treated as 
 - `e2e/resume.spec.ts` passes (dev server). Unit test: rebuilt run continues into a byte-identical log.
 - `a11y`, `smoke`, `keyboard-6b`, `replay` specs: 14 / 15 on the player rebuild; the failure (Map toggle in the keyboard spec) was fixed but **not re-run**.
 
-## Open decision (blocks scoring trust)
+## Closed: ending a session early scored 100
 
-**Ending a session early can score 100.** `services/scoring/engine.py`: a component with no scored threats gets full marks, so quitting before any threat is detectable gives 100 / 100 (seen on S05 at 0:29: 0 of 1 neutralised, "Not resolved"). Not mode-specific, so it reaches Elo and the service record; partly too (beat one threat, quit before the next). SPEC §4.5 says an explicit abort is `ABANDONED` with no score; the code stores `COMPLETED`.
+**Closed 2026-10-31, decision 173 (user chose split by mode).** Assessment ended early: `ABANDONED`, no score, no rating, not on the record. Practice ended early: feedback as a partial run with no total, template debrief. SPEC §4.5 updated; migration 0011; `tests/test_early_end.py`, `e2e/early-end.spec.ts`. Evidence: shared 48, sim-core 345, web 288, full API pytest; `pnpm e2e` 26 / 27 on the final code, the failure a 5 s screenshot timeout on the 1920 landing during a slow run (7.9 min), which then passed 2 / 2 alone. `a11y` keyboard test now waits through `awaitSession` (it had a 5 s limit on a cold API).
 
 ## Not verified: do not assume these work
 
@@ -37,7 +37,8 @@ Session of 2026-10-29 to 31. User decisions: do 6R before 6G; drafts treated as 
 5. **Landing `TelemetryStrip` and the `DEPLOY` facts** quote earlier FPS numbers: re-check them against the new measurements.
 6. S01–S03 (`PROCEDURAL_HILLS`) stills are a plain green blob and are the first cards in the gallery.
 7. Full API pytest passes (2026-10-31). `next.config.ts` CSP tested on production only.
-8. CI status unknown (`gh` not installed). Pushes since 5c517dc should be checked.
+8. CI status unknown (`gh` not installed). Pushes since 5c517dc should be checked. Root `pnpm test` was failing from 3f65453 (`resumeCount` missing from a shared fixture) until 2026-10-31, so runs in that range are expected red.
+10. Comms ack on the dev server is noisy: usually 4–40 ms, spikes of 60–101 ms on any key when the machine is busy (seen 2026-10-31). Measure on a production build in 6H; the 100 ms limit stays.
 9. `/status` admin list of client errors from the plan is not built (the API route exists).
 
 ## Deferred from the plans (decision 168)
