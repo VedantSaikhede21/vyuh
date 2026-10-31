@@ -24,9 +24,13 @@ Session of 2026-10-29 to 31. User decisions: do 6R before 6G; drafts treated as 
 - `e2e/resume.spec.ts` passes (dev server). Unit test: rebuilt run continues into a byte-identical log.
 - `a11y`, `smoke`, `keyboard-6b`, `replay` specs: 14 / 15 on the player rebuild; the failure (Map toggle in the keyboard spec) was fixed but **not re-run**.
 
+## Open decision (blocks scoring trust)
+
+**Ending a session early can score 100.** `services/scoring/engine.py`: a component with no scored threats gets full marks, so quitting before any threat is detectable gives 100 / 100 (seen on S05 at 0:29: 0 of 1 neutralised, "Not resolved"). Not mode-specific, so it reaches Elo and the service record; partly too (beat one threat, quit before the next). SPEC §4.5 says an explicit abort is `ABANDONED` with no score; the code stores `COMPLETED`.
+
 ## Not verified: do not assume these work
 
-1. **`apps/web/Dockerfile` has never completed.** Docker's VM here has ~900 MB; `pnpm install` inside it crashes the daemon. Needs Docker Desktop memory ≥ 3 GB (user's setting: Resources, or `.wslconfig`). So `docker compose up --build` is **unproven end to end**. The packaged host build failed on pnpm's Windows symlinks and was removed.
+1. ~~`apps/web/Dockerfile` has never completed.~~ **Closed 2026-10-31**: needs `memory=3GB` in `%USERPROFILE%\.wslconfig` (Docker runs on WSL2, the Resources slider does nothing; `wsl --shutdown` is required, Docker's restart alone keeps the old VM). `POSTGRES_PORT=5433 docker compose -p vyuh-proof up --build -d`: web image built, empty database migrated to 0010 and seeded, all up in ~50 s. Full S06 session in the containers (guard, 3D briefing, reload and resume, server score, template debrief, six other pages) with every non-localhost request blocked: **0 external requests, 0 console errors**. Proof stack and its volume removed.
 2. ~~FPS on the new terrain is unmeasured.~~ **Closed 2026-10-31**: production build, AMD integrated, HIGH tier, fixed pixel ratio, `e2e/fps.spec.ts` with `FPS_SHOT_DIR` frames reviewed. 1920×1080 / 1366×768 fps: map main S06 57 / 100, S05 69 / 119, S15 78 / 118; camera main 120 / 120 for all three (the picture is a fixed 640×360); S05 briefing 92 / 120. All above the 30 fps budget, no tuning needed. Not re-run: 150 % scaling, the generated and 60-entity cases (6H full set); Intel stays waived (decision 162).
 3. ~~Full `pnpm e2e` not run since the redesign.~~ **Closed 2026-10-31**: `pnpm e2e` 25 / 25 (3.5 min, dev server), web vitest 288, lint clean. All 24 visual baselines regenerated; the 1366 screens with real changes reviewed, the 1920 set not looked at one by one. Still open: `break-ui`, checkpoint and capture specs are outside `pnpm e2e` and likely reference removed things (action bar, operator panel, `generate-panel` now in a dialog, table rows on Training). `--update-snapshots` keeps a baseline that differs by under 1 %: delete the file to force a small change through.
 4. Landing media (`pnpm --filter @vyuh/web record:landing`) still shows the old UI: kill-chain crops, measure crop. The `/landing` hero video is no longer used on the page.
@@ -44,7 +48,7 @@ Shared-element tile → briefing, LOS coverage on the 3D briefing, compass tape,
 
 1. Start the dev stack: `pnpm dev` (old Postgres on 5432). The API needs a restart by hand after schema changes; the local DB is at migration 0010.
 2. Done 2026-10-31: FPS (item 2), `pnpm e2e` and baselines (item 3). Bugs those runs found, fixed: camera PIP black in the default layout (panel background above the canvas), night thermal terrain black (visible-light levels), landing FPS claim out of date, briefing caption under the controls.
-3. Fix the `break-ui`, checkpoint and capture specs. Known small issues: thermal trees render pure black; the map PIP covers the left of the camera readout in camera main; on the briefing map the title card overlaps the map corner at 1366.
+3. Fix the `break-ui`, checkpoint and capture specs. Known small issues: `/sources` has two `h1`s; thermal trees render pure black; the map PIP covers the left of the camera readout in camera main; on the briefing map the title card overlaps the map corner at 1366.
 4. Re-record landing media; fix the PROCEDURAL_HILLS stills; check claims on the landing.
 5. Show the user the batched captures (1366 and 1920) and take their feedback.
 6. Raise Docker memory, prove `docker compose up --build`.
