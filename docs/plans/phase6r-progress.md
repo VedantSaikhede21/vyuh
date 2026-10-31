@@ -37,7 +37,7 @@ Session of 2026-10-29 to 31. User decisions: do 6R before 6G; drafts treated as 
 5. **Landing `TelemetryStrip` and the `DEPLOY` facts** quote earlier FPS numbers: re-check them against the new measurements.
 6. S01–S03 (`PROCEDURAL_HILLS`) stills are a plain green blob and are the first cards in the gallery.
 7. Full API pytest passes (2026-10-31). `next.config.ts` CSP tested on production only.
-8. CI status unknown (`gh` not installed). Pushes since 5c517dc should be checked. Root `pnpm test` was failing from 3f65453 (`resumeCount` missing from a shared fixture) until 2026-10-31, so runs in that range are expected red.
+8. CI was red from 30e4136 to 2026-10-31: `gen:maps` crashed on an extensionless import in `scene-colours.ts` (fixed, 9 images regenerated), and root `pnpm test` failed from 3f65453 (fixture, fixed). No `gh` here; the public Actions API reads run status without it.
 10. Comms ack on the dev server is noisy: usually 4–40 ms, spikes of 60–101 ms on any key when the machine is busy (seen 2026-10-31). Measure on a production build in 6H; the 100 ms limit stays.
 9. `/status` admin list of client errors from the plan is not built (the API route exists).
 
