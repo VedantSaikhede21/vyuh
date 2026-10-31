@@ -40,6 +40,14 @@ for (const vp of VIEWPORTS) {
       await page.emulateMedia({ reducedMotion: 'reduce' });
       await page.goto('/');
       await page.evaluate(() => document.fonts.ready);
+      // A full-page picture never scrolls, so lazy images would stay empty.
+      const broken = await page.evaluate(async () => {
+        const images = [...document.images];
+        for (const img of images) img.loading = 'eager';
+        await Promise.all(images.map((img) => img.decode().catch(() => undefined)));
+        return images.filter((img) => img.naturalWidth === 0).map((img) => img.src);
+      });
+      expect(broken).toEqual([]);
       await shot(page, 'landing', { fullPage: true });
       await page.goto('/login');
       await shot(page, 'login');
@@ -59,6 +67,8 @@ for (const vp of VIEWPORTS) {
       await shot(page, 'training', { mask: [seed] });
       await login(page, 'trainee1@demo');
       await openBriefing(page, 'S01');
+      // The briefing opens in 3D, which is not pixel-stable; the picture is the Map view.
+      await page.getByTestId('briefing-view-map').click();
       // The shaded LOS coverage and the status text settle once it is computed.
       await expect(page.getByTestId('coverage-status')).toHaveText(/^LOS coverage ·/, {
         timeout: 120_000,
