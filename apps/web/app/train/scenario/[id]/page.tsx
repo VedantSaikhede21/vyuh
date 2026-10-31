@@ -360,7 +360,7 @@ function Briefing({ detail }: { detail: ScenarioDetailResponse }) {
           className="absolute inset-0 h-full w-full object-cover"
         />
       ) : (
-        <div className="absolute inset-y-0 left-0 right-[24rem] flex flex-col p-4 pt-24">
+        <div className="absolute inset-y-0 left-0 right-[24rem] flex flex-col p-4 pb-16 pt-24">
           <div className="flex min-h-0 flex-1 items-center justify-center">
             <BriefingMap
               scenario={scenario}

@@ -149,7 +149,7 @@ export const DEPLOY: readonly { fact: string; detail: string }[] = [
   {
     fact: 'Integrated graphics',
     detail:
-      'S06 Crowded Skies: 65 fps at 1920×1080 and 113 fps at 1366×768 on AMD Radeon integrated graphics (Ryzen 7 5800H), production build. Budget: 30 fps.',
+      'S06 Crowded Skies: 57 fps at 1920×1080 and 100 fps at 1366×768 on AMD Radeon integrated graphics (Ryzen 7 5800H), production build. Budget: 30 fps.',
   },
   {
     fact: 'Small downloads',
