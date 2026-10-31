@@ -442,7 +442,9 @@ export const EoPanel = forwardRef<HTMLDivElement, { runtime: SimRuntime; command
     };
 
     return (
-      <Panel className="h-full border-0 bg-bg-0">
+      // Transparent: as a picture-in-picture this sits above the shared canvas, and
+      // the picture is drawn on that canvas.
+      <Panel className="h-full border-0 bg-transparent">
         <PanelHeader title={`EO/IR · ${eo.id}`}>
           <Tooltip content="Day camera or thermal (white-hot)" shortcut="T" side="bottom">
             <StateChip tone="neutral" tabIndex={0}>

@@ -264,3 +264,21 @@ test('colour-blind captures for review', async ({ page }) => {
   }
   await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' });
 });
+
+test('nothing covers the camera picture-in-picture', async ({ page }) => {
+  await login(page, 'trainee1@demo');
+  await openBriefing(page, 'S01');
+  await beginSession(page);
+  // The picture is drawn on the shared canvas under this frame, so every layer
+  // between it and the frame has to be see-through.
+  const opaque = await page.getByTestId('eo-picture').evaluate((picture) => {
+    const frame = picture.closest('[data-tour="eo"]')!;
+    const covering: string[] = [];
+    for (let e: Element | null = picture; e && e !== frame.parentElement; e = e.parentElement) {
+      const { backgroundColor } = getComputedStyle(e);
+      if (backgroundColor !== 'rgba(0, 0, 0, 0)') covering.push(`${e.tagName} ${backgroundColor}`);
+    }
+    return covering;
+  });
+  expect(opaque).toEqual([]);
+});

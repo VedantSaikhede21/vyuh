@@ -4,12 +4,14 @@ import { Stars } from '@react-three/drei';
 import type { SimEnvironment } from '@vyuh/sim-core';
 import { useMemo } from 'react';
 import { environmentLook, type EnvironmentVariant } from '@/lib/sim/environment-look';
-import { SKY } from '@/lib/theme/scene-colours';
+import { IR, SKY } from '@/lib/theme/scene-colours';
 import { SkyDome } from './sky-dome';
 
 const SUN_DISTANCE = 20_000;
 
 const IR_SKY = SKY.ir;
+/** Heat does not fade with the sun: the thermal pass never lights surfaces below this. */
+const IR_MIN_AMBIENT = 0.9;
 
 /**
  * Lights, sky and fog for a view. The EO day sky is the haze colour the fog fades
@@ -38,7 +40,13 @@ export function Environment({
       {!ir && look.showStars && (
         <Stars radius={30_000} depth={5_000} count={2500} factor={400} fade />
       )}
-      <hemisphereLight args={[look.hemiSky, look.hemiGround, look.hemiIntensity]} />
+      <hemisphereLight
+        args={
+          ir
+            ? [IR.ambient, IR.ambient, Math.max(look.hemiIntensity, IR_MIN_AMBIENT)]
+            : [look.hemiSky, look.hemiGround, look.hemiIntensity]
+        }
+      />
       <directionalLight
         position={[x * SUN_DISTANCE, y * SUN_DISTANCE, z * SUN_DISTANCE]}
         color={look.sunColor}

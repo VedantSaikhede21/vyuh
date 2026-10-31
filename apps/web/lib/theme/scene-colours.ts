@@ -98,6 +98,7 @@ export const IR = {
   buildings: '#8a8a8a',
   trees: '#5e5e5e',
   contacts: '#ffffff',
+  ambient: '#ffffff',
 } as const;
 
 /** Own-site markers in the tactical view: neutral chrome, never signal colours. */
