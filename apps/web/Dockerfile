@@ -8,6 +8,9 @@ RUN corepack enable
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY packages/ packages/
 COPY apps/web/ apps/web/
+# Read at build time: scenarios by the dev pages type-checked with the app, sources by /sources.
+COPY apps/api/app/seed/scenarios/*.json apps/api/app/seed/scenarios/
+COPY docs/realism-sources.md docs/realism-sources.md
 ARG NODE_HEAP_MB=2048
 ARG NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 ARG NEXT_PUBLIC_AUTH_MODE=local
