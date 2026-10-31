@@ -249,6 +249,7 @@ describe('Session detail / Score', () => {
     endedAt: '2026-10-14T10:03:00+00:00',
     simVersion: 1,
     terrainRevision: null,
+    resumeCount: 0,
     score,
     ended: { reason: 'TIME_UP', tMs: 180000 },
     isDemo: false,
