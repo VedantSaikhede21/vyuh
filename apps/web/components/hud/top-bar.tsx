@@ -188,14 +188,22 @@ function LiveControls({ runtime, commands }: { runtime: SimRuntime; commands: Co
       {endArmed ? (
         <span className="flex items-center gap-1">
           <Button size="hud" variant="danger" onClick={commands.abort} autoFocus>
-            Confirm end <Kbd>Enter</Kbd>
+            Confirm end{runtime.mode === 'ASSESSMENT' && ' · not scored'} <Kbd>Enter</Kbd>
           </Button>
           <Button size="hud" variant="ghost" onClick={() => setUi({ endArmed: false })}>
             Cancel
           </Button>
         </span>
       ) : (
-        <Tooltip content="Stop now and score what you have done" align="end" side="bottom">
+        <Tooltip
+          content={
+            runtime.mode === 'ASSESSMENT'
+              ? 'Stop now. An Assessment ended early is not scored'
+              : 'Stop now and review what you have done, with no total'
+          }
+          align="end"
+          side="bottom"
+        >
           <Button size="hud" disabled={ended} onClick={commands.armEnd}>
             End session
           </Button>

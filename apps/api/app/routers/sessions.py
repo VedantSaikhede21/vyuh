@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, Request, Response, status
 
 from app.core.auth import CurrentUser, DbDep, StaffUser
 from app.schemas.generated import (
@@ -61,12 +61,18 @@ def resume_session(session_id: uuid.UUID, user: CurrentUser, db: DbDep) -> Sessi
     return sessions.resume_session(db, user, session_id)
 
 
-@router.post("/{session_id}/complete", response_model=Score, response_model_exclude_unset=True)
+@router.post(
+    "/{session_id}/complete",
+    response_model=Score,
+    response_model_exclude_unset=True,
+    responses={204: {"description": "An Assessment ended early: stored, not scored"}},
+)
 def complete_session(
     session_id: uuid.UUID, body: CompleteSessionRequest, user: CurrentUser, db: DbDep
-) -> Score:
+) -> Score | Response:
     """Validate the event log, score it on the server and store the score."""
-    return sessions.complete_session(db, user, session_id, body)
+    score = sessions.complete_session(db, user, session_id, body)
+    return Response(status_code=204) if score is None else score
 
 
 @router.get(

@@ -1779,7 +1779,8 @@
         "INVALID_OUTPUT",
         "ERROR",
         "RATE_LIMITED",
-        "BUDGET"
+        "BUDGET",
+        "ENDED_EARLY"
       ]
     },
     "DebriefMistake": {
@@ -4305,6 +4306,9 @@
         "treeVersion": {
           "type": "string",
           "minLength": 1
+        },
+        "partial": {
+          "type": "boolean"
         },
         "recommendedDifficulty": {
           "$ref": "#/$defs/Difficulty"

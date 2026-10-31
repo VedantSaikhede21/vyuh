@@ -171,7 +171,7 @@ export function ResultScreen({
   };
 
   const shown = displayScore(score);
-  const primary = primaryAction(shown.total);
+  const primary = primaryAction(score.partial ? 0 : shown.total);
   const scored = (Object.keys(COMPONENT_LABEL) as (keyof ScoreComponents)[]).filter(
     (c) => score.componentMax[c] > 0,
   );
@@ -200,7 +200,10 @@ export function ResultScreen({
       >
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="space-y-1">
-            <p className="text-body text-text-1">Debrief · {mode.toLowerCase()}</p>
+            <p className="text-body text-text-1">
+              Debrief · {mode.toLowerCase()}
+              {score.partial && ' · partial run'}
+            </p>
             <h1 className="text-display text-text-1 [overflow-wrap:anywhere]">{scenarioName}</h1>
             {ended && (
               <p className="text-small text-text-1" data-testid="result-ended">
@@ -274,88 +277,100 @@ export function ResultScreen({
 
       {/* Story order (audit, plan 6B): score → debrief (went well, mistakes, drill)
           → penalties with replay links → per contact. Actions stay in the header. */}
-      <Panel data-tour="score">
-        <PanelHeader title="Score">
-          <span className="text-label">Scored on the server</span>
-        </PanelHeader>
-        <PanelBody className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <div className="flex flex-wrap content-start items-end gap-8">
-            <div>
-              <p className="text-figure-xl text-text-1">
-                <span data-testid="score-total">{shown.total}</span>
-                <span className="ml-2 text-h2 font-normal text-text-2">/ 100</span>
-              </p>
-              <p className="text-label">Total</p>
-            </div>
-            {score.recommendedDifficulty !== undefined && (
-              <div className="flex flex-col gap-1">
-                <span className="text-label">Recommended next difficulty</span>
-                <span className="flex items-center gap-2">
-                  <Pips value={score.recommendedDifficulty} />
-                  <span className="text-readout">{score.recommendedDifficulty}</span>
-                  {current && (
-                    <span className="text-small text-text-2">
-                      {score.recommendedDifficulty > current.difficulty
-                        ? `up from ${current.difficulty}`
-                        : score.recommendedDifficulty < current.difficulty
-                          ? `down from ${current.difficulty}`
-                          : 'same level'}
+      {score.partial ? (
+        <Panel data-tour="score" data-testid="partial-run">
+          <PanelHeader title="Partial run">
+            <span className="text-label">No total</span>
+          </PanelHeader>
+          <PanelBody className="text-body text-text-body">
+            You ended this run early, so threats still to come are not judged and there is no total.
+            The notes below cover what you did up to that point.
+          </PanelBody>
+        </Panel>
+      ) : (
+        <Panel data-tour="score">
+          <PanelHeader title="Score">
+            <span className="text-label">Scored on the server</span>
+          </PanelHeader>
+          <PanelBody className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="flex flex-wrap content-start items-end gap-8">
+              <div>
+                <p className="text-figure-xl text-text-1">
+                  <span data-testid="score-total">{shown.total}</span>
+                  <span className="ml-2 text-h2 font-normal text-text-2">/ 100</span>
+                </p>
+                <p className="text-label">Total</p>
+              </div>
+              {score.recommendedDifficulty !== undefined && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-label">Recommended next difficulty</span>
+                  <span className="flex items-center gap-2">
+                    <Pips value={score.recommendedDifficulty} />
+                    <span className="text-readout">{score.recommendedDifficulty}</span>
+                    {current && (
+                      <span className="text-small text-text-2">
+                        {score.recommendedDifficulty > current.difficulty
+                          ? `up from ${current.difficulty}`
+                          : score.recommendedDifficulty < current.difficulty
+                            ? `down from ${current.difficulty}`
+                            : 'same level'}
+                      </span>
+                    )}
+                  </span>
+                  {score.recommendationRating !== undefined && (
+                    <span className="text-small text-text-2" data-testid="recommendation-basis">
+                      Recommended from your rating ({formatRating(score.recommendationRating)})
                     </span>
                   )}
-                </span>
-                {score.recommendationRating !== undefined && (
-                  <span className="text-small text-text-2" data-testid="recommendation-basis">
-                    Recommended from your rating ({formatRating(score.recommendationRating)})
-                  </span>
-                )}
-              </div>
-            )}
-            <RatingReadout score={score} mode={mode} />
-          </div>
-          <div className="space-y-2">
-            {scored.map((c) => {
-              const pct = (score.components[c] / score.componentMax[c]) * 100;
-              return (
-                <div key={c} className="grid grid-cols-[7.5rem_1fr_6.5rem] items-center gap-3">
-                  <span className="text-label">{COMPONENT_LABEL[c]}</span>
-                  <div
-                    className="h-2 bg-bg-3"
-                    role="meter"
-                    aria-label={COMPONENT_LABEL[c]}
-                    aria-valuemin={0}
-                    aria-valuemax={score.componentMax[c]}
-                    aria-valuenow={score.components[c]}
-                  >
-                    <div className="h-full bg-text-1" style={{ width: `${pct}%` }} />
-                  </div>
-                  <span className="text-right text-readout">
-                    {shown.components[c].toFixed(1)}
-                    <span className="text-text-2"> / {score.componentMax[c]}</span>
-                  </span>
                 </div>
-              );
-            })}
-            {(note || unscored.length > 0) && (
-              <p className="pt-1 text-small text-text-2" data-testid="scale-note">
-                {note}
-                {unscored.length > 0 && (
-                  <>
-                    {note && ' '}
-                    Scoring tree {score.treeVersion.replace('default_', '')} does not score{' '}
-                    {unscored.map((c) => COMPONENT_LABEL[c].toLowerCase()).join(' or ')}.
-                  </>
-                )}
-              </p>
-            )}
-            {penalties.length === 0 && (
-              // Empty penalties are one line here, not a half-width panel (audit P2-4).
-              <p className="text-small text-text-2" data-testid="no-penalties">
-                No penalties or bonuses.
-              </p>
-            )}
-          </div>
-        </PanelBody>
-      </Panel>
+              )}
+              <RatingReadout score={score} mode={mode} />
+            </div>
+            <div className="space-y-2">
+              {scored.map((c) => {
+                const pct = (score.components[c] / score.componentMax[c]) * 100;
+                return (
+                  <div key={c} className="grid grid-cols-[7.5rem_1fr_6.5rem] items-center gap-3">
+                    <span className="text-label">{COMPONENT_LABEL[c]}</span>
+                    <div
+                      className="h-2 bg-bg-3"
+                      role="meter"
+                      aria-label={COMPONENT_LABEL[c]}
+                      aria-valuemin={0}
+                      aria-valuemax={score.componentMax[c]}
+                      aria-valuenow={score.components[c]}
+                    >
+                      <div className="h-full bg-text-1" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-right text-readout">
+                      {shown.components[c].toFixed(1)}
+                      <span className="text-text-2"> / {score.componentMax[c]}</span>
+                    </span>
+                  </div>
+                );
+              })}
+              {(note || unscored.length > 0) && (
+                <p className="pt-1 text-small text-text-2" data-testid="scale-note">
+                  {note}
+                  {unscored.length > 0 && (
+                    <>
+                      {note && ' '}
+                      Scoring tree {score.treeVersion.replace('default_', '')} does not score{' '}
+                      {unscored.map((c) => COMPONENT_LABEL[c].toLowerCase()).join(' or ')}.
+                    </>
+                  )}
+                </p>
+              )}
+              {penalties.length === 0 && (
+                // Empty penalties are one line here, not a half-width panel (audit P2-4).
+                <p className="text-small text-text-2" data-testid="no-penalties">
+                  No penalties or bonuses.
+                </p>
+              )}
+            </div>
+          </PanelBody>
+        </Panel>
+      )}
 
       <div id="debrief" className="scroll-mt-4">
         <DebriefPanel sessionId={sessionId} />

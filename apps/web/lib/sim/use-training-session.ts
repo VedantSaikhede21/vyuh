@@ -38,6 +38,8 @@ export type Phase =
       /** How the run ended (after a reload, from the stored SESSION_ENDED event). */
       ended: { reason: SessionEndReason; tMs: number } | null;
     }
+  /** An Assessment the trainee ended early: stored, not scored. */
+  | { kind: 'notScored'; scenarioId: string; tMs: number | null }
   | { kind: 'interrupted' }
   /** Reloaded mid-run, and this tab holds what is needed to rebuild it. */
   | {
@@ -87,6 +89,14 @@ export function useTrainingSession(sessionId: string) {
           scenarioId: session.scenarioId,
           mode: session.mode,
           ended: session.ended,
+        });
+        return;
+      }
+      if (session.status === 'ABANDONED' && session.ended?.reason === 'ABORTED') {
+        setPhase({
+          kind: 'notScored',
+          scenarioId: session.scenarioId,
+          tMs: session.ended.tMs,
         });
         return;
       }
@@ -210,6 +220,14 @@ export function useTrainingSession(sessionId: string) {
           invalidate('home');
           invalidate('record');
           const st = runtime.sim.getState();
+          if (score === null) {
+            setPhase({
+              kind: 'notScored',
+              scenarioId: meta.current?.scenarioId ?? '',
+              tMs: st.clock.tMs,
+            });
+            return;
+          }
           setPhase({
             kind: 'result',
             score,

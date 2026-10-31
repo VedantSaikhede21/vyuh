@@ -89,6 +89,7 @@ def home(db: Session, user: User) -> HomeResponse:
         .where(
             TrainingSession.user_id == user.id,
             TrainingSession.status == SessionStatus.COMPLETED,
+            TrainingSession.ended_early.is_(False),
         )
         .order_by(TrainingSession.ended_at.desc().nulls_last())
         .limit(5)

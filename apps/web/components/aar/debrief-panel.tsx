@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 
 export const FALLBACK_TEXT: Record<DebriefFallbackReason, string> = {
   LLM_DISABLED: 'LLM off on this server',
+  ENDED_EARLY: 'Run ended early',
   TIMEOUT: 'LLM timed out',
   INVALID_OUTPUT: 'LLM answer failed validation',
   ERROR: 'LLM unavailable',

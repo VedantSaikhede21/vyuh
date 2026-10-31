@@ -204,7 +204,7 @@ def _value(v: Any) -> Any:
 
 
 def debrief_input(
-    scenario: Scenario, mode: str, score: Score, events: list[dict[str, Any]]
+    scenario: Scenario, mode: str, score: Score, events: list[dict[str, Any]], partial: bool = False
 ) -> dict[str, Any]:
     """What the LLM may see (no raw log, no personal data)."""
     chains = kill_chain(scenario, events)
@@ -235,6 +235,7 @@ def debrief_input(
             "durationS": scenario.duration_s,
         },
         "mode": mode,
+        "partial": partial,
         "score": {
             "total": score.total,
             "components": score.components.model_dump(),
@@ -449,9 +450,14 @@ def template_debrief(data: dict[str, Any]) -> DebriefContent:
     order = list(STAGE_WORD)
     weakest = max(cost, key=lambda k: (cost[k], -order.index(k)), default=None)
 
+    partial = data.get("partial", False)
+    opening = (
+        f"Partial run on {sc['code']} {sc['name']}: ended early, so there is no total "
+        if partial
+        else f"Score {display_int(s['total'])} / 100 on {sc['code']} {sc['name']} "
+    )
     summary = (
-        f"Score {display_int(s['total'])} / 100 on {sc['code']} {sc['name']} "
-        f"(difficulty {sc['difficulty']}, {data['mode'].lower()}). "
+        opening + f"(difficulty {sc['difficulty']}, {data['mode'].lower()}). "
         f"{neutralised} of {len(threats)} threats neutralised"
         + (f", {leaked} leaked" if leaked else "")
         + "."
@@ -460,7 +466,8 @@ def template_debrief(data: dict[str, Any]) -> DebriefContent:
     )
 
     strengths = []
-    for c in COMPONENTS:
+    # A partial run's component points cover only what was met, so they prove nothing.
+    for c in () if partial else COMPONENTS:
         mx = s["componentMax"][c]
         if mx > 0 and s["components"][c] >= 0.8 * mx:
             strengths.append(f"{c.capitalize()}: {s['components'][c]:.1f} of {mx:g} points.")
@@ -562,8 +569,12 @@ def session_debrief(
     if score is None:  # pragma: no cover - completed sessions always have a score
         raise ApiError(ErrorCode.NOT_FOUND, "Session has no score")
     scenario = load_scenario(db.get_one(ScenarioRow, row.scenario_id))
-    data = debrief_input(scenario, row.mode.value, score, stored_events(db, row.id))
-    if llm_on:
+    data = debrief_input(
+        scenario, row.mode.value, score, stored_events(db, row.id), partial=row.ended_early
+    )
+    if row.ended_early:
+        content, model, reason = template_debrief(data), TEMPLATE_MODEL, "ENDED_EARLY"
+    elif llm_on:
         content, model, reason = build_debrief(llm, str(user.id), data)
     else:
         content, model, reason = template_debrief(data), TEMPLATE_MODEL, "LLM_DISABLED"

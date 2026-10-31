@@ -108,6 +108,8 @@ export const Score = named(
     perContact: z.array(PerContactMetrics),
     metrics: z.record(z.string(), z.unknown()),
     treeVersion: z.string().min(1),
+    /** Practice run the trainee ended early: feedback only, no total (SPEC §4.5, decision 173). */
+    partial: z.boolean().optional(),
     /** Next difficulty to train at; added by the API, not the scoring tree (decision 64). */
     recommendedDifficulty: Difficulty.optional(),
     recommendationBasis: RecommendationBasis.optional(),

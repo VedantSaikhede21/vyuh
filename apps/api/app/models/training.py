@@ -48,6 +48,8 @@ class TrainingSession(Base):
     client_meta: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     #: sim-core SIM_VERSION of the client that ran it (null for pre-Part-B sessions).
     sim_version: Mapped[int | None]
+    #: The trainee ended the run (SESSION_ENDED ABORTED): never a final score (SPEC §4.5).
+    ended_early: Mapped[bool] = mapped_column(server_default="false")
     resume_count: Mapped[int] = mapped_column(server_default="0")
     resumed_at: Mapped[list[str]] = mapped_column(JSONB, server_default=text("'[]'::jsonb"))
     #: Terrain preset meta.revision at creation (null before Phase 4a; decision 106).

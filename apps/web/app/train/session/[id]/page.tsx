@@ -126,6 +126,28 @@ function Session({ sessionId }: { sessionId: string }) {
           </PanelBody>
         </Panel>
       );
+    case 'notScored':
+      return (
+        <Panel className="mx-auto max-w-xl" data-testid="not-scored">
+          <PanelBody className="space-y-3 pt-4 text-body">
+            <p className="text-h2 text-text-1">
+              Ended early{phase.tMs !== null && ` at ${formatClock(phase.tMs)}`}, not scored
+            </p>
+            <p className="text-text-body">
+              An Assessment counts only when it runs to the end. This run has no score, does not
+              change your rating and is not on your record.
+            </p>
+            <div className="flex gap-2">
+              <Button asChild variant="primary" size="lg">
+                <Link href={`/train/scenario/${phase.scenarioId}`}>Open the briefing</Link>
+              </Button>
+              <Button asChild variant="secondary" size="lg">
+                <Link href="/train">Back to training</Link>
+              </Button>
+            </div>
+          </PanelBody>
+        </Panel>
+      );
     case 'interrupted':
       return (
         <Panel className="mx-auto max-w-xl">

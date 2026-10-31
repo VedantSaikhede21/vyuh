@@ -239,7 +239,9 @@ ContactReport {
 ```
 
 ### 4.5 Session lifecycle
-`CREATED` (POST /sessions) → `ACTIVE` (first event batch) → `COMPLETED` (POST complete) or `ABANDONED` (no batch for 15 min, or explicit abort). Completed sessions and their events are immutable. Only `ACTIVE` sessions accept events; only `COMPLETED` sessions have scores.
+`CREATED` (POST /sessions) → `ACTIVE` (first event batch) → `COMPLETED` (POST complete) or `ABANDONED` (no batch for 15 min, or an Assessment the trainee ended early). Completed sessions and their events are immutable. Only `ACTIVE` sessions accept events; only `COMPLETED` sessions have scores.
+
+**Ended early (decision 173):** threats still to come are left out of a score, so a run the trainee ends (`SESSION_ENDED` reason `ABORTED`) is never a final score. **Assessment:** `ABANDONED`, no score row, no rating change, not on the record, assignment not completed; complete answers 204. **Practice:** `COMPLETED` with feedback, `sessions.ended_early` set and `Score.partial` true on every read; no total shown, not counted in best scores or Home recents, template debrief only (`ENDED_EARLY`).
 
 **Abandonment (Phase 4a, decision 102):** every batch, including the empty 60 s heartbeat, sets `sessions.last_batch_at`. An `ACTIVE` session whose last batch is more than 15 min old becomes `ABANDONED` when it is next read and in a sweep at API startup. `CREATED` sessions (never started) are left as they are. The server also stores the end reason from the `SESSION_ENDED` event, so the result screen shows it after a reload (`SessionDetailResponse.ended`).
 
@@ -511,7 +513,7 @@ Rules (Phase 4a, `default_v4`, `services/scoring/report.py`, decision 115):
 | `terrain_presets` | code (pk), name, meta (jsonb), attribution |
 | `scenarios` | id, code (nullable unique, e.g. `S04`), name, kind (SCRIPTED/GENERATED/AUTHORED), seed, difficulty, tags (text[], e.g. `demo`, `tutorial`), request (jsonb), content (jsonb), schema_version, created_by, created_at |
 | `assignments` | id, scenario_id, unit_id (nullable), user_id (nullable), assigned_by, due_at, created_at |
-| `sessions` | id, user_id, scenario_id, mode (PRACTICE/ASSESSMENT), status (CREATED/ACTIVE/COMPLETED/ABANDONED), last_batch_seq, is_demo (bool), started_at, ended_at, client_meta (jsonb: fps, gpu, browser), sim_version (int, nullable: sim-core `SIM_VERSION` the session ran on; null before Phase 2B), terrain_revision (int, nullable: the preset's `meta.revision` at creation; null before Phase 4a, migration 0004), last_batch_at (timestamptz, nullable: last event batch or heartbeat; migration 0003) |
+| `sessions` | id, user_id, scenario_id, mode (PRACTICE/ASSESSMENT), status (CREATED/ACTIVE/COMPLETED/ABANDONED), ended_early (bool), last_batch_seq, is_demo (bool), started_at, ended_at, client_meta (jsonb: fps, gpu, browser), sim_version (int, nullable: sim-core `SIM_VERSION` the session ran on; null before Phase 2B), terrain_revision (int, nullable: the preset's `meta.revision` at creation; null before Phase 4a, migration 0004), last_batch_at (timestamptz, nullable: last event batch or heartbeat; migration 0003) |
 | `session_events` | id (bigserial), session_id, seq (unique with session_id), t_ms, type, contact_id, track_id, payload (jsonb). Index (session_id, t_ms) |
 | `scores` | id, session_id (unique with tree_version), total, detection, classification, decision, report, efficiency, penalties (jsonb), per_contact (jsonb), metrics (jsonb), tree_version, created_at |
 | `debriefs` | session_id (pk), model, content (jsonb), created_at |
@@ -541,7 +543,7 @@ The API owns all DB access (Supabase service key stays server-side; no client-si
 | POST `/scenarios/from-text` | instructor | Text → parsed, clamped generator parameters only (`FromTextResponse {request, notes, model}`); the client calls POST `/scenarios/generate` after the instructor confirms (decision 134). 503 `LLM_UNAVAILABLE` when the LLM is off |
 | POST `/sessions` | trainee+ | Start session for scenario |
 | POST `/sessions/{id}/events` | owner | Append event batch |
-| POST `/sessions/{id}/complete` | owner | Validate, score, update Elo → Score |
+| POST `/sessions/{id}/complete` | owner | Validate, score, update Elo → Score; 204 with no score for an Assessment ended early (§4.5) |
 | GET `/sessions/{id}` | owner/instructor | Session + score |
 | GET `/aar/sessions/{id}` | owner/instructor | Scenario + events + score + kill chain (for replay); COMPLETED sessions only (else 409 `SESSION_NOT_ACTIVE`) |
 | POST `/aar/sessions/{id}/debrief` | owner/instructor | Generate/cache LLM debrief (`DebriefResponse {source LLM / TEMPLATE, model, fallbackReason?, content}`); COMPLETED sessions only |

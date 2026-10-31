@@ -465,4 +465,6 @@ def test_v1_to_v3_rescore_byte_identical_on_every_fixture_log() -> None:
         # Phase 6B display fields (decision 149), also set by the API only.
         assert dumped.pop("recommendation_rating") is None
         assert dumped.pop("display") is None
+        # Set by the API on a run ended early (decision 173).
+        assert dumped.pop("partial") is None
         assert dumped == expected, key

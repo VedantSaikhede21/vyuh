@@ -140,7 +140,8 @@ export const api = {
   },
   study: (signal?: AbortSignal) => apiFetch('/study/results', StudyResultsResponse, { signal }),
   completeSession: (sessionId: string, endTMs: number, clientMeta: ClientMeta) =>
-    apiFetch(`/sessions/${sessionId}/complete`, Score, {
+    // null: an Assessment ended early, stored but not scored (204).
+    apiFetch(`/sessions/${sessionId}/complete`, Score.nullable(), {
       method: 'POST',
       body: { endTMs, clientMeta },
     }),

@@ -246,8 +246,14 @@ def resume_session(db: Session, user: User, session_id: uuid.UUID) -> SessionDet
 
 def complete_session(
     db: Session, user: User, session_id: uuid.UUID, body: CompleteSessionRequest
-) -> Score:
-    """Validate the whole log, score it with the scenario's tree and store the score."""
+) -> Score | None:
+    """Validate the whole log, score it with the scenario's tree and store the score.
+
+    An Assessment the trainee ended early is not scored (SPEC §4.5): threats still to
+    come would be left out of the score, so quitting could look like a clean run. It
+    becomes ABANDONED and None is returned. A Practice run keeps its feedback, with
+    `partial` set on every read and no total shown.
+    """
     row = get_owned_session(db, user, session_id, for_update=True)
     if row.status is not SessionStatus.ACTIVE:
         raise ApiError(
@@ -271,11 +277,19 @@ def complete_session(
             {"violations": [v.as_detail() for v in violations]},
         )
 
+    row.ended_early = any(
+        e["type"] == "SESSION_ENDED" and e["payload"].get("reason") == "ABORTED" for e in events
+    )
+    row.ended_at = datetime.now(UTC)
+    row.client_meta = body.client_meta.model_dump(mode="json", by_alias=True, exclude_unset=True)
+    if row.ended_early and row.mode is SessionMode.ASSESSMENT:
+        row.status = SessionStatus.ABANDONED
+        db.commit()
+        return None
+
     score = score_session(scenario, events, get_tree(db, scenario.scoring_tree_id))
     store_score(db, row.id, score)
     row.status = SessionStatus.COMPLETED
-    row.ended_at = datetime.now(UTC)
-    row.client_meta = body.client_meta.model_dump(mode="json", by_alias=True, exclude_unset=True)
     if row.mode is SessionMode.ASSESSMENT:
         update_rating(db, user, row, scenario.difficulty, score.total)
     db.commit()
@@ -386,6 +400,7 @@ def with_derived_fields(
         basis_rating = owner.rating if owner is not None else START_RATING
     nxt, basis = recommend_difficulty(basis_rating)
     update: dict = {
+        **({"partial": True} if row.ended_early else {}),
         "per_contact": per_contact,
         "recommended_difficulty": nxt,
         "recommendation_basis": basis,

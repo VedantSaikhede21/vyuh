@@ -373,6 +373,7 @@ class DebriefFallbackReason(StrEnum):
     ERROR = "ERROR"
     RATE_LIMITED = "RATE_LIMITED"
     BUDGET = "BUDGET"
+    ENDED_EARLY = "ENDED_EARLY"
 
 
 class DebriefMistake(BaseModel):
@@ -1978,6 +1979,7 @@ class Score(BaseModel):
     per_contact: Annotated[list[PerContactMetrics], Field(alias="perContact")]
     metrics: dict[str, Any]
     tree_version: Annotated[str, Field(alias="treeVersion", min_length=1)]
+    partial: bool | None = None
     recommended_difficulty: Annotated[
         int | None, Field(alias="recommendedDifficulty", ge=1, le=5)
     ] = None

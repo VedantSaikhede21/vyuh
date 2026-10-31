@@ -426,6 +426,7 @@ _ADDED_OPTIONALS = frozenset(
         "rating",
         "recommendation_rating",
         "display",
+        "partial",
     }
 )
 

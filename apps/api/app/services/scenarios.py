@@ -108,6 +108,7 @@ def best_scores(db: Session, user_id: uuid.UUID) -> dict[uuid.UUID, float]:
         .where(
             TrainingSession.user_id == user_id,
             TrainingSession.status == SessionStatus.COMPLETED,
+            TrainingSession.ended_early.is_(False),
         )
         .group_by(TrainingSession.scenario_id)
     )
