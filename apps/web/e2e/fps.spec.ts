@@ -27,6 +27,9 @@ import { login, openBriefing } from './helpers';
 // FPS_SELECT=1 (Phase 6B): before measuring, select and mark three tracks
 // (Tab, D) so their 3D labels and the selected-track camera are part of the
 // frame; without it the spec measures as before.
+//
+// FPS_MAIN=camera (Part 6R): swap the camera into the main view (V) before
+// measuring. Briefing cases measure the live 3D briefing page instead of the player.
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
 
@@ -34,6 +37,8 @@ interface Case {
   name: string;
   code?: string;
   hero?: string;
+  /** Measure the 3D briefing page of `code` instead of the session. */
+  briefing?: boolean;
   /** POST /scenarios/generate body (instructor). */
   generate?: Record<string, unknown>;
   /** Sim time to measure at (contacts airborne). */
@@ -43,6 +48,9 @@ interface Case {
 const CASES: Case[] = [
   { name: 'S13 Silent Ridge (JK, buildings)', code: 'S13', atMs: 30_000 },
   { name: 'S14 Mixed Sky', code: 'S14', atMs: 30_000 },
+  { name: 'S05 briefing', code: 'S05', briefing: true, atMs: 0 },
+  { name: 'S05', code: 'S05', atMs: 70_000 },
+  { name: 'S15', code: 'S15', atMs: 70_000 },
   { name: 'S06 Crowded Skies (URBAN, 13.6 k buildings)', code: 'S06', atMs: 70_000 },
   {
     name: 'Generated JK D4 seed 37',
@@ -102,6 +110,7 @@ const WINDOW_MS = 10_000;
 const WINDOWS = 3;
 const COOLDOWN_MS = Number(process.env.FPS_COOLDOWN_MS ?? 30_000);
 const MODES = (process.env.FPS_MODES ?? 'fixed,adaptive').split(',') as ('fixed' | 'adaptive')[];
+const CAMERA_MAIN = process.env.FPS_MAIN === 'camera';
 
 /** Opt this page into the adaptive pixel ratio (fixed under automation by default). */
 const ADAPTIVE = (key: string) => {
@@ -234,7 +243,8 @@ for (const scale of SCALES) {
     for (const vp of VIEWPORTS) {
       for (const c of CASES) {
         for (const mode of MODES) {
-          const title = `${c.name} at ${vp.width}×${vp.height} ×${scale.factor} ${mode} ${scale.tag}`;
+          const main = CAMERA_MAIN ? 'camera main ' : '';
+          const title = `${c.name} at ${vp.width}×${vp.height} ×${scale.factor} ${main}${mode} ${scale.tag}`;
           test(title, async ({ page }) => {
             test.setTimeout(420_000);
             await page.goto('about:blank');
@@ -243,7 +253,10 @@ for (const scale of SCALES) {
             if (mode === 'adaptive') await page.addInitScript(ADAPTIVE, ADAPTIVE_PIXEL_RATIO_KEY);
             await page.setViewportSize(vp);
             let entities: number | null = null;
-            if (c.code || c.generate) {
+            if (c.briefing) {
+              await login(page, 'instructor@demo');
+              await openBriefing(page, c.code!);
+            } else if (c.code || c.generate) {
               await login(page, 'instructor@demo');
               if (c.generate) {
                 const g = await startGenerated(page, c.generate);
@@ -263,6 +276,7 @@ for (const scale of SCALES) {
                   await page.keyboard.press('d');
                 }
               }
+              if (CAMERA_MAIN) await page.keyboard.press('v');
             } else {
               const res = await page.goto(`/dev/hero?${c.hero}`);
               test.skip(res?.status() === 404, 'dev hero route is not in production builds');
@@ -275,9 +289,14 @@ for (const scale of SCALES) {
             const windows: FrameWindow[] = [];
             for (let i = 0; i < WINDOWS; i++) windows.push(await sampleWindow(page, WINDOW_MS));
             const median = [...windows].sort((a, b) => a.meanFps - b.meanFps)[1]!;
+            // Proof of what was on screen while measuring.
+            if (process.env.FPS_SHOT_DIR) {
+              const file = title.replace(/[^\w]+/g, '-').slice(0, 80);
+              await page.screenshot({ path: `${process.env.FPS_SHOT_DIR}/${file}.png` });
+            }
             const tracks = await page
               .getByRole('tab', { name: /Tracks/ })
-              .textContent()
+              .textContent({ timeout: 2000 })
               .catch(() => null);
             const result = {
               ...median,
