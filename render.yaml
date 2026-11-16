@@ -17,7 +17,7 @@ services:
       - key: SUPABASE_JWT_AUDIENCE
         value: authenticated
       - key: GUEST_MODE_ENABLED
-        value: "true"
+        value: 'true'
       - key: LOCAL_JWT_SECRET
         generateValue: true
       - key: LOG_LEVEL
@@ -27,7 +27,7 @@ services:
       - key: LLM_MODEL
         value: google/gemini-3.8-flash
       - key: LLM_DAILY_TOKEN_BUDGET
-        value: "200000"
+        value: '200000'
       - key: DATABASE_URL
         sync: false
       - key: SUPABASE_URL

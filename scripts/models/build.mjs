@@ -38,7 +38,10 @@ const MODELS = [
 ];
 
 function run(args) {
-  execFileSync('npx', ['--yes', CLI, ...args], { stdio: ['ignore', 'ignore', 'inherit'], shell: true });
+  execFileSync('npx', ['--yes', CLI, ...args], {
+    stdio: ['ignore', 'ignore', 'inherit'],
+    shell: true,
+  });
 }
 
 /** Strip everything but the base-colour map; drop named nodes and (unless kept) animations. */

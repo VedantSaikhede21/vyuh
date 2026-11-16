@@ -32,13 +32,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 // animation into morph targets, so a whole flock stays one instanced draw.
 
 export type ModelId =
-  | 'quad-small'
-  | 'quad-heavy'
-  | 'fpv'
-  | 'fixed-wing'
-  | 'loitering'
-  | 'heli'
-  | 'bird';
+  'quad-small' | 'quad-heavy' | 'fpv' | 'fixed-wing' | 'loitering' | 'heli' | 'bird';
 
 export const MODEL_IDS: readonly ModelId[] = [
   'quad-small',
@@ -204,7 +198,10 @@ function bakeGeometry(src: BufferGeometry, m: Matrix4, positions?: Float32Array)
   const normal = src.getAttribute('normal');
   if (normal) g.setAttribute('normal', toFloat(normal));
   const uv = src.getAttribute('uv');
-  g.setAttribute('uv', uv ? toFloat(uv) : new Float32BufferAttribute(new Float32Array(pos.count * 2), 2));
+  g.setAttribute(
+    'uv',
+    uv ? toFloat(uv) : new Float32BufferAttribute(new Float32Array(pos.count * 2), 2),
+  );
   if (src.index) g.setIndex(Array.from(src.index.array));
   else g.setIndex(Array.from({ length: pos.count }, (_, i) => i));
   g.applyMatrix4(m);
@@ -384,7 +381,9 @@ export function prepareModel(
   const size = box.getSize(new Vector3());
   const k = 1 / Math.max(size.x, size.y, size.z, 1e-9);
   const centre = box.getCenter(new Vector3());
-  const norm = new Matrix4().makeScale(k, k, k).multiply(new Matrix4().makeTranslation(-centre.x, -centre.y, -centre.z));
+  const norm = new Matrix4()
+    .makeScale(k, k, k)
+    .multiply(new Matrix4().makeTranslation(-centre.x, -centre.y, -centre.z));
   const normalise = (arr: Float32Array) => {
     const v = new Vector3();
     for (let i = 0; i < arr.length; i += 3) {
@@ -417,7 +416,8 @@ export function prepareModel(
       // Unskinned pieces hold still: their own (normalised) positions in every frame.
       const parts = ordered.map(
         ({ mesh, geometry }) =>
-          framePositions.get(mesh)?.[f] ?? (geometry.getAttribute('position').array as Float32Array),
+          framePositions.get(mesh)?.[f] ??
+          (geometry.getAttribute('position').array as Float32Array),
       );
       const total = parts.reduce((s, a) => s + a.length, 0);
       const arr = new Float32Array(total);
