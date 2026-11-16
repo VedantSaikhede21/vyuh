@@ -158,6 +158,7 @@ describe('EO pointing', () => {
     mode: 'DAY',
     lockTrackId: null,
     trackMode: 'MANUAL',
+    targetLevel: null,
   };
   const from = { x: 0, y: 0, z: 0 };
   const at = (azDeg: number, elDeg: number, r = 1000) => {

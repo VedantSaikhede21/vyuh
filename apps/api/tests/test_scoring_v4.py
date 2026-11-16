@@ -449,12 +449,15 @@ def test_v4_penalties_carry_the_moment_of_the_mistake() -> None:
 
 
 def test_v1_to_v3_rescore_byte_identical_on_every_fixture_log() -> None:
-    """Goldens scored by the engine before default_v4 (tests/fixtures/v123_golden.json)."""
+    """Goldens scored by the engine before default_v4 (tests/fixtures/v123_golden.json), on
+    the logs they were scored from, frozen in tests/fixtures/v123_logs: re-exporting the
+    live fixture logs after a sim change (SIM_VERSION 7 added an EO event to s01_ignored,
+    decision 176) must not move this engine check."""
     golden = json.loads((FIXTURES / "v123_golden.json").read_text(encoding="utf-8"))
     assert len(golden) == 18
     for key, expected in golden.items():
         log, tree = key.split(":")
-        events = json.loads((FIXTURES / f"{log}.json").read_text(encoding="utf-8"))
+        events = json.loads((FIXTURES / "v123_logs" / f"{log}.json").read_text(encoding="utf-8"))
         # The goldens predate SIM_VERSION 6: those logs had no AI-assist events.
         events = [e for e in events if not e["type"].startswith("AI_SUGGESTION_")]
         code = {"s01": "S01", "s14": "S14", "s04": "S04", "s06": "S06"}[log[:3]]

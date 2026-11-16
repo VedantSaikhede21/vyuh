@@ -1,7 +1,7 @@
 {
  "scenarioCode": "S01",
  "mode": "PRACTICE",
- "simVersion": 6,
+ "simVersion": 7,
  "events": [
   {
    "tMs": 0,

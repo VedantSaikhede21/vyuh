@@ -30,6 +30,17 @@
   "seq": 2
  },
  {
+  "tMs": 139300,
+  "type": "EO_IDENTIFIABLE",
+  "contactId": "c01",
+  "trackId": "T001",
+  "payload": {
+   "level": "DETECT",
+   "rangeM": 427.25085977122296
+  },
+  "seq": 3
+ },
+ {
   "tMs": 165600,
   "type": "EO_IDENTIFIABLE",
   "contactId": "c01",
@@ -38,7 +49,7 @@
    "level": "IDENTIFY",
    "rangeM": 14.790526851004296
   },
-  "seq": 3
+  "seq": 4
  },
  {
   "tMs": 166750,
@@ -47,7 +58,7 @@
   "payload": {
    "assetId": "a1"
   },
-  "seq": 4
+  "seq": 5
  },
  {
   "tMs": 166750,
@@ -55,6 +66,6 @@
   "payload": {
    "reason": "ALL_RESOLVED"
   },
-  "seq": 5
+  "seq": 6
  }
 ]

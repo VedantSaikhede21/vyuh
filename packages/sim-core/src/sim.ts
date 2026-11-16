@@ -257,7 +257,15 @@ export function createSim(
       .map((e) => createEffectorState(e, sampleHeight(terrain, e.x, e.z))),
     sensorPositions,
     selectedTrackId: null,
-    camera: { azDeg: 0, elDeg: 0, zoom: 1, mode: 'DAY', lockTrackId: null, trackMode: 'MANUAL' },
+    camera: {
+      azDeg: 0,
+      elDeg: 0,
+      zoom: 1,
+      mode: 'DAY',
+      lockTrackId: null,
+      trackMode: 'MANUAL',
+      targetLevel: null,
+    },
   };
   const contactsById = new Map(state.contacts.map((c) => [c.id, c]));
   /** AI-assist suggestions pre-baked in the scenario (SPEC §13.3), by contact id. */
@@ -442,6 +450,7 @@ export function createSim(
           mode: cmd.payload.mode ?? state.camera.mode,
           lockTrackId: cmd.trackId ?? null,
           trackMode: cmd.trackId !== undefined ? 'CUE' : 'MANUAL',
+          targetLevel: null,
         };
         resetEoTracker();
         break;
@@ -667,6 +676,7 @@ export function createSim(
     const id = state.camera.lockTrackId;
     const live = id !== null && tracksById.get(id)?.status === 'ACTIVE';
     state.camera.trackMode = live ? 'CUE' : 'MANUAL';
+    state.camera.targetLevel = null;
     if (!live) state.camera.lockTrackId = null;
   }
 
@@ -679,7 +689,9 @@ export function createSim(
     // Break checks use last tick's pointing: did the contact leave the frame or the LOS?
     if (!inEoFrustum(eo, state.camera, eoPos, c.pos)) return false;
     if (!los.visible(state.clock.tick, eo.id, eoPos, c.id, c.pos)) return false;
-    if (eoLevelNow(c, spec) === null) {
+    const level = eoLevelNow(c, spec);
+    state.camera.targetLevel = level;
+    if (level === null) {
       eoTracker.noLevelSinceMs ??= tMs;
       if (tMs - eoTracker.noLevelSinceMs > EO_TRACK_DROP_MS) return false;
     } else {
@@ -702,6 +714,7 @@ export function createSim(
     if (track === undefined || track.status !== 'ACTIVE') {
       state.camera.lockTrackId = null;
       state.camera.trackMode = 'MANUAL';
+      state.camera.targetLevel = null;
       resetEoTracker();
       return;
     }

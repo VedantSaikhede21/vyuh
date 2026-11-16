@@ -101,8 +101,8 @@
       "fovDegMin": 1.5,
       "fovDegMax": 30,
       "resolution": [
-        640,
-        360
+        1280,
+        720
       ],
       "irResolution": [
         640,

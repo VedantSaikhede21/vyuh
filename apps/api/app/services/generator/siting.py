@@ -381,7 +381,7 @@ def site(
             "z": rz,
             "fovDegMin": 1.5,
             "fovDegMax": 30,
-            "resolution": [640, 360],
+            "resolution": [1280, 720],
             "irResolution": [640, 512],
         },
         {"id": "rf1", "kind": "RF", "x": rx, "y": 4, "z": rz, "rangeM": 4000, "bearingErrDeg": 7},

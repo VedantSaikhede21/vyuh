@@ -36,15 +36,24 @@ export const EO_EPISODE_RESET_MS = 1000;
 export const CAMERA_FOLLOW_RATE = 4;
 
 // EO video auto-track (decision 52): radar cues the camera (CUE); once the cued
-// contact is seen near the frame centre the EO tracker holds it (TRACK).
-/** CUE → TRACK after the contact has been at ≥ DETECT inside the central half this long. */
+// contact is seen in the frame the EO tracker holds it (TRACK).
+/** CUE → TRACK after the contact has been at ≥ DETECT inside the acquisition window this long. */
 export const EO_ACQUIRE_MS = 500;
 /** TRACK → CUE after the contact has had no EO level for longer than this. */
 export const EO_TRACK_DROP_MS = 1000;
-/** Fraction of the frame half-size that counts as "central" for acquisition. */
-export const EO_ACQUIRE_FRAME_FRACTION = 0.5;
-/** Tracker jitter, 1σ per axis, as a fraction of the horizontal FOV. */
-export const EO_TRACK_JITTER_FOV = 0.02;
+/**
+ * Fraction of the frame half-size the tracker searches for the cued contact. 0.85
+ * (SIM_VERSION 7, decision 176): a video tracker acquires a target anywhere but the
+ * frame edge; at 0.5 a cue at full zoom almost never locked, because the radar's
+ * pointing error (p95 1.6–1.9° beyond 1 km) is wider than the central half.
+ */
+export const EO_ACQUIRE_FRAME_FRACTION = 0.85;
+/**
+ * Tracker jitter, 1σ per axis, as a fraction of the horizontal FOV. 0.006 (SIM_VERSION
+ * 7, decision 176; was 0.02): at 2 % the target jumped ~27 px per tick on a full-width
+ * picture, which hid its shape; a video tracker holds far steadier than that.
+ */
+export const EO_TRACK_JITTER_FOV = 0.006;
 
 /** MANUAL = trainee pointing; CUE = following a radar track; TRACK = EO tracker holds the contact. */
 export type EoTrackMode = 'MANUAL' | 'CUE' | 'TRACK';
@@ -58,6 +67,12 @@ export interface EoCameraState {
   /** Track the camera is locked on; null = manual pointing. */
   lockTrackId: string | null;
   trackMode: EoTrackMode;
+  /**
+   * What the EO tracker sees of its target (TRACK only; else null): the level the
+   * picture supports right now (SIM_VERSION 7, decision 176). Shown to the trainee
+   * as the camera verdict; it is what the picture already shows, not ground truth.
+   */
+  targetLevel: EoLevel | null;
 }
 
 export interface EoConditions {

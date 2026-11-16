@@ -196,6 +196,54 @@ def test_seed_updates_ai_suggestions_only_before_sim_version_6(
     assert row.content["contacts"][0]["aiSuggestion"]["suggestedClass"] == "BIRD_SMALL"
 
 
+def _eo(content: dict) -> dict:
+    return next(s for s in content["sensors"] if s["kind"] == "EO_IR")
+
+
+def test_seed_updates_camera_resolution_only_before_sim_version_7(
+    db: Session,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    start_session: Callable[..., str],
+    tmp_path: Path,
+) -> None:
+    """Decision 176: a used scenario's EO camera resolution may change until a session ran
+    on SIM_VERSION 7; any other sensor change is still refused."""
+    row = scenarios["S01"]
+    sid = start_session(make_user(), row)
+    session = db.get(TrainingSession, uuid.UUID(sid))
+    session.sim_version = 6
+    session.status = SessionStatus.ACTIVE
+    db.commit()
+
+    edited = json.loads(json.dumps(S01))
+    _eo(edited)["resolution"] = [1920, 1080]
+    _eo(edited)["irResolution"] = [640, 512]
+    (tmp_path / "S01.json").write_text(json.dumps(edited), encoding="utf-8")
+    assert seed_scenarios(db, tmp_path) == 1
+    db.commit()
+    db.refresh(row)
+    assert _eo(row.content)["resolution"] == [1920, 1080]
+    assert _eo(row.content)["irResolution"] == [640, 512]
+
+    # Another camera field (the zoom range) is gameplay: refused.
+    _eo(edited)["fovDegMin"] = 0.5
+    (tmp_path / "S01.json").write_text(json.dumps(edited), encoding="utf-8")
+    assert seed_scenarios(db, tmp_path) == 0
+    db.refresh(row)
+    assert _eo(row.content)["fovDegMin"] == _eo(S01)["fovDegMin"]
+
+    # Once a session ran on SIM_VERSION 7 the resolution is frozen too.
+    _eo(edited)["fovDegMin"] = _eo(S01)["fovDegMin"]
+    _eo(edited)["resolution"] = [640, 360]
+    session.sim_version = 7
+    db.commit()
+    (tmp_path / "S01.json").write_text(json.dumps(edited), encoding="utf-8")
+    assert seed_scenarios(db, tmp_path) == 0
+    db.refresh(row)
+    assert _eo(row.content)["resolution"] == [1920, 1080]
+
+
 def test_list_scenarios(
     client: TestClient,
     scenarios: dict[str, ScenarioRow],

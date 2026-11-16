@@ -4,5 +4,7 @@
 // 3 = DROP / RTH waypoint actions, WEAPONS_TIGHT class check, NO_KINETIC gate;
 // 4 = IR range cap ramps from 1 × visibility in fog to 1.5 × in haze (decision 94);
 // 5 = track height is a noisy, filtered estimate (decision 108); REPORT_TRUTH (decision 104);
-// 6 = AI_SUGGESTION_SHOWN on a track's first selection, accept / reject validated (decision 132).
-export const SIM_VERSION = 6;
+// 6 = AI_SUGGESTION_SHOWN on a track's first selection, accept / reject validated (decision 132);
+// 7 = EO tracker acquires in the central 85 % of the frame and jitters 0.6 % of the FOV,
+//     camera.targetLevel; scripted and generated cameras 1280 × 720 (decision 176).
+export const SIM_VERSION = 7;

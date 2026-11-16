@@ -3,8 +3,10 @@
 A scenario that already has sessions keeps its gameplay content (replay and scores depend
 on it); only its display fields (name, briefing, tags), scoring tree and generator version
 may change. AI-assist suggestions may also change while no session on the scenario ran
-on SIM_VERSION 6 or later, the first that shows them (decision 132). Any other edit needs
-a new code (decision 46).
+on SIM_VERSION 6 or later, the first that shows them (decision 132), and the EO camera's
+resolution while none ran on SIM_VERSION 7 or later, the first with 1280 x 720 cameras
+(decision 176): older sessions cannot be replayed on a newer sim anyway, and their stored
+scores do not read the camera. Any other edit needs a new code (decision 46).
 """
 
 import json
@@ -29,6 +31,10 @@ DISPLAY_FIELDS = ("name", "briefing", "scoringTreeId", "generatorVersion")
 
 #: The first sim version that reads `aiSuggestion` (AI_SUGGESTION_SHOWN).
 AI_SUGGESTION_SIM_VERSION = 6
+#: The first sim version recorded with the 1280 x 720 scripted cameras (decision 176).
+CAMERA_SIM_VERSION = 7
+#: EO/IR sensor fields that CAMERA_SIM_VERSION allows to change on a used scenario.
+CAMERA_FIELDS = ("resolution", "irResolution")
 
 SCENARIO_DIR = Path(__file__).resolve().parent / "scenarios"
 #: Library sources (scripts/scenarios/build_scripted.py); their tags are seeded too.
@@ -84,19 +90,38 @@ def _without_ai(content: dict[str, Any]) -> dict[str, Any]:
     contacts = [
         {k: v for k, v in c.items() if k != "aiSuggestion"} for c in content.get("contacts", [])
     ]
-    return {**gameplay_content(content), "contacts": contacts}
+    return {**content, "contacts": contacts}
 
 
-def _suggestions_unused(db: Session, row: ScenarioRow) -> bool:
-    """No started session on this scenario ran on a sim that shows AI suggestions (a
-    CREATED session has no events, so nothing in it depends on the content)."""
-    newest = db.scalar(
+def _without_camera(content: dict[str, Any]) -> dict[str, Any]:
+    sensors = [
+        {k: v for k, v in s.items() if not (s.get("kind") == "EO_IR" and k in CAMERA_FIELDS)}
+        for s in content.get("sensors", [])
+    ]
+    return {**content, "sensors": sensors}
+
+
+def _newest_sim_version(db: Session, row: ScenarioRow) -> int | None:
+    """Newest sim version of a started session on this scenario (a CREATED session has
+    no events, so nothing in it depends on the content); None if there is none."""
+    return db.scalar(
         select(func.max(TrainingSession.sim_version)).where(
             TrainingSession.scenario_id == row.id,
             TrainingSession.status != SessionStatus.CREATED,
         )
     )
-    return newest is None or newest < AI_SUGGESTION_SIM_VERSION
+
+
+def _allowed_update(db: Session, row: ScenarioRow, content: dict[str, Any]) -> bool:
+    """Whether a used scenario's gameplay may change to `content`: only in the parts
+    that no started session's sim version has read yet (AI suggestions, camera)."""
+    newest = _newest_sim_version(db, row)
+    old, new = gameplay_content(row.content), gameplay_content(content)
+    if newest is None or newest < AI_SUGGESTION_SIM_VERSION:
+        old, new = _without_ai(old), _without_ai(new)
+    if newest is None or newest < CAMERA_SIM_VERSION:
+        old, new = _without_camera(old), _without_camera(new)
+    return old == new
 
 
 def seed_scenarios(db: Session, directory: Path = SCENARIO_DIR) -> int:
@@ -114,15 +139,14 @@ def seed_scenarios(db: Session, directory: Path = SCENARIO_DIR) -> int:
         elif db.scalar(select(exists().where(TrainingSession.scenario_id == row.id))):
             keep = dict(row.content)
             if gameplay_content(row.content) != gameplay_content(content):
-                if not (
-                    _without_ai(row.content) == _without_ai(content)
-                    and _suggestions_unused(db, row)
-                ):
+                if not _allowed_update(db, row, content):
                     logger.warning(
                         "Scenario %s has sessions; not updating its content", scenario.id
                     )
                     continue
+                # Only the allowed parts differ, so taking these whole changes nothing else.
                 keep["contacts"] = content["contacts"]
+                keep["sensors"] = content["sensors"]
             row.name = scenario.name
             row.tags = tags
             row.content = {**keep, **{k: content[k] for k in DISPLAY_FIELDS if k in content}}
