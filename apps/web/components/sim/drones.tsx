@@ -3,7 +3,15 @@
 import { useFrame } from '@react-three/fiber';
 import { CLASS_PROFILES, type ContactClass } from '@vyuh/shared';
 import { toThree, type ContactState, type Vec3 } from '@vyuh/sim-core';
-import { useEffect, useMemo, useRef } from 'react';
+import {
+  Component,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from 'react';
 import {
   BoxGeometry,
   Color,
@@ -18,11 +26,14 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { IR_MATERIALS } from '@/lib/sim/ir-materials';
 import type { SimRuntime } from '@/lib/sim/runtime';
 import { useSimRuntime } from './sim-context';
+import { ClassModelMesh, type ModelPose } from './contact-model-mesh';
 import { GROUND } from '@/lib/theme/scene-colours';
 
-// Contacts at true size, one InstancedMesh per shape family (≈ 4 draw calls).
-// Each geometry is normalised to a 1 m largest dimension (nose toward −z) and
-// scaled per instance by the class's sizeM.
+// Contacts at true size. Each class is drawn with its downloaded model
+// (contact-model-mesh.tsx, decision 175); the procedural shapes below are the
+// fallback while models load or if a file fails. Every geometry is normalised
+// to a 1 m largest dimension (nose toward −z) and scaled per instance by the
+// class's sizeM.
 
 type Family = 'QUAD' | 'FIXED_WING' | 'BIRD' | 'HELICOPTER';
 
@@ -165,28 +176,94 @@ function FamilyMesh({
   );
 }
 
+/** Procedural shapes: shown while the models load, or if a model file fails. */
+function FallbackDrones({
+  rt,
+  members,
+}: {
+  rt: SimRuntime;
+  members: readonly { contact: ContactState; cls: ContactClass }[];
+}) {
+  const groups = useMemo(() => {
+    const out = new Map<Family, { contact: ContactState; cls: ContactClass }[]>();
+    for (const m of members) out.set(FAMILY[m.cls], [...(out.get(FAMILY[m.cls]) ?? []), m]);
+    return [...out.entries()];
+  }, [members]);
+  return (
+    <>
+      {groups.map(([family, list]) => (
+        <FamilyMesh key={family} rt={rt} family={family} members={list} />
+      ))}
+    </>
+  );
+}
+
+class ModelBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+  override state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  override componentDidCatch(error: unknown) {
+    console.warn('Contact models failed to load; using simple shapes.', error);
+  }
+  override render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
+/** One class's contacts with its downloaded model (contact-model-mesh.tsx). */
+function ClassContacts({
+  rt,
+  cls,
+  members,
+}: {
+  rt: SimRuntime;
+  cls: ContactClass;
+  members: readonly ContactState[];
+}) {
+  const v = useMemo(() => ({ x: 0, y: 0, z: 0 }) as Vec3, []);
+  const sizeM = CLASS_PROFILES[cls].sizeM;
+  const pose = useCallback(
+    (i: number, out: ModelPose) => {
+      const c = members[i]!;
+      out.visible = c.status === 'ACTIVE' && rt.contactPosition(c.id, v) !== null;
+      const p = toThree(v);
+      out.position.set(p.x, p.y, p.z);
+      out.headingDeg = c.headingDeg;
+      out.sizeM = sizeM;
+    },
+    [rt, members, v, sizeM],
+  );
+  return <ClassModelMesh cls={cls} count={members.length} pose={pose} />;
+}
+
 /** Ground-truth contacts at true size: effectively invisible at tactical range, seen in EO. */
 export function Drones() {
   const rt = useSimRuntime();
   const contacts = rt.sim.getState().contacts;
-  const groups = useMemo(() => {
+  const members = useMemo(() => {
     const cls = new Map(rt.scenario.contacts.map((c) => [c.id, c.class]));
-    const out = new Map<Family, { contact: ContactState; cls: ContactClass }[]>();
+    const out: { contact: ContactState; cls: ContactClass }[] = [];
     for (const contact of contacts) {
       const c = cls.get(contact.id);
-      if (c === undefined) continue;
-      const list = out.get(FAMILY[c]) ?? [];
-      list.push({ contact, cls: c });
-      out.set(FAMILY[c], list);
+      if (c !== undefined) out.push({ contact, cls: c });
     }
-    return [...out.entries()];
+    return out;
   }, [rt, contacts]);
+  const byClass = useMemo(() => {
+    const out = new Map<ContactClass, ContactState[]>();
+    for (const m of members) out.set(m.cls, [...(out.get(m.cls) ?? []), m.contact]);
+    return [...out.entries()];
+  }, [members]);
 
+  const fallback = <FallbackDrones rt={rt} members={members} />;
   return (
-    <>
-      {groups.map(([family, members]) => (
-        <FamilyMesh key={family} rt={rt} family={family} members={members} />
-      ))}
-    </>
+    <ModelBoundary fallback={fallback}>
+      <Suspense fallback={fallback}>
+        {byClass.map(([cls, list]) => (
+          <ClassContacts key={cls} rt={rt} cls={cls} members={list} />
+        ))}
+      </Suspense>
+    </ModelBoundary>
   );
 }

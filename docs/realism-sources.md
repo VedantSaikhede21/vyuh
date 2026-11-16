@@ -77,7 +77,15 @@ Every data source, model, asset and incident inspiration used in VYUH is listed 
 
 ## 3D models and other assets (licence + author)
 
-- Contact meshes (quad, fixed-wing, bird, helicopter): built in code from primitive shapes (`apps/web/components/sim/drones.tsx`), scaled to each class's size. No external asset. Bird wingbeat (3–6 Hz) is a display effect only.
+- **Contact models** (`apps/web/public/models/*.glb`, decision 175): downloaded from Sketchfab, all licensed **CC BY 4.0** (https://creativecommons.org/licenses/by/4.0/). Changes made by VYUH, for every model: normal, metal and emissive maps removed; base-colour texture reduced to 512 px (bird 256 px) and re-encoded as WebP; geometry quantised; heavy meshes simplified (`scripts/models/build.mjs`); at load time re-oriented, re-centred, scaled to the class's size, and propellers given blur discs or spun (`apps/web/lib/sim/contact-models.ts`). Appearance only: every speed, size and signature stays the representative class profile above.
+  - Small quadcopter (also the friendly and civilian quads): "DJI Mavic 2 Pro" by MattMaksymowicz — https://sketchfab.com/3d-models/dji-mavic-2-pro-3e5b8566dbe24f4ba65473179650abd1
+  - Heavy multirotor: "Drone For agriculture(Low Poly)" by Bharat Nagar — https://sketchfab.com/3d-models/drone-for-agriculturelow-poly-b6220a9a99d349d5aa64c8e7edef3758 (simplified to ~25 %)
+  - FPV: "FPV kamikaze drone Low-poly" by Kvasovich — https://sketchfab.com/3d-models/fpv-kamikaze-drone-low-poly-87f5bbb5b08641b782bc084ddd4082a7 (simplified to ~15 %)
+  - Loitering munition: "UAV Gerbera [Low-Poly]" by Vlarder1 — https://sketchfab.com/3d-models/uav-gerbera-low-poly-0b619df8b433445f8d22f3c4afdf7758 (propeller spun at display rate)
+  - Small fixed-wing: "Orlan-10" by FLIGHTCLUB (flightclubua) — https://sketchfab.com/3d-models/orlan-10-e2efb223c1814b7291818a9a7b4e80c5 (simplified to ~12 %)
+  - Friendly helicopter: "Bell Huey helicopter" by Duane's Mind — https://sketchfab.com/3d-models/bell-huey-helicopter-755d8518a06e41b19752c1b54c0da588 (cabin interior removed; main and tail rotors spun)
+  - Birds (small and large): "Crow Ascend" by Lahcen.el — https://sketchfab.com/3d-models/crow-ascend-e2e6d407b18547d2a9ed37a1707042e1 (one wingbeat of the "Ascend" clip baked into 12 morph frames with its climb and bob removed; large birds glide between bursts). Wingbeat rate (3–6 Hz) is a display effect only.
+- Fallback contact shapes (shown while the models load, or if a file fails): built in code from primitive shapes (`apps/web/components/sim/drones.tsx`). No external asset.
 - **Affiliation symbols:** simplified, domain-agnostic APP-6 / MIL-STD-2525 frames — hostile diamond, friendly circle, neutral square, unknown quatrefoil — always with the letter H/F/N/U (NATO APP-6(D) *Joint Military Symbology*; US MIL-STD-2525D). Real symbology uses different frames per battle dimension; ours are simplified for a single air picture.
 - **Rendering libraries:** three.js (MIT), React Three Fiber and drei (MIT, pmndrs). The day sky is the haze colour of the scene (the drei `<Sky>` shader was removed in Phase 6B, audit P1-3); the night sky is drei `<Stars>` (MIT). Charts: Recharts (MIT). Icons: Lucide (ISC).
 - IR display: a custom white-hot shader (noise + blur) written for VYUH; no external asset.

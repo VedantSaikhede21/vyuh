@@ -31,7 +31,8 @@ function securityHeaders() {
     "img-src 'self' data: blob:",
     "media-src 'self' blob:",
     "font-src 'self'",
-    `connect-src 'self' ${api} ${supabase}${isProd ? '' : ' ws: http://localhost:*'}`.trim(),
+    // blob: — three's GLTFLoader fetches the textures packed inside a GLB as blob URLs (decision 175).
+    `connect-src 'self' blob: ${api} ${supabase}${isProd ? '' : ' ws: http://localhost:*'}`.trim(),
     "worker-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'self'",

@@ -79,6 +79,10 @@ export const GROUND = {
   rock: '#6e6a62',
   snow: '#e6eaee',
   droneBody: '#1a1d21',
+  /** Spinning-propeller blur disc on the contact models (drawn at low opacity). */
+  rotorBlur: '#202224',
+  /** Neutral sky-grey backdrop for the dev model check page. */
+  modelBackdrop: '#9aa3ad',
   conifer: '#46583a',
   coniferDark: '#33472f',
 } as const;
