@@ -217,7 +217,7 @@ ContactReport {
   "assets": [ { "id": "a1", "name": "Post Alpha", "x": 0, "z": 0, "radiusM": 150 } ],
   "sensors": [
     { "id": "rad1", "kind": "RADAR", "x": 0, "y": 6, "z": 0, "refRangeM": 3000, "scanPeriodS": 2 },
-    { "id": "eo1", "kind": "EO_IR", "x": 0, "y": 8, "z": 0, "fovDegMin": 1.5, "fovDegMax": 30, "resolution": [640, 360] },
+    { "id": "eo1", "kind": "EO_IR", "x": 0, "y": 8, "z": 0, "fovDegMin": 1.5, "fovDegMax": 30, "resolution": [1280, 720], "irResolution": [640, 512] },
     { "id": "rf1", "kind": "RF", "x": 0, "y": 4, "z": 0, "rangeM": 4000, "bearingErrDeg": 7 }
   ],
   "effectors": [
@@ -276,15 +276,17 @@ Modules: `rng.ts`, `clock.ts`, `coords.ts`, `terrain.ts` (heightmap sampling + L
 - Trainee slews a narrow-FOV camera (drag on view or "slew to track"). Zoom levels change FOV.
 - Pixels on target = targetSizeM / (rangeM × IFOV). **Johnson criteria** (cycles = pixels/2): detect ≥ 1, recognise ≥ 4, identify ≥ 6.4.
 - Visibility caps EO range (fog/haze); at night, EO is useless and IR is used with lower contrast for small electric drones (thermal signature parameter per class).
-- Rendered as a second R3F camera at reduced resolution with a post-process shader: day = slight noise; IR = white-hot palette + noise + blur. Emits `EO_IDENTIFIABLE` when a contact crosses the identify threshold in the current pointing (used for fair scoring).
+- Rendered as a second R3F camera at the sensor's resolution (`resolution` by day, `irResolution` in IR), capped at the pixels the picture is shown with (decision 176), with a post-process shader: day = slight noise; IR = white-hot palette + noise + blur. Emits `EO_IDENTIFIABLE` when a contact crosses the identify threshold in the current pointing (used for fair scoring).
 - **Model (Phase 2):** IFOV = horizontal FOV (rad) ÷ horizontal pixels (`irResolution` in IR mode). Cycles = (sizeM / (rangeM × IFOV)) / 2, × `thermalContrast` in IR mode. Level: DETECT ≥ 1, RECOGNISE ≥ 4, IDENTIFY ≥ 6.4. A contact counts only if inside the camera frustum and in LOS. Visibility cap: DAY range ≤ `visibilityM`; IR range ≤ f × `visibilityM`, where f = 1 at visibility ≤ 1 km (dense fog) rising linearly to 1.5 at ≥ 3 km — thermal sees better through haze, not through fog (`SIM_VERSION` 4, decision 94). DAY mode gives nothing when `isNight`.
 - **Pointing is sim state**, set only by logged `CAMERA_SLEWED` commands (incl. lock and mode), so EO results replay exactly.
 - **EO video auto-track (decision 52).** The camera is in one of three states, all derived deterministically from the logged commands (no new event type):
   - `MANUAL` — trainee pointing (`CAMERA_SLEWED` without `trackId`).
   - `CUE` — locked on a radar track (`CAMERA_SLEWED` with `trackId`): the camera follows the track's filtered, predicted estimate.
-  - `TRACK` — the EO tracker holds the contact: entered from `CUE` when the cued track's contact has been at EO level ≥ DETECT inside the central half of the frame (both axes) for 0.5 s. Each tick the camera aims at the contact itself plus a small jitter (1σ = 2 % of the horizontal FOV per axis, own RNG stream `eo-track`, two draws per TRACK tick).
+  - `TRACK` — the EO tracker holds the contact: entered from `CUE` when the cued track's contact has been at EO level ≥ DETECT inside the central 85 % of the frame (both axes; the central half before `SIM_VERSION` 7) for 0.5 s. Each tick the camera aims at the contact itself plus a small jitter (1σ = 0.6 % of the horizontal FOV per axis, 2 % before `SIM_VERSION` 7; own RNG stream `eo-track`, two draws per TRACK tick). While in `TRACK`, `camera.targetLevel` holds the contact's current EO level (null otherwise, `SIM_VERSION` 7): what the picture shows, used for the camera verdict.
   - `TRACK` → `CUE` when the contact leaves the frame (checked against the previous tick's pointing), loses LOS, has no EO level for > 1 s, or stops being active; if the radar track is no longer live it falls back to `MANUAL`. A `CAMERA_SLEWED` with the same `trackId` (zoom / day–IR change) keeps `TRACK`; one without `trackId` → `MANUAL`; a different `trackId` → `CUE`. The EO tracker keeps holding the contact if the radar track drops.
   - `EO_IDENTIFIABLE` logic is unchanged; the HUD shows `MAN` / `CUE` / `TRK` on the EO view.
+- **Cue framing (client, decision 176).** A cue (Space) first sets the field of view so the tracker's window covers the radar's 95th-percentile pointing error at the track's radar range (30° under 500 m, 14° under 1 km, 6.7° beyond on the scripted camera); once `TRACK` holds, it zooms in until a nominal 2 m object would fill 40 % of the width (full zoom beyond a few hundred metres), and back out to search if the lock is lost. Each step is an ordinary logged `CAMERA_SLEWED`; a manual zoom or slew ends it. Uses the radar range only, never the contact's true size or class.
+- **Camera verdict (HUD).** One line on the picture from `trackMode` and `targetLevel`: searching / no lock (CUE), and in `TRACK` IDENTIFY "Clear enough to identify", RECOGNISE "Shape visible — type not certain yet", DETECT "Too far to identify — a dot, no shape yet".
 - **Emission:** `EO_IDENTIFIABLE` is emitted when the highest level reached for a contact in the current pointing episode rises; the episode resets after the contact has had no level for 1 s (hysteresis, no flicker spam). The event carries the matching live track id when one exists.
 
 ### 6.3 RF detector
@@ -770,7 +772,7 @@ The visual design and player layout are in `docs/DESIGN.md` §0 (Part 6R), which
 ### Performance budget
 - ≥ 30 fps on integrated graphics (Intel UHD 620 class) at 1080p; target 60 on a mid GPU.
 - ≤ 60 active entities (birds included), instanced meshes, ≤ 150 draw calls, 512² terrain with LOD.
-- EO/IR view rendered at ≤ 640×360; sim tick ≤ 2 ms.
+- EO/IR view rendered at the sensor resolution (≤ 1280×720 day, 640×512 IR on the scripted cameras), never wider than shown; sim tick ≤ 2 ms.
 - Initial load ≤ 10 MB per terrain preset; lazy-load presets.
 
 ### Testing
