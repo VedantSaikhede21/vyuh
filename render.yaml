@@ -1,0 +1,40 @@
+# Render Blueprint for the VYUH API (docs/DEPLOY.md, step 2).
+# Render > New > Blueprint > this repo. Values marked sync: false are asked for in the dashboard.
+services:
+  - type: web
+    name: vyuh-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    region: singapore
+    plan: free
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: ENV
+        value: prod
+      - key: AUTH_MODE
+        value: supabase
+      - key: SUPABASE_JWT_AUDIENCE
+        value: authenticated
+      - key: GUEST_MODE_ENABLED
+        value: "true"
+      - key: LOCAL_JWT_SECRET
+        generateValue: true
+      - key: LOG_LEVEL
+        value: INFO
+      - key: LLM_PROVIDER
+        value: openrouter
+      - key: LLM_MODEL
+        value: google/gemini-3.8-flash
+      - key: LLM_DAILY_TOKEN_BUDGET
+        value: "200000"
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: LLM_ENABLED
+        sync: false
+      - key: LLM_API_KEY
+        sync: false

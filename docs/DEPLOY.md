@@ -1,6 +1,6 @@
 # Deploying VYUH
 
-Two builds: **hosted** (Vercel + Render + Supabase) for the judge link, and **offline** (`docker compose up`) for a unit PC or as the demo fallback.
+Two builds: **hosted** (Vercel + Render + Supabase) for the portfolio link, and **offline** (`docker compose up`) for a unit PC or as the demo fallback.
 
 ## Offline build
 
@@ -14,47 +14,39 @@ Open <http://localhost:3000>, pick a demo account, train. Auth is local, the LLM
 
 ## Hosted build: what to create, in order
 
-You need three accounts: Supabase, Render, Vercel. Everything below is a click or a pasted value; nothing here costs money except the optional Render always-on plan.
+The hosted link is the portfolio demo: a visitor opens it, presses "Try the demo" and plays as a guest, with no sign-up. It runs on free plans. You need four accounts: Supabase, Render, Vercel and UptimeRobot (an OpenRouter key is optional, for LLM debriefs). Render and Vercel both read the GitHub repo `VedantSaikhede21/vyuh`, so push `main` first.
 
 ### 1. Supabase (database and sign-in)
 
-1. <https://supabase.com> → **New project**. Name `vyuh`, region **Mumbai (ap-south-1)**, a strong database password. Save the password.
-2. **Project Settings → Database → Connection string → URI**, mode **Session pooler**. Copy it, put in your password, and change `postgresql://` to `postgresql+psycopg://`. This is `DATABASE_URL`.
+1. <https://supabase.com> → **New project**. Name `vyuh`, region **Southeast Asia (Singapore, ap-southeast-1)**, the same region as the Render API (only the API talks to the database, so the database sits next to it, not next to the visitors), a strong database password. Save the password.
+2. **Connect** (top bar) → **Session pooler** connection string. Copy it and put in your password. This is `DATABASE_URL` (the API accepts `postgresql://` as Supabase shows it).
 3. **Project Settings → API**: copy **Project URL** (`SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`) and the **anon public** key (`NEXT_PUBLIC_SUPABASE_ANON_KEY`).
 4. **Project Settings → JWT Keys**: make sure signing is **asymmetric (ECC or RSA)**. The API verifies tokens through JWKS and does not accept the old shared-secret HS256 tokens.
 5. **Authentication → Providers → Email**: on. Turn off "Confirm email" for the demo users.
 
+Free Supabase projects pause after a week with no database activity. Step 4 below keeps it active.
+
 ### 2. Render (API)
 
-1. <https://render.com> → **New → Web Service** → connect the GitHub repo.
-2. Runtime **Docker**. Dockerfile path `apps/api/Dockerfile`, Docker build context `.` (the repo root).
-3. Region **Singapore**. Instance **Starter** ($7/month) for the judging window; see "Cold starts".
-4. Environment variables:
+1. <https://render.com> → **New → Blueprint** → connect the GitHub repo. Render reads `render.yaml` at the repo root: Docker image from `apps/api/Dockerfile`, region Singapore, free instance, health check `/api/v1/health`. It generates `LOCAL_JWT_SECRET` (guest tokens are signed with it; without it the API refuses to start).
+2. Render asks for the values marked `sync: false`:
 
 | Key | Value |
 |---|---|
-| `ENV` | `prod` |
 | `DATABASE_URL` | from Supabase step 2 |
-| `AUTH_MODE` | `supabase` |
 | `SUPABASE_URL` | from Supabase step 3 |
-| `SUPABASE_JWT_AUDIENCE` | `authenticated` |
-| `CORS_ORIGINS` | your Vercel URL, e.g. `https://vyuh.vercel.app` (fill in after step 3) |
-| `LLM_ENABLED` | `true` |
-| `LLM_PROVIDER` | `openrouter` |
-| `LLM_MODEL` | `google/gemini-3.8-flash` |
-| `LLM_API_KEY` | your OpenRouter key |
-| `LLM_DAILY_TOKEN_BUDGET` | `200000` |
-| `GUEST_MODE_ENABLED` | `true` |
-| `LOG_LEVEL` | `INFO` |
+| `CORS_ORIGINS` | your Vercel URL, e.g. `https://vyuh.vercel.app` (put a placeholder now, fix it after step 3) |
+| `LLM_ENABLED` | `true` with an OpenRouter key, else `false` (debriefs then use the template) |
+| `LLM_API_KEY` | your OpenRouter key, or leave empty |
 
-The image runs migrations and seeds the demo data at start. Check `https://<service>.onrender.com/api/v1/status` shows API and database `OK`.
+The image runs migrations and seeds the demo data at start, and listens on Render's `PORT`. Check `https://<service>.onrender.com/api/v1/status` shows API and database `OK`.
 
 On OpenRouter, also set a **credit limit on the key**: it is the hard spend cap. `LLM_DAILY_TOKEN_BUDGET` is the app's own softer limit: over it, debriefs fall back to the template and text-to-scenario says why.
 
 ### 3. Vercel (web)
 
 1. <https://vercel.com> → **Add New → Project** → the same repo.
-2. **Root Directory** `apps/web`. Framework Next.js. Vercel detects pnpm from the lockfile.
+2. **Root Directory** `apps/web`. Framework Next.js. Vercel detects pnpm from the lockfile. Leave "Include files outside the root directory" on (the build reads `packages/*` and `docs/realism-sources.md`).
 3. Environment variables:
 
 | Key | Value |
@@ -65,17 +57,17 @@ On OpenRouter, also set a **credit limit on the key**: it is the hard spend cap.
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | from Supabase step 3 |
 | `NEXT_PUBLIC_GUEST_MODE` | `true` |
 
-4. Deploy, then put the Vercel URL into Render's `CORS_ORIGINS` and into Supabase **Authentication → URL Configuration → Site URL**.
+4. Deploy, then put the Vercel URL into Render's `CORS_ORIGINS` and into Supabase **Authentication → URL Configuration → Site URL**. `NEXT_PUBLIC_*` values are baked in at build time: after changing one, redeploy.
 
-### 4. Send back for the hosted checks
+### 4. UptimeRobot (keeps everything awake)
 
-The Vercel URL and the Render URL. No keys. With those I can run the judge path, the guest flow and the security header checks against the deployed site.
+<https://uptimerobot.com> → **New monitor** → HTTP(s), URL `https://<service>.onrender.com/api/v1/status`, interval **5 minutes**.
 
-## Cold starts
+Free Render services sleep after 15 minutes without traffic and take about a minute to wake; free Supabase projects pause after a week without database activity. `/status` reads the database, so this one monitor keeps both awake. One always-on free service uses about 720 of Render's 750 free hours a month, so keep only this service on the free plan. If a visitor still lands on a sleeping API, the landing page calls `/health` on load, so it starts waking before the first click.
 
-Render's free tier sleeps after 15 minutes idle and takes 30–60 s to wake. **Recommendation: the Starter plan ($7/month) for the judging window only**, then back to free. It is the cheapest option that is reliable.
+### 5. Send back for the hosted checks
 
-The landing page calls `/health` on load, so a sleeping API starts waking before the first click. If you stay on the free tier, also add an external ping every 10 minutes to `/api/v1/health` (UptimeRobot's free plan does this). A ping only delays sleep; it does not remove the risk.
+The Vercel URL and the Render URL. No keys. With those the judge path, the guest flow and the security headers can be checked against the deployed site.
 
 ## Security settings already in the code
 

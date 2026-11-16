@@ -22,5 +22,6 @@ COPY apps/web/public/terrain/ /app/terrain/
 ENV PATH=/app/.venv/bin:$PATH \
     TERRAIN_DIR=/app/terrain
 
+# Render and other hosts set PORT; locally and in docker compose it stays 8000.
 EXPOSE 8000
-CMD ["sh", "-c", "alembic upgrade head && python -m app.seed.demo && uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "alembic upgrade head && python -m app.seed.demo && uvicorn app.main:create_app --factory --host 0.0.0.0 --port ${PORT:-8000}"]
