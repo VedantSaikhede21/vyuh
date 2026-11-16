@@ -1,12 +1,19 @@
-import type { EoIrSensor, EoLevel, EoMode } from '@vyuh/shared';
+import { CLASS_PROFILES, type EoIrSensor, type EoLevel, type EoMode } from '@vyuh/shared';
+import { INHERENT_CONTRAST, betaFor } from '../atmosphere.ts';
 import type { Vec3 } from '../coords.ts';
-import { datan2, dcos, dsin, dtan } from '../dmath.ts';
+import { datan2, dcos, dexp, dsin, dtan } from '../dmath.ts';
 
 // EO/IR camera (SPEC §6.2). Pixels on target = size / (range × IFOV), Johnson
-// cycles = pixels / 2, scaled by the class's thermal contrast in IR mode.
-// DETECT ≥ 1, RECOGNISE ≥ 4, IDENTIFY ≥ 6.4 cycles. The day camera is capped by
-// visibility and useless at night; IR sees up to 1.5× further through haze, but
-// no further than the day camera in dense fog (decision 94).
+// cycles = pixels / 2. DETECT ≥ 1, RECOGNISE ≥ 4, IDENTIFY ≥ 6.4 cycles.
+//
+// Day camera (SIM_VERSION 8, eo-haze plan §2): the haze between camera and contact
+// lowers the contact's apparent contrast (Koschmieder against the sky; Duntley's
+// sky-to-ground ratio against terrain, with a far background hazed by the gap), and
+// the Johnson cycles are scaled by a targeting-task-performance (TTP) ratio of that
+// contrast: none below the 2 % threshold. Still capped at the visibility, and
+// useless at night. IR is unchanged: cycles × the class's thermal contrast, up to
+// 1.5× the visibility through haze, no further than the day camera in dense fog
+// (decision 94).
 
 export const JOHNSON_CYCLES: Readonly<Record<EoLevel, number>> = {
   DETECT: 1,
@@ -78,6 +85,76 @@ export interface EoCameraState {
 export interface EoConditions {
   readonly isNight: boolean;
   readonly visibilityM: number;
+  /** Mean haze density (0–1) on the path to the target: 1 inside the haze layer (atmosphere.ts). */
+  readonly pathHaze: number;
+  /** Sky-to-ground ratio of the terrain behind ground-backed targets (atmosphere.ts). */
+  readonly skyGroundRatio: number;
+}
+
+/** What the day camera needs to know about a target besides its size. */
+export interface EoTarget {
+  readonly sizeM: number;
+  readonly thermalContrast: number;
+  readonly rangeM: number;
+  /** Inherent |contrast| against the sky and against the ground (INHERENT_CONTRAST). */
+  readonly inherentContrast: { readonly sky: number; readonly ground: number };
+  /** Distance from the target to the terrain behind it (m); null = seen against the sky. */
+  readonly backgroundGapM: number | null;
+}
+
+// ---- Day-camera contrast (SIM_VERSION 8) -----------------------------------------
+
+/** The eye's contrast threshold behind Koschmieder's 3.912 (decision 178). */
+export const EO_CONTRAST_THRESHOLD = 0.02;
+/**
+ * How much more contrast the finest detail the pixels show needs than coarse
+ * detail: the contrast threshold function rises from ε to G·ε at the pixel limit.
+ * Representative (eo-haze plan Q1).
+ */
+export const CTF_RISE = 10;
+/**
+ * Contrast at which Johnson's cycles hold unchanged: a drone against a clear sky
+ * at short range, so today's identification ranges stay exact for that case.
+ */
+export const CONTRAST_REF = INHERENT_CONTRAST.DRONE.sky;
+
+/**
+ * Apparent |contrast| of a target through the haze (Duntley 1948, as in Gordon
+ * 1980 Eq. 29). Against the sky: C₀·T. Against the ground: C₀ / (1 + S·(1/T − 1)),
+ * where the background is first seen through the gap behind the target, so a far,
+ * hazed ridge acts almost like sky: S' = S / (Tg + S·(1 − Tg)) and C₀ moves from
+ * the ground value towards the sky value by (1 − Tg) (eo-haze plan [C3]).
+ */
+export function apparentContrast(
+  target: Pick<EoTarget, 'rangeM' | 'inherentContrast' | 'backgroundGapM'>,
+  cond: Pick<EoConditions, 'visibilityM' | 'pathHaze' | 'skyGroundRatio'>,
+): number {
+  const beta = betaFor(cond.visibilityM) * cond.pathHaze;
+  const t = dexp(-beta * Math.max(target.rangeM, 0));
+  const c0 = target.inherentContrast;
+  if (target.backgroundGapM === null) return c0.sky * t;
+  const tg = dexp(-beta * Math.max(target.backgroundGapM, 0));
+  const s = cond.skyGroundRatio / (tg + cond.skyGroundRatio * (1 - tg));
+  const inherent = c0.ground + (c0.sky - c0.ground) * (1 - tg);
+  return t <= 0 ? 0 : inherent / (1 + s * (1 / t - 1));
+}
+
+/**
+ * Targeting task performance for a target contrast, up to a constant factor
+ * (Vollmerhausen & Jacobs 2004: TTP = ∫ √(C / CTF(ξ)) dξ while C > CTF). With
+ * CTF(ξ) = ε·G^(ξ/ξN) the integral is closed: √(C/ε) − 1 below the pixel limit,
+ * √(C/ε)·(1 − 1/√G) once the contrast reaches it. Zero at or below ε.
+ */
+export function ttp(contrast: number): number {
+  const q = Math.sqrt(Math.max(contrast, 0) / EO_CONTRAST_THRESHOLD);
+  return contrast >= EO_CONTRAST_THRESHOLD * CTF_RISE
+    ? q * (1 - 1 / Math.sqrt(CTF_RISE))
+    : Math.max(q - 1, 0);
+}
+
+/** Factor (0–1) on the Johnson cycles for a contrast; never above 1, so nothing gets easier. */
+export function ttpRatio(contrast: number): number {
+  return Math.min(1, ttp(contrast) / ttp(CONTRAST_REF));
 }
 
 export function eoHfovDeg(sensor: Pick<EoIrSensor, 'fovDegMin' | 'fovDegMax'>, zoom: number) {
@@ -112,11 +189,12 @@ export function levelForCycles(cycles: number): EoLevel | null {
 export function eoLevel(
   sensor: EoIrSensor,
   camera: Pick<EoCameraState, 'zoom' | 'mode'>,
-  target: { readonly sizeM: number; readonly thermalContrast: number; readonly rangeM: number },
+  target: EoTarget,
   cond: EoConditions,
 ): EoLevel | null {
   const ir = camera.mode === 'IR';
   if (!ir && cond.isNight) return null;
+  // The day camera keeps its hard cap at the visibility (eo-haze plan [C2]).
   const cap = ir ? cond.visibilityM * irVisibilityFactor(cond.visibilityM) : cond.visibilityM;
   if (target.rangeM > cap) return null;
   const cycles = johnsonCycles(
@@ -124,7 +202,51 @@ export function eoLevel(
     target.rangeM,
     eoIfovRad(sensor, camera.zoom, camera.mode),
   );
-  return levelForCycles(ir ? cycles * target.thermalContrast : cycles);
+  if (ir) return levelForCycles(cycles * target.thermalContrast);
+  const k = ttpRatio(apparentContrast(target, cond));
+  return k > 0 ? levelForCycles(cycles * k) : null;
+}
+
+/** Size of the nominal target the cue plans for: a small quad (eo-haze plan [C1]). */
+export const CUE_NOMINAL_SIZE_M = CLASS_PROFILES.QUAD_SMALL.sizeM;
+
+/**
+ * Farthest range at which the day camera still DETECTs a small quad at this field
+ * of view in the worst case: seen against the ground right behind it, inside the
+ * haze layer. Used by the cue to pick a field of view from the radar range alone
+ * (no truth about the contact). 0 at night.
+ */
+export function worstCaseDetectRangeM(
+  sensor: EoIrSensor,
+  hfovDeg: number,
+  cond: Pick<EoConditions, 'isNight' | 'visibilityM' | 'skyGroundRatio'>,
+): number {
+  const camera = { zoom: sensor.fovDegMax / hfovDeg, mode: 'DAY' as const };
+  const full = { ...cond, pathHaze: 1 };
+  const detects = (rangeM: number) =>
+    eoLevel(
+      sensor,
+      camera,
+      {
+        sizeM: CUE_NOMINAL_SIZE_M,
+        thermalContrast: 1,
+        rangeM,
+        inherentContrast: INHERENT_CONTRAST.DRONE,
+        backgroundGapM: 0,
+      },
+      full,
+    ) !== null;
+  let lo = 1;
+  let hi = Math.max(cond.visibilityM, 1);
+  if (!detects(lo)) return 0;
+  if (detects(hi)) return hi;
+  // Level falls with range, so bisect to a metre.
+  while (hi - lo > 1) {
+    const mid = (lo + hi) / 2;
+    if (detects(mid)) lo = mid;
+    else hi = mid;
+  }
+  return lo;
 }
 
 /** Compass az / elevation (degrees) from one point to another. */

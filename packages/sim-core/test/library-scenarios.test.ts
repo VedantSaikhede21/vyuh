@@ -298,14 +298,19 @@ describe('S08 Fog Line (PUNJAB_PLAINS, January fog)', () => {
 
   it('the camera never identifies anything beyond 0.8 km, day or thermal', () => {
     const target = s.contacts.find((c) => c.isThreat && c.behaviour === 'ATTACK_RUN')!;
-    for (const mode of ['DAY', 'IR'] as const) {
-      const ids = lockOn(s, target.id, mode)
+    const identified = (mode: 'DAY' | 'IR') =>
+      lockOn(s, target.id, mode)
         .getEvents()
-        .filter((e) => e.type === 'EO_IDENTIFIABLE' && e.payload.level === 'IDENTIFY');
-      expect(ids.length).toBeGreaterThan(0);
-      for (const e of ids)
-        expect((e.payload as { rangeM: number }).rangeM).toBeLessThanOrEqual(800);
-    }
+        .filter((e) => e.type === 'EO_IDENTIFIABLE' && e.payload.level === 'IDENTIFY')
+        .map((e) => (e.payload as { rangeM: number }).rangeM);
+    const day = identified('DAY');
+    const ir = identified('IR');
+    // Thermal identifies it inside the fog; the day camera, which loses contrast in
+    // fog (SIM_VERSION 8), only closer in, if at all: this heavy quad passes 600 m
+    // from the mast and the day camera identifies it only inside about 510 m.
+    expect(ir.length).toBeGreaterThan(0);
+    for (const r of [...day, ...ir]) expect(r).toBeLessThanOrEqual(800);
+    for (const r of day) expect(r).toBeLessThanOrEqual(520);
   }, 60_000);
 });
 

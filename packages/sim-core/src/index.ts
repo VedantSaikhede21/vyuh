@@ -168,6 +168,40 @@ export {
 } from './sun.ts';
 export type { SimEnvironment, SunAzElDeg, TimeOfDay } from './sun.ts';
 export {
+  FOG_MAX_VISIBILITY_M,
+  HAZE_MAX_VISIBILITY_M,
+  INHERENT_CONTRAST,
+  KOSCHMIEDER,
+  SKY_GROUND_RATIO,
+  betaFor,
+  floorOf,
+  hazeLayer,
+  layerFor,
+  meanDensity,
+  monthOf,
+  pathHaze,
+  presetFor,
+  regionFor,
+  seasonOf,
+} from './atmosphere.ts';
+export type { AtmosPreset, AtmosRegion, HazeLayer, Layer, Season } from './atmosphere.ts';
+export {
+  SKYLINE_BINS,
+  SKYLINE_STEP_M,
+  backgroundDistanceM,
+  buildSkyline,
+  skylineFor,
+} from './horizon.ts';
+export type { Skyline } from './horizon.ts';
+export {
+  CONTRAST_REF,
+  CTF_RISE,
+  CUE_NOMINAL_SIZE_M,
+  EO_CONTRAST_THRESHOLD,
+  apparentContrast,
+  ttp,
+  ttpRatio,
+  worstCaseDetectRangeM,
   CAMERA_FOLLOW_RATE,
   EO_ACQUIRE_FRAME_FRACTION,
   EO_ACQUIRE_MS,
@@ -191,7 +225,7 @@ export {
   levelForCycles,
   pointingTo,
 } from './sensors/eoir.ts';
-export type { EoCameraState, EoConditions, EoTrackMode } from './sensors/eoir.ts';
+export type { EoCameraState, EoConditions, EoTarget, EoTrackMode } from './sensors/eoir.ts';
 export {
   DEFENDER_HOVER_MPS,
   DEFENDER_INTERCEPT_FRACTION,

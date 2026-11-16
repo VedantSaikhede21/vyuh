@@ -15,6 +15,7 @@ import {
   followPointing,
   inEoFrustum,
   isNightAt,
+  INHERENT_CONTRAST,
   johnsonCycles,
   levelForCycles,
   localInstantMs,
@@ -81,12 +82,23 @@ const eo: EoIrSensor = {
   resolution: [640, 360],
 };
 const MAX_ZOOM = 20; // 30° / 1.5°
-const clear = { isNight: false, visibilityM: 20_000 };
+// pathHaze 0 = no extinction on the path, and every target at its reference
+// contrast against the sky: these pin the Johnson thresholds and the caps alone.
+// Haze and backgrounds (SIM_VERSION 8) are in eo-haze.test.ts.
+const air = (visibilityM: number, isNight = false) => ({
+  isNight,
+  visibilityM,
+  pathHaze: 0,
+  skyGroundRatio: 1,
+});
+const clear = air(20_000);
 const quad = CLASS_PROFILES.QUAD_SMALL;
 const target = (rangeM: number, p = quad) => ({
   sizeM: p.sizeM,
   thermalContrast: p.thermalContrast,
   rangeM,
+  inherentContrast: INHERENT_CONTRAST[p.category],
+  backgroundGapM: null,
 });
 const day = { zoom: MAX_ZOOM, mode: 'DAY' as const };
 const ir = { zoom: MAX_ZOOM, mode: 'IR' as const };
@@ -115,7 +127,7 @@ describe('EO/IR Johnson criteria (SPEC §6.2)', () => {
 
   it('caps the day camera at visibility and IR at 1.5 × visibility', () => {
     const heli = CLASS_PROFILES.HELICOPTER_FRIENDLY;
-    const hazy = { isNight: false, visibilityM: 3000 };
+    const hazy = air(3000);
     expect(eoLevel(eo, day, target(2900, heli), hazy)).toBe('IDENTIFY');
     expect(eoLevel(eo, day, target(3100, heli), hazy)).toBeNull();
     expect(eoLevel(eo, ir, target(3100, heli), hazy)).toBe('IDENTIFY');
@@ -135,14 +147,14 @@ describe('EO/IR Johnson criteria (SPEC §6.2)', () => {
     for (const [visibilityM, factor] of cases) {
       expect(irVisibilityFactor(visibilityM)).toBeCloseTo(factor, 9);
       const cap = visibilityM * factor;
-      const cond = { isNight: false, visibilityM };
+      const cond = air(visibilityM);
       expect(eoLevel(eo, ir, target(cap - 50, heli), cond), `${visibilityM} m`).not.toBeNull();
       expect(eoLevel(eo, ir, target(cap + 50, heli), cond), `${visibilityM} m`).toBeNull();
     }
   });
 
   it('needs IR at night, where thermal contrast reduces the cycles', () => {
-    const night = { isNight: true, visibilityM: 20_000 };
+    const night = air(20_000, true);
     expect(eoLevel(eo, day, target(250), night)).toBeNull();
     expect(eoLevel(eo, ir, target(250), night)).toBe('IDENTIFY');
     // 0.45 contrast: identify range shrinks from 668 m to ~300 m.
@@ -214,10 +226,11 @@ describe('EO/IR in the sim', () => {
   const elTo = (r: number) => (Math.atan2(32, r) * 180) / Math.PI;
 
   it('emits EO_IDENTIFIABLE only when pointed and zoomed enough', () => {
-    const sim = createSim(scenarioWith(600), flatWorld);
-    run(sim, 40); // wide FOV, 600 m: < 1 cycle
+    // 500 m: inside the identify range through the test's 10 km haze (SIM_VERSION 8).
+    const sim = createSim(scenarioWith(500), flatWorld);
+    run(sim, 40); // wide FOV, 500 m: < 1 cycle
     expect(eoEvents(sim)).toHaveLength(0);
-    sim.dispatch({ type: 'CAMERA_SLEWED', payload: { azDeg: 0, elDeg: elTo(600), zoom: 20 } });
+    sim.dispatch({ type: 'CAMERA_SLEWED', payload: { azDeg: 0, elDeg: elTo(500), zoom: 20 } });
     run(sim, 2);
     const ev = eoEvents(sim);
     expect(ev).toHaveLength(1);

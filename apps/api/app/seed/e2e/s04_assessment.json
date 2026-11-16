@@ -1,7 +1,7 @@
 {
  "scenarioCode": "S04",
  "mode": "ASSESSMENT",
- "simVersion": 7,
+ "simVersion": 8,
  "events": [
   {
    "tMs": 0,

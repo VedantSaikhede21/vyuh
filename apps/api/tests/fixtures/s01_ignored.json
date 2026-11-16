@@ -30,13 +30,13 @@
   "seq": 2
  },
  {
-  "tMs": 139300,
+  "tMs": 141300,
   "type": "EO_IDENTIFIABLE",
   "contactId": "c01",
   "trackId": "T001",
   "payload": {
    "level": "DETECT",
-   "rangeM": 427.25085977122296
+   "rangeM": 395.4763109712912
   },
   "seq": 3
  },

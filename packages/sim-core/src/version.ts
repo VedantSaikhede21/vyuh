@@ -6,5 +6,7 @@
 // 5 = track height is a noisy, filtered estimate (decision 108); REPORT_TRUTH (decision 104);
 // 6 = AI_SUGGESTION_SHOWN on a track's first selection, accept / reject validated (decision 132);
 // 7 = EO tracker acquires in the central 85 % of the frame and jitters 0.6 % of the FOV,
-//     camera.targetLevel; scripted and generated cameras 1280 × 720 (decision 176).
-export const SIM_VERSION = 7;
+//     camera.targetLevel; scripted and generated cameras 1280 × 720 (decision 176);
+// 8 = day camera sees through haze: apparent contrast against the sky or the terrain
+//     behind the contact, TTP-scaled Johnson cycles (eo-haze plan).
+export const SIM_VERSION = 8;

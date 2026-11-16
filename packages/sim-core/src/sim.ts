@@ -18,7 +18,22 @@ import {
 import { createFlocks, stepFlock } from './boids.ts';
 import { TICK_MS, TICK_S, advanceClock, ceilToTick, createClock, type SimClock } from './clock.ts';
 import { createContactState, stepContact, type ContactState } from './contacts.ts';
-import { bearingDeg, headingVector, slantRange, wrapDeg, type Vec3 } from './coords.ts';
+import {
+  INHERENT_CONTRAST,
+  SKY_GROUND_RATIO,
+  floorOf,
+  hazeLayer,
+  pathHaze,
+  regionFor,
+} from './atmosphere.ts';
+import {
+  bearingDeg,
+  headingVector,
+  horizontalRange,
+  slantRange,
+  wrapDeg,
+  type Vec3,
+} from './coords.ts';
 import {
   createEffectorState,
   resolveEw,
@@ -32,6 +47,7 @@ import {
   type EventDraft,
   type TraineeEvent,
 } from './events.ts';
+import { backgroundDistanceM, skylineFor } from './horizon.ts';
 import { createLosCache } from './los.ts';
 import { createRng, type RandomStream } from './rng.ts';
 import {
@@ -656,15 +672,50 @@ export function createSim(
     eoTracker.noLevelSinceMs = null;
   }
 
+  // Day-camera air (SIM_VERSION 8, eo-haze plan §2): the scenario's haze layer (the
+  // same one the render's fog draws), the terrain's sky-to-ground ratio, and what
+  // lies behind each contact. The skyline is static (world + camera only): built
+  // here, at load, and cached per world, never part of a snapshot.
+  const haze = hazeLayer(
+    scenario.terrain.preset,
+    state.environment.date,
+    state.environment.weather,
+    floorOf(terrain.heights),
+  );
+  const skyGroundRatio = SKY_GROUND_RATIO[regionFor(scenario.terrain.preset)];
+  const skyline = eoPos ? skylineFor(world, eoPos) : null;
+
   /** EO level of a contact in the current pointing (frustum + LOS), or null. */
   function eoLevelNow(c: ContactState, spec: ContactSpec): EoLevel | null {
     if (eo === undefined || eoPos === undefined) return null;
     if (!inEoFrustum(eo, state.camera, eoPos, c.pos)) return null;
+    const { isNight, weather } = state.environment;
+    const day = state.camera.mode === 'DAY';
+    const rangeM = slantRange(eoPos, c.pos);
+    // Cheap outs before the skyline: the day camera is blind at night and capped at V.
+    if (day && (isNight || rangeM > weather.visibilityM)) return null;
+    const profile = CLASS_PROFILES[spec.class];
+    let backgroundGapM: number | null = null;
+    if (day && skyline !== null) {
+      const behind = backgroundDistanceM(skyline, c.pos);
+      if (behind !== null) backgroundGapM = behind - horizontalRange(eoPos, c.pos);
+    }
     const level = eoLevel(
       eo,
       state.camera,
-      { ...CLASS_PROFILES[spec.class], rangeM: slantRange(eoPos, c.pos) },
-      { isNight: state.environment.isNight, visibilityM: state.environment.weather.visibilityM },
+      {
+        sizeM: profile.sizeM,
+        thermalContrast: profile.thermalContrast,
+        rangeM,
+        inherentContrast: INHERENT_CONTRAST[profile.category],
+        backgroundGapM,
+      },
+      {
+        isNight,
+        visibilityM: weather.visibilityM,
+        pathHaze: pathHaze(haze, eoPos.y, c.pos.y),
+        skyGroundRatio,
+      },
     );
     if (level === null) return null;
     return los.visible(state.clock.tick, eo.id, eoPos, c.id, c.pos) ? level : null;
@@ -772,22 +823,11 @@ export function createSim(
 
   function scanEo(tMs: number): void {
     if (eo === undefined || eoPos === undefined) return;
-    const cond = {
-      isNight: state.environment.isNight,
-      visibilityM: state.environment.weather.visibilityM,
-    };
     for (const c of state.contacts) {
       const spec = specs.get(c.id);
       if (c.status !== 'ACTIVE' || spec === undefined) continue;
-      let level: EoLevel | null = null;
+      const level = eoLevelNow(c, spec);
       const rangeM = slantRange(eoPos, c.pos);
-      if (inEoFrustum(eo, state.camera, eoPos, c.pos)) {
-        const p = CLASS_PROFILES[spec.class];
-        level = eoLevel(eo, state.camera, { ...p, rangeM }, cond);
-        if (level !== null && !los.visible(state.clock.tick, eo.id, eoPos, c.id, c.pos)) {
-          level = null;
-        }
-      }
       const ep = eoEpisodes.get(c.id);
       if (level === null) {
         if (ep && tMs - ep.lastSeenMs >= EO_EPISODE_RESET_MS) eoEpisodes.delete(c.id);
