@@ -218,7 +218,20 @@ Existing tests to update: `sun-eo.test.ts` (DAY boundaries move; IR unchanged); 
 ## 5. Effects elsewhere
 
 ### 5.1 Cue and lock
-**[C1] Replaced by a change in this build:** `cue-zoom.ts` gains `cueFovDeg(steps, rangeM, detectRangeAt)`. It picks the widest zoom step whose worst-case DETECT range (`eoWorstCaseDetectRangeM` from sim-core: 0.35 m, ground-backed, this scenario's visibility, preset and camera) reaches the track's radar range. If no step does, it keeps today's pick (the narrowest step that covers the p95 pointing error). The re-search after a lost lock uses the same rule. The rule uses only the radar range and the scenario's own conditions, never the contact's truth. Lock times before and after on S15, S06 and S05 come from `apps/web/test/cue-lock.test.ts` (full report behind `CUE_LOCK_REPORT=1`).
+**[C1] Replaced by a change in this build:** `cue-zoom.ts` gains `cueFovDeg(steps, rangeM, detectRangeAt)`. It picks the widest zoom step whose worst-case DETECT range (`worstCaseDetectRangeM` from sim-core: 0.35 m, ground-backed, this scenario's visibility, preset and camera) reaches the track's radar range. **If no step does, it opens at the narrowest step** (it detects farthest; user 2026-11-16, chosen over "today's pick" after the measurement below). In thermal or at night it keeps the decision-176 pick. The re-search after a lost lock uses the same rule. The rule uses only the radar range and the scenario's own conditions, never the contact's truth.
+
+Lock times (`apps/web/test/cue-lock.test.ts`, `CUE_LOCK_REPORT=1`: one cue per radar track at the tick it appears, 60 s timeout, day camera):
+
+| Scenario | v7 sim, decision-176 cue (before) | v8 sim, decision-176 cue | v8 sim, detection-first cue (after) |
+|---|---|---|---|
+| S15 (quad T006, cued at 1.95 km) | lock 4.5 s at 1.89 km | lock 22.4 s at 1.63 km | **lock 0.6 s at 1.95 km** |
+| S15 all tracks | 5 of 8 locked | 5 of 8 | **8 of 8** (median 2.1 s) |
+| S06 drones | 1 of 7 locked | 0 of 7 | **4 of 7** (median 28.5 s, at about 2.5 km) |
+| S06 birds | 12 of 12 (median 0.6 s) | 5 of 12 | 8 of 12 (median 8.8 s) |
+| S05 FPV (cued at 2.2 km) | lock 47.9 s at 1.36 km | no lock | **lock 25.0 s at 1.92 km** |
+| S05 birds | 3 of 3 (0.6 s) | 3 of 3 (0.6 s) | 3 of 3 (median 12.8 s) |
+
+The trade: far drones lock much sooner, while near, easy targets (birds already in reach of a wider step) are opened at the narrowest step less often but, when they are, take longer because the 1.5° window leaves little room for the pointing error. A permanent test checks that S05 locks more drones than the old rule, sooner in total, with the FPV locked.
 
 Original analysis: the drone chat's finding holds and gets slightly worse: at 30° a small quad is detectable inside 430 m today and 400 m sky-backed at 10 km, so a cue under 500 m on a quad cannot lock between 400 and 500 m. The bigger change is ground-backed quads at the cue's middle steps: 14° covers 500 m–1 km but detects them only inside 550 m, and 6.7° beyond 1 km only inside 940 m (10 km visibility). Low drones against the ground will lock later, mostly in J&K and URBAN; on the Punjab plains nearly everything is sky-backed.
 - **Recommendation:** no cue change in this task. Measure lock times before and after on S15, S06 and S05 with the trainee policy (`scripts/cue-error.ts` style), and report them. If they grow a lot, the camera session changes the cue rule so the opening FOV gives at least one cycle on a nominal 0.35 m target at the track's radar range, using the sim-core function with the ground-backed (worst-case) contrast. That still uses no truth.

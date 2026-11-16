@@ -29,6 +29,30 @@ export function searchFovDeg(rangeM: number): number {
   return Math.max((2 * e.azDeg) / f, (2 * e.elDeg * PICTURE_ASPECT) / f);
 }
 
+/**
+ * Cue field of view, detection first (eo-haze plan [C1], user 2026-11-16). The EO
+ * tracker locks only on a contact it can DETECT inside its window, and haze cuts
+ * that range hardest for a small drone against the ground. So the cue takes the
+ * widest zoom step whose worst-case DETECT range (`worstCaseDetectRangeM`: a small
+ * quad seen against the ground, this scenario's air) reaches the track's radar
+ * range, even when that step is narrower than the p95 pointing error: the tracker
+ * then locks whenever the error is small, instead of never. If no step reaches it,
+ * the narrowest step, which detects farthest, so the tracker locks as soon as the
+ * contact comes in range (user 2026-11-16, measured with test/cue-lock.test.ts).
+ * Where detection does not apply (thermal, night: `detectRangeAt` null), the
+ * decision-176 pick: the narrowest step that covers the pointing error. Radar
+ * range and the scenario's conditions only; never the contact's truth.
+ */
+export function cueFovDeg(
+  steps: readonly number[],
+  rangeM: number,
+  detectRangeAt: ((hfovDeg: number) => number) | null,
+): number {
+  if (!detectRangeAt || steps.length === 0) return pickStep(steps, searchFovDeg(rangeM));
+  for (const s of steps) if (detectRangeAt(s) >= rangeM) return s;
+  return steps[steps.length - 1]!;
+}
+
 /** Framing: a nominal object of this size (m)… */
 export const FRAME_SIZE_M = 2;
 /** …spans at most this fraction of the picture width (helicopters still fit). */

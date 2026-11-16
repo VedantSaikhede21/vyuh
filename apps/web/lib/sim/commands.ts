@@ -3,13 +3,18 @@
 import type { Affiliation, ContactClass } from '@vyuh/shared';
 import type { CommsStatus } from '@/components/hud/primitives/comms-log';
 import { CLASS_LABEL, EFFECTOR_LABEL } from '@/lib/strings';
-import type { SimCommand } from '@vyuh/sim-core';
+import {
+  SKY_GROUND_RATIO,
+  regionFor,
+  worstCaseDetectRangeM,
+  type SimCommand,
+} from '@vyuh/sim-core';
 import { useEffect, useMemo } from 'react';
 import type { SimRuntime } from './runtime';
 import { effectorSites } from '@/components/hud/use-hud-derived';
 import { actionStates, roeBlocksIntercept, type ActionId } from '@/lib/hud/derive';
 import { reportText } from '@/lib/hud/comms';
-import { frameFovDeg, pickStep, searchFovDeg } from '@/lib/hud/cue-zoom';
+import { cueFovDeg, frameFovDeg, pickStep } from '@/lib/hud/cue-zoom';
 import { weaponsTightHint } from '@/lib/hud/hints';
 import { prefillReport, reportPayload, type ReportDraft } from '@/lib/hud/report';
 import { snapshot, useHudStore } from './store';
@@ -143,6 +148,21 @@ export function useCommands(rt: SimRuntime | null) {
     const steps = () => {
       const eo = eoSensor(rt);
       return eo?.kind === 'EO_IR' ? eoFovSteps(eo.fovDegMax, eo.fovDegMin) : [];
+    };
+    /**
+     * Worst-case DETECT range per field of view for the cue (eo-haze plan [C1]): the
+     * day camera in this scenario's air; null in thermal or at night.
+     */
+    const detectRangeAt = (): ((hfovDeg: number) => number) | null => {
+      const eo = eoSensor(rt);
+      const { environment } = rt.sim.getState();
+      if (eo?.kind !== 'EO_IR' || ui().eo.mode !== 'DAY' || environment.isNight) return null;
+      const cond = {
+        isNight: false,
+        visibilityM: environment.weather.visibilityM,
+        skyGroundRatio: SKY_GROUND_RATIO[regionFor(rt.scenario.terrain.preset)],
+      };
+      return (hfovDeg) => worstCaseDetectRangeM(eo, hfovDeg, cond);
     };
     /** Radar range of a track as the HUD shows it (no truth). */
     const rangeOf = (trackId: string) =>
@@ -288,7 +308,7 @@ export function useCommands(rt: SimRuntime | null) {
         const s = steps();
         ui().setEo({
           lockTrackId: id,
-          ...(s.length ? { hfovDeg: pickStep(s, searchFovDeg(rangeOf(id))) } : {}),
+          ...(s.length ? { hfovDeg: cueFovDeg(s, rangeOf(id), detectRangeAt()) } : {}),
           autoFrame: s.length ? { trackId: id, stage: 'SEARCH' } : null,
         });
         logSlew();
@@ -311,7 +331,7 @@ export function useCommands(rt: SimRuntime | null) {
             logSlew();
           }
         } else if (next === 'CUE' && prev === 'TRACK' && af.stage === 'FRAMED') {
-          const hfov = pickStep(s, searchFovDeg(rangeOf(af.trackId)));
+          const hfov = cueFovDeg(s, rangeOf(af.trackId), detectRangeAt());
           ui().setEo({ autoFrame: { ...af, stage: 'SEARCH' } });
           if (hfov > eo.hfovDeg) {
             ui().setEo({ hfovDeg: hfov });

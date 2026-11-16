@@ -1,7 +1,9 @@
-import { EO_ACQUIRE_FRAME_FRACTION } from '@vyuh/sim-core';
+import type { EoIrSensor } from '@vyuh/shared';
+import { EO_ACQUIRE_FRAME_FRACTION, worstCaseDetectRangeM } from '@vyuh/sim-core';
 import { describe, expect, it } from 'vitest';
 import {
   cameraVerdict,
+  cueFovDeg,
   CUE_ERROR_P95,
   frameFovDeg,
   pickStep,
@@ -33,6 +35,50 @@ describe('cue search field of view', () => {
   it('is never narrower than needed when a step is wide enough', () => {
     for (const range of [800, 1500, 2500, 4000]) {
       expect(pickStep(STEPS, searchFovDeg(range))).toBeGreaterThanOrEqual(searchFovDeg(range));
+    }
+  });
+});
+
+describe('cue field of view, detection first (eo-haze plan [C1])', () => {
+  // Small quad against the ground, 10 km visibility, Punjab (S = 2.5): 30° 291 m,
+  // 14.1° 548 m, 6.7° 935 m (eo-haze.test.ts).
+  const sensor: EoIrSensor = {
+    id: 'eo1',
+    kind: 'EO_IR',
+    x: 0,
+    y: 8,
+    z: 0,
+    fovDegMin: 1.5,
+    fovDegMax: 30,
+    resolution: [1280, 720],
+  };
+  const air = { isNight: false, visibilityM: 10_000, skyGroundRatio: 2.5 };
+  const detect = (h: number) => worstCaseDetectRangeM(sensor, h, air);
+
+  it('takes the widest step that still detects at the radar range', () => {
+    expect(cueFovDeg(STEPS, 250, detect)).toBe(30);
+    expect(cueFovDeg(STEPS, 500, detect)).toBe(STEPS[1]);
+    // 800 m: the pointing floor wants ≥ 11.7° (14.1°), which detects only inside 548 m.
+    expect(cueFovDeg(STEPS, 800, detect)).toBe(STEPS[2]);
+    expect(pickStep(STEPS, searchFovDeg(800))).toBe(STEPS[1]);
+  });
+
+  it('opens at the narrowest step when none detects that far', () => {
+    expect(cueFovDeg(STEPS, 9000, detect)).toBe(STEPS[4]);
+  });
+
+  it('keeps the pointing-floor pick where detection does not apply', () => {
+    for (const range of [300, 800, 2500]) {
+      expect(cueFovDeg(STEPS, range, null)).toBe(pickStep(STEPS, searchFovDeg(range)));
+    }
+  });
+
+  it('never picks a step that cannot detect when a wider-or-equal one can', () => {
+    for (const range of [200, 400, 700, 1200, 2000]) {
+      const pick = cueFovDeg(STEPS, range, detect);
+      if (detect(pick) >= range) {
+        for (const s of STEPS) if (s > pick) expect(detect(s)).toBeLessThan(range);
+      }
     }
   });
 });

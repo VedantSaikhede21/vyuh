@@ -1,16 +1,25 @@
 import { readFileSync } from 'node:fs';
-import { CLASS_PROFILES, Scenario, TerrainPresetMeta, type SimEvent } from '@vyuh/shared';
 import {
+  CLASS_PROFILES,
+  Scenario,
+  TerrainPresetMeta,
+  type EoIrSensor,
+  type SimEvent,
+} from '@vyuh/shared';
+import {
+  SKY_GROUND_RATIO,
   builtinWorld,
   createSim,
   pointingTo,
+  regionFor,
   sampleHeight,
   worldFromPreset,
+  worstCaseDetectRangeM,
   type SimSnapshot,
   type World,
 } from '@vyuh/sim-core';
 import { describe, expect, it } from 'vitest';
-import { pickStep, searchFovDeg } from '@/lib/hud/cue-zoom';
+import { cueFovDeg, pickStep, searchFovDeg } from '@/lib/hud/cue-zoom';
 import { eoFovSteps } from '@/lib/sim/commands';
 
 // Cue lock times (eo-haze plan §5.1). For every radar track a scenario makes with
@@ -25,10 +34,30 @@ const REPO = new URL('../../../', import.meta.url);
 /** Give up on a cue after this long without a lock (sim ms). */
 const LOCK_TIMEOUT_MS = 60_000;
 
-export type CueRule = (steps: readonly number[], rangeM: number) => number;
+/** Field of view (deg) the cue opens at, from the zoom steps and the track's radar range. */
+export type CueRule = (
+  steps: readonly number[],
+  rangeM: number,
+  ctx: { scenario: Scenario; eo: EoIrSensor; isNight: boolean },
+) => number;
 
 /** The cue rule of decision 176: narrowest step that covers the p95 pointing error. */
 export const pointingFloorRule: CueRule = (steps, rangeM) => pickStep(steps, searchFovDeg(rangeM));
+
+/** The eo-haze rule ([C1]): widest step whose worst-case DETECT range reaches the track. */
+export const detectionFirstRule: CueRule = (steps, rangeM, { scenario, eo, isNight }) =>
+  cueFovDeg(
+    steps,
+    rangeM,
+    isNight
+      ? null
+      : (hfovDeg) =>
+          worstCaseDetectRangeM(eo, hfovDeg, {
+            isNight,
+            visibilityM: scenario.environment.weather.visibilityM,
+            skyGroundRatio: SKY_GROUND_RATIO[regionFor(scenario.terrain.preset)],
+          }),
+  );
 
 function loadScenario(id: string): Scenario {
   const url = new URL(`apps/api/app/seed/scenarios/${id}.json`, REPO);
@@ -99,7 +128,7 @@ export function measureLocks(id: string, rule: CueRule): LockResult[] {
       z: track.pos.z,
     });
     const cueRangeM = track.rangeM;
-    const hfov = rule(steps, cueRangeM);
+    const hfov = rule(steps, cueRangeM, { scenario, eo, isNight: st.environment.isNight });
     sim.dispatch({
       type: 'CAMERA_SLEWED',
       trackId: track.id,
@@ -184,9 +213,33 @@ export function summarise(rs: readonly LockResult[]): string {
 describe.runIf(process.env.CUE_LOCK_REPORT === '1')('cue lock report', () => {
   for (const id of ['S15', 'S06', 'S05']) {
     it(`${id}`, () => {
-      const rs = measureLocks(id, pointingFloorRule);
-      console.log(`\n${id} — pointing-floor rule\n${summarise(rs)}`);
-      expect(rs.length).toBeGreaterThan(0);
+      for (const [name, rule] of [
+        ['pointing-floor rule (decision 176)', pointingFloorRule],
+        ['detection-first rule (eo-haze [C1])', detectionFirstRule],
+      ] as const) {
+        const rs = measureLocks(id, rule);
+        console.log(`\n${id} — ${name}\n${summarise(rs)}`);
+        expect(rs.length).toBeGreaterThan(0);
+      }
     }, 600_000);
   }
+});
+
+describe('detection-first cue (eo-haze plan [C1])', () => {
+  // J&K: drones against the slopes are the case the rule exists for.
+  it('locks more drones on S05 than the pointing-floor rule, sooner in total', () => {
+    const drones = (rule: CueRule) =>
+      measureLocks('S05', rule).filter((r) => r.category === 'DRONE');
+    const locked = (rs: LockResult[]) => rs.filter((r) => r.lockS !== null);
+    /** Total seconds to lock, a failed cue counting as the whole timeout. */
+    const total = (rs: LockResult[]) =>
+      rs.reduce((a, r) => a + (r.lockS ?? LOCK_TIMEOUT_MS / 1000), 0);
+    const before = drones(pointingFloorRule);
+    const after = drones(detectionFirstRule);
+    // The FPV cued at 2.2 km: no step reaches it in the worst case, so the cue opens
+    // at the narrowest step and locks as the FPV closes, where 6.7° never did.
+    expect(locked(after).length).toBeGreaterThan(locked(before).length);
+    expect(after.find((r) => r.cls === 'FPV')?.lockS).not.toBeNull();
+    expect(total(after)).toBeLessThanOrEqual(total(before));
+  }, 120_000);
 });
