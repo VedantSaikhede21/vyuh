@@ -212,6 +212,14 @@ function bakeGeometry(src: BufferGeometry, m: Matrix4, positions?: Float32Array)
   return g;
 }
 
+/**
+ * Day colour scale for the models. Seen from the side against a bright haze sky, a
+ * light-grey airframe lit by the sky hemisphere matched the sky and vanished; real
+ * small drones read as dark shapes against the sky (backlit, matt plastic). Display
+ * only (decision 177).
+ */
+export const MODEL_DAY_TONE = 0.55;
+
 /** Day material: the model's base colour (map + factor), lit, both sides (thin blades and wings). */
 function dayMaterial(src: Material): Material {
   const s = src as MeshStandardMaterial;
@@ -219,7 +227,9 @@ function dayMaterial(src: Material): Material {
   const map: Texture | null = s.map ?? null;
   return new MeshLambertMaterial({
     map,
-    color: s.color ? new Color().copy(s.color) : new Color(1, 1, 1),
+    color: (s.color ? new Color().copy(s.color) : new Color(1, 1, 1)).multiplyScalar(
+      MODEL_DAY_TONE,
+    ),
     side: DoubleSide,
     // Instanced draws are not sorted: cut-out alpha instead of blending.
     alphaTest: blend ? 0.5 : 0,
