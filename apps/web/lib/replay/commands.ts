@@ -28,6 +28,7 @@ export function readOnlyCommands(): Commands {
     submitReport: noop,
     togglePause: noop,
     slewToSelected: noop,
+    advanceCue: noop,
     slewBy: noop,
     toggleEoMode: noop,
     endSlew: noop,

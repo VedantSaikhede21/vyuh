@@ -1,4 +1,4 @@
-import type { ContactClass, EoMode } from '@vyuh/shared';
+import type { ContactClass, EoLevel, EoMode } from '@vyuh/shared';
 import type { EoTrackMode } from '@vyuh/sim-core';
 import { create } from 'zustand';
 import type { CommsLine, CommsStatus } from '@/components/hud/primitives/comms-log';
@@ -19,7 +19,17 @@ export interface EoPointing {
   trackMode: EoTrackMode;
   /** Sim time the camera entered CUE (for the UI-only ACQ state), or null. */
   cueSinceTMs: number | null;
+  /** Mirror of the sim's camera.targetLevel: what the EO tracker sees of its target. */
+  targetLevel: EoLevel | null;
+  /**
+   * Cue framing in progress (decision 176): SEARCH = opened wide for the tracker to
+   * lock; FRAMED = zoomed in on the tracked target. Cleared by a manual zoom or slew.
+   */
+  autoFrame: { trackId: string; stage: 'SEARCH' | 'FRAMED' } | null;
 }
+
+/** Camera fields the UI derives itself; callers of `reset` do not supply them. */
+type DerivedEo = 'cueSinceTMs' | 'targetLevel' | 'autoFrame';
 
 /**
  * A line the UI adds itself. `untilTMs` set = an echo of a command the sim has
@@ -37,6 +47,8 @@ export type MainView = 'TACTICAL' | 'EO' | 'RADAR';
 
 interface UiStore {
   eo: EoPointing;
+  /** CSS width the EO picture is shown at (EoPanel measures it); caps the render size. */
+  eoPictureW: number;
   mainView: MainView;
   moreOpen: boolean;
   classifyMenu: boolean;
@@ -60,12 +72,13 @@ interface UiStore {
   echo: (tMs: number, text: string) => void;
   /** Add a HINT line unless this key was already shown. */
   hint: (tMs: number, key: string, text: string) => void;
-  reset: (eo: Omit<EoPointing, 'cueSinceTMs'>) => void;
+  reset: (eo: Omit<EoPointing, DerivedEo>) => void;
 }
 
 let nextLocal = 0;
 
 export const useUiStore = create<UiStore>((set) => ({
+  eoPictureW: 0,
   mainView: 'TACTICAL',
   moreOpen: false,
   eo: {
@@ -76,6 +89,8 @@ export const useUiStore = create<UiStore>((set) => ({
     mode: 'DAY',
     trackMode: 'MANUAL',
     cueSinceTMs: null,
+    targetLevel: null,
+    autoFrame: null,
   },
   classifyMenu: false,
   interceptArmed: false,
@@ -115,7 +130,7 @@ export const useUiStore = create<UiStore>((set) => ({
     set({
       mainView: 'TACTICAL',
       moreOpen: false,
-      eo: { ...eo, cueSinceTMs: null },
+      eo: { ...eo, cueSinceTMs: null, targetLevel: null, autoFrame: null },
       classifyMenu: false,
       interceptArmed: false,
       endArmed: false,

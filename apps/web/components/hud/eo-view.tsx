@@ -20,19 +20,25 @@ import { useUiStore } from '@/lib/sim/ui-store';
 import { ChevronRight } from 'lucide-react';
 import { Panel, PanelHeader, StateChip, StatusNotice, Tooltip } from '@/components/hud/primitives';
 import { ACQ_REASON, eoChip, formatBearing, type EoChip } from '@/lib/hud/derive';
+import { cameraVerdict, type VerdictTone } from '@/lib/hud/cue-zoom';
 import { edgePoint, projectToEo } from '@/lib/hud/eo-project';
 import { useHudStore } from '@/lib/sim/store';
 
 // EO/IR view (SPEC §6.2). The camera on the EO mast renders the world into a
-// 640×360 target (the sensor resolution, so what the trainee sees matches the
-// sim's pixels-on-target), shown through a display shader: day = slight noise
-// (more when dark), IR = white-hot palette + noise + blur. In IR mode meshes
-// swap to their heat materials for the pass. The view is a drei <View> on the
-// shared canvas; the DOM panel handles drag/wheel and the readout.
+// target as wide as the sensor (day `resolution`, thermal `irResolution`), so what
+// the trainee sees matches the sim's pixels-on-target; never wider than the
+// picture is shown, which only drops pixels the screen could not show (decision
+// 176). It is shown through a display shader: day = slight noise (more when
+// dark), IR = white-hot palette + noise + blur. In IR mode meshes swap to their
+// heat materials for the pass. The view is a drei <View> on the shared canvas;
+// the DOM panel handles drag/wheel and the readout.
 
-const RT_W = 640;
-const RT_H = 360;
-const ASPECT = RT_W / RT_H;
+/** The picture is 16:9 in both modes (a 5:4 thermal sensor is shown cropped to it). */
+const ASPECT = 16 / 9;
+/** Render-target width before the first frame sizes it. */
+const RT_W0 = 640;
+/** Never render the picture narrower than this, however small it is shown. */
+const RT_MIN_W = 320;
 /** Day-camera exposure into the filmic curve: keeps the ground mid-grey and the sky below white. */
 const EO_DAY_EXPOSURE = 0.6;
 /**
@@ -93,6 +99,8 @@ interface EoFrame {
   rt: SimRuntime;
   mast: Vec3;
   fovMax: number;
+  /** Sensor width in pixels per mode. */
+  sensorW: { DAY: number; IR: number };
   eoScene: Scene;
   camera: PerspectiveCamera;
   target: WebGLRenderTarget;
@@ -110,6 +118,7 @@ function renderEoFrame({
   rt,
   mast,
   fovMax,
+  sensorW,
   eoScene,
   camera,
   target,
@@ -125,6 +134,7 @@ function renderEoFrame({
       cueSinceTMs: simCam.trackMode === 'CUE' ? rt.sim.getState().clock.tMs : null,
     });
   }
+  if (ui.eo.targetLevel !== simCam.targetLevel) ui.setEo({ targetLevel: simCam.targetLevel });
   let { azDeg, elDeg } = ui.eo;
   if (simCam.lockTrackId) {
     // Locked: the sim slews and follows; mirror it so the readout and the next drag agree.
@@ -155,6 +165,16 @@ function renderEoFrame({
   const now = state.clock.elapsedTime;
   if (now - last.s < EO_FRAME_S - EO_FRAME_SLACK_S) return;
   last.s = now;
+  // Sensor pixels, capped at the pixels the picture is shown with. Measured on the
+  // DOM picture (EoPanel): inside the View, state.size keeps the frame it first had,
+  // so it misses a swap of the camera into the main view.
+  const shownW = Math.ceil(ui.eoPictureW * state.viewport.dpr);
+  const w = Math.max(RT_MIN_W, Math.min(sensorW[ui.eo.mode], shownW || sensorW[ui.eo.mode]));
+  if (target.width !== w) {
+    const h = Math.round(w / ASPECT);
+    target.setSize(w, h);
+    material.uniforms.uTexel!.value = [1 / w, 1 / h];
+  }
   const gl = state.gl;
   const restore = ui.eo.mode === 'IR' ? swapToIr(eoScene) : null;
   const prev = gl.getRenderTarget();
@@ -176,6 +196,9 @@ export function EoScene() {
   const eo = eoSensor(rt);
   const mast = eo ? rt.sim.getState().sensorPositions[eo.id] : undefined;
   const fovMax = eo?.kind === 'EO_IR' ? eo.fovDegMax : 30;
+  const dayW = eo?.kind === 'EO_IR' ? eo.resolution[0] : RT_W0;
+  const irW = eo?.kind === 'EO_IR' ? (eo.irResolution ?? eo.resolution)[0] : RT_W0;
+  const sensorW = useMemo(() => ({ DAY: dayW, IR: irW }), [dayW, irW]);
   const mode = useUiStore((s) => s.eo.mode);
   const env = rt.sim.getState().environment;
   const look = useMemo(() => environmentLook(env, 'eo'), [env]);
@@ -188,7 +211,10 @@ export function EoScene() {
   );
   // Half float: an 8-bit target clipped the HDR sky to 1.0 before the filmic
   // curve, so the day sky still read as flat white (audit P1-3).
-  const target = useMemo(() => new WebGLRenderTarget(RT_W, RT_H, { type: HalfFloatType }), []);
+  const target = useMemo(
+    () => new WebGLRenderTarget(RT_W0, Math.round(RT_W0 / ASPECT), { type: HalfFloatType }),
+    [],
+  );
   const material = useMemo(
     () =>
       new ShaderMaterial({
@@ -202,7 +228,7 @@ export function EoScene() {
           uTime: { value: 0 },
           uNoise: { value: 0.03 },
           uExposure: { value: EO_DAY_EXPOSURE },
-          uTexel: { value: [1 / RT_W, 1 / RT_H] },
+          uTexel: { value: [1 / RT_W0, 1 / Math.round(RT_W0 / ASPECT)] },
         },
       }),
     [target],
@@ -222,6 +248,7 @@ export function EoScene() {
         rt,
         mast,
         fovMax,
+        sensorW,
         eoScene,
         camera,
         target,
@@ -374,10 +401,16 @@ function EoStateChip() {
   );
 }
 
+const VERDICT_TONE: Record<VerdictTone, string> = {
+  ok: 'text-ok',
+  info: 'text-text-1',
+  warn: 'text-warn',
+};
+
 function EoReadout({ fovMax }: { fovMax: number }) {
   const eo = useUiStore((s) => s.eo);
   const tMs = useHudStore((s) => s.hud?.tMs ?? 0);
-  const acq = eoChip(eo.trackMode, eo.cueSinceTMs, tMs) === 'ACQ';
+  const verdict = cameraVerdict(eo.trackMode, eo.targetLevel, eo.lockTrackId, eo.cueSinceTMs, tMs);
   return (
     <>
       <div
@@ -389,9 +422,15 @@ function EoReadout({ fovMax }: { fovMax: number }) {
         <div className="absolute left-0 top-1/2 h-px w-2 bg-current" />
         <div className="absolute right-0 top-1/2 h-px w-2 bg-current" />
       </div>
-      {acq && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 truncate bg-bg-1 px-2 py-0.5 text-small text-text-1">
-          {ACQ_REASON}
+      {verdict && (
+        // Can the picture identify the target? (decision 176) Announced politely.
+        <div
+          role="status"
+          data-testid="eo-verdict"
+          data-tone={verdict.tone}
+          className={`pointer-events-none absolute inset-x-0 top-0 truncate bg-bg-1 px-2 py-0.5 text-small ${VERDICT_TONE[verdict.tone]}`}
+        >
+          {verdict.text}
         </div>
       )}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex gap-3 whitespace-nowrap bg-bg-1 px-2 text-readout leading-5">
@@ -420,8 +459,20 @@ function EoReadout({ fovMax }: { fovMax: number }) {
 export const EoPanel = forwardRef<HTMLDivElement, { runtime: SimRuntime; commands: Commands }>(
   function EoPanel({ runtime, commands }, ref) {
     const drag = useRef<{ x: number; y: number } | null>(null);
+    const frame = useRef<HTMLDivElement>(null);
     const mode = useUiStore((s) => s.eo.mode);
     const eo = eoSensor(runtime);
+    // Width the picture is shown at (16:9 inside its frame), for the render target size.
+    useEffect(() => {
+      const el = frame.current;
+      if (!el) return;
+      const ro = new ResizeObserver(([e]) => {
+        const { width, height } = e!.contentRect;
+        useUiStore.getState().set({ eoPictureW: Math.min(width, (height * 16) / 9) });
+      });
+      ro.observe(el);
+      return () => ro.disconnect();
+    }, []);
     if (!eo || eo.kind !== 'EO_IR') {
       return (
         <Panel className="h-full border-0">
@@ -454,7 +505,7 @@ export const EoPanel = forwardRef<HTMLDivElement, { runtime: SimRuntime; command
           <EoStateChip />
         </PanelHeader>
         {/* The sensor picture stays 16:9 in any frame: enlarged, never stretched. */}
-        <div className="grid min-h-0 flex-1 place-items-center [container-type:size]">
+        <div ref={frame} className="grid min-h-0 flex-1 place-items-center [container-type:size]">
           <div
             ref={ref}
             data-testid="eo-picture"
