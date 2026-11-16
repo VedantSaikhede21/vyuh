@@ -17,6 +17,7 @@ import {
   Vector3,
 } from 'three';
 import { presetFileUrl } from '@/lib/terrain/load-world';
+import { withAtmosphereFog } from '@/lib/sim/atmosphere-fog';
 import { IR_MATERIALS } from '@/lib/sim/ir-materials';
 import { GROUND } from '@/lib/theme/scene-colours';
 import { CHUNKS } from './terrain-mesh';
@@ -118,7 +119,7 @@ function loadTrees(world: World): Promise<TreeTile[]> {
 }
 
 const GEOMETRY = coniferGeometry();
-const MATERIAL = new MeshLambertMaterial({ flatShading: true });
+const MATERIAL = withAtmosphereFog(new MeshLambertMaterial({ flatShading: true }), 'ground');
 const SHADE_LOW = new Color(GROUND.coniferDark);
 const SHADE_HIGH = new Color(GROUND.conifer);
 

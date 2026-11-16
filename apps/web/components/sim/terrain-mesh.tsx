@@ -14,6 +14,7 @@ import {
   syncTerrainUniforms,
   terrainMaterial,
 } from '@/lib/terrain/terrain-material';
+import { withAtmosphereFog } from '@/lib/sim/atmosphere-fog';
 import { IR_MATERIALS } from '@/lib/sim/ir-materials';
 import type { EnvironmentLook } from '@/lib/sim/environment-look';
 import { GROUND } from '@/lib/theme/scene-colours';
@@ -202,7 +203,7 @@ export function terrainTiles(map: Heightmap, originElevM = 0): TerrainTile[] {
   return tiles;
 }
 
-const PLAIN_MATERIAL = new MeshLambertMaterial({ vertexColors: true });
+const PLAIN_MATERIAL = withAtmosphereFog(new MeshLambertMaterial({ vertexColors: true }), 'ground');
 
 /**
  * The tactical map fades into the sky between these fractions of the half-width,

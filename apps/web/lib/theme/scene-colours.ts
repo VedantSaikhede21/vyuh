@@ -72,6 +72,38 @@ export const SKY = {
   ir: '#050505',
 } as const;
 
+/**
+ * Air colour by region and weather preset (atmosphere step 1, approved 2026-11-16,
+ * docs/plans/atmosphere-step2-direction.md §4): haze = what distant ground fades
+ * into and the sky at the horizon; zenith = sky overhead; sunTint = the colour
+ * haze brightens towards near the sun. Representative values, sRGB: the cited
+ * sources fix the direction (IGP milky and warm, J&K deep blue), not the hex.
+ * DUST is kept but never selected until a desert preset exists.
+ */
+export const ATMOSPHERE = {
+  PUNJAB_PLAINS: {
+    CLEAR: { haze: '#c4c0b4', zenith: '#7d98b0', sunTint: '#fff0d8' },
+    HAZE: { haze: '#bdb5a3', zenith: '#a3a8a8', sunTint: '#ffe6c4' },
+    FOG: { haze: '#c9c9c4', zenith: '#b4b7b8', sunTint: '#fff4e6' },
+    RAIN: { haze: '#8e969c', zenith: '#6f7a84', sunTint: '#e8ecf0' },
+    DUST: { haze: '#c7b08a', zenith: '#b0a48c', sunTint: '#ffdca8' },
+  },
+  JK_MOUNTAIN: {
+    CLEAR: { haze: '#b4c6d8', zenith: '#2b5c9e', sunTint: '#fffaf0' },
+    HAZE: { haze: '#b6c0c8', zenith: '#4a74a4', sunTint: '#fff4e4' },
+    FOG: { haze: '#c3c8cc', zenith: '#6d86a3', sunTint: '#fff8ee' },
+    RAIN: { haze: '#959ea6', zenith: '#75808b', sunTint: '#e6ebf0' },
+    DUST: { haze: '#c0b29a', zenith: '#8f98a0', sunTint: '#ffe6c0' },
+  },
+  URBAN_GENERIC: {
+    CLEAR: { haze: '#bab4a8', zenith: '#8199ad', sunTint: '#ffeed4' },
+    HAZE: { haze: '#aaa290', zenith: '#a09f98', sunTint: '#ffe0b8' },
+    FOG: { haze: '#b9b7ae', zenith: '#aaaba8', sunTint: '#fff0dc' },
+    RAIN: { haze: '#8b9298', zenith: '#6c7680', sunTint: '#e6eaee' },
+    DUST: { haze: '#c2ab86', zenith: '#ab9f88', sunTint: '#ffd8a0' },
+  },
+} as const;
+
 /** Terrain, buildings and drone bodies (physical look). */
 export const GROUND = {
   fieldLow: '#3b5228',

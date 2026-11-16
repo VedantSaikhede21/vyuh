@@ -25,7 +25,7 @@ const ZENITH_DAY = new Color(SKY.zenithDay);
 const ZENITH_NIGHT = new Color(SKY.zenithNight);
 const ZENITH_DUSK = new Color(SKY.zenithDusk);
 /** The tactical map keeps its sky dim, so it stays a map with bright symbols on it. */
-const TACTICAL_SKY_DIM = 0.42;
+export const TACTICAL_SKY_DIM = 0.42;
 /** Intensity of the tactical map's overhead display light when the real sun is weaker. */
 const TACTICAL_MAP_LIGHT = 1.2;
 const MAP_LIGHT_DIR: [number, number, number] = [0.3, 0.9, 0.3];
@@ -34,10 +34,18 @@ const TACTICAL_MIN_DAYLIGHT = 0.85;
 /** Visibility at or beyond which the air counts as clear, metres. */
 const CLEAR_VIS_M = 20_000;
 
-const smoothstep = (a: number, b: number, x: number) => {
+export const smoothstep = (a: number, b: number, x: number) => {
   const t = Math.min(Math.max((x - a) / (b - a), 0), 1);
   return t * t * (3 - 2 * t);
 };
+
+/** How much day (0 night → 1 day) and dusk colour the sun's elevation gives. */
+export function daylight(elDeg: number): { day: number; dusk: number } {
+  return {
+    day: smoothstep(-6, 10, elDeg),
+    dusk: smoothstep(-6, 0, elDeg) * (1 - smoothstep(2, 12, elDeg)),
+  };
+}
 
 export interface EnvironmentLook {
   sunDir: [number, number, number];
@@ -69,8 +77,7 @@ export function environmentLook(env: SimEnvironment, variant: EnvironmentVariant
     y: Math.sin(el),
     z: Math.cos(az) * Math.cos(el),
   });
-  const day = smoothstep(-6, 10, elDeg);
-  const dusk = smoothstep(-6, 0, elDeg) * (1 - smoothstep(2, 12, elDeg));
+  const { day, dusk } = daylight(elDeg);
   const vis = env.weather.visibilityM;
   const haze = 1 - Math.min(vis / CLEAR_VIS_M, 1);
   const cloud = env.weather.cloudPct / 100;

@@ -25,6 +25,7 @@ import {
   type ModelId,
   type PreparedModel,
 } from '@/lib/sim/contact-models';
+import { withAtmosphereFog } from '@/lib/sim/atmosphere-fog';
 import { GROUND, IR } from '@/lib/theme/scene-colours';
 
 // One class of contacts drawn with its downloaded model (display only, SPEC
@@ -106,13 +107,16 @@ export function ClassModelMesh({
   const disc = useMemo(
     () => ({
       geometry: new CircleGeometry(1, 28).rotateX(-Math.PI / 2),
-      day: new MeshBasicMaterial({
-        color: GROUND.rotorBlur,
-        transparent: true,
-        opacity: 0.14,
-        depthWrite: false,
-        side: DoubleSide,
-      }),
+      day: withAtmosphereFog(
+        new MeshBasicMaterial({
+          color: GROUND.rotorBlur,
+          transparent: true,
+          opacity: 0.14,
+          depthWrite: false,
+          side: DoubleSide,
+        }),
+        'contact',
+      ),
       ir: new MeshBasicMaterial({ colorWrite: false, depthWrite: false }),
     }),
     [],

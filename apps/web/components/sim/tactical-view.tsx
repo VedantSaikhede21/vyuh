@@ -4,6 +4,7 @@ import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { useMemo, type RefObject } from 'react';
 import { QUALITY_FEATURES, resolveQuality } from '@/lib/gpu-tier';
 import { useSettings } from '@/lib/settings';
+import { atmosphereSite } from '@/lib/sim/atmosphere-look';
 import { environmentLook } from '@/lib/sim/environment-look';
 import { CAMERA_START } from '@/lib/sim/framing';
 import { BuildingsMesh, roofStyleOf } from './buildings-mesh';
@@ -37,11 +38,15 @@ export function TacticalScene({
   }, [runtime]);
   const env = runtime.sim.getState().environment;
   const look = useMemo(() => environmentLook(env, 'tactical'), [env]);
+  const site = useMemo(
+    () => atmosphereSite(runtime.scenario.terrain.preset, runtime.world),
+    [runtime],
+  );
   const quality = resolveQuality(useSettings().graphics);
   return (
     <>
       <PerspectiveCamera makeDefault position={start} fov={50} near={5} far={40_000} />
-      <Environment env={env} variant="tactical" />
+      <Environment env={env} variant="tactical" site={site} />
       <TerrainMesh world={runtime.world} look={look} quality={quality} edgeFade encoded />
       <BuildingsMesh index={runtime.world.buildings} roofStyle={roofStyleOf(runtime.world)} />
       <VegetationMesh world={runtime.world} viewM={QUALITY_FEATURES[quality].treeViewM} />

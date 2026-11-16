@@ -16,6 +16,7 @@ import { ZoneMarkers } from '@/components/sim/zone-markers';
 import { QUALITY_FEATURES, resolveQuality } from '@/lib/gpu-tier';
 import { shotPose, type Shot } from '@/lib/scene/shots';
 import { useSettings } from '@/lib/settings';
+import { atmosphereSite } from '@/lib/sim/atmosphere-look';
 import { environmentLook } from '@/lib/sim/environment-look';
 import { CAMERA_START } from '@/lib/sim/framing';
 import { SimRuntime } from '@/lib/sim/runtime';
@@ -102,6 +103,7 @@ export function MissionScene({
   const runtime = useMemo(() => new SimRuntime(scenario, world, 'PRACTICE'), [scenario, world]);
   const env = runtime.sim.getState().environment;
   const look = useMemo(() => environmentLook(env, 'tactical'), [env]);
+  const site = useMemo(() => atmosphereSite(scenario.terrain.preset, world), [scenario, world]);
   const quality = resolveQuality(useSettings().graphics);
   const pose = useMemo(() => shotPose(scenario, shot), [scenario, shot]);
   return (
@@ -113,7 +115,7 @@ export function MissionScene({
       <SimRuntimeContext.Provider value={runtime}>
         <PerspectiveCamera makeDefault fov={pose.fovDeg} near={5} far={40_000} />
         <CameraRig scenario={scenario} world={world} shot={shot} orbit={orbit} flying={flying} />
-        <Environment env={env} variant="tactical" />
+        <Environment env={env} variant="tactical" site={site} />
         <TerrainMesh world={world} look={look} quality={quality} edgeFade encoded />
         <BuildingsMesh index={world.buildings} roofStyle={roofStyleOf(world)} />
         <VegetationMesh world={world} viewM={QUALITY_FEATURES[quality].treeViewM} />

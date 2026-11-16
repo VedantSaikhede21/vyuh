@@ -13,6 +13,7 @@ import { VegetationMesh } from '@/components/sim/vegetation-mesh';
 import { eoSensor, type Commands } from '@/lib/sim/commands';
 import { QUALITY_FEATURES, resolveQuality } from '@/lib/gpu-tier';
 import { useSettings } from '@/lib/settings';
+import { atmosphereSite } from '@/lib/sim/atmosphere-look';
 import { environmentLook } from '@/lib/sim/environment-look';
 import { swapToIr } from '@/lib/sim/ir-materials';
 import type { SimRuntime } from '@/lib/sim/runtime';
@@ -202,6 +203,7 @@ export function EoScene() {
   const mode = useUiStore((s) => s.eo.mode);
   const env = rt.sim.getState().environment;
   const look = useMemo(() => environmentLook(env, 'eo'), [env]);
+  const site = useMemo(() => atmosphereSite(rt.scenario.terrain.preset, rt.world), [rt]);
   const quality = resolveQuality(useSettings().graphics);
 
   const eoScene = useMemo(() => new Scene(), []);
@@ -263,7 +265,7 @@ export function EoScene() {
     <>
       {createPortal(
         <>
-          <Environment env={env} variant="eo" ir={mode === 'IR'} />
+          <Environment env={env} variant="eo" ir={mode === 'IR'} site={site} />
           <TerrainMesh world={rt.world} look={look} quality={quality} encoded={false} />
           <BuildingsMesh index={rt.world.buildings} roofStyle={roofStyleOf(rt.world)} />
           <VegetationMesh world={rt.world} viewM={QUALITY_FEATURES[quality].treeViewM} />

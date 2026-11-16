@@ -14,6 +14,7 @@ import {
   ShapeUtils,
   Vector2,
 } from 'three';
+import { withAtmosphereFog } from '@/lib/sim/atmosphere-fog';
 import { IR_MATERIALS } from '@/lib/sim/ir-materials';
 import { BUILDING_LOOK } from '@/lib/theme/scene-colours';
 import { CHUNKS } from './terrain-mesh';
@@ -209,7 +210,12 @@ export function buildingTiles(
   return tiles;
 }
 
-const DAY_MATERIAL = new MeshLambertMaterial({ vertexColors: true, side: 2 });
+// Physical fog and the tactical edge fade (atmosphere step 2): no more villages
+// floating past the map edge.
+const DAY_MATERIAL = withAtmosphereFog(
+  new MeshLambertMaterial({ vertexColors: true, side: 2 }),
+  'ground',
+);
 
 function tileMesh(geo: BufferGeometry): Mesh {
   const m = new Mesh(geo, DAY_MATERIAL);

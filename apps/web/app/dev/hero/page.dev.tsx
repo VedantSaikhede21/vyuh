@@ -16,10 +16,12 @@ import { loadWorld } from '@/lib/terrain/load-world';
 import S01 from '../../../../api/app/seed/scenarios/S01.json';
 import S02 from '../../../../api/app/seed/scenarios/S02.json';
 import S03 from '../../../../api/app/seed/scenarios/S03.json';
+import S08 from '../../../../api/app/seed/scenarios/S08.json';
 import S11 from '../../../../api/app/seed/scenarios/S11.json';
 import S12 from '../../../../api/app/seed/scenarios/S12.json';
 import S13 from '../../../../api/app/seed/scenarios/S13.json';
 import S14 from '../../../../api/app/seed/scenarios/S14.json';
+import S15 from '../../../../api/app/seed/scenarios/S15.json';
 
 // Dev-only "hero" route (decision 63): plays a seeded scenario locally with the
 // ground-truth defender (decision 68) — no API, no session — for the landing
@@ -36,7 +38,7 @@ import S14 from '../../../../api/app/seed/scenarios/S14.json';
 //               user (events posted, scored on the server), then open its result page
 // window.__vyuhHero = { ready, tMs } reports progress to scripts.
 
-const SCENARIOS: Record<string, unknown> = { S01, S02, S03, S11, S12, S13, S14 };
+const SCENARIOS: Record<string, unknown> = { S01, S02, S03, S08, S11, S12, S13, S14, S15 };
 
 const SimPlayer = dynamic(() => import('@/components/sim/player').then((m) => m.SimPlayer), {
   ssr: false,

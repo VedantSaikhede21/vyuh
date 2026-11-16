@@ -30,6 +30,9 @@ import { login, openBriefing } from './helpers';
 //
 // FPS_MAIN=camera (Part 6R): swap the camera into the main view (V) before
 // measuring. Briefing cases measure the live 3D briefing page instead of the player.
+//
+// FPS_ATMOS=0 (atmosphere step 2): measure the old linear fog on the same build
+// (localStorage `vyuh.atmos`, read by lib/sim/atmosphere-switch.ts).
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
 
@@ -251,6 +254,15 @@ for (const scale of SCALES) {
             await page.waitForTimeout(COOLDOWN_MS);
             await page.addInitScript(COUNT_DRAWS);
             if (mode === 'adaptive') await page.addInitScript(ADAPTIVE, ADAPTIVE_PIXEL_RATIO_KEY);
+            if (process.env.FPS_ATMOS === '0') {
+              await page.addInitScript(() => {
+                try {
+                  window.localStorage.setItem('vyuh.atmos', '0');
+                } catch {
+                  // Storage blocked: the default look is measured.
+                }
+              });
+            }
             await page.setViewportSize(vp);
             let entities: number | null = null;
             if (c.briefing) {

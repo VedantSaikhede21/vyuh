@@ -1,5 +1,7 @@
 import type { Texture } from 'three';
 import { Color, MeshLambertMaterial, type IUniform } from 'three';
+import { patchAtmosphereShader } from '@/lib/sim/atmosphere-fog';
+import { atmosEnabled } from '@/lib/sim/atmosphere-switch';
 import type { EnvironmentLook } from '@/lib/sim/environment-look';
 import type { TerrainTextures } from './display';
 
@@ -82,6 +84,9 @@ export function terrainMaterial(opts: TerrainMaterialOptions): {
 } {
   const { textures: t, sizeM, floorM, edgeFade, fadeRange } = opts;
   const useAlbedo = t.albedo !== null;
+  // Physical fog (atmosphere step 2): the shared chunk does fog and the map-edge
+  // fade; the old smoothstep fog below is the `?atmos=0` look.
+  const atmos = atmosEnabled();
   const material = new MeshLambertMaterial({ vertexColors: true });
   const uniforms = {
     uBlend: { value: 0 },
@@ -93,7 +98,7 @@ export function terrainMaterial(opts: TerrainMaterialOptions): {
     useAlbedo && '#define USE_T_ALBEDO',
     t.ao && '#define USE_T_AO',
     t.detail && opts.detail && '#define USE_T_DETAIL',
-    edgeFade && '#define USE_T_EDGE',
+    edgeFade && !atmos && '#define USE_T_EDGE',
   ]
     .filter(Boolean)
     .join('\n');
@@ -163,10 +168,14 @@ export function terrainMaterial(opts: TerrainMaterialOptions): {
           float tShadow = texture2D(uShadowMap, tUv).r;
           reflectedLight.directDiffuse *= mix(1.0, 0.2 + 0.8 * tShadow, uShadowOn * uBlend);
         }`,
-      )
-      .replace(
-        '#include <fog_fragment>',
-        `#ifdef USE_FOG
+      );
+    if (atmos) {
+      patchAtmosphereShader(shader, 'ground');
+      return;
+    }
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <fog_fragment>',
+      `#ifdef USE_FOG
           float tHaze = exp(-max(vWorldPos.y - uFloor, 0.0) / ${HAZE_SCALE_M.toFixed(1)});
           float tFog = smoothstep(fogNear, fogFar, vFogDepth) * mix(0.4, 1.0, tHaze);
           gl_FragColor.rgb = mix(gl_FragColor.rgb, uHorizon, tFog);
@@ -175,9 +184,9 @@ export function terrainMaterial(opts: TerrainMaterialOptions): {
           gl_FragColor.rgb = mix(
             gl_FragColor.rgb, uHorizon, smoothstep(uFadeStart, uFadeEnd, length(vWorldPos.xz)));
         #endif`,
-      );
+    );
   };
-  material.customProgramCacheKey = () => `terrain:${defines}`;
+  material.customProgramCacheKey = () => `terrain:${defines}${atmos ? '|atmos:ground' : ''}`;
   return { material, uniforms };
 }
 

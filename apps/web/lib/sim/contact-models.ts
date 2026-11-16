@@ -21,6 +21,7 @@ import {
   type AnimationClip,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { withAtmosphereFog } from './atmosphere-fog';
 
 // Contact models (display only). Downloaded CC-BY models, processed by
 // scripts/models/build.mjs into apps/web/public/models/<id>.glb; sources in
@@ -222,7 +223,7 @@ function dayMaterial(src: Material): Material {
   const s = src as MeshStandardMaterial;
   const blend = s.transparent || s.alphaTest > 0;
   const map: Texture | null = s.map ?? null;
-  return new MeshLambertMaterial({
+  const material = new MeshLambertMaterial({
     map,
     color: (s.color ? new Color().copy(s.color) : new Color(1, 1, 1)).multiplyScalar(
       MODEL_DAY_TONE,
@@ -232,6 +233,8 @@ function dayMaterial(src: Material): Material {
     alphaTest: blend ? 0.5 : 0,
     name: src.name,
   });
+  // Physical fog with the EO contrast floor (atmosphere step 2).
+  return withAtmosphereFog(material, 'contact');
 }
 
 function isUnder(o: Object3D, name: string): boolean {

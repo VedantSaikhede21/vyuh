@@ -19,9 +19,11 @@ import {
   type BufferGeometry,
   type InstancedMesh,
   Matrix4,
+  MeshLambertMaterial,
   Quaternion,
   Vector3,
 } from 'three';
+import { withAtmosphereFog } from '@/lib/sim/atmosphere-fog';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { IR_MATERIALS } from '@/lib/sim/ir-materials';
 import type { SimRuntime } from '@/lib/sim/runtime';
@@ -113,6 +115,11 @@ const GEOMETRY: Readonly<Record<Family, () => BufferGeometry>> = {
 const WINGBEAT_HZ: Partial<Record<ContactClass, number>> = { BIRD_SMALL: 6, BIRD_LARGE: 3 };
 
 const UP = new Vector3(0, 1, 0);
+/** Dark body of the fallback shapes; physical fog with the EO contrast floor. */
+const FALLBACK_MATERIAL = withAtmosphereFog(
+  new MeshLambertMaterial({ color: GROUND.droneBody }),
+  'contact',
+);
 
 function FamilyMesh({
   rt,
@@ -170,9 +177,11 @@ function FamilyMesh({
   });
 
   return (
-    <instancedMesh ref={ref} args={[geometry, undefined, members.length]} frustumCulled={false}>
-      <meshLambertMaterial color={GROUND.droneBody} />
-    </instancedMesh>
+    <instancedMesh
+      ref={ref}
+      args={[geometry, FALLBACK_MATERIAL, members.length]}
+      frustumCulled={false}
+    />
   );
 }
 
