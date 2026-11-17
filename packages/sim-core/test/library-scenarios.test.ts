@@ -383,4 +383,20 @@ describe('S15 Birds or Drone? (PUNJAB_PLAINS, day)', () => {
     );
     expect(groupsBefore.size).toBe(2);
   });
+
+  it('flies in 10 km Punjab haze, and the camera identifies the quad only inside 1.09 km', () => {
+    // Eo-haze plan, decision A: S04, S07 and S15 went from 20 to 10 km; §2.5 gives
+    // the small quad's sky-backed IDENTIFY range at 10 km as 1.08 km.
+    expect(s.environment.weather.visibilityM).toBe(10_000);
+    const quad = s.contacts.find((c) => c.isThreat)!;
+    const ids = lockOn(s, quad.id, 'DAY')
+      .getEvents()
+      .filter(
+        (e) =>
+          e.type === 'EO_IDENTIFIABLE' && e.payload.level === 'IDENTIFY' && e.contactId === quad.id,
+      )
+      .map((e) => (e.payload as { rangeM: number }).rangeM);
+    expect(ids.length).toBeGreaterThan(0);
+    for (const r of ids) expect(r).toBeLessThanOrEqual(1090);
+  }, 60_000);
 });

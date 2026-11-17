@@ -1,8 +1,10 @@
 """POST /sessions, POST /sessions/{id}/events, GET /sessions/{id}."""
 
 import json
+import re
 import uuid
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -13,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.models import Scenario as ScenarioRow
 from app.models import ScoreRow, SessionEvent, TrainingSession, User
 from app.schemas.generated import SessionStatus, UserRole
+from app.services.sessions import SIM_VERSION
 from tests.conftest import assert_error, fixture_log
 
 Headers = Callable[[User], dict[str, str]]
@@ -83,6 +86,44 @@ def test_create_session_requires_sim_version(
         body["simVersion"] = sim_version
     response = client.post("/api/v1/sessions", json=body, headers=auth_header(make_user()))
     assert_error(response, 422, "VALIDATION_ERROR")
+
+
+def test_create_session_refuses_a_newer_sim_than_the_server(
+    client: TestClient,
+    db: Session,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    auth_header: Headers,
+) -> None:
+    """Eo-haze plan [C4]: a web build ahead of the API must not start sessions (they would
+    play scenario content the seeder has not updated yet)."""
+    user = make_user()
+    body = {"scenarioId": str(scenarios["S01"].id), "mode": "PRACTICE"}
+    ahead = client.post(
+        "/api/v1/sessions",
+        json={**body, "simVersion": SIM_VERSION + 1},
+        headers=auth_header(user),
+    )
+    assert_error(ahead, 422, "VALIDATION_ERROR")
+    error = ahead.json()["error"]
+    assert "newer than the server's" in error["message"]
+    assert error["details"] == {"simVersion": SIM_VERSION + 1, "serverSimVersion": SIM_VERSION}
+    assert db.scalar(select(func.count()).select_from(TrainingSession)) == 0
+    # The server's own version (and older ones, kept for replays) still start.
+    for version in (SIM_VERSION, 1):
+        ok = client.post(
+            "/api/v1/sessions", json={**body, "simVersion": version}, headers=auth_header(user)
+        )
+        assert ok.status_code == 201, ok.text
+
+
+def test_server_sim_version_is_generated_from_sim_core() -> None:
+    version_ts = (
+        Path(__file__).resolve().parents[3] / "packages" / "sim-core" / "src" / "version.ts"
+    ).read_text(encoding="utf-8")
+    match = re.search(r"export const SIM_VERSION = (\d+);", version_ts)
+    assert match is not None
+    assert int(match.group(1)) == SIM_VERSION, "run `pnpm gen:schemas`"
 
 
 def test_ingest_real_log_in_batches(

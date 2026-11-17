@@ -1,7 +1,9 @@
 """Session lifecycle (SPEC §4.5): create, ingest event batches, complete + score, read."""
 
+import json
 import uuid
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import func, select, update
@@ -52,6 +54,9 @@ from app.services.terrain import preset_revision
 ACCEPTS_EVENTS = frozenset({SessionStatus.CREATED, SessionStatus.ACTIVE})
 #: An ACTIVE session with no batch (heartbeats count) for this long is ABANDONED (SPEC §4.5).
 IDLE_LIMIT = timedelta(minutes=15)
+#: The newest sim version this API knows, generated from sim-core by `pnpm gen:schemas`.
+SIM_FILE = Path(__file__).resolve().parents[1] / "seed" / "generated" / "sim.json"
+SIM_VERSION: int = json.loads(SIM_FILE.read_text(encoding="utf-8"))["simVersion"]
 
 
 def _idle_since(row: TrainingSession) -> datetime:
@@ -86,6 +91,15 @@ def expire_stale_sessions(db: Session, now: datetime | None = None) -> int:
 
 
 def create_session(db: Session, user: User, body: CreateSessionRequest) -> CreateSessionResponse:
+    # Deploy guard (eo-haze plan [C4]): a web build newer than this API must not start
+    # sessions, or they would play scenario content the seeder has not updated yet.
+    if body.sim_version > SIM_VERSION:
+        raise ApiError(
+            ErrorCode.VALIDATION_ERROR,
+            f"This simulator version ({body.sim_version}) is newer than the server's "
+            f"({SIM_VERSION}). The server must be updated first.",
+            {"simVersion": body.sim_version, "serverSimVersion": SIM_VERSION},
+        )
     scenario_row = get_scenario_row(db, body.scenario_id, user)
     scenario = load_scenario(scenario_row)
     row = TrainingSession(

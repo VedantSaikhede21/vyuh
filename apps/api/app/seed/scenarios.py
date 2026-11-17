@@ -5,8 +5,10 @@ on it); only its display fields (name, briefing, tags), scoring tree and generat
 may change. AI-assist suggestions may also change while no session on the scenario ran
 on SIM_VERSION 6 or later, the first that shows them (decision 132), and the EO camera's
 resolution while none ran on SIM_VERSION 7 or later, the first with 1280 x 720 cameras
-(decision 176): older sessions cannot be replayed on a newer sim anyway, and their stored
-scores do not read the camera. Any other edit needs a new code (decision 46).
+(decision 176), and the visibility while none ran on SIM_VERSION 8 or later, the first
+whose day camera reads it inside the visibility (eo-haze plan, decision A): older
+sessions cannot be replayed on a newer sim anyway, and their stored scores do not read
+the camera or the weather. Any other edit needs a new code (decision 46).
 """
 
 import json
@@ -35,6 +37,10 @@ AI_SUGGESTION_SIM_VERSION = 6
 CAMERA_SIM_VERSION = 7
 #: EO/IR sensor fields that CAMERA_SIM_VERSION allows to change on a used scenario.
 CAMERA_FIELDS = ("resolution", "irResolution")
+#: The first sim version whose day camera grades contacts by the haze (eo-haze plan): a
+#: used scenario's visibility may change until a session ran on it. Only the visibility:
+#: rain and wind feed the radar and the contacts in every version.
+WEATHER_SIM_VERSION = 8
 
 SCENARIO_DIR = Path(__file__).resolve().parent / "scenarios"
 #: Library sources (scripts/scenarios/build_scripted.py); their tags are seeded too.
@@ -101,6 +107,14 @@ def _without_camera(content: dict[str, Any]) -> dict[str, Any]:
     return {**content, "sensors": sensors}
 
 
+def _without_visibility(content: dict[str, Any]) -> dict[str, Any]:
+    env = dict(content.get("environment", {}))
+    weather = env.get("weather")
+    if isinstance(weather, dict):
+        env["weather"] = {k: v for k, v in weather.items() if k != "visibilityM"}
+    return {**content, "environment": env}
+
+
 def _newest_sim_version(db: Session, row: ScenarioRow) -> int | None:
     """Newest sim version of a started session on this scenario (a CREATED session has
     no events, so nothing in it depends on the content); None if there is none."""
@@ -114,13 +128,16 @@ def _newest_sim_version(db: Session, row: ScenarioRow) -> int | None:
 
 def _allowed_update(db: Session, row: ScenarioRow, content: dict[str, Any]) -> bool:
     """Whether a used scenario's gameplay may change to `content`: only in the parts
-    that no started session's sim version has read yet (AI suggestions, camera)."""
+    that no started session's sim version has read yet (AI suggestions, camera,
+    visibility)."""
     newest = _newest_sim_version(db, row)
     old, new = gameplay_content(row.content), gameplay_content(content)
     if newest is None or newest < AI_SUGGESTION_SIM_VERSION:
         old, new = _without_ai(old), _without_ai(new)
     if newest is None or newest < CAMERA_SIM_VERSION:
         old, new = _without_camera(old), _without_camera(new)
+    if newest is None or newest < WEATHER_SIM_VERSION:
+        old, new = _without_visibility(old), _without_visibility(new)
     return old == new
 
 
@@ -147,6 +164,7 @@ def seed_scenarios(db: Session, directory: Path = SCENARIO_DIR) -> int:
                 # Only the allowed parts differ, so taking these whole changes nothing else.
                 keep["contacts"] = content["contacts"]
                 keep["sensors"] = content["sensors"]
+                keep["environment"] = content["environment"]
             row.name = scenario.name
             row.tags = tags
             row.content = {**keep, **{k: content[k] for k in DISPLAY_FIELDS if k in content}}

@@ -244,6 +244,52 @@ def test_seed_updates_camera_resolution_only_before_sim_version_7(
     assert _eo(row.content)["resolution"] == [1920, 1080]
 
 
+def _weather(content: dict) -> dict:
+    return content["environment"]["weather"]
+
+
+def test_seed_updates_visibility_only_before_sim_version_8(
+    db: Session,
+    scenarios: dict[str, ScenarioRow],
+    make_user: Callable[..., User],
+    start_session: Callable[..., str],
+    tmp_path: Path,
+) -> None:
+    """Eo-haze plan, decision A: a used scenario's visibility may change until a session
+    ran on SIM_VERSION 8 (the first whose day camera reads it); rain never may."""
+    row = scenarios["S01"]
+    sid = start_session(make_user(), row)
+    session = db.get(TrainingSession, uuid.UUID(sid))
+    session.sim_version = 7
+    session.status = SessionStatus.ACTIVE
+    db.commit()
+
+    edited = json.loads(json.dumps(S01))
+    _weather(edited)["visibilityM"] = 6000
+    (tmp_path / "S01.json").write_text(json.dumps(edited), encoding="utf-8")
+    assert seed_scenarios(db, tmp_path) == 1
+    db.commit()
+    db.refresh(row)
+    assert _weather(row.content)["visibilityM"] == 6000
+
+    # Rain is gameplay in every version (radar loss): refused.
+    _weather(edited)["rainMmph"] = 3
+    (tmp_path / "S01.json").write_text(json.dumps(edited), encoding="utf-8")
+    assert seed_scenarios(db, tmp_path) == 0
+    db.refresh(row)
+    assert _weather(row.content)["rainMmph"] == _weather(S01)["rainMmph"]
+
+    # Once a session ran on SIM_VERSION 8 the visibility is frozen too.
+    _weather(edited)["rainMmph"] = _weather(S01)["rainMmph"]
+    _weather(edited)["visibilityM"] = 4000
+    session.sim_version = 8
+    db.commit()
+    (tmp_path / "S01.json").write_text(json.dumps(edited), encoding="utf-8")
+    assert seed_scenarios(db, tmp_path) == 0
+    db.refresh(row)
+    assert _weather(row.content)["visibilityM"] == 6000
+
+
 def test_list_scenarios(
     client: TestClient,
     scenarios: dict[str, ScenarioRow],
