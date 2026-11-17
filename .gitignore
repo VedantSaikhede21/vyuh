@@ -30,6 +30,9 @@ scripts/terrain/raw/
 # raw contact-model downloads (sources and licences in docs/realism-sources.md)
 scripts/models/raw/
 
+# Basis transcoder, copied from three before dev / build (apps/web/scripts/copy-decoders.ts)
+apps/web/public/basis/
+
 # editors / OS
 .vscode/*
 !.vscode/extensions.json

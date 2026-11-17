@@ -3,14 +3,72 @@
 import { Canvas } from '@react-three/fiber';
 import type { ContactClass } from '@vyuh/shared';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useCallback } from 'react';
+import { Suspense, useCallback, useEffect, useMemo } from 'react';
+import { Box3, CompressedTexture, type Mesh, type MeshStandardMaterial, Vector3 } from 'three';
 import { ClassModelMesh, type ModelPose } from '@/components/sim/contact-model-mesh';
+import { useAssetGltf } from '@/lib/assets/gltf';
 import { GROUND } from '@/lib/theme/scene-colours';
 
 // Dev-only model check (decision 175): every contact model at 1 m, nose to −z
 // (the red arrow), from ?view=side|top|front|three-quarter. ?big=1 shows one
 // model per row; ?frames=1 the bird's 12 baked wingbeat frames. Used for
-// screenshots when tuning MODEL_SPECS.
+// screenshots when tuning MODEL_SPECS. ?pipeline=1 (realism plan R0): the shipped
+// quad-small next to its meshopt + KTX2 build from scripts/assets/optimize.mjs,
+// both through lib/assets, with what each decoded to.
+
+interface Decoded {
+  extensions: string[];
+  textures: string[];
+}
+
+declare global {
+  interface Window {
+    __vyuhPipeline?: Record<string, Decoded>;
+  }
+}
+
+function PipelineModel({ url, label }: { url: string; label: string }) {
+  const gltf = useAssetGltf(url);
+  const scene = useMemo(() => {
+    const s = gltf.scene.clone();
+    const box = new Box3().setFromObject(s);
+    const size = box.getSize(new Vector3()).length();
+    s.scale.setScalar(1.4 / size);
+    s.position.copy(box.getCenter(new Vector3()).multiplyScalar(-1.4 / size));
+    return s;
+  }, [gltf]);
+  useEffect(() => {
+    const textures = new Set<string>();
+    gltf.scene.traverse((o) => {
+      const map = ((o as Mesh).material as MeshStandardMaterial | undefined)?.map;
+      if (map)
+        textures.add(
+          `${map.constructor.name}${map instanceof CompressedTexture ? ' (GPU-compressed)' : ''}`,
+        );
+    });
+    const json = gltf.parser.json as { extensionsUsed?: string[] };
+    window.__vyuhPipeline = {
+      ...window.__vyuhPipeline,
+      [label]: { extensions: json.extensionsUsed ?? [], textures: [...textures] },
+    };
+  }, [gltf, label]);
+  return <primitive object={scene} />;
+}
+
+function PipelineTile({ url, label }: { url: string; label: string }) {
+  return (
+    <div className="relative aspect-square" style={{ background: GROUND.modelBackdrop }}>
+      <span className="absolute left-2 top-1 z-10 font-mono text-xs text-black">{label}</span>
+      <Canvas camera={{ position: VIEWS['three-quarter'], fov: 40, near: 0.01 }}>
+        <ambientLight intensity={1.2} />
+        <directionalLight position={[2, 4, 1]} intensity={2.2} />
+        <Suspense fallback={null}>
+          <PipelineModel url={url} label={label} />
+        </Suspense>
+      </Canvas>
+    </div>
+  );
+}
 
 const CLASSES: readonly ContactClass[] = [
   'QUAD_SMALL',
@@ -63,6 +121,17 @@ function Models() {
   const q = useSearchParams();
   const view = q.get('view') ?? 'three-quarter';
   const big = q.get('big') === '1';
+  if (q.get('pipeline') === '1') {
+    return (
+      <div className="grid grid-cols-2 gap-2 bg-black p-2">
+        <PipelineTile url="/models/quad-small.glb" label="shipped (WebP)" />
+        <PipelineTile
+          url="/models/pipeline-test/quad-small.glb"
+          label="pipeline (meshopt + KTX2)"
+        />
+      </div>
+    );
+  }
   if (q.get('frames') === '1') {
     // The bird's baked wingbeat, one frame per tile.
     return (

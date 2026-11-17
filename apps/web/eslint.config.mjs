@@ -35,5 +35,6 @@ export default defineConfig([
       ],
     },
   },
-  globalIgnores(['.next/**', 'out/**', 'next-env.d.ts']),
+  // public/basis: three's Basis transcoder, copied before dev / build (scripts/copy-decoders.ts).
+  globalIgnores(['.next/**', 'out/**', 'next-env.d.ts', 'public/basis/**']),
 ]);
