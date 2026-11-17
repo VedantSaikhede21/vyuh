@@ -1,7 +1,7 @@
 'use client';
 
 import { Scenario } from '@vyuh/shared';
-import { TICK_MS, createDefender } from '@vyuh/sim-core';
+import { TICK_MS, createDefender, isNightAt } from '@vyuh/sim-core';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
@@ -16,6 +16,8 @@ import { loadWorld } from '@/lib/terrain/load-world';
 import S01 from '../../../../api/app/seed/scenarios/S01.json';
 import S02 from '../../../../api/app/seed/scenarios/S02.json';
 import S03 from '../../../../api/app/seed/scenarios/S03.json';
+import S05 from '../../../../api/app/seed/scenarios/S05.json';
+import S06 from '../../../../api/app/seed/scenarios/S06.json';
 import S08 from '../../../../api/app/seed/scenarios/S08.json';
 import S11 from '../../../../api/app/seed/scenarios/S11.json';
 import S12 from '../../../../api/app/seed/scenarios/S12.json';
@@ -36,9 +38,27 @@ import S15 from '../../../../api/app/seed/scenarios/S15.json';
 //               ten spread around the site (FPS stress case, e2e/fps.spec.ts)
 //   submit=1    play to the end with the defender as a real session for the signed-in
 //               user (events posted, scored on the server), then open its result page
+// Reference shots (realism plan R0, scripts/render-reference.ts):
+//   s=session   the scenario JSON in sessionStorage `vyuh.hero.scenario` (generated ones)
+//   select=first  the first active track of any kind
+//   hour=17:20  start time override (night recomputed from the preset)
+//   main=camera EO picture as the main view
+//   aim=165,-0.5  EO azimuth, elevation (deg), manual        fov=6  EO horizontal FOV (deg)
 // window.__vyuhHero = { ready, tMs } reports progress to scripts.
 
-const SCENARIOS: Record<string, unknown> = { S01, S02, S03, S08, S11, S12, S13, S14, S15 };
+const SCENARIOS: Record<string, unknown> = {
+  S01,
+  S02,
+  S03,
+  S05,
+  S06,
+  S08,
+  S11,
+  S12,
+  S13,
+  S14,
+  S15,
+};
 
 const SimPlayer = dynamic(() => import('@/components/sim/player').then((m) => m.SimPlayer), {
   ssr: false,
@@ -124,10 +144,21 @@ function Hero() {
   useEffect(() => {
     let live = true;
     (async () => {
-      const raw = SCENARIOS[code];
+      const raw =
+        code === 'session'
+          ? JSON.parse(sessionStorage.getItem('vyuh.hero.scenario') ?? 'null')
+          : SCENARIOS[code];
       if (!raw) throw new Error(`Unknown scenario ${code}`);
-      const scenario = withBirds(Scenario.parse(raw), Number(q.get('birds') ?? 0));
+      let scenario = withBirds(Scenario.parse(raw), Number(q.get('birds') ?? 0));
       const world = await loadWorld(scenario.terrain.preset);
+      const hour = q.get('hour');
+      if (hour && world.meta) {
+        const env = scenario.environment;
+        scenario = Scenario.parse({
+          ...scenario,
+          environment: { ...env, time: hour, isNight: isNightAt(env.date, hour, world.meta) },
+        });
+      }
       const runtime = new SimRuntime(scenario, world, 'PRACTICE');
       if (q.get('defend') !== '0') {
         const defender = createDefender(scenario);
@@ -167,9 +198,11 @@ function Hero() {
     const track =
       sel === 'threat'
         ? st.tracks.find((t) => t.status === 'ACTIVE' && threats.has(t.contactId))
-        : sel
-          ? st.tracks.find((t) => t.id === sel)
-          : undefined;
+        : sel === 'first'
+          ? st.tracks.find((t) => t.status === 'ACTIVE')
+          : sel
+            ? st.tracks.find((t) => t.id === sel)
+            : undefined;
     if (track) {
       commands.select(track.id);
       setTimeout(() => {
@@ -177,6 +210,8 @@ function Hero() {
         for (let i = 0; i < Number(q.get('zoom') ?? 0); i++) commands.zoom(1);
         if (q.get('ir') === '1') commands.toggleEoMode();
       }, 120);
+    } else if (q.get('ir') === '1') {
+      commands.toggleEoMode();
     }
     const t = setTimeout(() => {
       // A held picture still needs one tick so the selection and cue apply.
@@ -185,6 +220,18 @@ function Hero() {
         useHudStore.getState().publish(snapshot(rt));
       }
       if (q.get('tab') === 'rf') document.getElementById('tab-RF')?.click();
+      const aim = q.get('aim')?.split(',').map(Number);
+      const fov = Number(q.get('fov') ?? NaN);
+      if (aim || Number.isFinite(fov)) {
+        const eo = useUiStore.getState().eo;
+        useUiStore.getState().setEo({
+          ...(aim ? { azDeg: aim[0] ?? eo.azDeg, elDeg: aim[1] ?? eo.elDeg } : {}),
+          ...(Number.isFinite(fov) ? { hfovDeg: fov } : {}),
+          lockTrackId: null,
+          autoFrame: null,
+        });
+      }
+      if (q.get('main') === 'camera') useUiStore.getState().set({ mainView: 'EO' });
       window.__vyuhHero = { ready: true, tMs: rt.sim.getState().clock.tMs };
     }, 400);
     return () => clearTimeout(t);

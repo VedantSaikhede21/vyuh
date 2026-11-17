@@ -1,0 +1,786 @@
+{
+  "assets": [{ "id": "a1", "name": "Pump Station", "radiusM": 60, "x": -200, "z": 2900 }],
+  "briefing": "## Situation\nNight; fog, visibility under 1 km. Hostile drone activity is reported near Pump Station. Own patrol drones are airborne and may not broadcast a friendly ID.\n## Mission\nDetect, identify and defeat hostile drones before they reach Pump Station or drop a payload. Leave birds, civilians and friendlies alone. Contact reports are expected: send one for every threat track (R).\n## ROE\nWEAPONS TIGHT — intercept only tracks you have classified as a threat type and declared HOSTILE. No intercepts inside the marked no-kinetic zones (settlements).\n## Assets\n- Radar, EO/IR camera and RF detector on high ground near the asset\n- RF jammer, 2.0 km, ±10° sector, 10 s cycle\n- GNSS spoofer, 2.0 km, ±10° sector, 15 s cycle\n- Interceptor, 1.5 km, 13 rounds, 6 s reload\n## Intel\nMultiple contacts possible from several directions; no reliable axis.",
+  "contacts": [
+    {
+      "affiliation": "HOSTILE",
+      "aiSuggestion": { "confidence": 0.65, "suggestedClass": "FPV" },
+      "behaviour": "SWARM_SATURATION",
+      "class": "FPV",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "2.4GHz" },
+      "groupId": "sw1",
+      "id": "c01",
+      "isThreat": true,
+      "path": [
+        { "speedMps": 27.5, "x": -2350.1, "y": 21, "z": 1624.4 },
+        { "speedMps": 27.5, "x": -1619, "y": 21, "z": 2058.1 },
+        { "action": "DIVE", "speedMps": 27.5, "x": -200, "y": 0, "z": 2900 }
+      ],
+      "spawnTMs": 68400
+    },
+    {
+      "affiliation": "HOSTILE",
+      "aiSuggestion": { "confidence": 0.53, "suggestedClass": "QUAD_SMALL" },
+      "behaviour": "SWARM_SATURATION",
+      "class": "FPV",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "5.8GHz" },
+      "groupId": "sw1",
+      "id": "c02",
+      "isThreat": true,
+      "path": [
+        { "speedMps": 27.5, "x": -2333.7, "y": 21.8, "z": 1596.8 },
+        { "speedMps": 27.5, "x": -1602.7, "y": 24.4, "z": 2030.5 },
+        { "action": "DIVE", "speedMps": 27.5, "x": -193.5, "y": 0, "z": 2889 }
+      ],
+      "spawnTMs": 75600
+    },
+    {
+      "affiliation": "HOSTILE",
+      "aiSuggestion": { "confidence": 0.89, "suggestedClass": "FPV" },
+      "behaviour": "SWARM_SATURATION",
+      "class": "FPV",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "2.4GHz" },
+      "groupId": "sw1",
+      "id": "c03",
+      "isThreat": true,
+      "path": [
+        { "speedMps": 27.5, "x": -2368.4, "y": 21.8, "z": 1655.4 },
+        { "speedMps": 27.5, "x": -1637.4, "y": 23.3, "z": 2089.1 },
+        { "speedMps": 27.5, "x": -1507.3, "y": 23.3, "z": 2164 },
+        { "speedMps": 27.5, "x": -1377.3, "y": 12.7, "z": 2238.8 },
+        { "action": "DIVE", "speedMps": 27.5, "x": -207.4, "y": 0, "z": 2912.4 }
+      ],
+      "spawnTMs": 82500
+    },
+    {
+      "affiliation": "HOSTILE",
+      "aiSuggestion": { "confidence": 0.74, "suggestedClass": "BIRD_SMALL" },
+      "behaviour": "SWARM_SATURATION",
+      "class": "FPV",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "5.8GHz" },
+      "groupId": "sw1",
+      "id": "c04",
+      "isThreat": true,
+      "path": [
+        { "speedMps": 27.5, "x": -2320.6, "y": 22.7, "z": 1574.7 },
+        { "speedMps": 27.5, "x": -1589.6, "y": 22.5, "z": 2008.5 },
+        { "action": "DIVE", "speedMps": 27.5, "x": -188.2, "y": 0, "z": 2880.2 }
+      ],
+      "spawnTMs": 86800
+    },
+    {
+      "affiliation": "HOSTILE",
+      "aiSuggestion": { "confidence": 0.53, "suggestedClass": "QUAD_SMALL" },
+      "behaviour": "SWARM_SATURATION",
+      "class": "FPV",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "5.8GHz" },
+      "groupId": "sw1",
+      "id": "c05",
+      "isThreat": true,
+      "path": [
+        { "speedMps": 27.5, "x": -2377.9, "y": 22.8, "z": 1671.3 },
+        { "speedMps": 27.5, "x": -1646.9, "y": 25.8, "z": 2105 },
+        { "speedMps": 27.5, "x": -1516.1, "y": 25.8, "z": 2179.1 },
+        { "speedMps": 27.5, "x": -1385.6, "y": 6.2, "z": 2253.1 },
+        { "action": "DIVE", "speedMps": 27.5, "x": -211.1, "y": 0, "z": 2918.8 }
+      ],
+      "spawnTMs": 92100
+    },
+    {
+      "affiliation": "HOSTILE",
+      "aiSuggestion": { "confidence": 0.71, "suggestedClass": "QUAD_SMALL" },
+      "behaviour": "SWARM_SATURATION",
+      "class": "FPV",
+      "controlLink": "FIBRE_OPTIC",
+      "emissions": { "rfActive": false },
+      "groupId": "sw2",
+      "id": "c06",
+      "isThreat": true,
+      "path": [
+        { "speedMps": 26.3, "x": 2299.7, "y": 19, "z": 2936.8 },
+        { "speedMps": 26.3, "x": 1677.1, "y": 19, "z": 2989.6 },
+        { "speedMps": 26.3, "x": 1377.8, "y": 19, "z": 2923.2 },
+        { "action": "DIVE", "speedMps": 26.3, "x": -200, "y": 0, "z": 2900 }
+      ],
+      "spawnTMs": 7400
+    },
+    {
+      "affiliation": "HOSTILE",
+      "aiSuggestion": { "confidence": 0.61, "suggestedClass": "FPV" },
+      "behaviour": "SWARM_SATURATION",
+      "class": "FPV",
+      "controlLink": "FIBRE_OPTIC",
+      "emissions": { "rfActive": false },
+      "groupId": "sw2",
+      "id": "c07",
+      "isThreat": true,
+      "path": [
+        { "speedMps": 26.3, "x": 2299.2, "y": 21.5, "z": 2970.6 },
+        { "speedMps": 26.3, "x": 1676.6, "y": 23.6, "z": 3023.4 },
+        { "speedMps": 26.3, "x": 1377.3, "y": 21, "z": 2957.1 },
+        { "action": "DIVE", "speedMps": 26.3, "x": -200.2, "y": 0, "z": 2913.5 }
+      ],
+      "spawnTMs": 14600
+    },
+    {
+      "affiliation": "HOSTILE",
+      "aiSuggestion": { "confidence": 0.59, "suggestedClass": "QUAD_SMALL" },
+      "behaviour": "SWARM_SATURATION",
+      "class": "FPV",
+      "controlLink": "FIBRE_OPTIC",
+      "emissions": { "rfActive": false },
+      "groupId": "sw2",
+      "id": "c08",
+      "isThreat": true,
+      "path": [
+        { "speedMps": 26.3, "x": 2300.1, "y": 22.7, "z": 2911.8 },
+        { "speedMps": 26.3, "x": 1677.5, "y": 20, "z": 2964.6 },
+        { "speedMps": 26.3, "x": 1378.2, "y": 21.1, "z": 2898.2 },
+        { "action": "DIVE", "speedMps": 26.3, "x": -199.9, "y": 0, "z": 2890 }
+      ],
+      "spawnTMs": 19600
+    },
+    {
+      "affiliation": "HOSTILE",
+      "aiSuggestion": { "confidence": 0.82, "suggestedClass": "BIRD_SMALL" },
+      "behaviour": "SWARM_SATURATION",
+      "class": "FPV",
+      "controlLink": "FIBRE_OPTIC",
+      "emissions": { "rfActive": false },
+      "groupId": "sw2",
+      "id": "c09",
+      "isThreat": true,
+      "path": [
+        { "speedMps": 26.3, "x": 2298.7, "y": 20.2, "z": 3009.8 },
+        { "speedMps": 26.3, "x": 1676, "y": 19.1, "z": 3062.6 },
+        { "speedMps": 26.3, "x": 1376.8, "y": 22.3, "z": 2996.2 },
+        { "speedMps": 26.3, "x": 1298.2, "y": 22.3, "z": 2992.9 },
+        { "speedMps": 26.3, "x": 1148.4, "y": 9.2, "z": 2986.5 },
+        { "action": "DIVE", "speedMps": 26.3, "x": -200.4, "y": 0, "z": 2929.2 }
+      ],
+      "spawnTMs": 24800
+    },
+    {
+      "affiliation": "HOSTILE",
+      "aiSuggestion": { "confidence": 0.94, "suggestedClass": "FIXED_WING_SMALL" },
+      "behaviour": "DECOY",
+      "class": "FIXED_WING_SMALL",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "2.4GHz" },
+      "id": "c10",
+      "isThreat": true,
+      "path": [
+        { "speedMps": 25.1, "x": 129.2, "y": 274, "z": 5378.2 },
+        { "speedMps": 25.1, "x": -1267.8, "y": 274, "z": 4580.5 },
+        { "speedMps": 25.1, "x": 1269.5, "y": 274, "z": 4243.4 },
+        { "speedMps": 25.1, "x": -1267.8, "y": 274, "z": 4580.5 },
+        { "speedMps": 25.1, "x": 1269.5, "y": 274, "z": 4243.4 },
+        { "speedMps": 25.1, "x": -1267.8, "y": 274, "z": 4580.5 },
+        { "speedMps": 25.1, "x": 1269.5, "y": 274, "z": 4243.4 },
+        { "speedMps": 25.1, "x": -1267.8, "y": 274, "z": 4580.5 }
+      ],
+      "spawnTMs": 5800
+    },
+    {
+      "affiliation": "HOSTILE",
+      "aiSuggestion": { "confidence": 0.8, "suggestedClass": "QUAD_HEAVY" },
+      "behaviour": "DECOY",
+      "class": "QUAD_HEAVY",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "5.8GHz" },
+      "id": "c11",
+      "isThreat": true,
+      "path": [
+        { "speedMps": 12.6, "x": 773, "y": 186, "z": 5202.9 },
+        { "speedMps": 12.6, "x": -846, "y": 186, "z": 5000.5 },
+        { "speedMps": 12.6, "x": 1756.4, "y": 186, "z": 3900.9 },
+        { "speedMps": 12.6, "x": -846, "y": 186, "z": 5000.5 },
+        { "speedMps": 12.6, "x": 1756.4, "y": 186, "z": 3900.9 },
+        { "speedMps": 12.6, "x": -846, "y": 186, "z": 5000.5 },
+        { "speedMps": 12.6, "x": 1756.4, "y": 186, "z": 3900.9 },
+        { "speedMps": 12.6, "x": -846, "y": 186, "z": 5000.5 }
+      ],
+      "spawnTMs": 19000
+    },
+    {
+      "affiliation": "HOSTILE",
+      "aiSuggestion": { "confidence": 0.79, "suggestedClass": "QUAD_HEAVY" },
+      "behaviour": "RECON_LOITER",
+      "class": "QUAD_HEAVY",
+      "controlLink": "AUTONOMOUS_GNSS",
+      "emissions": { "rfActive": false },
+      "id": "c12",
+      "isThreat": true,
+      "path": [
+        { "speedMps": 12.2, "x": -562, "y": 88, "z": 5373.6 },
+        { "speedMps": 12.2, "x": -106.5, "y": 88, "z": 3158.2 },
+        { "speedMps": 12.2, "x": 199.1, "y": 88, "z": 3099.5 },
+        { "speedMps": 12.2, "x": 373.6, "y": 88, "z": 2841.9 },
+        { "speedMps": 12.2, "x": 314.9, "y": 88, "z": 2536.3 },
+        { "speedMps": 12.2, "x": 57.3, "y": 88, "z": 2361.8 },
+        { "speedMps": 12.2, "x": -248.2, "y": 88, "z": 2420.5 },
+        { "speedMps": 12.2, "x": -422.8, "y": 88, "z": 2678.1 },
+        { "speedMps": 12.2, "x": -364.1, "y": 88, "z": 2983.6 },
+        { "speedMps": 12.2, "x": -106.5, "y": 88, "z": 3158.2 },
+        { "speedMps": 12.2, "x": 5904.3, "y": 88, "z": 138.2 }
+      ],
+      "spawnTMs": 10200
+    },
+    {
+      "affiliation": "HOSTILE",
+      "aiSuggestion": { "confidence": 0.65, "suggestedClass": "BIRD_LARGE" },
+      "behaviour": "ATTACK_RUN",
+      "class": "QUAD_SMALL",
+      "controlLink": "AUTONOMOUS_GNSS",
+      "emissions": { "rfActive": false },
+      "id": "c13",
+      "isThreat": true,
+      "path": [
+        { "speedMps": 16.7, "x": -2352.6, "y": 15, "z": 1628.6 },
+        { "speedMps": 16.7, "x": -1521.8, "y": 15, "z": 2296.6 },
+        { "speedMps": 16.7, "x": -1404.9, "y": 10.3, "z": 2390.6 },
+        { "speedMps": 16.7, "x": -1385.4, "y": 10.3, "z": 2406.2 },
+        { "speedMps": 16.7, "x": -1062.8, "y": 10.3, "z": 2390.4 },
+        { "action": "DIVE", "speedMps": 16.7, "x": -200, "y": 0, "z": 2900 }
+      ],
+      "spawnTMs": 23000
+    },
+    {
+      "affiliation": "FRIENDLY",
+      "aiSuggestion": { "confidence": 0.62, "suggestedClass": "FIXED_WING_SMALL" },
+      "behaviour": "TRANSIT",
+      "class": "HELICOPTER_FRIENDLY",
+      "controlLink": "NONE",
+      "despawnTMs": 248500,
+      "emissions": { "rfActive": false },
+      "id": "c14",
+      "isThreat": false,
+      "path": [
+        { "speedMps": 54.7, "x": 2156.8, "y": 150, "z": 6343.3 },
+        { "speedMps": 54.7, "x": -2226.7, "y": 150, "z": -6319.2 }
+      ],
+      "spawnTMs": 600
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.63, "suggestedClass": "BIRD_SMALL" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_SMALL",
+      "controlLink": "NONE",
+      "despawnTMs": 261500,
+      "emissions": { "rfActive": false },
+      "groupId": "fl1",
+      "id": "c15",
+      "isThreat": false,
+      "path": [
+        { "speedMps": 11.5, "x": -845.7, "y": 83, "z": 1066.8 },
+        { "speedMps": 11.5, "x": -1517.9, "y": 83, "z": 1071 },
+        { "speedMps": 11.5, "x": -2467.6, "y": 83, "z": 1734.9 },
+        { "speedMps": 11.5, "x": -3310.6, "y": 83, "z": 1150.4 }
+      ],
+      "spawnTMs": 10100
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.8, "suggestedClass": "BIRD_SMALL" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_SMALL",
+      "controlLink": "NONE",
+      "despawnTMs": 261500,
+      "emissions": { "rfActive": false },
+      "groupId": "fl1",
+      "id": "c16",
+      "isThreat": false,
+      "path": [{ "speedMps": 11.5, "x": -861.9, "y": 86, "z": 1070.6 }],
+      "spawnTMs": 10100
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.63, "suggestedClass": "FPV" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_SMALL",
+      "controlLink": "NONE",
+      "despawnTMs": 261500,
+      "emissions": { "rfActive": false },
+      "groupId": "fl1",
+      "id": "c17",
+      "isThreat": false,
+      "path": [{ "speedMps": 11.5, "x": -824, "y": 87, "z": 1059.1 }],
+      "spawnTMs": 10100
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.82, "suggestedClass": "QUAD_SMALL" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_SMALL",
+      "controlLink": "NONE",
+      "despawnTMs": 261500,
+      "emissions": { "rfActive": false },
+      "groupId": "fl1",
+      "id": "c18",
+      "isThreat": false,
+      "path": [{ "speedMps": 11.5, "x": -851.3, "y": 82, "z": 1064.3 }],
+      "spawnTMs": 10100
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.84, "suggestedClass": "FRIENDLY_QUAD" },
+      "behaviour": "TRANSIT",
+      "class": "CIVILIAN_HOBBY",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "2.4GHz" },
+      "id": "c19",
+      "isThreat": false,
+      "path": [
+        { "speedMps": 8.6, "x": -1780.9, "y": 45, "z": 98 },
+        { "speedMps": 8.6, "x": -716.2, "y": 45, "z": 1109.3 },
+        { "speedMps": 8.6, "x": -462.6, "y": 45, "z": -1159.5 },
+        { "speedMps": 8.6, "x": 137.6, "y": 45, "z": 1067.6 }
+      ],
+      "spawnTMs": 200
+    },
+    {
+      "affiliation": "FRIENDLY",
+      "aiSuggestion": { "confidence": 0.85, "suggestedClass": "FRIENDLY_QUAD" },
+      "behaviour": "FRIENDLY_PATROL",
+      "class": "FRIENDLY_QUAD",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "5.8GHz" },
+      "id": "c20",
+      "isThreat": false,
+      "path": [
+        { "speedMps": 9.1, "x": -546.3, "y": 60, "z": 3274.7 },
+        { "speedMps": 9.1, "x": 174.7, "y": 60, "z": 3246.3 },
+        { "speedMps": 9.1, "x": 146.3, "y": 60, "z": 2525.3 },
+        { "speedMps": 9.1, "x": -574.7, "y": 60, "z": 2553.7 },
+        { "speedMps": 9.1, "x": -546.3, "y": 60, "z": 3274.7 },
+        { "speedMps": 9.1, "x": 174.7, "y": 60, "z": 3246.3 },
+        { "speedMps": 9.1, "x": 146.3, "y": 60, "z": 2525.3 },
+        { "speedMps": 9.1, "x": -574.7, "y": 60, "z": 2553.7 },
+        { "speedMps": 9.1, "x": -546.3, "y": 60, "z": 3274.7 }
+      ],
+      "spawnTMs": 400
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.61, "suggestedClass": "CIVILIAN_HOBBY" },
+      "behaviour": "TRANSIT",
+      "class": "CIVILIAN_HOBBY",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "5.8GHz" },
+      "id": "c21",
+      "isThreat": false,
+      "path": [
+        { "speedMps": 8.7, "x": -3019, "y": 33, "z": 1456.4 },
+        { "speedMps": 8.7, "x": -2783, "y": 33, "z": 3651.1 },
+        { "speedMps": 8.7, "x": -1965.4, "y": 33, "z": 1358.5 },
+        { "speedMps": 8.7, "x": 186.2, "y": 33, "z": 1392.6 },
+        { "speedMps": 8.7, "x": 2299.2, "y": 33, "z": 2596 }
+      ],
+      "spawnTMs": 64400
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.85, "suggestedClass": "CIVILIAN_HOBBY" },
+      "behaviour": "TRANSIT",
+      "class": "CIVILIAN_HOBBY",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "2.4GHz" },
+      "id": "c22",
+      "isThreat": false,
+      "path": [
+        { "speedMps": 7.4, "x": -1044.5, "y": 48, "z": -712.2 },
+        { "speedMps": 7.4, "x": -939.9, "y": 48, "z": 1779 },
+        { "speedMps": 7.4, "x": 1537.2, "y": 48, "z": 1625.7 },
+        { "speedMps": 7.4, "x": -73.1, "y": 48, "z": 1248.5 },
+        { "speedMps": 7.4, "x": 678.5, "y": 48, "z": 1793.7 },
+        { "speedMps": 7.4, "x": 1331.3, "y": 48, "z": 2129.5 }
+      ],
+      "spawnTMs": 58200
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.9, "suggestedClass": "BIRD_SMALL" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_SMALL",
+      "controlLink": "NONE",
+      "emissions": { "rfActive": false },
+      "groupId": "fl2",
+      "id": "c23",
+      "isThreat": false,
+      "path": [
+        { "speedMps": 12.7, "x": 408.6, "y": 94, "z": -1149.5 },
+        { "speedMps": 12.7, "x": 700.3, "y": 94, "z": -182.5 },
+        { "speedMps": 12.7, "x": 133.8, "y": 94, "z": 369.5 },
+        { "speedMps": 12.7, "x": 299.6, "y": 94, "z": 1063.4 },
+        { "speedMps": 12.7, "x": -560, "y": 94, "z": 1870.2 }
+      ],
+      "spawnTMs": 74900
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.51, "suggestedClass": "QUAD_SMALL" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_SMALL",
+      "controlLink": "NONE",
+      "emissions": { "rfActive": false },
+      "groupId": "fl2",
+      "id": "c24",
+      "isThreat": false,
+      "path": [{ "speedMps": 12.7, "x": 415.8, "y": 96, "z": -1124.5 }],
+      "spawnTMs": 74900
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.82, "suggestedClass": "FPV" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_SMALL",
+      "controlLink": "NONE",
+      "emissions": { "rfActive": false },
+      "groupId": "fl2",
+      "id": "c25",
+      "isThreat": false,
+      "path": [{ "speedMps": 12.7, "x": 396.7, "y": 91, "z": -1127.9 }],
+      "spawnTMs": 74900
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.65, "suggestedClass": "QUAD_SMALL" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_SMALL",
+      "controlLink": "NONE",
+      "emissions": { "rfActive": false },
+      "groupId": "fl2",
+      "id": "c26",
+      "isThreat": false,
+      "path": [{ "speedMps": 12.7, "x": 383.7, "y": 95, "z": -1160.9 }],
+      "spawnTMs": 74900
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.79, "suggestedClass": "QUAD_SMALL" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_LARGE",
+      "controlLink": "NONE",
+      "emissions": { "rfActive": false },
+      "groupId": "fl3",
+      "id": "c27",
+      "isThreat": false,
+      "path": [
+        { "speedMps": 11.8, "x": 1802.7, "y": 86, "z": 1486.5 },
+        { "speedMps": 11.8, "x": 2805, "y": 86, "z": 1239.9 },
+        { "speedMps": 11.8, "x": 3191, "y": 86, "z": 804.3 },
+        { "speedMps": 11.8, "x": 3208.1, "y": 86, "z": 179.1 },
+        { "speedMps": 11.8, "x": 3188, "y": 86, "z": -563.2 }
+      ],
+      "spawnTMs": 33500
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.64, "suggestedClass": "QUAD_SMALL" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_LARGE",
+      "controlLink": "NONE",
+      "emissions": { "rfActive": false },
+      "groupId": "fl3",
+      "id": "c28",
+      "isThreat": false,
+      "path": [{ "speedMps": 11.8, "x": 1817, "y": 90, "z": 1493.2 }],
+      "spawnTMs": 33500
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.69, "suggestedClass": "FIXED_WING_SMALL" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_LARGE",
+      "controlLink": "NONE",
+      "emissions": { "rfActive": false },
+      "groupId": "fl3",
+      "id": "c29",
+      "isThreat": false,
+      "path": [{ "speedMps": 11.8, "x": 1799.4, "y": 84, "z": 1464.5 }],
+      "spawnTMs": 33500
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.76, "suggestedClass": "QUAD_SMALL" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_LARGE",
+      "controlLink": "NONE",
+      "emissions": { "rfActive": false },
+      "groupId": "fl3",
+      "id": "c30",
+      "isThreat": false,
+      "path": [{ "speedMps": 11.8, "x": 1785.6, "y": 81, "z": 1483.1 }],
+      "spawnTMs": 33500
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.73, "suggestedClass": "QUAD_SMALL" },
+      "behaviour": "TRANSIT",
+      "class": "CIVILIAN_HOBBY",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "2.4GHz" },
+      "id": "c31",
+      "isThreat": false,
+      "path": [
+        { "speedMps": 7.4, "x": 539.3, "y": 71, "z": 546.4 },
+        { "speedMps": 7.4, "x": -366.8, "y": 71, "z": 584.4 },
+        { "speedMps": 7.4, "x": 1179.8, "y": 71, "z": -1149.5 },
+        { "speedMps": 7.4, "x": 2341.1, "y": 71, "z": 210.2 },
+        { "speedMps": 7.4, "x": 930.4, "y": 71, "z": 455.2 }
+      ],
+      "spawnTMs": 104200
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.69, "suggestedClass": "FRIENDLY_QUAD" },
+      "behaviour": "TRANSIT",
+      "class": "CIVILIAN_HOBBY",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "2.4GHz" },
+      "id": "c32",
+      "isThreat": false,
+      "path": [
+        { "speedMps": 6.1, "x": -1815.2, "y": 99, "z": 5758.4 },
+        { "speedMps": 6.1, "x": -1426, "y": 99, "z": 5014.6 },
+        { "speedMps": 6.1, "x": 768.6, "y": 99, "z": 5246.2 },
+        { "speedMps": 6.1, "x": -1416.6, "y": 99, "z": 4089 },
+        { "speedMps": 6.1, "x": -2898.3, "y": 99, "z": 2300.5 }
+      ],
+      "spawnTMs": 44000
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.74, "suggestedClass": "BIRD_SMALL" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_SMALL",
+      "controlLink": "NONE",
+      "emissions": { "rfActive": false },
+      "groupId": "fl4",
+      "id": "c33",
+      "isThreat": false,
+      "path": [
+        { "speedMps": 9.9, "x": 1610.9, "y": 61, "z": 2625.8 },
+        { "speedMps": 9.9, "x": 2589.5, "y": 61, "z": 2458.2 },
+        { "speedMps": 9.9, "x": 2890.5, "y": 61, "z": 1484.2 },
+        { "speedMps": 9.9, "x": 3754.1, "y": 61, "z": 969.3 }
+      ],
+      "spawnTMs": 65200
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.79, "suggestedClass": "BIRD_SMALL" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_SMALL",
+      "controlLink": "NONE",
+      "emissions": { "rfActive": false },
+      "groupId": "fl4",
+      "id": "c34",
+      "isThreat": false,
+      "path": [{ "speedMps": 9.9, "x": 1590.5, "y": 58, "z": 2647.8 }],
+      "spawnTMs": 65200
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.61, "suggestedClass": "BIRD_SMALL" },
+      "behaviour": "BIRD_FLOCK",
+      "class": "BIRD_SMALL",
+      "controlLink": "NONE",
+      "emissions": { "rfActive": false },
+      "groupId": "fl4",
+      "id": "c35",
+      "isThreat": false,
+      "path": [{ "speedMps": 9.9, "x": 1623.7, "y": 65, "z": 2637.2 }],
+      "spawnTMs": 65200
+    },
+    {
+      "affiliation": "NEUTRAL",
+      "aiSuggestion": { "confidence": 0.65, "suggestedClass": "QUAD_SMALL" },
+      "behaviour": "TRANSIT",
+      "class": "CIVILIAN_HOBBY",
+      "controlLink": "RF_MANUAL",
+      "emissions": { "rfActive": true, "rfBand": "2.4GHz" },
+      "id": "c36",
+      "isThreat": false,
+      "path": [
+        { "speedMps": 8.5, "x": -2978.4, "y": 83, "z": 3473.1 },
+        { "speedMps": 8.5, "x": -3307.2, "y": 83, "z": 2563 },
+        { "speedMps": 8.5, "x": -1987.5, "y": 83, "z": 1890.3 },
+        { "speedMps": 8.5, "x": -1451.6, "y": 83, "z": 2429.9 }
+      ],
+      "spawnTMs": 32300
+    }
+  ],
+  "difficulty": 5,
+  "durationS": 270,
+  "effectors": [
+    { "cooldownS": 10, "id": "jam1", "kind": "EW_JAM", "rangeM": 2000, "x": -200, "z": 2900 },
+    { "cooldownS": 15, "id": "spf1", "kind": "EW_SPOOF", "rangeM": 2000, "x": -200, "z": 2900 },
+    {
+      "ammo": 13,
+      "cooldownS": 6,
+      "id": "int1",
+      "kind": "INTERCEPT",
+      "rangeM": 1500,
+      "x": -200,
+      "z": 2900
+    }
+  ],
+  "environment": {
+    "date": "2026-12-17",
+    "isNight": true,
+    "time": "18:50",
+    "weather": {
+      "cloudPct": 88,
+      "rainMmph": 0,
+      "visibilityM": 800,
+      "windDirDeg": 159,
+      "windMps": 1.7
+    }
+  },
+  "generatorVersion": 3,
+  "id": "GEN-a2c03d3e0e26",
+  "name": "Silent Field",
+  "request": {
+    "aiAssistAccuracy": 0.45,
+    "date": "2026-12-17",
+    "difficulty": 5,
+    "durationS": 270,
+    "roe": "WEAPONS_TIGHT",
+    "seed": 2,
+    "terrainPreset": "URBAN_GENERIC",
+    "threatMix": { "FIXED_WING_SMALL": 1, "FPV": 9, "QUAD_HEAVY": 2, "QUAD_SMALL": 1 },
+    "timeOfDay": "18:50",
+    "weather": {
+      "cloudPct": 88,
+      "rainMmph": 0,
+      "visibilityM": 800,
+      "windDirDeg": 159,
+      "windMps": 1.7
+    }
+  },
+  "roe": "WEAPONS_TIGHT",
+  "schemaVersion": 1,
+  "scoringTreeId": "default_v4",
+  "seed": 2,
+  "sensors": [
+    {
+      "id": "rad1",
+      "kind": "RADAR",
+      "refRangeM": 3000,
+      "scanPeriodS": 2,
+      "x": -750,
+      "y": 6,
+      "z": 2350
+    },
+    {
+      "fovDegMax": 30,
+      "fovDegMin": 1.5,
+      "id": "eo1",
+      "irResolution": [640, 512],
+      "kind": "EO_IR",
+      "resolution": [1280, 720],
+      "x": -750,
+      "y": 8,
+      "z": 2350
+    },
+    { "bearingErrDeg": 7, "id": "rf1", "kind": "RF", "rangeM": 4000, "x": -750, "y": 4, "z": 2350 }
+  ],
+  "terrain": { "origin": { "lat": 29.8, "lon": 76.4 }, "preset": "URBAN_GENERIC" },
+  "zones": [
+    {
+      "id": "Z1",
+      "kind": "NO_KINETIC",
+      "name": "town",
+      "polygon": [
+        [-1900, 600],
+        [-700, 600],
+        [-700, 1800],
+        [-1900, 1800]
+      ]
+    },
+    {
+      "id": "Z2",
+      "kind": "NO_KINETIC",
+      "name": "town",
+      "polygon": [
+        [-700, 600],
+        [500, 600],
+        [500, 1800],
+        [-700, 1800]
+      ]
+    },
+    {
+      "id": "Z3",
+      "kind": "NO_KINETIC",
+      "name": "town",
+      "polygon": [
+        [500, 600],
+        [1700, 600],
+        [1700, 1800],
+        [500, 1800]
+      ]
+    },
+    {
+      "id": "Z4",
+      "kind": "NO_KINETIC",
+      "name": "town",
+      "polygon": [
+        [-1800, 1800],
+        [-700, 1800],
+        [-700, 2500],
+        [-1800, 2500]
+      ]
+    },
+    {
+      "id": "Z5",
+      "kind": "NO_KINETIC",
+      "name": "town",
+      "polygon": [
+        [-700, 1800],
+        [500, 1800],
+        [500, 2400],
+        [-700, 2400]
+      ]
+    },
+    {
+      "id": "Z6",
+      "kind": "NO_KINETIC",
+      "name": "village",
+      "polygon": [
+        [700, 1900],
+        [900, 1900],
+        [900, 2100],
+        [700, 2100]
+      ]
+    },
+    {
+      "id": "Z7",
+      "kind": "NO_KINETIC",
+      "name": "village",
+      "polygon": [
+        [500, 2200],
+        [900, 2200],
+        [900, 2500],
+        [500, 2500]
+      ]
+    },
+    {
+      "id": "Z8",
+      "kind": "NO_KINETIC",
+      "name": "village",
+      "polygon": [
+        [1700, 2200],
+        [2300, 2200],
+        [2300, 2700],
+        [1700, 2700]
+      ]
+    }
+  ]
+}

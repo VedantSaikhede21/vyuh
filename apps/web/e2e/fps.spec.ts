@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SIM_VERSION } from '@vyuh/sim-core';
 import { ADAPTIVE_PIXEL_RATIO_KEY } from '../lib/sim/pixel-ratio';
+import { GPU_ARGS } from '../scripts/gpu';
 import { login, openBriefing } from './helpers';
 
 // FPS check (decision 45 method: headless Chrome, ANGLE D3D11, integrated GPU),
@@ -33,6 +34,12 @@ import { login, openBriefing } from './helpers';
 //
 // FPS_ATMOS=0 (atmosphere step 2): measure the old linear fog on the same build
 // (localStorage `vyuh.atmos`, read by lib/sim/atmosphere-switch.ts).
+//
+// GPU (realism plan R0, SPEC §16 Rendering): main numbers run on the NVIDIA RTX 3050
+// (`--force_high_performance_gpu`; Chrome otherwise draws on the AMD integrated even
+// for 'high-performance' WebGL), with the frame-rate limit and vsync off. GPU=amd
+// gives the second-line AMD number. Every result logs the renderer string it ran on.
+test.use({ launchOptions: { args: GPU_ARGS } });
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
 
