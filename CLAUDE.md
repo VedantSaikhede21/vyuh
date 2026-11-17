@@ -39,7 +39,7 @@ A browser-based 3D simulator that trains military personnel to **detect, track, 
 7. **Scoring happens on the server.** The client sends events; the API computes scores. Never trust a client-computed score.
 8. **No real military system specs, no classified data, no real bases as targets.** Use public commercial-drone specs and textbook physics, label everything "representative", and record every source in `docs/realism-sources.md`.
 9. **Engagement responses stay abstract** (monitor / report / EW jam / EW spoof / intercept) with simple effectiveness rules. This is a decision-making trainer, not a weapons simulator.
-10. **Ask before adding a dependency.** State what it does and why the existing stack can't do it.
+10. **Ask before adding a dependency.** State what it does and why the existing stack can't do it. Exception: the rendering packages listed in `docs/plans/realism-plan.md` §7 are pre-approved; confirm each licence at install and record it in `docs/assets.md`.
 11. **Keep tests green.** Run lint + tests for the packages you touched before saying a task is done. Add tests for every scoring rule and generator change.
 12. **Update §14 "Current status"** of this file at the end of every phase or significant feature.
 13. **Never silently diverge from the spec.** If the spec looks wrong or a better approach exists, say so, propose the change, and after approval update `docs/SPEC.md` and log it in `docs/decisions.md`.
@@ -232,7 +232,7 @@ docker compose up --build   # offline full stack (Docker needs ≥ 3 GB; `up -d 
 - [ ] Tests added/updated; `pnpm lint`, `pnpm test`, `uv run pytest` pass.
 - [ ] sim-core still deterministic (determinism test passes).
 - [ ] No secrets, no real military data, no new unapproved dependency.
-- [ ] UI works at 1366×768 and does not drop below the FPS budget (SPEC §16) on integrated graphics, if UI/3D was touched.
+- [ ] UI works at 1366×768, if UI was touched. If 3D was touched: ≥ 30 fps at 1920×1080 on the High setting on the dev machine (NVIDIA RTX 3050, plugged in), and the Plain setting no slower than before (SPEC §16 Rendering).
 - [ ] Everything still works with `LLM_ENABLED=false`, if AI code was touched.
 - [ ] UI work passes `docs/DESIGN.md` §13 with screenshots at 1366×768 and 1920×1080 reviewed.
 - [ ] Short plain-language summary given.
@@ -276,7 +276,7 @@ docker compose up --build   # offline full stack (Docker needs ≥ 3 GB; `up -d 
 - **Migrations:** a merged Alembic migration is never edited; add a new one.
 - **Scoring trees:** a tree version that has scored sessions is immutable; changes create `default_v2` etc. Scores store `tree_version`.
 - **Scenario schema:** bump `schema_version` on breaking changes and keep a loader that upgrades old scenario JSON.
-- **Raw data:** `scripts/terrain/raw/` is git-ignored. Built presets in `apps/web/public/terrain/` are committed (keep each ≤ ~10 MB).
+- **Raw data:** `scripts/terrain/raw/` is git-ignored. Built presets in `apps/web/public/terrain/` are committed. No size limit on terrain or rendering assets: big files load in stages and are kept out of git history as `docs/assets.md` says.
 - **Never commit:** `.env*` (except `.env.example`), API keys, raw DEM tiles, user data.
 - **Branches (solo, decision 153):** commit straight to `main`; push to `origin/main` after each completed group of commits (at minimum after every progress-file update); CI must stay green — fix a red run before continuing. Never squash: every commit lands on `main` individually.
 - **Team reality:** one developer builds VYUH; the stream split in SPEC §18 describes ownership areas, not separate people.

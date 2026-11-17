@@ -776,6 +776,22 @@ The visual design and player layout are in `docs/DESIGN.md` §0 (Part 6R), which
 - EO/IR view rendered at the sensor resolution (≤ 1280×720 day, 640×512 IR on the scripted cameras), never wider than shown; sim tick ≤ 2 ms.
 - Initial load ≤ 10 MB per terrain preset; lazy-load presets.
 
+These budgets now bind the **Plain** setting only (see Rendering below).
+
+### Rendering (realism plan, `docs/plans/realism-plan.md`)
+Rendering changes only: sim-core, scoring and replay are untouched, and the sensors still decide what is visible (the picture must agree with the sim).
+
+| Setting | What it draws | Who gets it |
+|---|---|---|
+| **Plain** | Today's look (atmosphere steps 1–3). The detail tiers in `lib/gpu-tier.ts` (High / Medium / Low: shadows, trees) stay as Plain's automatic levels. | Weak machines, e2e tests, `?atmos=0` |
+| **High** | Every realism step, medium clouds, half-resolution effects | Default on a discrete GPU |
+| **Ultra** | High with quality numbers raised; not tuned | Stills, video capture, strong machines |
+
+- Chosen in Settings; Auto picks from the WebGL renderer string. An integrated GPU (e.g. "AMD Radeon(TM) Graphics") gets Plain, so on a dual-GPU laptop High is picked by hand unless the browser runs on the discrete GPU.
+- **Floor:** ≥ 30 fps at 1920×1080 on High on the dev machine (NVIDIA RTX 3050 Laptop, plugged in, Chrome forced onto it with `--force_high_performance_gpu`); the AMD integrated number is reported as a second line. Plain must not get slower than before.
+- **Size:** no per-preset limit; large files load in stages (`docs/assets.md`).
+- Approval stills are taken on High: the eight reference shots, `pnpm --filter @vyuh/web render:reference <step>`.
+
 ### Testing
 - **sim-core (vitest):** determinism, LOS, sensor Pd curves, track N-of-M, Johnson thresholds, effector rules, boids stability.
 - **api (pytest):** every scoring leaf, plausibility checks, generator reproducibility + 50-seed validity sweep, Elo, RBAC per route, LLM output validation + fallback (mock LLM).
